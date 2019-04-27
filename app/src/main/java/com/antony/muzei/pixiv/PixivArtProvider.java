@@ -90,30 +90,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	private Uri downloadFile(String url, String token)
 	{
-		Response imageResponse = null;
-		try
-		{
-			imageResponse = sendGetRequest(url);
-		} catch (IOException e)
-		{
-			return null;
-		}
-		Log.i("PIXIV", Integer.toString(imageResponse.code()));
-
+		Response imageResponse;
 		Context context = getContext();
-		File downloadedFile = new File(context.getExternalCacheDir(), token + ".png");
+		File downloadedFile = new File(context.getCacheDir(), token + ".png");
 		FileOutputStream fileStream = null;
 		try
 		{
+			imageResponse = sendGetRequest(url);
 			fileStream = new FileOutputStream(downloadedFile);
-		} catch (FileNotFoundException f)
-		{
-			f.printStackTrace();
-		}
-
-		final InputStream inputStream = imageResponse.body().byteStream();
-		try
-		{
+			final InputStream inputStream = imageResponse.body().byteStream();
 			final byte[] buffer = new byte[1024 * 50];
 			int read;
 			while ((read = inputStream.read(buffer)) > 0)
@@ -122,9 +107,9 @@ public class PixivArtProvider extends MuzeiArtProvider
 			}
 			fileStream.close();
 			inputStream.close();
-		} catch (IOException e)
+		} catch (IOException ex)
 		{
-			e.printStackTrace();
+			return null;
 		}
 
 		return Uri.fromFile(downloadedFile);
@@ -134,58 +119,46 @@ public class PixivArtProvider extends MuzeiArtProvider
 	protected void onLoadRequested(boolean initial)
 	{
 		JSONObject overallJson;
-		JSONArray contents = new JSONArray();
+		JSONArray contents;
+		JSONObject pic0Meta;
+		String title;
+		String byline;
+		String token;
+		String originalUri;
 
 		try
 		{
 			Response rankingResponse = sendGetRequest(PixivArtProviderDefines.DAILY_RANKING_URL);
 			if (!rankingResponse.isSuccessful())
 			{
-				Log.d("PIXIV", "Could not get overall ranking JSON");
+				Log.e("PIXIV", "Could not get overall ranking JSON");
 				return;
 			}
-			try
-			{
-				overallJson = new JSONObject((rankingResponse.body().string()));
-				contents = overallJson.getJSONArray("contents");
-			} catch (JSONException j)
-			{
-				Log.d("PIXIV", "could not get JSON from response body");
-				j.printStackTrace();
-			}
 
-		} catch (IOException e)
-		{
-			Log.d("PIXIV", "error");
-			e.printStackTrace();
-			return;
-		}
+			overallJson = new JSONObject((rankingResponse.body().string()));
+			contents = overallJson.getJSONArray("contents");
 
-		JSONObject pic0Meta;
-		String title;
-		String byline;
-		String token;
-		String originalUri;
-		try
-		{
-			pic0Meta = contents.getJSONObject(0);
+			pic0Meta = contents.getJSONObject(2);
 			title = pic0Meta.getString("title");
 			byline = pic0Meta.getString("user_name");
 			token = pic0Meta.getString("illust_id");
 			originalUri = pic0Meta.getString(("url"));
 			Log.i("PIXIV", title);
 			Log.i("PIXIV", token);
-		} catch (JSONException j)
+		} catch (IOException | JSONException ex)
 		{
-			j.printStackTrace();
+			Log.d("PIXIV", "error");
+			ex.printStackTrace();
 			return;
 		}
 
 		String uri0 = originalUri.replace("c/240x480/", "");
 		String uri1 = uri0.replace("img-master", "img-original");
 		String uri2 = uri1.replace("_master1200", "");
-		String uri3 = uri2.replace("jpg","png");
+		String uri3 = uri2.replace("jpg", "png");
 		Log.i("PIXIV", uri3);
+
+		String webUri = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token;
 
 		Uri finalUri = downloadFile(uri3, token);
 
@@ -196,6 +169,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.byline(byline)
 				.token(token)
 				.persistentUri(finalUri)
+				.webUri(Uri.parse(webUri))
 				.build());
 	}
 }
