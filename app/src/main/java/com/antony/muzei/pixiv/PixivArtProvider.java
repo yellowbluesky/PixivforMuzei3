@@ -70,7 +70,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
 				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
-		if (refreshToken.isEmpty())
+		//if (refreshToken.isEmpty())
+		if (true)
 		{
 			Log.d(LOG_TAG, "empty refresh token");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
@@ -101,7 +102,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			editor.putString("accessToken", tokens.getString("access_token"));
 			editor.putString("refreshToken", tokens.getString("refresh_token"));
 			editor.putString("deviceToken", tokens.getString("device_token"));
-			editor.commit();
+			editor.apply();
 		} catch (IOException | JSONException ex)
 		{
 			ex.printStackTrace();
@@ -245,11 +246,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 		String mode = sharedPreferences.getString("pref_updateMode", "");
 		Log.d(LOG_TAG, "mode: " + mode);
-		if (mode.equals("follow") || mode.equals("bookmark"))
-		{
-			Log.d(LOG_TAG, "authenticating...");
-			checkAuth();
-		}
 		JSONObject overallJson;
 		JSONArray contents;
 		JSONObject pictureMetadata;
@@ -257,6 +253,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 		String byline;
 		String token;
 		String thumbUri;
+		String imageUrl;
+		Response response;
 
 		try
 		{
@@ -278,6 +276,43 @@ public class PixivArtProvider extends MuzeiArtProvider
 			{
 				pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
 			} while (pictureMetadata.getInt("illust_type") != 0);
+
+
+			if (!mode.equals("follow") || !mode.equals("bookmark"))
+			{
+				Log.d(LOG_TAG, "ranking");
+				title = pictureMetadata.getString("title");
+				byline = pictureMetadata.getString("user_name");
+				token = pictureMetadata.getString("illust_id");
+				String thumbUrl = pictureMetadata.getString(("url"));
+				response = getRemoteFileExtension(thumbUrl);
+			}
+			// pictures from follow feed or bookmark
+			else
+			{
+				Log.d(LOG_TAG, "feed or bookmark");
+				title = pictureMetadata.getString("title");
+				JSONObject usernameObject = pictureMetadata.getJSONObject("user");
+				byline = usernameObject.getString("name");
+				token = pictureMetadata.getString("id");
+				// picture pulled is a single image
+				if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
+				{
+					Log.d(LOG_TAG, "single image");
+					JSONObject imageJsonObject = pictureMetadata.getJSONObject("meta_single_page");
+					imageUrl = imageJsonObject.getString("original_image_url");
+				}
+				// we have pulled an album, picking the first picture in album
+				else
+				{
+					Log.d(LOG_TAG, "album");
+					JSONArray albumArray = pictureMetadata.getJSONArray("meta_pages");
+					JSONObject imageUrls = albumArray.getJSONObject(0);
+					JSONObject mainPictureUrls = imageUrls.getJSONObject("image_urls");
+					imageUrl = mainPictureUrls.getString("original");
+				}
+				response = sendGetRequest(imageUrl);
+			}
 
 			title = pictureMetadata.getString("title");
 			byline = pictureMetadata.getString("user_name");
