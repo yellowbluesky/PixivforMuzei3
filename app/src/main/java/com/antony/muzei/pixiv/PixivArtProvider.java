@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Random;
@@ -100,6 +101,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			editor.putString("accessToken", tokens.getString("access_token"));
 			editor.putString("refreshToken", tokens.getString("refresh_token"));
 			editor.putString("deviceToken", tokens.getString("device_token"));
+			editor.commit();
 		} catch (IOException | JSONException ex)
 		{
 			ex.printStackTrace();
@@ -130,42 +132,43 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return httpClient.newCall(builder.build()).execute();
 	}
 
-	private Uri getUpdateUriInfo()
+	private String getUpdateUriInfo()
 	{
-		Uri.Builder uri = new Uri.Builder();
-		String mode = "daily_rank";
-		String userId = "";
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+		String urlString;
+		String mode = sharedPreferences.getString("pref_updateMode", "");
+		String userId = sharedPreferences.getString("pref_loginId", "");
 		switch (mode)
 		{
 			case "follow":
 				if (checkAuth())
 				{
-					uri.appendQueryParameter("url", PixivArtProviderDefines.FOLLOW_URL + "?restrict=public");
+					urlString = PixivArtProviderDefines.FOLLOW_URL + "?restrict=public";
 				} else
 				{
-					uri.appendQueryParameter("url", PixivArtProviderDefines.DAILY_RANKING_URL);
+					urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
 				}
 				break;
 			case "bookmark":
 				if (checkAuth())
 				{
-					uri.appendQueryParameter("url", PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public");
+					urlString = PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public";
 				} else
 				{
-					uri.appendQueryParameter("url", PixivArtProviderDefines.DAILY_RANKING_URL);
+					urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
 				}
 				break;
 			case "weekly_rank":
-				uri.appendQueryParameter("url", PixivArtProviderDefines.WEEKLY_RANKING_URL);
+				urlString = PixivArtProviderDefines.WEEKLY_RANKING_URL;
 				break;
 			case "monthly_rank":
-				uri.appendQueryParameter("url", PixivArtProviderDefines.MONTHLY_RANKING_URL);
+				urlString = PixivArtProviderDefines.MONTHLY_RANKING_URL;
 				break;
 			case "daily_rank":
 			default:
-				uri.appendQueryParameter("url", PixivArtProviderDefines.DAILY_RANKING_URL);
+				urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
 		}
-		return uri.build();
+		return urlString;
 	}
 
 	private Response sendGetRequest(String url) throws IOException
@@ -249,7 +252,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		}
 		JSONObject overallJson;
 		JSONArray contents;
-		JSONObject pic0Meta;
+		JSONObject pictureMetadata;
 		String title;
 		String byline;
 		String token;
@@ -257,7 +260,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 		try
 		{
-			Response rankingResponse = sendGetRequest(PixivArtProviderDefines.DAILY_RANKING_URL);
+			String url = getUpdateUriInfo();
+			Response rankingResponse = sendGetRequest(url);
 			if (!rankingResponse.isSuccessful())
 			{
 				Log.e(LOG_TAG, "Could not get overall ranking JSON");
@@ -272,13 +276,13 @@ public class PixivArtProvider extends MuzeiArtProvider
 			Random random = new Random();
 			do
 			{
-				pic0Meta = contents.getJSONObject(random.nextInt(contents.length()));
-			} while (pic0Meta.getInt("illust_type") != 0);
+				pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+			} while (pictureMetadata.getInt("illust_type") != 0);
 
-			title = pic0Meta.getString("title");
-			byline = pic0Meta.getString("user_name");
-			token = pic0Meta.getString("illust_id");
-			thumbUri = pic0Meta.getString(("url"));
+			title = pictureMetadata.getString("title");
+			byline = pictureMetadata.getString("user_name");
+			token = pictureMetadata.getString("illust_id");
+			thumbUri = pictureMetadata.getString(("url"));
 		} catch (IOException | JSONException ex)
 		{
 			Log.d(LOG_TAG, "error");
