@@ -13,7 +13,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".settings.SettingsActivity"
-            android:label="@string/title_activity_settings"></activity>
+            android:label="@string/title_activity_settings"
+            android:exported="true"></activity>
 
         <provider
             android:name=".PixivArtProvider"
@@ -24,7 +25,12 @@
             <intent-filter>
                 <action android:name="com.google.android.apps.muzei.api.MuzeiArtProvider" />
             </intent-filter>
+            <meta-data android:name="settingsActivity"
+                android:value="com.antony.muzei.pixiv.settings.SettingsActivity" />
+            <meta-data android:name="color" android:value="#0096db" />
         </provider>
+
+
     </application>
 
 </manifest>

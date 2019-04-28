@@ -2,9 +2,12 @@ package com.antony.muzei.pixiv;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
 import android.app.Activity;
+
+import androidx.preference.PreferenceManager;
 
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 import com.google.android.apps.muzei.api.provider.Artwork;
@@ -22,8 +25,10 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Random;
 
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class PixivArtProvider extends MuzeiArtProvider
@@ -32,19 +37,86 @@ public class PixivArtProvider extends MuzeiArtProvider
 	private static final String LOG_TAG = "PIXIV";
 	private final String mode = "daily_rank";
 
-	private String userId = "";
-
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
 	// placeholder for future functions that require auth, such as bookmark or feed
 	private boolean checkAuth()
 	{
+		SharedPreferences preferences = getContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+		if (!preferences.getBoolean("pref_useAuth", false))
+		{
+			//return false;
+		}
+		String loginId = preferences.getString("pref_loginId", "");
+		String loginPassword = preferences.getString("pref_loginPassword", "");
+		if (loginId.isEmpty() || loginPassword.isEmpty())
+		{
+			//return false;
+		}
+
+
+		String refreshToken = preferences.getString("refreshToken", "");
+
+		Uri.Builder authQueryBuilder = new Uri.Builder()
+				.appendQueryParameter("get_secure_url", Integer.toString(1))
+				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
+				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
+
+		if (refreshToken.isEmpty())
+		{
+			authQueryBuilder.appendQueryParameter("grant_type", "password")
+					.appendQueryParameter("username", loginId)
+					.appendQueryParameter("password", loginPassword)
+					.build();
+		} else
+		{
+			authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
+					.appendQueryParameter("refresh_token", refreshToken)
+					.build();
+		}
+		Uri authQuery = authQueryBuilder.build();
+
+		String accessToken = preferences.getString("accessToken", "");
+
+		Response response;
+		try
+		{
+			response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, accessToken);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		//String accessToken =
+		//SharedPreferences.Editor editor = preferences.edit();
 		return false;
+	}
+
+	private Response sendPostRequest(String url, Uri authQuery, String accessToken) throws IOException
+	{
+		String contentType = "application/x-www-form-urlencoded";
+		OkHttpClient httpClient = new OkHttpClient.Builder()
+				.build();
+
+		RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
+
+		Request.Builder builder = new Request.Builder()
+				.addHeader("User-Agent", "PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)")
+				.addHeader("App-OS", "ios")
+				.addHeader("App-OS-Version", "10.3.1")
+				.addHeader("App-Version", "6.9.0")
+				.addHeader("Content-type", body.contentType().toString())
+				.addHeader("Authorization", accessToken)
+				.post(body)
+				.url(url);
+		return httpClient.newCall(builder.build()).execute();
 	}
 
 	private Uri getUpdateUriInfo()
 	{
 		Uri.Builder uri = new Uri.Builder();
+		String mode = "daily_rank";
+		String userId = "";
 		switch (mode)
 		{
 			case "follow":
@@ -59,7 +131,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			case "bookmark":
 				if (checkAuth())
 				{
-					uri.appendQueryParameter("url", PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + this.userId + "&restrict=public");
+					uri.appendQueryParameter("url", PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public");
 				} else
 				{
 					uri.appendQueryParameter("url", PixivArtProviderDefines.DAILY_RANKING_URL);
@@ -84,8 +156,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.build();
 
 		Request.Builder builder = new Request.Builder()
-				.addHeader("User-Agent",
-						"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0")
+				.addHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0")
 				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
 				.url(url);
 
@@ -195,7 +266,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		}
 
 		Uri finalUri = downloadFile(response, token);
-
+		response.close();
 		addArtwork(new Artwork.Builder()
 				.title(title)
 				.byline(byline)

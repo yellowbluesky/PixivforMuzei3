@@ -14,38 +14,39 @@
   ~ limitations under the License.
   -->
 
-<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="@string/messages_header">
+    <PreferenceCategory app:title="@string/title_activity_settings">Settings">
 
+        <SwitchPreference
+            android:key="pref_useAuth"
+            android:title="@string/pref_useAuth"
+            android:dialogTitle="@string/pref_useAuth"
+            android:persistent="true" />
         <EditTextPreference
-            app:key="signature"
-            app:title="@string/signature_title"
-            app:useSimpleSummaryProvider="true" />
-
+            android:key="pref_loginId"
+            android:title="@string/pref_loginId"
+            android:dialogTitle="@string/pref_loginId"
+            android:persistent="true"
+            android:dependency="pref_useAuth" />
+        <EditTextPreference
+            android:key="pref_loginPassword"
+            android:title="@string/pref_loginPassword"
+            android:dialogTitle="@string/pref_loginPassword"
+            android:persistent="true"
+            android:dependency="pref_useAuth"
+            android:password="true" />
         <ListPreference
-            app:defaultValue="reply"
-            app:entries="@array/reply_entries"
-            app:entryValues="@array/reply_values"
-            app:key="reply"
-            app:title="@string/reply_title"
-            app:useSimpleSummaryProvider="true" />
+            android:key="pref_updateMode"
+            android:title="@string/pref_updateMode"
+            android:dialogTitle="@string/pref_updateMode"
+            android:entries="@array/pref_updateMode_entries"
+            android:entryValues="@array/pref_updateMode_entryValues"
+            android:defaultValue="@string/pref_updateMode_default"
+            android:persistent="true" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/sync_header">
-
-        <SwitchPreferenceCompat
-            app:key="sync"
-            app:title="@string/sync_title" />
-
-        <SwitchPreferenceCompat
-            app:dependency="sync"
-            app:key="attachment"
-            app:summaryOff="@string/attachment_summary_off"
-            app:summaryOn="@string/attachment_summary_on"
-            app:title="@string/attachment_title" />
-
-    </PreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

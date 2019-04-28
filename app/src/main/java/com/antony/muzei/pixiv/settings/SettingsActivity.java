@@ -6,6 +6,8 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 
+import com.antony.muzei.pixiv.R;
+
 public class SettingsActivity extends AppCompatActivity
 {
 
