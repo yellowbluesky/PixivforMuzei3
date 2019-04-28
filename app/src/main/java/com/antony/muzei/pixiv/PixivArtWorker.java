@@ -22,6 +22,7 @@ public class PixivArtWorker extends Worker
 	static void enqueueLoad()
 	{
 		WorkManager workManager = WorkManager.getInstance();
+
 	}
 
 	@NonNull

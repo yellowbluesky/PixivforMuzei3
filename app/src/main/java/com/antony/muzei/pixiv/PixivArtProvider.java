@@ -147,9 +147,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
-		TestKotlin test = new TestKotlin();
-		int hdsh = test.hello();
-		Log.d(LOG_TAG, Integer.toString(hdsh));
 		JSONObject overallJson;
 		JSONArray contents;
 		JSONObject pic0Meta;
