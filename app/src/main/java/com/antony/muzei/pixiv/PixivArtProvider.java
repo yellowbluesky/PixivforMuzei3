@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.Random;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -30,6 +31,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 	private final String mode = "daily_rank";
 
 	private String userId = "";
+
+	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
 	// placeholder for future functions that require auth, such as bookmark or feed
 	private boolean checkAuth()
@@ -88,17 +91,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return response;
 	}
 
-	private Uri downloadFile(String url, String token)
+	private Uri downloadFile(Response response, String token)
 	{
-		Response imageResponse;
 		Context context = getContext();
-		File downloadedFile = new File(context.getCacheDir(), token + ".png");
+		File downloadedFile = new File(context.getExternalCacheDir(), token + ".png");
 		FileOutputStream fileStream = null;
 		try
 		{
-			imageResponse = sendGetRequest(url);
 			fileStream = new FileOutputStream(downloadedFile);
-			final InputStream inputStream = imageResponse.body().byteStream();
+			final InputStream inputStream = response.body().byteStream();
 			final byte[] buffer = new byte[1024 * 50];
 			int read;
 			while ((read = inputStream.read(buffer)) > 0)
@@ -115,6 +116,32 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return Uri.fromFile(downloadedFile);
 	}
 
+	private Response getRemoteFileExtension(String url)
+	{
+		Response response;
+
+		String uri0 = url.replace("c/240x480/", "");
+		String uri1 = uri0.replace("img-master", "img-original");
+		String uri2 = uri1.replace("_master1200", "");
+		String uri3 = uri2.substring(0, uri2.length() - 4);
+		for (String suffix : IMAGE_SUFFIXS)
+		{
+			String uri = uri3 + suffix;
+			try
+			{
+				response = sendGetRequest(uri);
+				if (response.code() == 200)
+				{
+					return response;
+				}
+			} catch (IOException e)
+			{
+				return null;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
@@ -124,7 +151,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		String title;
 		String byline;
 		String token;
-		String originalUri;
+		String thumbUri;
 
 		try
 		{
@@ -138,11 +165,14 @@ public class PixivArtProvider extends MuzeiArtProvider
 			overallJson = new JSONObject((rankingResponse.body().string()));
 			contents = overallJson.getJSONArray("contents");
 
-			pic0Meta = contents.getJSONObject(2);
+			Random random = new Random();
+			int cursor = random.nextInt(contents.length());
+			pic0Meta = contents.getJSONObject(cursor);
+
 			title = pic0Meta.getString("title");
 			byline = pic0Meta.getString("user_name");
 			token = pic0Meta.getString("illust_id");
-			originalUri = pic0Meta.getString(("url"));
+			thumbUri = pic0Meta.getString(("url"));
 			Log.i("PIXIV", title);
 			Log.i("PIXIV", token);
 		} catch (IOException | JSONException ex)
@@ -152,15 +182,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 			return;
 		}
 
-		String uri0 = originalUri.replace("c/240x480/", "");
-		String uri1 = uri0.replace("img-master", "img-original");
-		String uri2 = uri1.replace("_master1200", "");
-		String uri3 = uri2.replace("jpg", "png");
-		Log.i("PIXIV", uri3);
-
 		String webUri = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token;
 
-		Uri finalUri = downloadFile(uri3, token);
+		Response response = getRemoteFileExtension(thumbUri);
+		if (response == null)
+		{
+			Log.e("PIXIV", "could not get file extension from Pixiv");
+		}
+
+		Uri finalUri = downloadFile(response, token);
 
 		Log.i("PIXIV", finalUri.toString());
 
