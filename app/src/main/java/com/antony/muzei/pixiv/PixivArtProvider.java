@@ -257,6 +257,27 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return null;
 	}
 
+	private JSONArray getContents(JSONObject ranking)
+	{
+		try
+		{
+			JSONArray contents = ranking.getJSONArray("contents");
+			return contents;
+		} catch (JSONException ex)
+		{
+			ex.printStackTrace();
+		}
+		try
+		{
+			JSONArray contents = ranking.getJSONArray("illusts");
+			return contents;
+		} catch (JSONException ex)
+		{
+			ex.printStackTrace();
+		}
+		return null;
+	}
+
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
@@ -292,15 +313,17 @@ public class PixivArtProvider extends MuzeiArtProvider
 			}
 
 			overallJson = new JSONObject((rankingResponse.body().string()));
+			Log.d(LOG_TAG, overallJson.toString());
 			rankingResponse.close();
-			contents = overallJson.getJSONArray("contents");
+			contents = getContents(overallJson);
+
 
 			// Prevent manga or gifs from being chosen
 			Random random = new Random();
-			do
+			//do
 			{
 				pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-			} while (pictureMetadata.getInt("illust_type") != 0);
+			} //while (pictureMetadata.getInt("illust_type") != 0);
 
 
 			if (!mode.equals("follow") || !mode.equals("bookmark"))
