@@ -89,8 +89,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
 				.url(url);
 
-		Response response = httpClient.newCall(builder.build()).execute();
-		return response;
+		return httpClient.newCall(builder.build()).execute();
 	}
 
 	private Uri downloadFile(Response response, String token)
@@ -98,10 +97,11 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Context context = getContext();
 		File downloadedFile = new File(context.getExternalCacheDir(), token + ".png");
 		FileOutputStream fileStream = null;
+		InputStream inputStream = null;
 		try
 		{
 			fileStream = new FileOutputStream(downloadedFile);
-			final InputStream inputStream = response.body().byteStream();
+			inputStream = response.body().byteStream();
 			final byte[] buffer = new byte[1024 * 50];
 			int read;
 			while ((read = inputStream.read(buffer)) > 0)
@@ -113,6 +113,9 @@ public class PixivArtProvider extends MuzeiArtProvider
 		} catch (IOException ex)
 		{
 			return null;
+		} finally
+		{
+			response.body().close();
 		}
 
 		return Uri.fromFile(downloadedFile);
@@ -167,10 +170,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 			overallJson = new JSONObject((rankingResponse.body().string()));
 			contents = overallJson.getJSONArray("contents");
 
-			for(int i = 0; i < LIMIT; i++)
-			{
-
-			}
 			Random random = new Random();
 			int cursor = random.nextInt(contents.length());
 			pic0Meta = contents.getJSONObject(cursor);
@@ -179,8 +178,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 			byline = pic0Meta.getString("user_name");
 			token = pic0Meta.getString("illust_id");
 			thumbUri = pic0Meta.getString(("url"));
-			Log.i(LOG_TAG, title);
-			Log.i(LOG_TAG, token);
 		} catch (IOException | JSONException ex)
 		{
 			Log.d(LOG_TAG, "error");
@@ -198,13 +195,11 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 		Uri finalUri = downloadFile(response, token);
 
-		Log.i(LOG_TAG, finalUri.toString());
-
-		setArtwork(new Artwork.Builder()
+		addArtwork(new Artwork.Builder()
 				.title(title)
 				.byline(byline)
-				.token(token)
 				.persistentUri(finalUri)
+				.token(token)
 				.webUri(Uri.parse(webUri))
 				.build());
 	}
