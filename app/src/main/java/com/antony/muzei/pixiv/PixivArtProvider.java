@@ -31,6 +31,10 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import android.R.string;
+
+import static android.content.Context.MODE_PRIVATE;
+
 public class PixivArtProvider extends MuzeiArtProvider
 {
 	private static final int LIMIT = 5;
@@ -39,23 +43,26 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
-	// placeholder for future functions that require auth, such as bookmark or feed
 	private boolean checkAuth()
 	{
-		SharedPreferences preferences = getContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-		if (!preferences.getBoolean("pref_useAuth", false))
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+		if (!sharedPreferences.getBoolean("pref_useAuth", false))
 		{
+			Log.d(LOG_TAG, "auth not enable");
 			//return false;
 		}
-		String loginId = preferences.getString("pref_loginId", "");
-		String loginPassword = preferences.getString("pref_loginPassword", "");
+		Log.d(LOG_TAG, "auth enabled, proceeding...");
+		// TODO
+		String loginId = sharedPreferences.getString("pref_loginId", "");
+		String loginPassword = sharedPreferences.getString("pref_loginPassword", "");
 		if (loginId.isEmpty() || loginPassword.isEmpty())
 		{
-			//return false;
+			Log.e(LOG_TAG, "no username or password");
+			return false;
 		}
 
 
-		String refreshToken = preferences.getString("refreshToken", "");
+		String refreshToken = sharedPreferences.getString("refreshToken", "");
 
 		Uri.Builder authQueryBuilder = new Uri.Builder()
 				.appendQueryParameter("get_secure_url", Integer.toString(1))
@@ -64,32 +71,43 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 		if (refreshToken.isEmpty())
 		{
+			Log.d(LOG_TAG, "empty refresh token");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
 					.appendQueryParameter("username", loginId)
 					.appendQueryParameter("password", loginPassword)
 					.build();
 		} else
 		{
+			Log.d(LOG_TAG, "found refresh token");
 			authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
 					.appendQueryParameter("refresh_token", refreshToken)
 					.build();
 		}
 		Uri authQuery = authQueryBuilder.build();
 
-		String accessToken = preferences.getString("accessToken", "");
+		String accessToken = sharedPreferences.getString("accessToken", "");
 
 		Response response;
+		JSONObject ret;
+		JSONObject tokens = new JSONObject();
 		try
 		{
 			response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, accessToken);
-		}
-		catch (IOException e)
+			ret = new JSONObject(response.body().string());
+			tokens = ret.getJSONObject("response");
+
+			SharedPreferences.Editor editor = sharedPreferences.edit();
+			editor.putString("accessToken", tokens.getString("access_token"));
+			editor.putString("refreshToken", tokens.getString("refresh_token"));
+			editor.putString("deviceToken", tokens.getString("device_token"));
+		} catch (IOException | JSONException ex)
 		{
-			e.printStackTrace();
+			ex.printStackTrace();
+			return false;
 		}
-		//String accessToken =
-		//SharedPreferences.Editor editor = preferences.edit();
-		return false;
+		Log.i(LOG_TAG, "auth ok");
+
+		return true;
 	}
 
 	private Response sendPostRequest(String url, Uri authQuery, String accessToken) throws IOException
@@ -221,6 +239,14 @@ public class PixivArtProvider extends MuzeiArtProvider
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+		String mode = sharedPreferences.getString("pref_updateMode", "");
+		Log.d(LOG_TAG, "mode: " + mode);
+		if (mode.equals("follow") || mode.equals("bookmark"))
+		{
+			Log.d(LOG_TAG, "authenticating...");
+			checkAuth();
+		}
 		JSONObject overallJson;
 		JSONArray contents;
 		JSONObject pic0Meta;
@@ -242,9 +268,12 @@ public class PixivArtProvider extends MuzeiArtProvider
 			rankingResponse.close();
 			contents = overallJson.getJSONArray("contents");
 
+			// Prevent manga or gifs from being chosen
 			Random random = new Random();
-			int cursor = random.nextInt(contents.length());
-			pic0Meta = contents.getJSONObject(cursor);
+			do
+			{
+				pic0Meta = contents.getJSONObject(random.nextInt(contents.length()));
+			} while (pic0Meta.getInt("illust_type") != 0);
 
 			title = pic0Meta.getString("title");
 			byline = pic0Meta.getString("user_name");

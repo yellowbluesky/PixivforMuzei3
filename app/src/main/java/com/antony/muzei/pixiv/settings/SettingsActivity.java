@@ -1,5 +1,7 @@
 package com.antony.muzei.pixiv.settings;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.appcompat.app.ActionBar;
@@ -25,6 +27,8 @@ public class SettingsActivity extends AppCompatActivity
 		{
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
+//		String sharedPrefFile = getApplicationContext().getPackageName() + "_implementation";
+//		SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
 	}
 
 	public static class SettingsFragment extends PreferenceFragmentCompat
