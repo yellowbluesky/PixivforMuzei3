@@ -28,6 +28,8 @@ import okhttp3.Response;
 
 public class PixivArtProvider extends MuzeiArtProvider
 {
+	private static final int LIMIT = 5;
+	private static final String LOG_TAG = "PIXIV";
 	private final String mode = "daily_rank";
 
 	private String userId = "";
@@ -145,6 +147,9 @@ public class PixivArtProvider extends MuzeiArtProvider
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
+		TestKotlin test = new TestKotlin();
+		int hdsh = test.hello();
+		Log.d(LOG_TAG, Integer.toString(hdsh));
 		JSONObject overallJson;
 		JSONArray contents;
 		JSONObject pic0Meta;
@@ -158,13 +163,17 @@ public class PixivArtProvider extends MuzeiArtProvider
 			Response rankingResponse = sendGetRequest(PixivArtProviderDefines.DAILY_RANKING_URL);
 			if (!rankingResponse.isSuccessful())
 			{
-				Log.e("PIXIV", "Could not get overall ranking JSON");
+				Log.e(LOG_TAG, "Could not get overall ranking JSON");
 				return;
 			}
 
 			overallJson = new JSONObject((rankingResponse.body().string()));
 			contents = overallJson.getJSONArray("contents");
 
+			for(int i = 0; i < LIMIT; i++)
+			{
+
+			}
 			Random random = new Random();
 			int cursor = random.nextInt(contents.length());
 			pic0Meta = contents.getJSONObject(cursor);
@@ -173,11 +182,11 @@ public class PixivArtProvider extends MuzeiArtProvider
 			byline = pic0Meta.getString("user_name");
 			token = pic0Meta.getString("illust_id");
 			thumbUri = pic0Meta.getString(("url"));
-			Log.i("PIXIV", title);
-			Log.i("PIXIV", token);
+			Log.i(LOG_TAG, title);
+			Log.i(LOG_TAG, token);
 		} catch (IOException | JSONException ex)
 		{
-			Log.d("PIXIV", "error");
+			Log.d(LOG_TAG, "error");
 			ex.printStackTrace();
 			return;
 		}
@@ -187,12 +196,12 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Response response = getRemoteFileExtension(thumbUri);
 		if (response == null)
 		{
-			Log.e("PIXIV", "could not get file extension from Pixiv");
+			Log.e(LOG_TAG, "could not get file extension from Pixiv");
 		}
 
 		Uri finalUri = downloadFile(response, token);
 
-		Log.i("PIXIV", finalUri.toString());
+		Log.i(LOG_TAG, finalUri.toString());
 
 		setArtwork(new Artwork.Builder()
 				.title(title)
