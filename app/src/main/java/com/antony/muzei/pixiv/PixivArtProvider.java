@@ -115,7 +115,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			return null;
 		} finally
 		{
-			response.body().close();
+			response.close();
 		}
 
 		return Uri.fromFile(downloadedFile);
@@ -168,6 +168,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			}
 
 			overallJson = new JSONObject((rankingResponse.body().string()));
+			rankingResponse.close();
 			contents = overallJson.getJSONArray("contents");
 
 			Random random = new Random();
