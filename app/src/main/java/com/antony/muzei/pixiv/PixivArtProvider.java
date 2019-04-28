@@ -127,7 +127,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.addHeader("App-OS-Version", "10.3.1")
 				.addHeader("App-Version", "6.9.0")
 				.addHeader("Content-type", body.contentType().toString())
-				.addHeader("Authorization", accessToken)
+				.addHeader("Authorization", "Bearer " + accessToken)
 				.post(body)
 				.url(url);
 		return httpClient.newCall(builder.build()).execute();
@@ -327,7 +327,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 		String webUri = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token;
 
-		Response response = getRemoteFileExtension(thumbUri);
 		if (response == null)
 		{
 			Log.e(LOG_TAG, "could not get file extension from Pixiv");
