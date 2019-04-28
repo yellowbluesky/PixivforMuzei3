@@ -185,6 +185,23 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return httpClient.newCall(builder.build()).execute();
 	}
 
+	private Response sendGetRequestAuth(String url) throws IOException
+	{
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+		OkHttpClient httpClient = new OkHttpClient.Builder()
+				.build();
+
+		Request.Builder builder = new Request.Builder()
+				.addHeader("User-Agent", "PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)")
+				.addHeader("App-OS", "ios")
+				.addHeader("App-OS-Version", "10.3.1")
+				.addHeader("App-Version", "6.9.0")
+				.addHeader("Authorization", "Bearer " + sharedPreferences.getString("accessToken", ""))
+				.url(url);
+
+		return httpClient.newCall(builder.build()).execute();
+	}
+
 	private Uri downloadFile(Response response, String token)
 	{
 		Context context = getContext();
@@ -259,7 +276,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 		try
 		{
 			String url = getUpdateUriInfo();
-			Response rankingResponse = sendGetRequest(url);
+			Response rankingResponse;
+			if (mode.equals("follow") || mode.equals("bookmark"))
+			{
+				rankingResponse = sendGetRequestAuth(url);
+			} else
+			{
+				rankingResponse = sendGetRequest(url);
+			}
+
 			if (!rankingResponse.isSuccessful())
 			{
 				Log.e(LOG_TAG, "Could not get overall ranking JSON");
@@ -325,7 +350,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			return;
 		}
 
-		String webUri = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token;
+		String webUri = PixivArtProviderDefines.MEMBER_ILLUST_URL + token;
 
 		if (response == null)
 		{
