@@ -49,19 +49,16 @@ public class PixivArtProvider extends MuzeiArtProvider
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 		if (!sharedPreferences.getBoolean("pref_useAuth", false))
 		{
-			Log.d(LOG_TAG, "auth not enable");
-			//return false;
+			Log.d(LOG_TAG, "Authentication not needed, how did you even get here?");
+			return false;
 		}
-		Log.d(LOG_TAG, "auth enabled, proceeding...");
-		// TODO
 		String loginId = sharedPreferences.getString("pref_loginId", "");
 		String loginPassword = sharedPreferences.getString("pref_loginPassword", "");
 		if (loginId.isEmpty() || loginPassword.isEmpty())
 		{
-			Log.e(LOG_TAG, "no username or password");
+			Log.e(LOG_TAG, "Username or password is empty");
 			return false;
 		}
-
 
 		String refreshToken = sharedPreferences.getString("refreshToken", "");
 
@@ -73,30 +70,26 @@ public class PixivArtProvider extends MuzeiArtProvider
 		//if (refreshToken.isEmpty())
 		if (true)
 		{
-			Log.d(LOG_TAG, "empty refresh token");
+			Log.d(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
 					.appendQueryParameter("username", loginId)
-					.appendQueryParameter("password", loginPassword)
-					.build();
+					.appendQueryParameter("password", loginPassword);
 		} else
 		{
 			Log.d(LOG_TAG, "found refresh token");
 			authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
-					.appendQueryParameter("refresh_token", refreshToken)
-					.build();
+					.appendQueryParameter("refresh_token", refreshToken);
 		}
 		Uri authQuery = authQueryBuilder.build();
 
-		String accessToken = sharedPreferences.getString("accessToken", "");
-
 		Response response;
-		JSONObject ret;
+		JSONObject authResponse;
 		JSONObject tokens = new JSONObject();
 		try
 		{
-			response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, accessToken);
-			ret = new JSONObject(response.body().string());
-			tokens = ret.getJSONObject("response");
+			response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, "");
+			authResponse = new JSONObject(response.body().string());
+			tokens = authResponse.getJSONObject("response");
 
 			SharedPreferences.Editor editor = sharedPreferences.edit();
 			editor.putString("accessToken", tokens.getString("access_token"));
@@ -108,7 +101,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			ex.printStackTrace();
 			return false;
 		}
-		Log.i(LOG_TAG, "auth ok");
+		Log.i(LOG_TAG, "Successfully authorised");
 
 		return true;
 	}
