@@ -5,6 +5,6 @@ Inspired by https://github.com/dahlia/muzei-pixiv, aim is to improve functionali
 
 Uses official API endpoints of Pixiv.net
 
-Current release at pulling images from daily, weekly, or monthly ranking
+Current release succeeds at pulling images from daily, weekly, or monthly ranking
 
 Next release will implement pulling images from authenticated sources, feed or bookmarks
