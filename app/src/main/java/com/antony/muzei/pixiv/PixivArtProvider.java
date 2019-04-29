@@ -79,12 +79,12 @@ public class PixivArtProvider extends MuzeiArtProvider
 		{
 			Log.d(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
-					.appendQueryParameter("username", sharedPreferences.getString("pref_loginId", ""));
+					.appendQueryParameter("username", sharedPreferences.getString("pref_loginId", ""))
 					.appendQueryParameter("password", sharedPreferences.getString("pref_loginPassword", ""));
 		}
 		else
 		{
-			Log.d(LOG_TAG, "Found refresh token");
+			Log.d(LOG_TAG, "Found refresh token, using it to request an access token");
 			authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
 					.appendQueryParameter("refresh_token", sharedPreferences.getString("refreshToken", ""));
 		}
