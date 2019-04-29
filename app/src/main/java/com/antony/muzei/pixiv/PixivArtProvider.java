@@ -61,52 +61,50 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
-	private boolean checkAuth()
+	// Returns true when an acccess token is found or successfully obtained
+	private Boolean getAccessToken()
 	{
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-		if (!sharedPreferences.getBoolean("pref_useAuth", false))
+		if(!sharedPreferences.getString("accessToken", "").isEmpty())
 		{
-			Log.d(LOG_TAG, "Authentication not needed, how did you even get here?");
-			return false;
+			return true;
 		}
-		String loginId = sharedPreferences.getString("pref_loginId", "");
-		String loginPassword = sharedPreferences.getString("pref_loginPassword", "");
-		if (loginId.isEmpty() || loginPassword.isEmpty())
-		{
-			Log.e(LOG_TAG, "Username or password is empty");
-			return false;
-		}
-
-		String refreshToken = sharedPreferences.getString("refreshToken", "");
 
 		Uri.Builder authQueryBuilder = new Uri.Builder()
 				.appendQueryParameter("get_secure_url", Integer.toString(1))
 				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
 				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
-		//if (refreshToken.isEmpty())
-		if (true)
+		if(sharedPreferences.getString("refreshToken", "").isEmpty())
 		{
 			Log.d(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
-					.appendQueryParameter("username", loginId)
-					.appendQueryParameter("password", loginPassword);
-		} else
-		{
-			Log.d(LOG_TAG, "found refresh token");
-			authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
-					.appendQueryParameter("refresh_token", refreshToken);
+					.appendQueryParameter("username", sharedPreferences.getString("pref_loginId", ""));
+					.appendQueryParameter("password", sharedPreferences.getString("pref_loginPassword", ""));
 		}
+		else
+		{
+			Log.d(LOG_TAG, "Found refresh token");
+			authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
+					.appendQueryParameter("refresh_token", sharedPreferences.getString("refreshToken", ""));
+		}
+
 		Uri authQuery = authQueryBuilder.build();
 
-		Response response;
-		JSONObject authResponse;
-		JSONObject tokens = new JSONObject();
 		try
 		{
-			response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, "");
-			authResponse = new JSONObject(response.body().string());
-			tokens = authResponse.getJSONObject("response");
+			// TODO can probably reduce the number of lines this takes, at expense of understandability
+			Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, "");
+			JSONObject authResponseBody = new JSONObject(response.body().string());
+			JSONObject tokens = authResponseBody.getJSONObject("response");
+			response.close();
+			// TODO check if response indicates a failed auth attempt
+			/*
+			if (auth == failed)
+			{
+				return false;
+			}
+			*/
 
 			SharedPreferences.Editor editor = sharedPreferences.edit();
 			editor.putString("accessToken", tokens.getString("access_token"));
@@ -118,8 +116,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 			ex.printStackTrace();
 			return false;
 		}
-		Log.i(LOG_TAG, "Successfully authorised");
-
 		return true;
 	}
 
@@ -137,7 +133,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.addHeader("App-OS-Version", "10.3.1")
 				.addHeader("App-Version", "6.9.0")
 				.addHeader("Content-type", body.contentType().toString())
-				.addHeader("Authorization", "Bearer " + accessToken)
 				.post(body)
 				.url(url);
 		return httpClient.newCall(builder.build()).execute();
@@ -152,22 +147,10 @@ public class PixivArtProvider extends MuzeiArtProvider
 		switch (mode)
 		{
 			case "follow":
-				if (checkAuth())
-				{
-					urlString = PixivArtProviderDefines.FOLLOW_URL + "?restrict=public";
-				} else
-				{
-					urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
-				}
+				urlString = PixivArtProviderDefines.FOLLOW_URL + "?restrict=public";
 				break;
 			case "bookmark":
-				if (checkAuth())
-				{
-					urlString = PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public";
-				} else
-				{
-					urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
-				}
+				urlString = PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public";
 				break;
 			case "weekly_rank":
 				urlString = PixivArtProviderDefines.WEEKLY_RANKING_URL;
