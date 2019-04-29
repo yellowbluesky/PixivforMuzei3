@@ -80,6 +80,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		//if (sharedPreferences.getString("refreshToken", "").isEmpty())
 		if (true)
 		{
+			Log.d(LOG_TAG, sharedPreferences.getString("pref_loginId", ""));
 			Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
 					.appendQueryParameter("username", sharedPreferences.getString("pref_loginId", ""))
@@ -181,7 +182,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	private Response sendGetRequestAuth(String url, String accessToken) throws IOException
 	{
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 		OkHttpClient httpClient = new OkHttpClient.Builder()
 				.build();
 
@@ -257,15 +257,19 @@ public class PixivArtProvider extends MuzeiArtProvider
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 		String mode = sharedPreferences.getString("pref_updateMode", "");
 		Log.d(LOG_TAG, "mode: " + mode);
-		JSONObject overallJson, pictureMetadata;
+		JSONObject overallJson = null, pictureMetadata;
 		JSONArray contents;
 		String title, byline, token, thumbUri, imageUrl;
 		Response response, rankingResponse;
 
+		getAccessToken();
+		Log.d(LOG_TAG, sharedPreferences.getString("userId", ""));
+		Log.d(LOG_TAG, sharedPreferences.getString("accessToken", ""));
 		try
 		{
 			if (mode.equals("follow") || mode.equals("bookmark"))
 			{
+
 				rankingResponse = sendGetRequestAuth(
 						getUpdateUriInfo(
 								sharedPreferences.getString("pref_updateMode", ""),
@@ -293,15 +297,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 			rankingResponse.close();
 
 			Random random = new Random();
-			if (!mode.equals("follow") || !mode.equals("bookmark"))
+			if(!mode.equals("follow") && !mode.equals("bookmark"))
 			{
-				Log.d(LOG_TAG, "ranking");
+				Log.d(LOG_TAG, " entered ranking");
 				// Prevents manga or gifs from being chosen
 				// TODO make this a setting
 				do
 				{
 					pictureMetadata = overallJson.getJSONArray("contents")
-							.getJSONObject(random.nextInt(50));
+							.getJSONObject(random.nextInt(overallJson.length()));
 				} while (pictureMetadata.getInt("illust_type") != 0);
 				Log.d(LOG_TAG, "ranking");
 				title = pictureMetadata.getString("title");
@@ -315,7 +319,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			{
 				Log.d(LOG_TAG, "feed or bookmark");
 				pictureMetadata = overallJson.getJSONArray("illusts")
-						.getJSONObject(random.nextInt(50));
+						.getJSONObject(random.nextInt(overallJson.length()));
 				title = pictureMetadata.getString("title");
 				byline = pictureMetadata.getJSONObject("user").getString("name");
 				token = pictureMetadata.getString("id");
@@ -342,6 +346,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		} catch (IOException | JSONException ex)
 		{
 			Log.d(LOG_TAG, "error");
+			Log.d(LOG_TAG, overallJson.toString());
 			ex.printStackTrace();
 			return;
 		}
