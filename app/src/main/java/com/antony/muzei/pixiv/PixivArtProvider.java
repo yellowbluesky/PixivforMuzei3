@@ -77,8 +77,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
 		// If we did not have an access token or if it had expired, we proceed to build a request to acquire one
-		//if (sharedPreferences.getString("refreshToken", "").isEmpty())
-		if (true)
+		if (sharedPreferences.getString("refreshToken", "").isEmpty())
+		//if (true)
 		{
 			Log.d(LOG_TAG, sharedPreferences.getString("pref_loginId", ""));
 			Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
