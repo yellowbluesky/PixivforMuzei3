@@ -316,7 +316,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				do
 				{
 					pictureMetadata = overallJson.getJSONArray("contents")
-							.getJSONObject(random.nextInt(50));
+							.getJSONObject(random.nextInt(overallJson.getJSONArray("contents").length()));
 				} while (pictureMetadata.getInt("illust_type") != 0);
 				Log.d(LOG_TAG, "ranking");
 				title = pictureMetadata.getString("title");
@@ -329,9 +329,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 			else
 			{
 				Log.d(LOG_TAG, "feed or bookmark");
-				Log.d(LOG_TAG,overallJson.toString());
 				pictureMetadata = overallJson.getJSONArray("illusts")
-						.getJSONObject(random.nextInt(30));
+						.getJSONObject(random.nextInt(overallJson.getJSONArray("illusts").length()));
 				title = pictureMetadata.getString("title");
 				byline = pictureMetadata.getJSONObject("user").getString("name");
 				token = pictureMetadata.getString("id");
