@@ -61,15 +61,16 @@ public class PixivArtProvider extends MuzeiArtProvider
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
 	// Returns true when an acccess token is found or successfully obtained
+	// Returns false when otherwise
 	private Boolean getAccessToken()
 	{
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 		// If we possess an access token, AND it has not expired
-//		if (!sharedPreferences.getString("accessToken", "").isEmpty() &&
-//				sharedPreferences.getLong("accessTokenIssueTime", 0) < System.currentTimeMillis() - 3600)
-//		{
-//			return true;
-//		}
+		if (!sharedPreferences.getString("accessToken", "").isEmpty() &&
+				sharedPreferences.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600)
+		{
+			return true;
+		}
 
 		Uri.Builder authQueryBuilder = new Uri.Builder()
 				.appendQueryParameter("get_secure_url", Integer.toString(1))
@@ -78,9 +79,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 		// If we did not have an access token or if it had expired, we proceed to build a request to acquire one
 		if (sharedPreferences.getString("refreshToken", "").isEmpty())
-		//if (true)
 		{
-			Log.d(LOG_TAG, sharedPreferences.getString("pref_loginId", ""));
 			Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
 					.appendQueryParameter("username", sharedPreferences.getString("pref_loginId", ""))
@@ -98,16 +97,16 @@ public class PixivArtProvider extends MuzeiArtProvider
 		{
 			Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, "");
 			JSONObject authResponseBody = new JSONObject(response.body().string());
+			response.close();
 			// Check if error here
 			if (authResponseBody.has("has_error"))
 			{
 				// TODO maybe a toast message indicating error
-				response.close();
 				Log.i(LOG_TAG, "Error authenticating, check username or password");
 				return false;
 			}
+
 			JSONObject tokens = authResponseBody.getJSONObject("response");
-			response.close();
 
 			SharedPreferences.Editor editor = sharedPreferences.edit();
 			editor.putString("accessToken", tokens.getString("access_token"));
@@ -196,16 +195,17 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return httpClient.newCall(builder.build()).execute();
 	}
 
+	// TODO Maybe mark this function as throwing exception
 	private Uri downloadFile(Response response, String token)
 	{
 		Context context = getContext();
+		// File extensions doesn't even matter when saving locally
+		// Only there to more easily allow local file manager access
 		File downloadedFile = new File(context.getExternalCacheDir(), token + ".png");
-		FileOutputStream fileStream = null;
-		InputStream inputStream = null;
 		try
 		{
-			fileStream = new FileOutputStream(downloadedFile);
-			inputStream = response.body().byteStream();
+			FileOutputStream fileStream = new FileOutputStream(downloadedFile);
+			InputStream inputStream = response.body().byteStream();
 			final byte[] buffer = new byte[1024 * 50];
 			int read;
 			while ((read = inputStream.read(buffer)) > 0)
@@ -225,6 +225,10 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return Uri.fromFile(downloadedFile);
 	}
 
+	// TODO Also mark this method as throwing exceptions
+	// For ranking images, we are only provided with an illustration id
+	// We require the correct file extension in order to pull the picture
+	// So we cycle through all common file extensions until we get a good response
 	private Response getRemoteFileExtension(String url)
 	{
 		Response response;
@@ -262,14 +266,18 @@ public class PixivArtProvider extends MuzeiArtProvider
 		String title, byline, token, thumbUri, imageUrl;
 		Response response, rankingResponse;
 
-		getAccessToken();
-		Log.d(LOG_TAG, sharedPreferences.getString("userId", ""));
-		Log.d(LOG_TAG, sharedPreferences.getString("accessToken", ""));
+		if(!getAccessToken())
+		{
+			Log.e(LOG_TAG, "Authentication failed, switching to daily_rank");
+			mode = "daily_rank";
+			// TODO commit the change to mode			
+		}
+
 		try
 		{
+			// TODO Refactor this section remove the doubled up mode check
 			if (mode.equals("follow") || mode.equals("bookmark"))
 			{
-
 				rankingResponse = sendGetRequestAuth(
 						getUpdateUriInfo(
 								sharedPreferences.getString("pref_updateMode", ""),
@@ -283,7 +291,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 								""));
 			}
 
-			// If HTTP code was anything other than 200 - 301, failure
+			// If HTTP code was anything other than 200 ... 301, failure
 			if (!rankingResponse.isSuccessful())
 			{
 				Log.e(LOG_TAG, "HTTP error: " + rankingResponse.code());
@@ -299,7 +307,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			Random random = new Random();
 			if(!mode.equals("follow") && !mode.equals("bookmark"))
 			{
-				Log.d(LOG_TAG, " entered ranking");
+				Log.d(LOG_TAG, "Ranking");
 				// Prevents manga or gifs from being chosen
 				// TODO make this a setting
 				do
