@@ -69,16 +69,19 @@ public class PixivArtProvider extends MuzeiArtProvider
 		if (!sharedPreferences.getString("accessToken", "").isEmpty() &&
 				sharedPreferences.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600)
 		{
+			Log.d(LOG_TAG, "Found valid access token");
 			return true;
 		}
+		Log.d(LOG_TAG, "No valid access token found, acquiring one");
 
+		// If we did not have an access token or if it had expired, we proceed to build a request to acquire one
 		Uri.Builder authQueryBuilder = new Uri.Builder()
 				.appendQueryParameter("get_secure_url", Integer.toString(1))
 				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
 				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
-		// If we did not have an access token or if it had expired, we proceed to build a request to acquire one
-		if (sharedPreferences.getString("refreshToken", "").isEmpty())
+		//if (sharedPreferences.getString("refreshToken", "").isEmpty())
+		if(true)
 		{
 			Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
@@ -114,7 +117,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			editor.putString("refreshToken", tokens.getString("refresh_token"));
 			editor.putString("userId", tokens.getJSONObject("user").getString("id"));
 			editor.putString("deviceToken", tokens.getString("device_token"));
-			editor.commit();
+			editor.apply();
 		} catch (IOException | JSONException ex)
 		{
 			ex.printStackTrace();
@@ -201,7 +204,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Context context = getContext();
 		// File extensions doesn't even matter when saving locally
 		// Only there to more easily allow local file manager access
-		File downloadedFile = new File(context.getExternalCacheDir(), token + ".png");
+		File downloadedFile = new File(context.getCacheDir(), token + ".png");
 		try
 		{
 			FileOutputStream fileStream = new FileOutputStream(downloadedFile);
@@ -304,7 +307,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 			overallJson = new JSONObject((rankingResponse.body().string()));
 			rankingResponse.close();
 
-			Random random = new Random();
+			Random random = new Random(System.currentTimeMillis());
 			if(!mode.equals("follow") && !mode.equals("bookmark"))
 			{
 				Log.d(LOG_TAG, "Ranking");
@@ -313,7 +316,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				do
 				{
 					pictureMetadata = overallJson.getJSONArray("contents")
-							.getJSONObject(random.nextInt(overallJson.length()));
+							.getJSONObject(random.nextInt(50));
 				} while (pictureMetadata.getInt("illust_type") != 0);
 				Log.d(LOG_TAG, "ranking");
 				title = pictureMetadata.getString("title");
@@ -326,8 +329,9 @@ public class PixivArtProvider extends MuzeiArtProvider
 			else
 			{
 				Log.d(LOG_TAG, "feed or bookmark");
+				Log.d(LOG_TAG,overallJson.toString());
 				pictureMetadata = overallJson.getJSONArray("illusts")
-						.getJSONObject(random.nextInt(overallJson.length()));
+						.getJSONObject(random.nextInt(30));
 				title = pictureMetadata.getString("title");
 				byline = pictureMetadata.getJSONObject("user").getString("name");
 				token = pictureMetadata.getString("id");

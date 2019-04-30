@@ -44,7 +44,8 @@
             android:entries="@array/pref_updateMode_entries"
             android:entryValues="@array/pref_updateMode_entryValues"
             android:defaultValue="@string/pref_updateMode_default"
-            android:persistent="true" />
+            android:persistent="true"
+            android:summary="%s"/>
 
     </PreferenceCategory>
 
