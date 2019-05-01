@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".settings.SettingsActivity"
-            android:label="@string/title_activity_settings"
+            android:label="@string/action_bar_title"
             android:exported="true"></activity>
 
         <provider
