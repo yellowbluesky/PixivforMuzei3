@@ -1,7 +1,7 @@
 # PixivforMuzei3
 Pixiv plugin for the new Muzei 3 API
 
-Inspired by https://github.com/dahlia/muzei-pixiv, aim is to improve functionality and add compatability with the new Muzei 3 API
+Inspired by https://github.com/dahlia/muzei-pixiv, aim is to  add compatability with the new Muzei 3 API while also improving functionality
 
 Uses official API endpoints of Pixiv.net
 
