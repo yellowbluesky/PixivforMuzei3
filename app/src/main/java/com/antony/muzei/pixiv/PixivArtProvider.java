@@ -62,15 +62,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	// Returns true when an acccess token is found or successfully obtained
 	// Returns false when otherwise
-	private Boolean getAccessToken()
+	private String getAccessToken()
 	{
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 		// If we possess an access token, AND it has not expired
-		if (!sharedPreferences.getString("accessToken", "").isEmpty() &&
-				sharedPreferences.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600)
+		if (!sharedPrefs.getString("accessToken", "").isEmpty() &&
+				sharedPrefs.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600)
 		{
 			Log.d(LOG_TAG, "Found valid access token");
-			return true;
+			return sharedPrefs.getString("accessToken", "");
 		}
 		Log.d(LOG_TAG, "No valid access token found, acquiring one");
 
@@ -80,25 +80,25 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
 				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
-		//if (sharedPreferences.getString("refreshToken", "").isEmpty())
+		//if (sharedPrefs.getString("refreshToken", "").isEmpty())
 		if(true)
 		{
 			Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
-					.appendQueryParameter("username", sharedPreferences.getString("pref_loginId", ""))
-					.appendQueryParameter("password", sharedPreferences.getString("pref_loginPassword", ""));
+					.appendQueryParameter("username", sharedPrefs.getString("pref_loginId", ""))
+					.appendQueryParameter("password", sharedPrefs.getString("pref_loginPassword", ""));
 		} else
 		{
 			Log.i(LOG_TAG, "Found refresh token, using it to request an access token");
 			authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
-					.appendQueryParameter("refresh_token", sharedPreferences.getString("refreshToken", ""));
+					.appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""));
 		}
 
 		Uri authQuery = authQueryBuilder.build();
 
 		try
 		{
-			Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery, "");
+			Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
 			JSONObject authResponseBody = new JSONObject(response.body().string());
 			response.close();
 			// Check if error here
@@ -106,12 +106,12 @@ public class PixivArtProvider extends MuzeiArtProvider
 			{
 				// TODO maybe a toast message indicating error
 				Log.i(LOG_TAG, "Error authenticating, check username or password");
-				return false;
+				return "";
 			}
 
 			JSONObject tokens = authResponseBody.getJSONObject("response");
 
-			SharedPreferences.Editor editor = sharedPreferences.edit();
+			SharedPreferences.Editor editor = sharedPrefs.edit();
 			editor.putString("accessToken", tokens.getString("access_token"));
 			editor.putLong("accessTokenIssueTime", System.currentTimeMillis());
 			editor.putString("refreshToken", tokens.getString("refresh_token"));
@@ -121,12 +121,14 @@ public class PixivArtProvider extends MuzeiArtProvider
 		} catch (IOException | JSONException ex)
 		{
 			ex.printStackTrace();
-			return false;
+			return "";
 		}
-		return true;
+		return sharedPrefs.getString("accessToken", "");
 	}
 
-	private Response sendPostRequest(String url, Uri authQuery, String accessToken) throws IOException
+	// Only used when acquiring an access token
+	// Therefore all necessayr headers are hardcoded in and not dynamically chosen 
+	private Response sendPostRequest(String url, Uri authQuery) throws IOException
 	{
 		String contentType = "application/x-www-form-urlencoded";
 		OkHttpClient httpClient = new OkHttpClient.Builder()
@@ -169,6 +171,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return urlString;
 	}
 
+	// Used for pulling (unauthenticated) ranking JSON's
 	private Response sendGetRequest(String url) throws IOException
 	{
 		OkHttpClient httpClient = new OkHttpClient.Builder()
@@ -182,6 +185,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return httpClient.newCall(builder.build()).execute();
 	}
 
+	// Used for pulling authenticated feed and bookmark JSON's
 	private Response sendGetRequestAuth(String url, String accessToken) throws IOException
 	{
 		OkHttpClient httpClient = new OkHttpClient.Builder()
@@ -199,11 +203,13 @@ public class PixivArtProvider extends MuzeiArtProvider
 	}
 
 	// TODO Maybe mark this function as throwing exception
+	// Downloads the selected image to cache folder on local storage
+	// Cache folder is periodically pruned of its oldest images by Android
 	private Uri downloadFile(Response response, String token)
 	{
 		Context context = getContext();
-		// File extensions doesn't even matter when saving locally
-		// Only there to more easily allow local file manager access
+		// File extensions do not matter to muzei
+		// Only there to more easily allow local user to open them
 		File downloadedFile = new File(context.getCacheDir(), token + ".png");
 		try
 		{
@@ -236,13 +242,20 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		Response response;
 
-		String uri0 = url.replace("c/240x480/", "");
-		String uri1 = uri0.replace("img-master", "img-original");
-		String uri2 = uri1.replace("_master1200", "");
-		String uri3 = uri2.substring(0, uri2.length() - 4);
+		// All urls have predictable formats
+		// TODO check the function of this
+		String uri0 = url
+			.replace("c/240x480/", "")
+			.replace("img-master", "img-original")
+			.replace("_master1200", "")
+			.substring(0, url.length() - 4);
+		// String uri0 = url.replace("c/240x480/", "");
+		// String uri1 = uri0.replace("img-master", "img-original");
+		// String uri2 = uri1.replace("_master1200", "");
+		// String uri3 = uri2.substring(0, uri2.length() - 4);
 		for (String suffix : IMAGE_SUFFIXS)
 		{
-			String uri = uri3 + suffix;
+			String uri = uri0 + suffix;
 			try
 			{
 				response = sendGetRequest(uri);
@@ -261,36 +274,36 @@ public class PixivArtProvider extends MuzeiArtProvider
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-		String mode = sharedPreferences.getString("pref_updateMode", "");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		String mode = sharedPrefs.getString("pref_updateMode", "");
 		Log.d(LOG_TAG, "mode: " + mode);
 		JSONObject overallJson = null, pictureMetadata;
 		JSONArray contents;
 		String title, byline, token, thumbUri, imageUrl;
 		Response response, rankingResponse;
 
-		if(!getAccessToken())
+		String accessToken = getAccessToken();
+		if(accessToken.isEmpty())
 		{
-			Log.e(LOG_TAG, "Authentication failed, switching to daily_rank");
+			Log.e(LOG_TAG, "Authentication failed, switching to Daily Ranking");
 			mode = "daily_rank";
-			// TODO commit the change to mode			
 		}
 
 		try
 		{
-			// TODO Refactor this section remove the doubled up mode check
 			if (mode.equals("follow") || mode.equals("bookmark"))
 			{
+				// This line here is a mess
 				rankingResponse = sendGetRequestAuth(
 						getUpdateUriInfo(
-								sharedPreferences.getString("pref_updateMode", ""),
-								sharedPreferences.getString("userId", "")),
-						sharedPreferences.getString("accessToken", ""));
+								sharedPrefs.getString("pref_updateMode", ""),
+								sharedPrefs.getString("userId", "")),
+						accessToken);
 			} else
 			{
 				rankingResponse = sendGetRequest(
 						getUpdateUriInfo(
-								sharedPreferences.getString("pref_updateMode", ""),
+								sharedPrefs.getString("pref_updateMode", ""),
 								""));
 			}
 
@@ -301,51 +314,35 @@ public class PixivArtProvider extends MuzeiArtProvider
 				JSONObject errorBody = new JSONObject(rankingResponse.body().string());
 				Log.e(LOG_TAG, errorBody.toString());
 				Log.e(LOG_TAG, "Could not get overall ranking JSON");
+				rankingResponse.close();
 				return;
 			}
 
 			overallJson = new JSONObject((rankingResponse.body().string()));
 			rankingResponse.close();
 
-			Random random = new Random(System.currentTimeMillis());
-			if(!mode.equals("follow") && !mode.equals("bookmark"))
+			Random random = new Random();
+			if(mode.equals("follow") || mode.equals("bookmark"))
 			{
-				Log.d(LOG_TAG, "Ranking");
-				// Prevents manga or gifs from being chosen
-				// TODO make this a setting
-				do
-				{
-					pictureMetadata = overallJson.getJSONArray("contents")
-							.getJSONObject(random.nextInt(overallJson.getJSONArray("contents").length()));
-				} while (pictureMetadata.getInt("illust_type") != 0);
-				Log.d(LOG_TAG, "ranking");
-				title = pictureMetadata.getString("title");
-				byline = pictureMetadata.getString("user_name");
-				token = pictureMetadata.getString("illust_id");
-				String thumbUrl = pictureMetadata.getString(("url"));
-				response = getRemoteFileExtension(thumbUrl);
-			}
-			// pictures from follow feed or bookmark
-			else
-			{
-				Log.d(LOG_TAG, "feed or bookmark");
+				Log.d(LOG_TAG, "Feed or bookmark");
+				// Raise an issue if this line proves too hard to understand
 				pictureMetadata = overallJson.getJSONArray("illusts")
 						.getJSONObject(random.nextInt(overallJson.getJSONArray("illusts").length()));
 				title = pictureMetadata.getString("title");
 				byline = pictureMetadata.getJSONObject("user").getString("name");
 				token = pictureMetadata.getString("id");
 
-				// picture pulled is a single image
+				// If picture pulled is a single image
 				if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
 				{
-					Log.d(LOG_TAG, "single image");
+					Log.d(LOG_TAG, "Single image");
 					imageUrl = pictureMetadata.getJSONObject("meta_single_page")
 							.getString("original_image_url");
 				}
-				// we have pulled an album, picking the first picture in album
+				// Otherwise we have pulled an album, picking the first picture in album
 				else
 				{
-					Log.d(LOG_TAG, "album");
+					Log.d(LOG_TAG, "Album");
 					imageUrl = pictureMetadata
 							.getJSONArray("meta_pages")
 							.getJSONObject(0)
@@ -354,11 +351,29 @@ public class PixivArtProvider extends MuzeiArtProvider
 				}
 				response = sendGetRequest(imageUrl);
 			}
+			else
+			{
+				Log.d(LOG_TAG, "Ranking");
+				// Prevents manga or gifs from being chosen
+				// TODO make this a setting
+				do
+				{
+					// Raise an issue if this line proves too hard to understand
+					pictureMetadata = overallJson.getJSONArray("contents")
+							.getJSONObject(random.nextInt(overallJson.getJSONArray("contents").length()));
+				} while (pictureMetadata.getInt("illust_type") != 0);
+				title = pictureMetadata.getString("title");
+				byline = pictureMetadata.getString("user_name");
+				token = pictureMetadata.getString("illust_id");
+				String thumbUrl = pictureMetadata.getString(("url"));
+				response = getRemoteFileExtension(thumbUrl);
+			}
 		} catch (IOException | JSONException ex)
 		{
 			Log.d(LOG_TAG, "error");
 			Log.d(LOG_TAG, overallJson.toString());
 			ex.printStackTrace();
+			response.close();
 			return;
 		}
 
