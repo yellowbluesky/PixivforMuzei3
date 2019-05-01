@@ -17,7 +17,7 @@
 <androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="@string/title_activity_settings">Settings">
+    <PreferenceCategory app:title="@string/auth_settings_prefCat_title">
 
         <SwitchPreference
             android:key="pref_useAuth"
@@ -37,6 +37,9 @@
             android:persistent="true"
             android:dependency="pref_useAuth"
             android:password="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/pull_feed_prefCat_settings">
         <ListPreference
             android:key="pref_updateMode"
             android:title="@string/pref_updateMode"
@@ -46,8 +49,10 @@
             android:defaultValue="@string/pref_updateMode_default"
             android:persistent="true"
             android:summary="%s"/>
-
+        <SwitchPreference
+            android:key="pref_illustType"
+            android:title="@string/pref_illustMode"
+            android:dialogTitle="@string/pref_illustMode"
+            android:persistent="true" />
     </PreferenceCategory>
-
-
 </androidx.preference.PreferenceScreen>

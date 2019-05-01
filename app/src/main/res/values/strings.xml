@@ -2,15 +2,12 @@
     <string name="app_name">Pixiv for Muzei 3</string>
     <string name="action_bar_title">Pixiv for Muzei 3 Settings</string>
     
-    <string name="title_activity_settings">Authentication Settings</string>
+    <string name="auth_settings_prefCat_title">Authentication Settings</string>
     <string name="pref_useAuth">Use authorization</string>
     <string name="pref_loginId">Login ID</string>
     <string name="pref_loginPassword">Login Password</string>
-    <string name="pull_picture_settings">Pulled picture settings</string>
+    <string name="pull_feed_prefCat_settings">Picture feed settings</string>
     <string name="pref_updateMode">Update mode</string>
     <string name="pref_updateMode_default">daily_rank</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
-</resources>
+    <string name="pref_illustMode">Allow manga in ranking</string>
+    </resources>

@@ -56,7 +56,7 @@ import static android.content.Context.MODE_PRIVATE;
 public class PixivArtProvider extends MuzeiArtProvider
 {
 	private static final int LIMIT = 5;
-	private static final String LOG_TAG = "PIXIV";
+	private static final String LOG_TAG = "PIXIV_DEBUG";
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
@@ -66,13 +66,23 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 		// If we possess an access token, AND it has not expired
-		if (!sharedPrefs.getString("accessToken", "").isEmpty() &&
-				sharedPrefs.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600)
+		//if (!sharedPrefs.getString("accessToken", "").isEmpty() &&s sharedPrefs.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600)
+		if (!sharedPrefs.getString("accessToken", "").isEmpty())
 		{
-			Log.d(LOG_TAG, "Found valid access token");
-			return sharedPrefs.getString("accessToken", "");
+			Log.d(LOG_TAG, "access token not empty");
+			if (sharedPrefs.getLong("accessTokenIssueTime", 0) > (System.currentTimeMillis() / 1000) - 3600)
+			{
+				Log.d(LOG_TAG, "access token not expired");
+				return sharedPrefs.getString("accessToken", "");
+
+			} else
+			{
+				Log.d(LOG_TAG, "access token expired");
+			}
+		} else
+		{
+			Log.d(LOG_TAG, "access token empty");
 		}
-		Log.d(LOG_TAG, "No valid access token found, acquiring one");
 
 		// If we did not have an access token or if it had expired, we proceed to build a request to acquire one
 		Uri.Builder authQueryBuilder = new Uri.Builder()
@@ -80,8 +90,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
 				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
-		//if (sharedPrefs.getString("refreshToken", "").isEmpty())
-		if(true)
+		if (sharedPrefs.getString("refreshToken", "").isEmpty())
+		//if (true)
 		{
 			Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
@@ -113,7 +123,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 			SharedPreferences.Editor editor = sharedPrefs.edit();
 			editor.putString("accessToken", tokens.getString("access_token"));
-			editor.putLong("accessTokenIssueTime", System.currentTimeMillis());
+			editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
 			editor.putString("refreshToken", tokens.getString("refresh_token"));
 			editor.putString("userId", tokens.getJSONObject("user").getString("id"));
 			editor.putString("deviceToken", tokens.getString("device_token"));
@@ -245,17 +255,17 @@ public class PixivArtProvider extends MuzeiArtProvider
 		// All urls have predictable formats
 		// TODO check the function of this
 		String uri0 = url
-			.replace("c/240x480/", "")
-			.replace("img-master", "img-original")
-			.replace("_master1200", "")
-			.substring(0, url.length() - 4);
+				.replace("c/240x480/", "")
+				.replace("img-master", "img-original")
+				.replace("_master1200", "");
+		String uri1 = uri0.substring(0, uri0.length() - 4);
 		// String uri0 = url.replace("c/240x480/", "");
 		// String uri1 = uri0.replace("img-master", "img-original");
 		// String uri2 = uri1.replace("_master1200", "");
 		// String uri3 = uri2.substring(0, uri2.length() - 4);
 		for (String suffix : IMAGE_SUFFIXS)
 		{
-			String uri = uri0 + suffix;
+			String uri = uri1 + suffix;
 			try
 			{
 				response = sendGetRequest(uri);
@@ -278,33 +288,35 @@ public class PixivArtProvider extends MuzeiArtProvider
 		String mode = sharedPrefs.getString("pref_updateMode", "");
 		Log.d(LOG_TAG, "mode: " + mode);
 		JSONObject overallJson = null, pictureMetadata;
-		JSONArray contents;
-		String title, byline, token, thumbUri, imageUrl;
-		Response response, rankingResponse;
+		String title, byline, token, imageUrl, accessToken = "";
+		Response response = null, rankingResponse;
 
-		String accessToken = getAccessToken();
-		if(accessToken.isEmpty())
+		// Gets an access token if required
+		// If the process failed in any way, then change modes to daily_rank
+		if (sharedPrefs.getBoolean("pref_useAuth", false))
 		{
-			Log.e(LOG_TAG, "Authentication failed, switching to Daily Ranking");
-			mode = "daily_rank";
+			accessToken = getAccessToken();
+			if (accessToken.isEmpty())
+			{
+				Log.e(LOG_TAG, "Authentication failed, switching to Daily Ranking");
+				mode = "daily_rank";
+			} else
+			{
+				Log.e(LOG_TAG, "Authentication success");
+			}
 		}
+
 
 		try
 		{
 			if (mode.equals("follow") || mode.equals("bookmark"))
 			{
-				// This line here is a mess
 				rankingResponse = sendGetRequestAuth(
-						getUpdateUriInfo(
-								sharedPrefs.getString("pref_updateMode", ""),
-								sharedPrefs.getString("userId", "")),
+						getUpdateUriInfo(mode, sharedPrefs.getString("userId", "")),
 						accessToken);
 			} else
 			{
-				rankingResponse = sendGetRequest(
-						getUpdateUriInfo(
-								sharedPrefs.getString("pref_updateMode", ""),
-								""));
+				rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
 			}
 
 			// If HTTP code was anything other than 200 ... 301, failure
@@ -322,12 +334,17 @@ public class PixivArtProvider extends MuzeiArtProvider
 			rankingResponse.close();
 
 			Random random = new Random();
-			if(mode.equals("follow") || mode.equals("bookmark"))
+			// If mode determine
+			if (mode.equals("follow") || mode.equals("bookmark"))
 			{
 				Log.d(LOG_TAG, "Feed or bookmark");
 				// Raise an issue if this line proves too hard to understand
-				pictureMetadata = overallJson.getJSONArray("illusts")
-						.getJSONObject(random.nextInt(overallJson.getJSONArray("illusts").length()));
+				// jfc this line is a mess
+				pictureMetadata = overallJson
+						.getJSONArray("illusts")
+						.getJSONObject(random.nextInt(overallJson
+								.getJSONArray("illusts")
+								.length()));
 				title = pictureMetadata.getString("title");
 				byline = pictureMetadata.getJSONObject("user").getString("name");
 				token = pictureMetadata.getString("id");
@@ -350,18 +367,25 @@ public class PixivArtProvider extends MuzeiArtProvider
 							.getString("original");
 				}
 				response = sendGetRequest(imageUrl);
-			}
-			else
+			} else
 			{
 				Log.d(LOG_TAG, "Ranking");
 				// Prevents manga or gifs from being chosen
-				// TODO make this a setting
-				do
+				if(sharedPrefs.getBoolean("pref_illustType", false))
 				{
-					// Raise an issue if this line proves too hard to understand
+					do
+					{
+						// Raise an issue if this line proves too hard to understand
+						pictureMetadata = overallJson.getJSONArray("contents")
+								.getJSONObject(random.nextInt(overallJson.getJSONArray("contents").length()));
+					} while (pictureMetadata.getInt("illust_type") != 0);
+				}
+				else
+				{
 					pictureMetadata = overallJson.getJSONArray("contents")
 							.getJSONObject(random.nextInt(overallJson.getJSONArray("contents").length()));
-				} while (pictureMetadata.getInt("illust_type") != 0);
+				}
+
 				title = pictureMetadata.getString("title");
 				byline = pictureMetadata.getString("user_name");
 				token = pictureMetadata.getString("illust_id");
@@ -373,7 +397,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 			Log.d(LOG_TAG, "error");
 			Log.d(LOG_TAG, overallJson.toString());
 			ex.printStackTrace();
-			response.close();
 			return;
 		}
 
