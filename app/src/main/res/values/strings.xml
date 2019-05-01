@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Pixiv for Muzei 3</string>
-    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_settings">Authentication Settings</string>
+    <string name="action_bar_title">Pixiv for Muzei 3.0</string>
 
     <string name="pref_useAuth">Use authorization</string>
     <string name="pref_loginId">Login ID</string>
