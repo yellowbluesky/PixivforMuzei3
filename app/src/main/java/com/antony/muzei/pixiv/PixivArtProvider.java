@@ -17,30 +17,23 @@
 
 package com.antony.muzei.pixiv;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
-import android.app.Activity;
 
 import androidx.preference.PreferenceManager;
 
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 import com.google.android.apps.muzei.api.provider.Artwork;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.Random;
 
 import okhttp3.MediaType;
@@ -48,10 +41,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
-import android.R.string;
-
-import static android.content.Context.MODE_PRIVATE;
 
 public class PixivArtProvider extends MuzeiArtProvider
 {
@@ -248,7 +237,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 	// For ranking images, we are only provided with an illustration id
 	// We require the correct file extension in order to pull the picture
 	// So we cycle through all common file extensions until we get a good response
-	private Response getRemoteFileExtension(String url)
+	private Response getRemoteFileExtension(String url) throws IOException
 	{
 		Response response;
 
@@ -266,16 +255,10 @@ public class PixivArtProvider extends MuzeiArtProvider
 		for (String suffix : IMAGE_SUFFIXS)
 		{
 			String uri = uri1 + suffix;
-			try
+			response = sendGetRequest(uri);
+			if (response.code() == 200)
 			{
-				response = sendGetRequest(uri);
-				if (response.code() == 200)
-				{
-					return response;
-				}
-			} catch (IOException e)
-			{
-				return null;
+				return response;
 			}
 		}
 		return null;
@@ -289,7 +272,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Log.d(LOG_TAG, "mode: " + mode);
 		JSONObject overallJson = null, pictureMetadata;
 		String title, byline, token, imageUrl, accessToken = "";
-		Response response = null, rankingResponse;
+		Response response, rankingResponse;
 
 		// Gets an access token if required
 		// If the process failed in any way, then change modes to daily_rank
@@ -298,14 +281,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 			accessToken = getAccessToken();
 			if (accessToken.isEmpty())
 			{
+				// Is the permanent change acceptable?
 				Log.e(LOG_TAG, "Authentication failed, switching to Daily Ranking");
+				sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
 				mode = "daily_rank";
 			} else
 			{
 				Log.e(LOG_TAG, "Authentication success");
 			}
 		}
-
 
 		try
 		{
