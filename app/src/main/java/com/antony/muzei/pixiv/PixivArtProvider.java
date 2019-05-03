@@ -51,20 +51,23 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	// Returns a string containing a valid access token
 	// Otherwise returns an empty string if authentication failed or not possible
+	// Password is not saved on device, is only used to authenticate
 	private String getAccessToken()
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		SharedPreferences.Editor editor = sharedPrefs.edit();
 
 		// If we possess an access token, AND it has not expired, instantly return it
 		// is this code style ok? Some declared variables, some getters
 		String accessToken = sharedPrefs.getString("accessToken", "");
 		if (!accessToken.isEmpty() && sharedPrefs.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600000)
 		{
-			LOG.i(LOG_TAG, "Existing access token found");
+			Log.i(LOG_TAG, "Existing access token found");
+			editor.putString("pref_loginPassword","").apply();
 			return accessToken;
 		}
 
-		LOG.i(LOG_TAG, "No access token, or access token expired");
+		Log.i(LOG_TAG, "No access token, or access token expired");
 
 
 		// If we did not have an access token or if it had expired, we proceed to build a request to acquire one
@@ -101,17 +104,17 @@ public class PixivArtProvider extends MuzeiArtProvider
 				// TODO maybe a one off toast message indicating error
 				// do we change the mode to ranking too?
 				Log.i(LOG_TAG, "Error authenticating, check username or password");
+				editor.putString("pref_loginPassword","").apply();
 				return "";
 			}
 
 			JSONObject tokens = authResponseBody.getJSONObject("response");
-
-			SharedPreferences.Editor editor = sharedPrefs.edit();
 			editor.putString("accessToken", tokens.getString("access_token"));
 			editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
 			editor.putString("refreshToken", tokens.getString("refresh_token"));
 			editor.putString("userId", tokens.getJSONObject("user").getString("id"));
 			editor.putString("deviceToken", tokens.getString("device_token"));
+			editor.putString("pref_loginPassword","");
 			editor.apply();
 		} catch (IOException | JSONException ex)
 		{
