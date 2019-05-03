@@ -271,7 +271,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 		// Gets an access token if required
 		// If the process failed in any way, then change modes to daily_rank
-		if (sharedPrefs.getBoolean("pref_useAuth", false))
+		// Really not happy about the many if statements checking the same thing
+		if(mode.equals("follow") || mode.equals("bookmark"))
 		{
 			accessToken = getAccessToken();
 			if (accessToken.isEmpty())
