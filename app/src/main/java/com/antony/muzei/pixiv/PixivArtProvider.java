@@ -49,29 +49,23 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
-	// Returns true when an acccess token is found or successfully obtained
-	// Returns false when otherwise
+	// Returns a string containing a valid access token
+	// Otherwise returns an empty string if authentication failed or not possible
 	private String getAccessToken()
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-		// If we possess an access token, AND it has not expired
-		//if (!sharedPrefs.getString("accessToken", "").isEmpty() &&s sharedPrefs.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600)
-		if (!sharedPrefs.getString("accessToken", "").isEmpty())
-		{
-			Log.d(LOG_TAG, "access token not empty");
-			if (sharedPrefs.getLong("accessTokenIssueTime", 0) > (System.currentTimeMillis() / 1000) - 3600)
-			{
-				Log.d(LOG_TAG, "access token not expired");
-				return sharedPrefs.getString("accessToken", "");
 
-			} else
-			{
-				Log.d(LOG_TAG, "access token expired");
-			}
-		} else
+		// If we possess an access token, AND it has not expired, instantly return it
+		// is this code style ok? Some declared variables, some getters
+		String accessToken = sharedPrefs.getString("accessToken", "");
+		if (!accessToken.isEmpty() && sharedPrefs.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600000)
 		{
-			Log.d(LOG_TAG, "access token empty");
+			LOG.i(LOG_TAG, "Existing access token found");
+			return accessToken;
 		}
+
+		LOG.i(LOG_TAG, "No access token, or access token expired");
+
 
 		// If we did not have an access token or if it had expired, we proceed to build a request to acquire one
 		Uri.Builder authQueryBuilder = new Uri.Builder()
@@ -79,8 +73,9 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
 				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
+		// Check if we have a refresh token
+		// If we do, we can avoid Pixiv sending an email to the user regarding a new login
 		if (sharedPrefs.getString("refreshToken", "").isEmpty())
-		//if (true)
 		{
 			Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
 			authQueryBuilder.appendQueryParameter("grant_type", "password")
@@ -100,10 +95,11 @@ public class PixivArtProvider extends MuzeiArtProvider
 			Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
 			JSONObject authResponseBody = new JSONObject(response.body().string());
 			response.close();
-			// Check if error here
+			// Check if returned JSON indicates an error in authentication
 			if (authResponseBody.has("has_error"))
 			{
-				// TODO maybe a toast message indicating error
+				// TODO maybe a one off toast message indicating error
+				// do we change the mode to ranking too?
 				Log.i(LOG_TAG, "Error authenticating, check username or password");
 				return "";
 			}
@@ -126,7 +122,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 	}
 
 	// Only used when acquiring an access token
-	// Therefore all necessayr headers are hardcoded in and not dynamically chosen 
+	// Therefore all necessary headers are hardcoded in and not dynamically chosen 
 	private Response sendPostRequest(String url, Uri authQuery) throws IOException
 	{
 		String contentType = "application/x-www-form-urlencoded";
@@ -233,7 +229,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return Uri.fromFile(downloadedFile);
 	}
 
-	// TODO Also mark this method as throwing exceptions
 	// For ranking images, we are only provided with an illustration id
 	// We require the correct file extension in order to pull the picture
 	// So we cycle through all common file extensions until we get a good response
@@ -248,10 +243,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				.replace("img-master", "img-original")
 				.replace("_master1200", "");
 		String uri1 = uri0.substring(0, uri0.length() - 4);
-		// String uri0 = url.replace("c/240x480/", "");
-		// String uri1 = uri0.replace("img-master", "img-original");
-		// String uri2 = uri1.replace("_master1200", "");
-		// String uri3 = uri2.substring(0, uri2.length() - 4);
+
 		for (String suffix : IMAGE_SUFFIXS)
 		{
 			String uri = uri1 + suffix;
@@ -282,12 +274,12 @@ public class PixivArtProvider extends MuzeiArtProvider
 			if (accessToken.isEmpty())
 			{
 				// Is the permanent change acceptable?
-				Log.e(LOG_TAG, "Authentication failed, switching to Daily Ranking");
+				Log.i(LOG_TAG, "Authentication failed, switching to Daily Ranking");
 				sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
 				mode = "daily_rank";
 			} else
 			{
-				Log.e(LOG_TAG, "Authentication success");
+				Log.i(LOG_TAG, "Authentication success");
 			}
 		}
 
@@ -336,14 +328,14 @@ public class PixivArtProvider extends MuzeiArtProvider
 				// If picture pulled is a single image
 				if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
 				{
-					Log.d(LOG_TAG, "Single image");
+					Log.d(LOG_TAG, "Picture is a single image");
 					imageUrl = pictureMetadata.getJSONObject("meta_single_page")
 							.getString("original_image_url");
 				}
 				// Otherwise we have pulled an album, picking the first picture in album
 				else
 				{
-					Log.d(LOG_TAG, "Album");
+					Log.d(LOG_TAG, "Picture is part of an album");
 					imageUrl = pictureMetadata
 							.getJSONArray("meta_pages")
 							.getJSONObject(0)
