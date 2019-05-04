@@ -16,29 +16,6 @@
 
 <androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <PreferenceCategory app:title="@string/auth_settings_prefCat_title">
-
-        <SwitchPreference
-            android:key="pref_useAuth"
-            android:title="@string/pref_useAuth"
-            android:dialogTitle="@string/pref_useAuth"
-            android:persistent="true" />
-        <EditTextPreference
-            android:key="pref_loginId"
-            android:title="@string/pref_loginId"
-            android:dialogTitle="@string/pref_loginId"
-            android:persistent="true"
-            android:dependency="pref_useAuth" />
-        <EditTextPreference
-            android:key="pref_loginPassword"
-            android:title="@string/pref_loginPassword"
-            android:dialogTitle="@string/pref_loginPassword"
-            android:persistent="true"
-            android:dependency="pref_useAuth"
-            android:password="true" />
-    </PreferenceCategory>
-
     <PreferenceCategory app:title="@string/pull_feed_prefCat_settings">
         <ListPreference
             android:key="pref_updateMode"
@@ -54,5 +31,20 @@
             android:title="@string/pref_illustMode"
             android:dialogTitle="@string/pref_illustMode"
             android:persistent="true" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/auth_settings_prefCat_title">
+        <EditTextPreference
+            android:key="pref_loginId"
+            android:title="@string/pref_loginId"
+            android:dialogTitle="@string/pref_loginId"
+            android:persistent="true"
+            android:dependency="pref_useAuth" />
+        <EditTextPreference
+            android:key="pref_loginPassword"
+            android:title="@string/pref_loginPassword"
+            android:dialogTitle="@string/pref_loginPassword"
+            android:persistent="true"
+            android:dependency="pref_useAuth"
+            android:password="true" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
