@@ -37,14 +37,12 @@
             android:key="pref_loginId"
             android:title="@string/pref_loginId"
             android:dialogTitle="@string/pref_loginId"
-            android:persistent="true"
-            android:dependency="pref_useAuth" />
+            android:persistent="true"/>
         <EditTextPreference
             android:key="pref_loginPassword"
             android:title="@string/pref_loginPassword"
             android:dialogTitle="@string/pref_loginPassword"
             android:persistent="true"
-            android:dependency="pref_useAuth"
             android:password="true" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
