@@ -27,6 +27,7 @@ import androidx.preference.PreferenceManager;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 import com.google.android.apps.muzei.api.provider.Artwork;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -58,7 +59,9 @@ public class PixivArtProvider extends MuzeiArtProvider {
         // If we possess an access token, AND it has not expired, instantly return it
         // is this code style ok? Some declared variables, some getters
         String accessToken = sharedPrefs.getString("accessToken", "");
-        if (!accessToken.isEmpty() && sharedPrefs.getLong("accessTokenIssueTime", 0) > System.currentTimeMillis() - 3600000) {
+        // Must be a divide by 1000, cannot be subtract 3600 * 1000
+        if (!accessToken.isEmpty() && sharedPrefs.getLong("accessTokenIssueTime", 0)
+                > (System.currentTimeMillis() / 1000) - 3600) {
             Log.i(LOG_TAG, "Existing access token found");
             editor.putString("pref_loginPassword", "").apply();
             return accessToken;
@@ -158,8 +161,6 @@ public class PixivArtProvider extends MuzeiArtProvider {
         return urlString;
     }
 
-    // TODO should I overload this method?
-        // If I do I'll end up with if statements checking if mode is follow or bookmark again
     // authMode = 1: auth Needed
     private Response sendGetRequest(String url, boolean authMode, String accessToken) throws IOException {
         OkHttpClient httpClient = new OkHttpClient.Builder()
@@ -232,6 +233,68 @@ public class PixivArtProvider extends MuzeiArtProvider {
         return null;
     }
 
+    private JSONObject selectPicture(JSONObject overallJson) {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+        boolean showNsfw = sharedPrefs.getBoolean("pref_restrictMode", false);
+        JSONObject pictureMetadata = null;
+        boolean validImage = false;
+        Random random = new Random();
+
+        try {
+            // If passed JSON was for feed or bookmark
+            if (overallJson.has("illusts")) {
+                JSONArray illusts = overallJson.getJSONArray("illusts");
+                while (!validImage) {
+                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                    // If user does not want manga to display
+                    if (!showManga) {
+                        Log.d(LOG_TAG, "checking for no manga");
+                        while (!pictureMetadata.getString("illusts").equals("illust")) {
+                            Log.d(LOG_TAG, "spinning for non manga");
+                            pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                        }
+                    }
+                    // If user does not want NSFW images to show
+                    if (!showNsfw) {
+                        Log.d(LOG_TAG, "checking for no sfw");
+                        while (pictureMetadata.getInt("x_restrict") != 0) {
+                            Log.d(LOG_TAG, "spinning for SFW");
+                            pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                        }
+                        Log.d(LOG_TAG, pictureMetadata.toString());
+                    }
+                    validImage = true;
+                }
+                // Else if passed JSON was from a ranking
+            } else if (overallJson.has("contents")) {
+                JSONArray contents = overallJson.getJSONArray("contents");
+                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+                while (!validImage) {
+                    if (!showManga) {
+                        Log.d(LOG_TAG, "checking for no manga");
+                        while (pictureMetadata.getInt("illust_type") != 0) {
+                            Log.d(LOG_TAG, "spinning for non manga");
+                            pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+                        }
+                    }
+                    if (!showNsfw) {
+                        Log.d(LOG_TAG, "checking for no sfw");
+                        while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0) {
+                            Log.d(LOG_TAG, "spinning for SFW");
+                            pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+                        }
+                    }
+                    validImage = true;
+                }
+            }
+        } catch (JSONException ex) {
+            ex.printStackTrace();
+        }
+        return pictureMetadata;
+    }
+
+    // Single entry single exit plzz
     @Override
     protected void onLoadRequested(boolean initial) {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -248,6 +311,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
             accessToken = getAccessToken();
             if (accessToken.isEmpty()) {
                 // Is the permanent change acceptable?
+                // Should chuck it into a textView on the activity
                 Log.i(LOG_TAG, "Authentication failed, switching to Daily Ranking");
                 sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
                 mode = "daily_rank";
@@ -263,7 +327,6 @@ public class PixivArtProvider extends MuzeiArtProvider {
                     accessToken
             );
 
-
             // If HTTP code was anything other than 200 ... 301, failure
             if (!rankingResponse.isSuccessful()) {
                 Log.e(LOG_TAG, "HTTP error: " + rankingResponse.code());
@@ -277,17 +340,11 @@ public class PixivArtProvider extends MuzeiArtProvider {
             overallJson = new JSONObject((rankingResponse.body().string()));
             rankingResponse.close();
 
-            Random random = new Random();
             // If mode determine
             if (mode.equals("follow") || mode.equals("bookmark")) {
                 Log.d(LOG_TAG, "Feed or bookmark");
-                // Raise an issue if this line proves too hard to understand
-                // jfc this line is a mess
-                pictureMetadata = overallJson
-                        .getJSONArray("illusts")
-                        .getJSONObject(random.nextInt(overallJson
-                                .getJSONArray("illusts")
-                                .length()));
+                pictureMetadata = selectPicture(overallJson);
+
                 title = pictureMetadata.getString("title");
                 byline = pictureMetadata.getJSONObject("user").getString("name");
                 token = pictureMetadata.getString("id");
@@ -310,17 +367,8 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 response = sendGetRequest(imageUrl, false, "");
             } else {
                 Log.d(LOG_TAG, "Ranking");
-                // Prevents manga or gifs from being chosen
-                if (sharedPrefs.getBoolean("pref_illustType", false)) {
-                    do {
-                        // Raise an issue if this line proves too hard to understand
-                        pictureMetadata = overallJson.getJSONArray("contents")
-                                .getJSONObject(random.nextInt(overallJson.getJSONArray("contents").length()));
-                    } while (pictureMetadata.getInt("illust_type") != 0);
-                } else {
-                    pictureMetadata = overallJson.getJSONArray("contents")
-                            .getJSONObject(random.nextInt(overallJson.getJSONArray("contents").length()));
-                }
+                // Filters out manga or NSFW depending on user settings
+                pictureMetadata = selectPicture(overallJson);
 
                 title = pictureMetadata.getString("title");
                 byline = pictureMetadata.getString("user_name");

@@ -27,9 +27,9 @@
             android:persistent="true"
             android:summary="%s"/>
         <SwitchPreference
-            android:key="pref_illustType"
-            android:title="@string/pref_illustMode"
-            android:dialogTitle="@string/pref_illustMode"
+            android:key="pref_showManga"
+            android:title="@string/pref_showManga"
+            android:dialogTitle="@string/pref_showManga"
             android:persistent="true" />
         <SwitchPreference
             android:key="pref_restrictMode"

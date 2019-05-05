@@ -5,7 +5,7 @@
     <string name="pull_feed_prefCat_settings">Picture feed settings</string>
     <string name="pref_updateMode">Update mode</string>
     <string name="pref_updateMode_default">daily_rank</string>
-    <string name="pref_illustMode">Show manga in ranking</string>
+    <string name="pref_showManga">Show manga</string>
     <string name="pref_restrictMode">Show NSFW images</string>
     <string name="auth_settings_prefCat_title">Pixiv Login</string>
     <string name="pref_loginId">Login ID</string>
