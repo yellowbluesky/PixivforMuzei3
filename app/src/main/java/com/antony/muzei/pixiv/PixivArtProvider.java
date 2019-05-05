@@ -35,6 +35,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import okhttp3.MediaType;
@@ -49,12 +53,54 @@ public class PixivArtProvider extends MuzeiArtProvider {
 
     private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
+    private boolean isCredentialsFresh() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String storedHash = sharedPrefs.getString("credentialHash", "");
+        String plaintextCred = sharedPrefs.getString("pref_loginId", "")
+                + sharedPrefs.getString("pref_loginPassword", "");
+        String computedHash = null;
+
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+            digest.update(plaintextCred.getBytes());
+            byte[] messageDigest = digest.digest();
+            StringBuffer hexString = new StringBuffer();
+            for (int i = 0; i < messageDigest.length; i++) {
+                String hex = Integer.toHexString(0xFF & messageDigest[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            computedHash = hexString.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            ex.printStackTrace();
+        }
+
+        Log.d(LOG_TAG, computedHash);
+        Log.d(LOG_TAG, storedHash);
+
+        if (!storedHash.equals(computedHash)) {
+            Log.d(LOG_TAG, "new credentials found");
+            return false;
+        }
+        Log.d(LOG_TAG, "using existing credentials");
+        return true;
+    }
+
     // Returns a string containing a valid access token
     // Otherwise returns an empty string if authentication failed or not possible
     // Password is not saved on device, is only used to authenticate
     private String getAccessToken() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sharedPrefs.edit();
+
+        if (!isCredentialsFresh()) {
+            editor.putString("accessToken", "");
+            editor.putString("refreshToken", "");
+            editor.commit();
+        }
 
         // If we possess an access token, AND it has not expired, instantly return it
         // is this code style ok? Some declared variables, some getters
@@ -63,7 +109,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         if (!accessToken.isEmpty() && sharedPrefs.getLong("accessTokenIssueTime", 0)
                 > (System.currentTimeMillis() / 1000) - 3600) {
             Log.i(LOG_TAG, "Existing access token found");
-            editor.putString("pref_loginPassword", "").apply();
+            //editor.putString("pref_loginPassword", "").apply();
             return accessToken;
         }
 
@@ -110,9 +156,26 @@ public class PixivArtProvider extends MuzeiArtProvider {
             editor.putString("refreshToken", tokens.getString("refresh_token"));
             editor.putString("userId", tokens.getJSONObject("user").getString("id"));
             editor.putString("deviceToken", tokens.getString("device_token"));
-            editor.putString("pref_loginPassword", "");
+
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String plaintextCred = sharedPrefs.getString("pref_loginId", "")
+                    + sharedPrefs.getString("pref_loginPassword", "");
+            digest.update(plaintextCred.getBytes());
+            byte[] messageDigest = digest.digest();
+            StringBuffer hexString = new StringBuffer();
+            for (int i = 0; i < messageDigest.length; i++) {
+                String hex = Integer.toHexString(0xFF & messageDigest[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            String computedHash = hexString.toString();
+            editor.putString("credentialHash", computedHash);
+
             editor.apply();
-        } catch (IOException | JSONException ex) {
+
+        } catch (IOException | JSONException | NoSuchAlgorithmException ex) {
             ex.printStackTrace();
             return "";
         }
@@ -315,8 +378,6 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 Log.i(LOG_TAG, "Authentication failed, switching to Daily Ranking");
                 sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
                 mode = "daily_rank";
-            } else {
-                Log.i(LOG_TAG, "Authentication success");
             }
         }
 
