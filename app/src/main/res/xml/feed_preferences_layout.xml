@@ -31,18 +31,24 @@
             android:title="@string/pref_illustMode"
             android:dialogTitle="@string/pref_illustMode"
             android:persistent="true" />
+        <SwitchPreference
+            android:key="pref_restrictMode"
+            android:title="@string/pref_restrictMode"
+            android:dialogTitle="@string/pref_restrictMode"
+            android:persistent="true" />
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/auth_settings_prefCat_title">
         <EditTextPreference
             android:key="pref_loginId"
             android:title="@string/pref_loginId"
             android:dialogTitle="@string/pref_loginId"
-            android:persistent="true"/>
+            android:persistent="true"
+            android:inputType="text"/>
         <EditTextPreference
             android:key="pref_loginPassword"
             android:title="@string/pref_loginPassword"
             android:dialogTitle="@string/pref_loginPassword"
             android:persistent="true"
-            android:password="true" />
+            android:inputType="textPassword"/>
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

@@ -3,17 +3,13 @@
         <item>Daily ranking</item>
         <item>Weekly ranking</item>
         <item>Monthly ranking</item>
-        <item>Follow feed</item>
-        <item>Bookmark images</item>
+        <item>Follow feed (Login required)</item>
+        <item>Bookmark images (Login Required)</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
         <item>weekly_rank</item>
         <item>monthly_rank</item>
-        <item>follow</item>
-        <item>bookmark</item>
-    </string-array>
-    <string-array name="pref_updateMode_requireAuthEntries">
         <item>follow</item>
         <item>bookmark</item>
     </string-array>

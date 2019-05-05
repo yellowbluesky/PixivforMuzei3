@@ -169,6 +169,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return urlString;
 	}
 
+	// TODO combine the two sendGet into one, include an arguement for if auth is needed
 	// Used for pulling (unauthenticated) ranking JSON's
 	private Response sendGetRequest(String url) throws IOException
 	{

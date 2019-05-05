@@ -17,7 +17,7 @@ public class SettingsActivity extends AppCompatActivity
 		setContentView(R.layout.settings_activity);
 		getSupportFragmentManager()
 				.beginTransaction()
-				.add(R.id.settings, new SettingsFragment())
+				.add(R.id.FeedPreferencesFragment, new SettingsFragment())
 				.commit();
 	}
 
@@ -26,7 +26,7 @@ public class SettingsActivity extends AppCompatActivity
 		@Override
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
 		{
-			setPreferencesFromResource(R.xml.root_preferences, rootKey);
+			setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
 		}
 	}
 }
