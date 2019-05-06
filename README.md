@@ -10,7 +10,6 @@ Features
     - Up to 50 pictures from the latest rankings
     - Up to 30 pictures from the latest feed or bookmarks
   - Can toggle the display of manga or R18 pictures (dependent on artist properly tagging their submissions)
-  - User passwords are not stored on device; they are used only during first time authentication and are then cleared
-
+  - App uses refresh and access tokens, so does not fill your inbox with new login notifications from Pixiv
 Future features
   - Granular NSFW level filtering
