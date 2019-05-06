@@ -53,40 +53,50 @@ public class PixivArtProvider extends MuzeiArtProvider {
 
     private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
+    // mate why am i hashing
+    // just concat and compare
     private boolean isCredentialsFresh() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String storedHash = sharedPrefs.getString("credentialHash", "");
-        String plaintextCred = sharedPrefs.getString("pref_loginId", "")
-                + sharedPrefs.getString("pref_loginPassword", "");
-        String computedHash = null;
-
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-            digest.update(plaintextCred.getBytes());
-            byte[] messageDigest = digest.digest();
-            StringBuffer hexString = new StringBuffer();
-            for (int i = 0; i < messageDigest.length; i++) {
-                String hex = Integer.toHexString(0xFF & messageDigest[i]);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            computedHash = hexString.toString();
-        } catch (NoSuchAlgorithmException ex) {
-            ex.printStackTrace();
-        }
-
-        Log.d(LOG_TAG, computedHash);
-        Log.d(LOG_TAG, storedHash);
-
-        if (!storedHash.equals(computedHash)) {
-            Log.d(LOG_TAG, "new credentials found");
+        String enteredCreds = sharedPrefs.getString("pref_loginId", "")
+            + sharedPrefs.getString("pref_loginPassword", "");
+        String storedCreds = sharedPrefs.getString("storedCreds", "");
+        if(!enteredCreds.equals(storedCreds))
+        {
             return false;
         }
-        Log.d(LOG_TAG, "using existing credentials");
         return true;
+        // String storedHash = sharedPrefs.getString("credentialHash", "");
+        // String plaintextCred = sharedPrefs.getString("pref_loginId", "")
+        //         + sharedPrefs.getString("pref_loginPassword", "");
+        // String computedHash = null;
+
+        // MessageDigest digest;
+        // try {
+        //     digest = MessageDigest.getInstance("SHA-256");
+        //     digest.update(plaintextCred.getBytes());
+        //     byte[] messageDigest = digest.digest();
+        //     StringBuffer hexString = new StringBuffer();
+        //     for (int i = 0; i < messageDigest.length; i++) {
+        //         String hex = Integer.toHexString(0xFF & messageDigest[i]);
+        //         if (hex.length() == 1) {
+        //             hexString.append('0');
+        //         }
+        //         hexString.append(hex);
+        //     }
+        //     computedHash = hexString.toString();
+        // } catch (NoSuchAlgorithmException ex) {
+        //     ex.printStackTrace();
+        // }
+
+        // Log.d(LOG_TAG, computedHash);
+        // Log.d(LOG_TAG, storedHash);
+
+        // if (!storedHash.equals(computedHash)) {
+        //     Log.d(LOG_TAG, "new credentials found");
+        //     return false;
+        // }
+        // Log.d(LOG_TAG, "using existing credentials");
+        // return true;
     }
 
     // Returns a string containing a valid access token
@@ -157,21 +167,23 @@ public class PixivArtProvider extends MuzeiArtProvider {
             editor.putString("userId", tokens.getJSONObject("user").getString("id"));
             editor.putString("deviceToken", tokens.getString("device_token"));
 
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            String plaintextCred = sharedPrefs.getString("pref_loginId", "")
-                    + sharedPrefs.getString("pref_loginPassword", "");
-            digest.update(plaintextCred.getBytes());
-            byte[] messageDigest = digest.digest();
-            StringBuffer hexString = new StringBuffer();
-            for (int i = 0; i < messageDigest.length; i++) {
-                String hex = Integer.toHexString(0xFF & messageDigest[i]);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            String computedHash = hexString.toString();
-            editor.putString("credentialHash", computedHash);
+            editor.putString("storedCreds", sharedPrefs.getString("pref_loginId", "")
+                + sharedPrefs.getString("pref_loginPassword", ""));
+            // MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            // String plaintextCred = sharedPrefs.getString("pref_loginId", "")
+            //         + sharedPrefs.getString("pref_loginPassword", "");
+            // digest.update(plaintextCred.getBytes());
+            // byte[] messageDigest = digest.digest();
+            // StringBuffer hexString = new StringBuffer();
+            // for (int i = 0; i < messageDigest.length; i++) {
+            //     String hex = Integer.toHexString(0xFF & messageDigest[i]);
+            //     if (hex.length() == 1) {
+            //         hexString.append('0');
+            //     }
+            //     hexString.append(hex);
+            // }
+            // String computedHash = hexString.toString();
+            // editor.putString("credentialHash", computedHash);
 
             editor.apply();
 
@@ -382,6 +394,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         }
 
         try {
+            // This is a mess
             rankingResponse = sendGetRequest(
                     getUpdateUriInfo(mode, sharedPrefs.getString("userId", "")),
                     mode.equals("follow") || mode.equals("bookmark"),
@@ -400,12 +413,10 @@ public class PixivArtProvider extends MuzeiArtProvider {
 
             overallJson = new JSONObject((rankingResponse.body().string()));
             rankingResponse.close();
+            pictureMetadata = selectPicture(overallJson);
 
-            // If mode determine
             if (mode.equals("follow") || mode.equals("bookmark")) {
                 Log.d(LOG_TAG, "Feed or bookmark");
-                pictureMetadata = selectPicture(overallJson);
-
                 title = pictureMetadata.getString("title");
                 byline = pictureMetadata.getJSONObject("user").getString("name");
                 token = pictureMetadata.getString("id");
@@ -413,7 +424,8 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 // If picture pulled is a single image
                 if (pictureMetadata.getJSONArray("meta_pages").length() == 0) {
                     Log.d(LOG_TAG, "Picture is a single image");
-                    imageUrl = pictureMetadata.getJSONObject("meta_single_page")
+                    imageUrl = pictureMetadata
+                            .getJSONObject("meta_single_page")
                             .getString("original_image_url");
                 }
                 // Otherwise we have pulled an album, picking the first picture in album
@@ -428,13 +440,10 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 response = sendGetRequest(imageUrl, false, "");
             } else {
                 Log.d(LOG_TAG, "Ranking");
-                // Filters out manga or NSFW depending on user settings
-                pictureMetadata = selectPicture(overallJson);
-
                 title = pictureMetadata.getString("title");
                 byline = pictureMetadata.getString("user_name");
                 token = pictureMetadata.getString("illust_id");
-                String thumbUrl = pictureMetadata.getString(("url"));
+                String thumbUrl = pictureMetadata.getString("url");
                 response = getRemoteFileExtension(thumbUrl);
             }
         } catch (IOException | JSONException ex) {
