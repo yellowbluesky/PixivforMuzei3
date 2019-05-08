@@ -58,12 +58,13 @@ public class PixivArtProvider extends MuzeiArtProvider {
     private boolean isCredentialsFresh() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         String enteredCreds = sharedPrefs.getString("pref_loginId", "")
-            + sharedPrefs.getString("pref_loginPassword", "");
+                + sharedPrefs.getString("pref_loginPassword", "");
         String storedCreds = sharedPrefs.getString("storedCreds", "");
-        if(!enteredCreds.equals(storedCreds))
-        {
+        if (!enteredCreds.equals(storedCreds)) {
+            Log.d(LOG_TAG, "new credentials found");
             return false;
         }
+        Log.d(LOG_TAG, "using existing credentials");
         return true;
         // String storedHash = sharedPrefs.getString("credentialHash", "");
         // String plaintextCred = sharedPrefs.getString("pref_loginId", "")
@@ -156,7 +157,11 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 // TODO maybe a one off toast message indicating error
                 // do we change the mode to ranking too?
                 Log.i(LOG_TAG, "Error authenticating, check username or password");
-                editor.putString("pref_loginPassword", "").apply();
+                editor.putString("pref_loginPassword", "");
+                editor.putString("accessToken", "");
+                editor.putString("refreshToken", "");
+                editor.putString("storedCreds", "");
+                editor.commit();
                 return "";
             }
 
@@ -168,7 +173,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
             editor.putString("deviceToken", tokens.getString("device_token"));
 
             editor.putString("storedCreds", sharedPrefs.getString("pref_loginId", "")
-                + sharedPrefs.getString("pref_loginPassword", ""));
+                    + sharedPrefs.getString("pref_loginPassword", ""));
             // MessageDigest digest = MessageDigest.getInstance("SHA-256");
             // String plaintextCred = sharedPrefs.getString("pref_loginId", "")
             //         + sharedPrefs.getString("pref_loginPassword", "");
@@ -187,7 +192,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
 
             editor.apply();
 
-        } catch (IOException | JSONException | NoSuchAlgorithmException ex) {
+        } catch (IOException | JSONException ex) {
             ex.printStackTrace();
             return "";
         }
