@@ -11,6 +11,7 @@ Features
     - Up to 30 pictures from the latest feed or bookmarks
   - Can toggle the display of manga or R18 pictures (dependent on artist properly tagging their submissions)
   - App uses OAuth2 refresh and access tokens, so does not fill your inbox with new login notifications from Pixiv
+  - Correctly handles the display of albums, displaying only the first image
 
 Future features
   - Granular NSFW level filtering
