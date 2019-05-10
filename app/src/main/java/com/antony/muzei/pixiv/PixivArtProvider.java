@@ -98,11 +98,12 @@ public class PixivArtProvider extends MuzeiArtProvider {
 
     // Returns a string containing a valid access token
     // Otherwise returns an empty string if authentication failed or not possible
-    // Password is not saved on device, is only used to authenticate
     private String getAccessToken() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sharedPrefs.edit();
 
+        // If user has entered new credentials (username, password)
+        // then clear stored OAuth2 credentials to prevent them from being used
         if (!isCredentialsFresh()) {
             editor.putString("accessToken", "");
             editor.putString("refreshToken", "");
@@ -110,13 +111,11 @@ public class PixivArtProvider extends MuzeiArtProvider {
         }
 
         // If we possess an access token, AND it has not expired, instantly return it
-        // is this code style ok? Some declared variables, some getters
-        String accessToken = sharedPrefs.getString("accessToken", "");
         // Must be a divide by 1000, cannot be subtract 3600 * 1000
-        if (!accessToken.isEmpty() && sharedPrefs.getLong("accessTokenIssueTime", 0)
-                > (System.currentTimeMillis() / 1000) - 3600) {
+        if (!sharedPrefs.getString("accessToken", "").isEmpty() 
+            && sharedPrefs.getLong("accessTokenIssueTime", 0) 
+            > (System.currentTimeMillis() / 1000) - 3600) {
             Log.i(LOG_TAG, "Existing access token found");
-            //editor.putString("pref_loginPassword", "").apply();
             return accessToken;
         }
 
@@ -137,13 +136,13 @@ public class PixivArtProvider extends MuzeiArtProvider {
                     .appendQueryParameter("username", sharedPrefs.getString("pref_loginId", ""))
                     .appendQueryParameter("password", sharedPrefs.getString("pref_loginPassword", ""));
         } else {
-            Log.i(LOG_TAG, "Found refresh token, using it to request an access token");
+            Log.i(LOG_TAG, "Refresh token found, using it to request an access token");
             authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
                     .appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""));
         }
 
+        // Now to actualyl send the auth GET request
         Uri authQuery = authQueryBuilder.build();
-
         try {
             Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
             JSONObject authResponseBody = new JSONObject(response.body().string());
@@ -151,7 +150,6 @@ public class PixivArtProvider extends MuzeiArtProvider {
             // Check if returned JSON indicates an error in authentication
             if (authResponseBody.has("has_error")) {
                 // TODO maybe a one off toast message indicating error
-                // do we change the mode to ranking too?
                 Log.i(LOG_TAG, "Error authenticating, check username or password");
                 editor.putString("pref_loginPassword", "");
                 editor.putString("accessToken", "");
@@ -161,6 +159,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 return "";
             }
 
+            // Authenticatin succeded, storing returned tokens
             JSONObject tokens = authResponseBody.getJSONObject("response");
             editor.putString("accessToken", tokens.getString("access_token"));
             editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
@@ -195,7 +194,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         return sharedPrefs.getString("accessToken", "");
     }
 
-    // Only used when acquiring an access token
+    // Only used for authentication in this application
     // Therefore all necessary headers are hardcoded in and not dynamically chosen
     private Response sendPostRequest(String url, Uri authQuery) throws IOException {
         String contentType = "application/x-www-form-urlencoded";
@@ -237,7 +236,8 @@ public class PixivArtProvider extends MuzeiArtProvider {
         return urlString;
     }
 
-    // authMode = 1: auth Needed
+    // authMode = true: auth Needed
+    // TODO should there be a second overloaded method without auth features
     private Response sendGetRequest(String url, boolean authMode, String accessToken) throws IOException {
         OkHttpClient httpClient = new OkHttpClient.Builder()
                 .build();
@@ -309,6 +309,9 @@ public class PixivArtProvider extends MuzeiArtProvider {
         return null;
     }
 
+    // Filters through the JSON containing all the images
+    // Picks one image based on user settings to show manga and NSFW
+    // TODO more granular NSFW filtering (sanity_level)
     private JSONObject selectPicture(JSONObject overallJson) {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
@@ -322,6 +325,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
             if (overallJson.has("illusts")) {
                 JSONArray illusts = overallJson.getJSONArray("illusts");
                 while (!validImage) {
+                    // Random seems to be very inefficient, potentialyl visiting the same image multiple times
                     pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                     // If user does not want manga to display
                     if (!showManga) {
@@ -333,7 +337,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
                     }
                     // If user does not want NSFW images to show
                     if (!showNsfw) {
-                        Log.d(LOG_TAG, "checking for no sfw");
+                        Log.d(LOG_TAG, "checking for R18");
                         while (pictureMetadata.getInt("x_restrict") != 0) {
                             Log.d(LOG_TAG, "spinning for SFW");
                             pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
@@ -347,6 +351,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 JSONArray contents = overallJson.getJSONArray("contents");
                 pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
                 while (!validImage) {
+                    // If user does not want manga to display
                     if (!showManga) {
                         Log.d(LOG_TAG, "checking for no manga");
                         while (pictureMetadata.getInt("illust_type") != 0) {
@@ -354,8 +359,9 @@ public class PixivArtProvider extends MuzeiArtProvider {
                             pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
                         }
                     }
+                    // If user does not want NSFW images to show
                     if (!showNsfw) {
-                        Log.d(LOG_TAG, "checking for no sfw");
+                        Log.d(LOG_TAG, "Checking for R18");
                         while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0) {
                             Log.d(LOG_TAG, "spinning for SFW");
                             pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
