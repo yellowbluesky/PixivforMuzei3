@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
+import com.antony.muzei.pixiv.PixivArtProvider;
 import com.antony.muzei.pixiv.R;
 
 public class SettingsActivity extends AppCompatActivity
@@ -48,20 +49,18 @@ public class SettingsActivity extends AppCompatActivity
     public void onDestroy()
     {
         super.onDestroy();
-        if (oldCreds.equals(newCreds))
+        if (!oldCreds.equals(newCreds))
         {
-            return;
-        }
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("accessToken", "");
-        editor.putString("refreshToken", "");
-        editor.putString("deviceToken", "");
-        editor.putLong("accessTokenIssueTime", 0);
-        editor.commit();
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            SharedPreferences.Editor editor = sharedPrefs.edit();
+            editor.putString("accessToken", "");
+            editor.putString("refreshToken", "");
+            editor.putString("deviceToken", "");
+            editor.putLong("accessTokenIssueTime", 0);
+            editor.commit();
 
-        Toast toast = Toast.makeText(getApplicationContext(), "New credentials found", Toast.LENGTH_SHORT);
-        toast.show();
+            Toast.makeText(getApplicationContext(), "New credentials found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat

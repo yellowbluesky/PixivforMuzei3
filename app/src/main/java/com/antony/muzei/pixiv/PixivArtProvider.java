@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.preference.PreferenceManager;
 
@@ -201,31 +200,23 @@ public class PixivArtProvider extends MuzeiArtProvider
     // TODO Maybe mark this function as throwing exception
     // Downloads the selected image to cache folder on local storage
     // Cache folder is periodically pruned of its oldest images by Android
-    private Uri downloadFile(Response response, String token)
+    private Uri downloadFile(Response response, String token) throws IOException
     {
         Context context = getContext();
-        // File extensions do not matter to muzei
+        // Muzei does not care about file extensions
         // Only there to more easily allow local user to open them
         File downloadedFile = new File(context.getCacheDir(), token + ".png");
-        try
+        FileOutputStream fileStream = new FileOutputStream(downloadedFile);
+        InputStream inputStream = response.body().byteStream();
+        final byte[] buffer = new byte[1024 * 50];
+        int read;
+        while ((read = inputStream.read(buffer)) > 0)
         {
-            FileOutputStream fileStream = new FileOutputStream(downloadedFile);
-            InputStream inputStream = response.body().byteStream();
-            final byte[] buffer = new byte[1024 * 50];
-            int read;
-            while ((read = inputStream.read(buffer)) > 0)
-            {
-                fileStream.write(buffer, 0, read);
-            }
-            fileStream.close();
-            inputStream.close();
-        } catch (IOException ex)
-        {
-            return null;
-        } finally
-        {
-            response.close();
+            fileStream.write(buffer, 0, read);
         }
+        fileStream.close();
+        inputStream.close();
+        response.body().close();
 
         return Uri.fromFile(downloadedFile);
     }
@@ -237,8 +228,7 @@ public class PixivArtProvider extends MuzeiArtProvider
     {
         Response response;
 
-        // All urls have predictable formats
-        // TODO check the function of this
+        // All urls have predictable formats, so we can do simple substring replacement
         String uri0 = url
                 .replace("c/240x480/", "")
                 .replace("img-master", "img-original")
@@ -346,10 +336,11 @@ public class PixivArtProvider extends MuzeiArtProvider
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         String mode = sharedPrefs.getString("pref_updateMode", "");
-        Log.d(LOG_TAG, "mode: " + mode);
+        Log.d(LOG_TAG, "Mode: " + mode);
         JSONObject overallJson = null, pictureMetadata;
         String title, byline, token, imageUrl, accessToken = "";
         Response response, rankingResponse;
+        Uri finalUri;
 
         // Gets an access token if required
         // If the process failed in any way, then change modes to daily_rank
@@ -426,6 +417,7 @@ public class PixivArtProvider extends MuzeiArtProvider
                 String thumbUrl = pictureMetadata.getString("url");
                 response = getRemoteFileExtension(thumbUrl);
             }
+            finalUri = downloadFile(response, token);
         } catch (IOException | JSONException ex)
         {
             Log.d(LOG_TAG, "error");
@@ -434,16 +426,13 @@ public class PixivArtProvider extends MuzeiArtProvider
             return;
         }
 
-        String webUri = PixivArtProviderDefines.MEMBER_ILLUST_URL + token;
-
-        Uri finalUri = downloadFile(response, token);
         response.close();
         addArtwork(new Artwork.Builder()
                 .title(title)
                 .byline(byline)
                 .persistentUri(finalUri)
                 .token(token)
-                .webUri(Uri.parse(webUri))
+                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
                 .build());
     }
 }
