@@ -16,7 +16,7 @@
 
 <androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/pull_feed_prefCat_settings">
+    <PreferenceCategory android:title="@string/prefCat_pullFeedSettings">
         <ListPreference
             android:key="pref_updateMode"
             android:title="@string/pref_updateMode"
@@ -28,16 +28,25 @@
             android:summary="%s"/>
         <SwitchPreference
             android:key="pref_showManga"
-            android:title="@string/pref_showManga"
-            android:dialogTitle="@string/pref_showManga"
+            android:title="@string/preftitle_showManga"
+            android:dialogTitle="@string/preftitle_showManga"
             android:persistent="true" />
         <SwitchPreference
             android:key="pref_restrictMode"
             android:title="@string/pref_restrictMode"
             android:dialogTitle="@string/pref_restrictMode"
             android:persistent="true" />
+        <ListPreference
+            android:key="pref_nsfwFilterLevel"
+            android:title="@string/preftitle_nswFilterLevel"
+            android:dialogTitle="@string/preftitle_nswFilterLevel"
+            android:entries="@array/pref_nsfwmode_entries"
+            android:entryValues="@array/pref_nsfwmode_entryvalues"
+            android:defaultValue="@string/pref_nsfwFilterLevel_default"
+            android:persistent="true"
+            android:summary="%s"/>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/auth_settings_prefCat_title">
+    <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference
             android:key="pref_loginId"
             android:title="@string/pref_loginId"
