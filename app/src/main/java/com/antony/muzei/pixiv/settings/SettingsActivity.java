@@ -3,6 +3,7 @@ package com.antony.muzei.pixiv.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +31,7 @@ public class SettingsActivity extends AppCompatActivity
 
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         oldCreds = sharedPrefs.getString("pref_loginPassword", "");
+        Log.d("PIXIV", oldCreds);
 
         prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
         {
@@ -41,6 +43,7 @@ public class SettingsActivity extends AppCompatActivity
                     return;
                 }
                 newCreds = sharedPrefs.getString("pref_loginPassword", "");
+                Log.d("PIXIV", newCreds);
             }
         };
     }

@@ -31,11 +31,6 @@
             android:title="@string/preftitle_showManga"
             android:dialogTitle="@string/preftitle_showManga"
             android:persistent="true" />
-        <SwitchPreference
-            android:key="pref_restrictMode"
-            android:title="@string/pref_restrictMode"
-            android:dialogTitle="@string/pref_restrictMode"
-            android:persistent="true" />
         <ListPreference
             android:key="pref_nsfwFilterLevel"
             android:title="@string/preftitle_nswFilterLevel"

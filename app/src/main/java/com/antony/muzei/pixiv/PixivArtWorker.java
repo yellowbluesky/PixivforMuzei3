@@ -260,13 +260,18 @@ public class PixivArtWorker extends Worker
     }
 
     // Filters through the JSON containing all the images
-    // Picks one image based on user settings to show manga and NSFW
-    // TODO more granular NSFW filtering (sanity_level)
+    // Picks one image based on user settings to show manga and NSFW filtering level
+    // There are 4 NSFW levels that Pixiv provides to us (well 5, but 4 and 5 are more or less the same and overlap)
+    // 0 -> Not NSFW at all
+    // 2 -> Moderately ecchi, e.g. beach bikinis, bras, mild upskirts
+    // 4 -> Much more risque with succubi and more explicit upskirts
+    // 6 / x_restrict -> nudity, penetration, the whole shebang
     private JSONObject selectPicture(JSONObject overallJson)
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        boolean showNsfw = sharedPrefs.getBoolean("pref_restrictMode", false);
+        int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        Log.d(LOG_TAG, "NSFW filter level set to: " + nsfwFilterLevel);
         JSONObject pictureMetadata = null;
         boolean validImage = false;
         Random random = new Random();
@@ -279,7 +284,7 @@ public class PixivArtWorker extends Worker
                 JSONArray illusts = overallJson.getJSONArray("illusts");
                 while (!validImage)
                 {
-                    // Random seems to be very inefficient, potentialyl visiting the same image multiple times
+                    // Random seems to be very inefficient, potentially visiting the same image multiple times
                     pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                     // If user does not want manga to display
                     if (!showManga)
@@ -292,14 +297,16 @@ public class PixivArtWorker extends Worker
                         }
                     }
                     // If user does not want NSFW images to show
-                    if (!showNsfw)
+                    // TODO
+                    // can probably optimize the while check into a variable of its own
+                    Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
+                    int nsfwLevel = pictureMetadata.getInt("sanity_level");
+                    while(nsfwLevel > nsfwFilterLevel)
                     {
-                        Log.d(LOG_TAG, "checking for R18");
-                        while (pictureMetadata.getInt("x_restrict") != 0)
-                        {
-                            Log.d(LOG_TAG, "spinning for SFW");
-                            pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                        }
+                        Log.d(LOG_TAG, "pulled picture has NSFW level of: " + nsfwLevel);
+                        Log.d(LOG_TAG, "exceeds set filter level, retrying");
+                        pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                        nsfwLevel = pictureMetadata.getInt("sanity_level");
                     }
                     validImage = true;
                 }
@@ -321,12 +328,12 @@ public class PixivArtWorker extends Worker
                         }
                     }
                     // If user does not want NSFW images to show
-                    if (!showNsfw)
+                    if (nsfwFilterLevel > 0)
                     {
-                        Log.d(LOG_TAG, "Checking for R18");
+                        Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
                         while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
                         {
-                            Log.d(LOG_TAG, "spinning for SFW");
+                            Log.d(LOG_TAG, "pulled picture exceeds set NSFW filter, retrying");
                             pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
                         }
                     }
@@ -438,8 +445,7 @@ public class PixivArtWorker extends Worker
         }
 
         response.close();
-        ProviderClient client =
-                ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
+        ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         final Artwork artwork = new Artwork.Builder()
                 .title(title)
                 .byline(byline)
