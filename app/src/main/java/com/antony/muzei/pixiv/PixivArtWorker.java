@@ -289,10 +289,10 @@ public class PixivArtWorker extends Worker
                 // If user does not want manga to display
                 if (!showManga)
                 {
-                    Log.d(LOG_TAG, "checking for no manga");
+                    Log.d(LOG_TAG, "Manga not desired");
                     while (!pictureMetadata.getString("type").equals("illust"))
                     {
-                        Log.d(LOG_TAG, "spinning for non manga");
+                        Log.d(LOG_TAG, "Retrying for a non-manga");
                         pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                     }
                 }
@@ -307,15 +307,16 @@ public class PixivArtWorker extends Worker
                         Log.d(LOG_TAG, "Checking for x_restrict");
                         while (pictureMetadata.getInt("x_restrict") != 0)
                         {
+                            Log.d(LOG_TAG, "Retrying for a non x_restrict");
                             pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                         }
                     } else
                     {
                         int nsfwLevel = pictureMetadata.getInt("sanity_level");
+                        Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel);
                         while (nsfwLevel > nsfwFilterLevel)
                         {
-                            Log.d(LOG_TAG, "pulled picture has NSFW level of: " + nsfwLevel);
-                            Log.d(LOG_TAG, "exceeds set filter level, retrying");
+                            Log.d(LOG_TAG, "Pulled picture xceeds set filter level, retrying");
                             pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                             nsfwLevel = pictureMetadata.getInt("sanity_level");
                         }
@@ -329,10 +330,10 @@ public class PixivArtWorker extends Worker
                 // If user does not want manga to display
                 if (!showManga)
                 {
-                    Log.d(LOG_TAG, "checking for no manga");
+                    Log.d(LOG_TAG, "Manga not desired");
                     while (pictureMetadata.getInt("illust_type") != 0)
                     {
-                        Log.d(LOG_TAG, "spinning for non manga");
+                        Log.d(LOG_TAG, "Retrying for a non-manga");
                         pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
                     }
                 }
@@ -342,7 +343,7 @@ public class PixivArtWorker extends Worker
                     Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
                     while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
                     {
-                        Log.d(LOG_TAG, "pulled picture exceeds set NSFW filter, retrying");
+                        Log.d(LOG_TAG, "pulled picture is NSFW, retrying");
                         pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
                     }
                 }

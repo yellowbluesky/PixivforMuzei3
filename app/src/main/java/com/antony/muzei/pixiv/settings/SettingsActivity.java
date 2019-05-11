@@ -32,8 +32,6 @@ public class SettingsActivity extends AppCompatActivity
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         oldCreds = sharedPrefs.getString("pref_loginPassword", "");
         newCreds = oldCreds;
-        Log.d("PIXIV", "oldcreds: " + oldCreds);
-        Log.d("PIXIV", "newcreds initial: " + newCreds);
 
         prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
         {
@@ -66,7 +64,6 @@ public class SettingsActivity extends AppCompatActivity
     public void onStop()
     {
         super.onStop();
-        Log.d("PIXIV", "newcreds: " + newCreds);
     }
 
     @Override

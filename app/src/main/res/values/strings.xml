@@ -10,7 +10,7 @@
     <string name="pref_restrictMode">Show NSFW images</string>
 
     <string name="preftitle_nswFilterLevel">NSFW filtering level</string>
-    <string name="pref_nsfwFilterLevel_default">0</string>
+    <string name="pref_nsfwFilterLevel_default">2</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>
     <string name="pref_loginId">Login ID</string>
