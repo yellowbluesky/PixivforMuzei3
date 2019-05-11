@@ -187,27 +187,32 @@ public class PixivArtWorker extends Worker
     }
 
     // authMode = true: auth Needed
-    // TODO should there be a second overloaded method without auth features
-    private Response sendGetRequest(String url, boolean authMode, String accessToken) throws IOException
+    private Response sendGetRequest(String url, String accessToken) throws IOException
     {
         OkHttpClient httpClient = new OkHttpClient.Builder()
                 .build();
 
-        Request.Builder builder = new Request.Builder();
-        if (authMode)
-        {
-            builder.addHeader("User-Agent", "PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)")
-                    .addHeader("App-OS", "ios")
-                    .addHeader("App-OS-Version", "10.3.1")
-                    .addHeader("App-Version", "6.9.0")
-                    .addHeader("Authorization", "Bearer " + accessToken)
-                    .url(url);
-        } else
-        {
-            builder.addHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0")
-                    .addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
-                    .url(url);
-        }
+        Request.Builder builder = new Request.Builder()
+                .addHeader("User-Agent", "PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)")
+                .addHeader("App-OS", "ios")
+                .addHeader("App-OS-Version", "10.3.1")
+                .addHeader("App-Version", "6.9.0")
+                .addHeader("Authorization", "Bearer " + accessToken)
+                .url(url);
+
+        return httpClient.newCall(builder.build()).execute();
+    }
+
+    private Response sendGetRequest(String url) throws IOException
+    {
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .build();
+
+        Request.Builder builder = new Request.Builder()
+                .addHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0")
+                .addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
+                .url(url);
+
         return httpClient.newCall(builder.build()).execute();
     }
 
@@ -256,7 +261,7 @@ public class PixivArtWorker extends Worker
         for (String suffix : IMAGE_SUFFIXS)
         {
             String uri = uri1 + suffix;
-            response = sendGetRequest(uri, false, "");
+            response = sendGetRequest(uri);
             if (response.code() == 200)
             {
                 return response;
@@ -402,7 +407,6 @@ public class PixivArtWorker extends Worker
             // This is a mess
             rankingResponse = sendGetRequest(
                     getUpdateUriInfo(mode, sharedPrefs.getString("userId", "")),
-                    mode.equals("follow") || mode.equals("bookmark"),
                     accessToken
             );
 
@@ -446,7 +450,7 @@ public class PixivArtWorker extends Worker
                             .getJSONObject("image_urls")
                             .getString("original");
                 }
-                imageDataResponse = sendGetRequest(imageUrl, false, "");
+                imageDataResponse = sendGetRequest(imageUrl);
             } else
             {
                 Log.d(LOG_TAG, "Ranking");
@@ -460,7 +464,6 @@ public class PixivArtWorker extends Worker
         } catch (IOException | JSONException ex)
         {
             Log.d(LOG_TAG, "error");
-            Log.d(LOG_TAG, overallJson.toString());
             ex.printStackTrace();
             return Result.failure();
         }
