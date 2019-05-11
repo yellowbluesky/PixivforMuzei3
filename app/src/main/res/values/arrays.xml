@@ -15,8 +15,8 @@
     </string-array>
     <string-array name="pref_nsfwmode_entries">
         <item>SFW</item>
-        <item>Slightly ecchi (beach)</item>
-        <item>Fairly ecchi (upskirt pantsu)</item>
+        <item>Slightly ecchi</item>
+        <item>Fairly ecchi</item>
         <item>R18</item>
     </string-array>
     <string-array name="pref_nsfwmode_entryvalues">
