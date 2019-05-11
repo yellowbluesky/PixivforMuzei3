@@ -29,23 +29,44 @@ public class SettingsActivity extends AppCompatActivity
                 .add(R.id.FeedPreferencesFragment, new SettingsFragment())
                 .commit();
 
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         oldCreds = sharedPrefs.getString("pref_loginPassword", "");
-        Log.d("PIXIV", oldCreds);
+        newCreds = oldCreds;
+        Log.d("PIXIV", "oldcreds: " + oldCreds);
+        Log.d("PIXIV", "newcreds initial: " + newCreds);
 
         prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
         {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
             {
-                if (!key.equals("pref_loginPassword"))
+                if (key.equals("pref_loginPassword"))
                 {
-                    return;
+                    newCreds = sharedPrefs.getString("pref_loginPassword", "");
                 }
-                newCreds = sharedPrefs.getString("pref_loginPassword", "");
-                Log.d("PIXIV", newCreds);
             }
         };
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        sharedPrefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        sharedPrefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
+    }
+
+    @Override
+    public void onStop()
+    {
+        super.onStop();
+        Log.d("PIXIV", "newcreds: " + newCreds);
     }
 
     @Override
@@ -61,7 +82,6 @@ public class SettingsActivity extends AppCompatActivity
             editor.putString("deviceToken", "");
             editor.putLong("accessTokenIssueTime", 0);
             editor.commit();
-
             Toast.makeText(getApplicationContext(), "New credentials found", Toast.LENGTH_SHORT).show();
         }
     }

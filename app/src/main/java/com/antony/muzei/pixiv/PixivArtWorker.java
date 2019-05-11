@@ -262,10 +262,12 @@ public class PixivArtWorker extends Worker
     // Filters through the JSON containing all the images
     // Picks one image based on user settings to show manga and NSFW filtering level
     // There are 4 NSFW levels that Pixiv provides to us (well 5, but 4 and 5 are more or less the same and overlap)
-    // 0 -> Not NSFW at all
-    // 2 -> Moderately ecchi, e.g. beach bikinis, bras, mild upskirts
-    // 4 -> Much more risque with succubi and more explicit upskirts
-    // 6 / x_restrict -> nudity, penetration, the whole shebang
+    // 2 -> Not NSFW at all
+    // 4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
+    // 6 -> More risque e.g. mroe explicit upskirts, succubi
+    // 8 -> A virtual level corresponding to x-resttrict = 1. Nudity, penetration
+
+    // A value of 6 means that the user is allowing images of level 2, 4 and 6 through while disallowing level 8
     private JSONObject selectPicture(JSONObject overallJson)
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -273,7 +275,6 @@ public class PixivArtWorker extends Worker
         int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
         Log.d(LOG_TAG, "NSFW filter level set to: " + nsfwFilterLevel);
         JSONObject pictureMetadata = null;
-        boolean validImage = false;
         Random random = new Random();
 
         try
@@ -282,62 +283,68 @@ public class PixivArtWorker extends Worker
             if (overallJson.has("illusts"))
             {
                 JSONArray illusts = overallJson.getJSONArray("illusts");
-                while (!validImage)
+                // Random seems to be very inefficient, potentially visiting the same image multiple times
+                pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+
+                // If user does not want manga to display
+                if (!showManga)
                 {
-                    // Random seems to be very inefficient, potentially visiting the same image multiple times
-                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                    // If user does not want manga to display
-                    if (!showManga)
+                    Log.d(LOG_TAG, "checking for no manga");
+                    while (!pictureMetadata.getString("type").equals("illust"))
                     {
-                        Log.d(LOG_TAG, "checking for no manga");
-                        while (!pictureMetadata.getString("type").equals("illust"))
+                        Log.d(LOG_TAG, "spinning for non manga");
+                        pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                    }
+                }
+                // If user does not want NSFW images to show
+                // If the level is 8, then the user has selected to disable ALL filtering
+                if (nsfwFilterLevel < 8)
+                {
+                    Log.d(LOG_TAG, "Performing some level of NSFW filtering");
+                    // Filtering out only x_restrict
+                    if (nsfwFilterLevel == 6)
+                    {
+                        Log.d(LOG_TAG, "Checking for x_restrict");
+                        while (pictureMetadata.getInt("x_restrict") != 0)
                         {
-                            Log.d(LOG_TAG, "spinning for non manga");
                             pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                         }
-                    }
-                    // If user does not want NSFW images to show
-                    // TODO
-                    // can probably optimize the while check into a variable of its own
-                    Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
-                    int nsfwLevel = pictureMetadata.getInt("sanity_level");
-                    while(nsfwLevel > nsfwFilterLevel)
+                    } else
                     {
-                        Log.d(LOG_TAG, "pulled picture has NSFW level of: " + nsfwLevel);
-                        Log.d(LOG_TAG, "exceeds set filter level, retrying");
-                        pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                        nsfwLevel = pictureMetadata.getInt("sanity_level");
+                        int nsfwLevel = pictureMetadata.getInt("sanity_level");
+                        while (nsfwLevel > nsfwFilterLevel)
+                        {
+                            Log.d(LOG_TAG, "pulled picture has NSFW level of: " + nsfwLevel);
+                            Log.d(LOG_TAG, "exceeds set filter level, retrying");
+                            pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                            nsfwLevel = pictureMetadata.getInt("sanity_level");
+                        }
                     }
-                    validImage = true;
                 }
                 // Else if passed JSON was from a ranking
             } else if (overallJson.has("contents"))
             {
                 JSONArray contents = overallJson.getJSONArray("contents");
                 pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-                while (!validImage)
+                // If user does not want manga to display
+                if (!showManga)
                 {
-                    // If user does not want manga to display
-                    if (!showManga)
+                    Log.d(LOG_TAG, "checking for no manga");
+                    while (pictureMetadata.getInt("illust_type") != 0)
                     {
-                        Log.d(LOG_TAG, "checking for no manga");
-                        while (pictureMetadata.getInt("illust_type") != 0)
-                        {
-                            Log.d(LOG_TAG, "spinning for non manga");
-                            pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-                        }
+                        Log.d(LOG_TAG, "spinning for non manga");
+                        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
                     }
-                    // If user does not want NSFW images to show
-                    if (nsfwFilterLevel > 0)
+                }
+                // If user does not want NSFW images to show
+                if (nsfwFilterLevel > 2)
+                {
+                    Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
+                    while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
                     {
-                        Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
-                        while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
-                        {
-                            Log.d(LOG_TAG, "pulled picture exceeds set NSFW filter, retrying");
-                            pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-                        }
+                        Log.d(LOG_TAG, "pulled picture exceeds set NSFW filter, retrying");
+                        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
                     }
-                    validImage = true;
                 }
             }
         } catch (JSONException ex)
