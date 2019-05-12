@@ -1,9 +1,7 @@
 # PixivforMuzei3
 Pixiv plugin for the new Muzei 3 API
 
-Inspired by https://github.com/dahlia/muzei-pixiv, the aim of this app is to  add compatability with the new Muzei 3 API while also improving functionality
-
-Uses official API endpoints of Pixiv.net
+Inspired by https://github.com/dahlia/muzei-pixiv, this app was originally developed to add Muzei 3 support. Now that the inspiration has Muzei 3 support, the aim of this app is to add functionality
 
 Features
   - Can pull pictures from rankings, feed, or bookmarks
