@@ -11,7 +11,4 @@ Features
   - Utilises the OAuth2 authentication protocol; yoru inbox will not be filled with emails from Pixiv warning on a new login
   - Correctly handles the display of albums, displaying only the first image
 
-Future features
-  - Granular NSFW level filtering
-
 ![main_screen](https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/main.png)![settings_screen](https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/settings.png)
