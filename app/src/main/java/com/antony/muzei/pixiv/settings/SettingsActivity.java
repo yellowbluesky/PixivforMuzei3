@@ -12,12 +12,16 @@ import androidx.preference.PreferenceManager;
 
 import com.antony.muzei.pixiv.PixivArtProvider;
 import com.antony.muzei.pixiv.R;
+import com.google.android.apps.muzei.api.provider.Artwork;
+import com.google.android.apps.muzei.api.provider.ProviderClient;
+import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 public class SettingsActivity extends AppCompatActivity
 {
     private SharedPreferences.OnSharedPreferenceChangeListener prefChangeListener;
-    private String oldCreds;
-    private String newCreds;
+    private String newCreds, oldCreds;
+    private String oldUpdateMode, newUpdateMode;
+    private String oldFilter, newFilter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -33,6 +37,12 @@ public class SettingsActivity extends AppCompatActivity
         oldCreds = sharedPrefs.getString("pref_loginPassword", "");
         newCreds = oldCreds;
 
+        oldUpdateMode = sharedPrefs.getString("pref_updateMode", "");
+        newUpdateMode = oldUpdateMode;
+
+        oldFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
+        newFilter = oldFilter;
+
         prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
         {
             @Override
@@ -41,20 +51,29 @@ public class SettingsActivity extends AppCompatActivity
                 if (key.equals("pref_loginPassword"))
                 {
                     newCreds = sharedPrefs.getString("pref_loginPassword", "");
+                } else if (key.equals("pref_updateMode"))
+                {
+                    newUpdateMode = sharedPrefs.getString("oldUpdateMode", "");
+                }
+                else if (key.equals("pref_nsfwFilterLevel"))
+                {
+                    newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
                 }
             }
         };
     }
 
     @Override
-    public void onResume() {
+    public void onResume()
+    {
         super.onResume();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         sharedPrefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
     }
 
     @Override
-    public void onPause() {
+    public void onPause()
+    {
         super.onPause();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         sharedPrefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
@@ -80,6 +99,13 @@ public class SettingsActivity extends AppCompatActivity
             editor.putLong("accessTokenIssueTime", 0);
             editor.commit();
             Toast.makeText(getApplicationContext(), "New credentials found", Toast.LENGTH_SHORT).show();
+        }
+
+        if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter))
+        {
+            ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
+            client.setArtwork(new Artwork());
+            Toast.makeText(getApplicationContext(), "New update or filtering mode, clearing cache", Toast.LENGTH_SHORT).show();
         }
     }
 
