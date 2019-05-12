@@ -13,3 +13,5 @@ Features
 
 Future features
   - Granular NSFW level filtering
+
+![main_screen](https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/main.png)![settings_screen](https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/settings.png)
