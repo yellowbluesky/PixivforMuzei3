@@ -80,7 +80,7 @@ public class PixivArtWorker extends Worker
             return accessToken;
         }
 
-        Log.i(LOG_TAG, "No access token, or access token expired");
+        Log.i(LOG_TAG, "No access token or access token expired, proceeding to acquire a new access token");
 
 
         // If we did not have an access token or if it had expired, we proceed to build a request to acquire one
@@ -97,7 +97,7 @@ public class PixivArtWorker extends Worker
                     .appendQueryParameter("password", sharedPrefs.getString("pref_loginPassword", ""));
         } else
         {
-            Log.i(LOG_TAG, "Refresh token found, using it to request an access token");
+            Log.i(LOG_TAG, "Refresh token found, usingn it for ");
             authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
                     .appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""));
         }
@@ -113,10 +113,8 @@ public class PixivArtWorker extends Worker
             if (authResponseBody.has("has_error"))
             {
                 Log.i(LOG_TAG, "Error authenticating, check username or password");
+                // Clearing loginPassword is a hacky way to alerting to the user that their crdentials do not work
                 editor.putString("pref_loginPassword", "");
-                editor.putString("accessToken", "");
-                editor.putString("refreshToken", "");
-                editor.putString("storedCreds", "");
                 editor.commit();
                 return "";
             }
@@ -128,9 +126,7 @@ public class PixivArtWorker extends Worker
             editor.putString("refreshToken", tokens.getString("refresh_token"));
             editor.putString("userId", tokens.getJSONObject("user").getString("id"));
             editor.putString("deviceToken", tokens.getString("device_token"));
-
             editor.apply();
-
         } catch (IOException | JSONException ex)
         {
             ex.printStackTrace();
@@ -194,6 +190,7 @@ public class PixivArtWorker extends Worker
                 .build();
 
         Request.Builder builder = new Request.Builder();
+
         if (authMode)
         {
             builder.addHeader("User-Agent", "PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)")
@@ -211,7 +208,6 @@ public class PixivArtWorker extends Worker
         return httpClient.newCall(builder.build()).execute();
     }
 
-    // TODO Maybe mark this function as throwing exception
     // Downloads the selected image to cache folder on local storage
     // Cache folder is periodically pruned of its oldest images by Android
     private Uri downloadFile(Response response, String token) throws IOException
@@ -314,7 +310,7 @@ public class PixivArtWorker extends Worker
                 }
             }
             // If user does not want NSFW images to show
-            // If the filtering level is 8, the user has selected to disable ALL filtering
+            // If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
             // TODO this can be made better
             if (nsfwFilterLevel < 8)
             {
@@ -331,10 +327,10 @@ public class PixivArtWorker extends Worker
                 } else
                 {
                     int nsfwLevel = pictureMetadata.getInt("sanity_level");
-                    Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel);
+                    Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel + ",checking");
                     while (nsfwLevel > nsfwFilterLevel)
                     {
-                        Log.d(LOG_TAG, "Pulled picture xceeds set filter level, retrying");
+                        Log.d(LOG_TAG, "Pulled picture exceeds set filter level, retrying");
                         pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                         nsfwLevel = pictureMetadata.getInt("sanity_level");
                     }
@@ -369,6 +365,8 @@ public class PixivArtWorker extends Worker
         return pictureMetadata;
     }
 
+    // TODO move most / all actual logic out of this function into their own functions
+    // this should be seen as a main(), and child functions with proper names will be much better
     @NonNull
     @Override
     public Result doWork()
