@@ -37,7 +37,6 @@ import okhttp3.Response;
 
 public class PixivArtWorker extends Worker
 {
-    private static final int LIMIT = 5;
     private static final String LOG_TAG = "PIXIV_DEBUG";
 
     private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
@@ -288,7 +287,7 @@ public class PixivArtWorker extends Worker
 
 
     */
-    private JSONObject selectPictureFeedBookmark(JSONObject illusts)
+    private JSONObject selectPictureFeedBookmark(JSONArray illusts) throws JSONException
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
@@ -340,17 +339,15 @@ public class PixivArtWorker extends Worker
         return pictureMetadata;
     }
 
-    private JSONObject selectPictureRanking(JSONObject contents) throws JSONException
+    private JSONObject selectPictureRanking(JSONArray contents) throws JSONException
     {
         Log.d(LOG_TAG, "Selecting ranking");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
         int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
-        Log.i(LOG_TAG, "NSFW filtering is " + (nsfwFilterLevel > 2 : "true" ? "false"));
-        JSONObject pictureMetadata = null;
+        JSONObject pictureMetadata;
         Random random = new Random();
 
-        JSONArray contents = overallJson.getJSONArray("contents");
         pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
         // If user does not want manga to display
         if (!showManga)
@@ -372,7 +369,7 @@ public class PixivArtWorker extends Worker
                 pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
             }
         }
-        Log.d(LOG_TAG, "Exited selecting ranking")
+        Log.d(LOG_TAG, "Exited selecting ranking");
         return pictureMetadata;
     }
 
