@@ -288,8 +288,7 @@ public class PixivArtWorker extends Worker
 
 
     */
-    // TODO also split this function up
-    private JSONObject selectPictureAuth(JSONObject illusts)
+    private JSONObject selectPictureFeedBookmark(JSONObject illusts)
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
@@ -384,7 +383,7 @@ public class PixivArtWorker extends Worker
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
         rankingResponse.close();
-        JSONObject pictureMetadata = selectPictureRanking(overallJson);
+        JSONObject pictureMetadata = selectPictureRanking(overallJson.getJSONArray("contents"));
 
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getString("user_name");
@@ -413,7 +412,7 @@ public class PixivArtWorker extends Worker
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
         rankingResponse.close();
-        JSONObject pictureMetadata = selectPictureAuth(overallJson.getJSONArray("illusts"));
+        JSONObject pictureMetadata = selectPictureFeedBookmark(overallJson.getJSONArray("illusts"));
 
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getJSONObject("user").getString("name");
