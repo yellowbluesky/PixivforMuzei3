@@ -289,96 +289,102 @@ public class PixivArtWorker extends Worker
 
     */
     // TODO also split this function up
-    private JSONObject selectPicture(JSONObject overallJson) throws JSONException
+    private JSONObject selectPictureAuth(JSONObject illusts)
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
         int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
         Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilterLevel);
-        JSONObject pictureMetadata = null;
         Random random = new Random();
 
-        // If passed JSON was for feed or bookmark
-        if (overallJson.has("illusts"))
-        {
-            JSONArray illusts = overallJson.getJSONArray("illusts");
-            // Random seems to be very inefficient, potentially visiting the same image multiple times
-            pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                    // Random seems to be very inefficient, potentially visiting the same image multiple times
+        JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
             // If user does not want manga to display
-            if (!showManga)
+        if (!showManga)
+        {
+            Log.d(LOG_TAG, "Manga not desired");
+            while (!pictureMetadata.getString("type").equals("illust"))
             {
-                Log.d(LOG_TAG, "Manga not desired");
-                while (!pictureMetadata.getString("type").equals("illust"))
+                Log.d(LOG_TAG, "Retrying for a non-manga");
+                pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+            }
+        }
+        // If user does not want NSFW images to show
+        // If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
+        // TODO this can be made better
+        if (nsfwFilterLevel < 8)
+        {
+            Log.d(LOG_TAG, "Performing some level of NSFW filtering");
+            // Allowing all sanity_level and filtering only x_restrict tagged pictures
+            if (nsfwFilterLevel == 6)
+            {
+                Log.d(LOG_TAG, "Checking for x_restrict");
+                while (pictureMetadata.getInt("x_restrict") != 0)
                 {
-                    Log.d(LOG_TAG, "Retrying for a non-manga");
+                    Log.d(LOG_TAG, "Retrying for a non x_restrict");
                     pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
                 }
-            }
-            // If user does not want NSFW images to show
-            // If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
-            // TODO this can be made better
-            if (nsfwFilterLevel < 8)
+            } else
             {
-                Log.d(LOG_TAG, "Performing some level of NSFW filtering");
-                // Allowing all sanity_level and filtering only x_restrict tagged pictures
-                if (nsfwFilterLevel == 6)
+                int nsfwLevel = pictureMetadata.getInt("sanity_level");
+                Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel + ",checking");
+                while (nsfwLevel > nsfwFilterLevel)
                 {
-                    Log.d(LOG_TAG, "Checking for x_restrict");
-                    while (pictureMetadata.getInt("x_restrict") != 0)
-                    {
-                        Log.d(LOG_TAG, "Retrying for a non x_restrict");
-                        pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                    }
-                } else
-                {
-                    int nsfwLevel = pictureMetadata.getInt("sanity_level");
-                    Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel + ",checking");
-                    while (nsfwLevel > nsfwFilterLevel)
-                    {
-                        Log.d(LOG_TAG, "Pulled picture exceeds set filter level, retrying");
-                        pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                        nsfwLevel = pictureMetadata.getInt("sanity_level");
-                    }
-                }
-            }
-            // Else if passed JSON was from a ranking
-        } else if (overallJson.has("contents"))
-        {
-            JSONArray contents = overallJson.getJSONArray("contents");
-            pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-            // If user does not want manga to display
-            if (!showManga)
-            {
-                Log.d(LOG_TAG, "Manga not desired");
-                while (pictureMetadata.getInt("illust_type") != 0)
-                {
-                    Log.d(LOG_TAG, "Retrying for a non-manga");
-                    pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-                }
-            }
-            // If user does not want NSFW images to show
-            if (nsfwFilterLevel > 2)
-            {
-                Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
-                while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
-                {
-                    Log.d(LOG_TAG, "pulled picture is NSFW, retrying");
-                    pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+                    Log.d(LOG_TAG, "Pulled picture exceeds set filter level, retrying");
+                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                    nsfwLevel = pictureMetadata.getInt("sanity_level");
                 }
             }
         }
+
+        return pictureMetadata;
+    }
+
+    private JSONObject selectPictureRanking(JSONObject contents) throws JSONException
+    {
+        Log.d(LOG_TAG, "Selecting ranking");
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+        int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        Log.i(LOG_TAG, "NSFW filtering is " + (nsfwFilterLevel > 2 : "true" ? "false"));
+        JSONObject pictureMetadata = null;
+        Random random = new Random();
+
+        JSONArray contents = overallJson.getJSONArray("contents");
+        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+        // If user does not want manga to display
+        if (!showManga)
+        {
+            Log.d(LOG_TAG, "Manga not desired");
+            while (pictureMetadata.getInt("illust_type") != 0)
+            {
+                Log.d(LOG_TAG, "Retrying for a non-manga");
+                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+            }
+        }
+        // If user does not want NSFW images to show
+        if (nsfwFilterLevel > 2)
+        {
+            Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
+            while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
+            {
+                Log.d(LOG_TAG, "pulled picture is NSFW, retrying");
+                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+            }
+        }
+        Log.d(LOG_TAG, "Exited selecting ranking")
         return pictureMetadata;
     }
 
     private Artwork getPictureRanking(String mode) throws IOException, JSONException
     {
-        Log.d(LOG_TAG, "Entered ranking");
+        Log.d(LOG_TAG, "Getting ranking");
         Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
         rankingResponse.close();
-        JSONObject pictureMetadata = selectPicture(overallJson);
+        JSONObject pictureMetadata = selectPictureRanking(overallJson);
 
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getString("user_name");
@@ -387,7 +393,7 @@ public class PixivArtWorker extends Worker
                 getRemoteFileExtension(pictureMetadata.getString("url")),
                 token
         );
-        Log.d(LOG_TAG, "Exited ranking");
+        Log.d(LOG_TAG, "Exited getting ranking");
 
         final Artwork artwork = new Artwork.Builder()
                 .title(title)
@@ -401,13 +407,13 @@ public class PixivArtWorker extends Worker
 
     private Artwork getPictureFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
     {
-        Log.d(LOG_TAG, "Entered feed or bookmark");
+        Log.d(LOG_TAG, "Getting feed or bookmark");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, sharedPrefs.getString("userId", "")), accessToken);
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
         rankingResponse.close();
-        JSONObject pictureMetadata = selectPicture(overallJson);
+        JSONObject pictureMetadata = selectPictureAuth(overallJson.getJSONArray("illusts"));
 
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getJSONObject("user").getString("name");
@@ -435,7 +441,7 @@ public class PixivArtWorker extends Worker
         Response imageDataResponse = sendGetRequest(imageUrl);
         Uri localUri = downloadFile(imageDataResponse, token);
         imageDataResponse.close();
-        Log.d(LOG_TAG, "Exited feed or bookmark");
+        Log.d(LOG_TAG, "Exited getting feed or bookmark");
         final Artwork artwork = new Artwork.Builder()
                 .title(title)
                 .byline(byline)
