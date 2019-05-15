@@ -70,8 +70,8 @@ public class PixivArtWorker extends Worker
                 .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
                 .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
                 .appendQueryParameter("grant_type", "password")
-                .appendQueryParameter("username", sharedPrefs.getString("pref_loginId", ""))
-                .appendQueryParameter("password", sharedPrefs.getString("pref_loginPassword", ""))
+                .appendQueryParameter("username", loginId)
+                .appendQueryParameter("password", loginPassword)
                 .build();
 
         Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
@@ -88,7 +88,7 @@ public class PixivArtWorker extends Worker
             .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
             .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
             .appendQueryParameter("grant_type", "refresh_token")
-            .appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""))
+            .appendQueryParameter("refresh_token", refreshToken)
             .build();
 
         Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
@@ -96,7 +96,7 @@ public class PixivArtWorker extends Worker
     }
 
     // Upon successful authentication this function stores tokens returned from Pixiv into device memory
-    private void storeTokens(JSONObject tokens) throws IOException
+    private void storeTokens(JSONObject tokens) throws JSONException
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPrefs.edit();
@@ -315,8 +315,6 @@ public class PixivArtWorker extends Worker
     Regarding rankings
         NSFW filtering is performed by checking the value of the "sexual" JSON string
         Manga filtering is performed by checking the value of the "illust_type" JSON string
-
-
     */
     private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
     {
