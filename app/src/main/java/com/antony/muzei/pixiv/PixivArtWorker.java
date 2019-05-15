@@ -60,6 +60,9 @@ public class PixivArtWorker extends Worker
         manager.enqueue(request);
     }
 
+    // Acquires an access token and refresh token from a username / password pair
+    // Returns a response containing an error or the tokens
+    // It is up to the caller to handle any errors
     private Response authLogin(String loginId, String loginPassword) throws IOException, JSONException
     {
         Uri authQuery = new Uri.Builder()
@@ -75,6 +78,9 @@ public class PixivArtWorker extends Worker
         return response;
     }
 
+    // Acquire an access token from an existing refresh token
+    // Returns a response containing an error or the tokens
+    // It is up to the caller to handle any errors
     private Response authRefreshToken(String refreshToken) throws IOException, JSONException
     {
         Uri authQuery = new Uri.Builder()
@@ -87,6 +93,21 @@ public class PixivArtWorker extends Worker
 
         Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
         return response;
+    }
+
+    // Upon successful authentication this function stores tokens returned from Pixiv into device memory
+    private void storeTokens(JSONObject tokens) throws IOException
+    {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("accessToken", tokens.getString("access_token"));
+        editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
+        editor.putString("refreshToken", tokens.getString("refresh_token"));
+        editor.putString("userId", tokens.getJSONObject("user").getString("id"));
+        editor.putString("deviceToken", tokens.getString("device_token"));
+        // Not yet tested, but I believe that this needs to be a commit() and not an apply()
+        // Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
+        editor.commit();
     }
 
     // Returns a string containing a valid access token
@@ -111,8 +132,6 @@ public class PixivArtWorker extends Worker
 
         Log.i(LOG_TAG, "No access token or access token expired, proceeding to acquire a new access token");
 
-
-
         try
         {
             Response response;
@@ -136,14 +155,7 @@ public class PixivArtWorker extends Worker
             }
 
             // Authentication succeeded, storing tokens returned from Pixiv
-            JSONObject tokens = authResponseBody.getJSONObject("response");
-            SharedPreferences.Editor editor = sharedPrefs.edit();
-            editor.putString("accessToken", tokens.getString("access_token"));
-            editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
-            editor.putString("refreshToken", tokens.getString("refresh_token"));
-            editor.putString("userId", tokens.getJSONObject("user").getString("id"));
-            editor.putString("deviceToken", tokens.getString("device_token"));
-            editor.commit();
+            storeTokens(authResponseBody.getJSONObject("response"));
         } catch (IOException | JSONException ex)
         {
             ex.printStackTrace();
@@ -314,7 +326,7 @@ public class PixivArtWorker extends Worker
         Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilterLevel);
         Random random = new Random();
 
-                    // Random seems to be very inefficient, potentially visiting the same image multiple times
+        // Random seems to be very inefficient, potentially visiting the same image multiple times
         JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
             // If user does not want manga to display
