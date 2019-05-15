@@ -60,12 +60,40 @@ public class PixivArtWorker extends Worker
         manager.enqueue(request);
     }
 
+    private Response authLogin(String loginId, String loginPassword) throws IOException, JSONException
+    {
+        Uri authQuery = new Uri.Builder()
+                .appendQueryParameter("get_secure_url", Integer.toString(1))
+                .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
+                .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
+                .appendQueryParameter("grant_type", "password")
+                .appendQueryParameter("username", sharedPrefs.getString("pref_loginId", ""))
+                .appendQueryParameter("password", sharedPrefs.getString("pref_loginPassword", ""))
+                .build();
+
+        Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
+        return response;
+    }
+
+    private Response authRefreshToken(String refreshToken) throws IOException, JSONException
+    {
+        Uri authQuery = new Uri.Builder()
+            .appendQueryParameter("get_secure_url", Integer.toString(1))
+            .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
+            .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
+            .appendQueryParameter("grant_type", "refresh_token")
+            .appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""))
+            .build();
+
+        Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
+        return response;
+    }
+
     // Returns a string containing a valid access token
     // Otherwise returns an empty string if authentication failed or not possible
     private String getAccessToken()
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPrefs.edit();
 
         // If we possess an access token, AND it has not expired, instantly return it
         // Must be a divide by 1000, cannot be subtract 3600 * 1000
@@ -78,53 +106,44 @@ public class PixivArtWorker extends Worker
             return accessToken;
         }
 
+        // call split functions here
+        // child functions will the ones to send the post request
+
         Log.i(LOG_TAG, "No access token or access token expired, proceeding to acquire a new access token");
 
 
-        // If we did not have an access token or if it had expired, we proceed to build a request to acquire one
-        Uri.Builder authQueryBuilder = new Uri.Builder()
-                .appendQueryParameter("get_secure_url", Integer.toString(1))
-                .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
-                .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
-        if (sharedPrefs.getString("refreshToken", "").isEmpty())
-        {
-            Log.i(LOG_TAG, "No refresh token found, proceeding with username / password authentication");
-            authQueryBuilder.appendQueryParameter("grant_type", "password")
-                    .appendQueryParameter("username", sharedPrefs.getString("pref_loginId", ""))
-                    .appendQueryParameter("password", sharedPrefs.getString("pref_loginPassword", ""));
-        } else
-        {
-            Log.i(LOG_TAG, "Refresh token found, proceeding to use it");
-            authQueryBuilder.appendQueryParameter("grant_type", "refresh_token")
-                    .appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""));
-        }
-
-        // Now to actually send the auth POST request
-        Uri authQuery = authQueryBuilder.build();
         try
         {
-            Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
+            Response response;
+            if(sharedPrefs.getString("refreshToken", "").isEmpty())
+            {
+                response = authLogin(sharedPrefs.getString("pref_loginId", ""), sharedPrefs.getString("pref_loginPassword", ""));
+            }
+            else
+            {
+                response = authRefreshToken(sharedPrefs.getString("refreshToken", ""));
+            }
             JSONObject authResponseBody = new JSONObject(response.body().string());
             response.close();
-            // Check if returned JSON indicates an error in authentication
+            
             if (authResponseBody.has("has_error"))
             {
                 Log.i(LOG_TAG, "Error authenticating, check username or password");
                 // Clearing loginPassword is a hacky way to alerting to the user that their crdentials do not work
-                editor.putString("pref_loginPassword", "");
-                editor.commit();
+                sharedPrefs.edit().putString("pref_loginPassword", "").apply();
                 return "";
             }
 
             // Authentication succeeded, storing tokens returned from Pixiv
             JSONObject tokens = authResponseBody.getJSONObject("response");
+            SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.putString("accessToken", tokens.getString("access_token"));
             editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
             editor.putString("refreshToken", tokens.getString("refresh_token"));
             editor.putString("userId", tokens.getJSONObject("user").getString("id"));
             editor.putString("deviceToken", tokens.getString("device_token"));
-            editor.apply();
+            editor.commit();
         } catch (IOException | JSONException ex)
         {
             ex.printStackTrace();
@@ -287,7 +306,7 @@ public class PixivArtWorker extends Worker
 
 
     */
-    private JSONObject selectPictureFeedBookmark(JSONArray illusts) throws JSONException
+    private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
@@ -339,7 +358,7 @@ public class PixivArtWorker extends Worker
         return pictureMetadata;
     }
 
-    private JSONObject selectPictureRanking(JSONArray contents) throws JSONException
+    private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
     {
         Log.d(LOG_TAG, "Selecting ranking");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -380,7 +399,7 @@ public class PixivArtWorker extends Worker
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
         rankingResponse.close();
-        JSONObject pictureMetadata = selectPictureRanking(overallJson.getJSONArray("contents"));
+        JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
 
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getString("user_name");
@@ -409,7 +428,7 @@ public class PixivArtWorker extends Worker
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
         rankingResponse.close();
-        JSONObject pictureMetadata = selectPictureFeedBookmark(overallJson.getJSONArray("illusts"));
+        JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
 
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getJSONObject("user").getString("name");
