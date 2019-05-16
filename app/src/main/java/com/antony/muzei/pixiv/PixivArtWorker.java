@@ -119,9 +119,8 @@ public class PixivArtWorker extends Worker
         // If we possess an access token, AND it has not expired, instantly return it
         // Must be a divide by 1000, cannot be subtract 3600 * 1000
         String accessToken = sharedPrefs.getString("accessToken", "");
-        if (!accessToken.isEmpty()
-                && sharedPrefs.getLong("accessTokenIssueTime", 0)
-                > (System.currentTimeMillis() / 1000) - 3600)
+        long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
+        if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
         {
             Log.i(LOG_TAG, "Existing access token found");
             return accessToken;
@@ -137,11 +136,14 @@ public class PixivArtWorker extends Worker
             Response response;
             if(sharedPrefs.getString("refreshToken", "").isEmpty())
             {
-                response = authLogin(sharedPrefs.getString("pref_loginId", ""), sharedPrefs.getString("pref_loginPassword", ""));
+                String loginId = sharedPrefs.getString("pref_loginId", "");
+                String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
+                response = authLogin(loginId, loginPassword);
             }
             else
             {
-                response = authRefreshToken(sharedPrefs.getString("refreshToken", ""));
+                String refreshToken = sharedPrefs.getString("refreshToken", "");
+                response = authRefreshToken(refreshToken);
             }
             JSONObject authResponseBody = new JSONObject(response.body().string());
             response.close();
@@ -320,8 +322,8 @@ public class PixivArtWorker extends Worker
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
-        Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilterLevel);
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilteringLevel", "0"));
+        Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
         Random random = new Random();
 
         // Random seems to be very inefficient, potentially visiting the same image multiple times
@@ -340,11 +342,11 @@ public class PixivArtWorker extends Worker
         // If user does not want NSFW images to show
         // If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
         // TODO this can be made better
-        if (nsfwFilterLevel < 8)
+        if (nsfwFilteringLevel < 8)
         {
             Log.d(LOG_TAG, "Performing some level of NSFW filtering");
             // Allowing all sanity_level and filtering only x_restrict tagged pictures
-            if (nsfwFilterLevel == 6)
+            if (nsfwFilteringLevel == 6)
             {
                 Log.d(LOG_TAG, "Checking for x_restrict");
                 while (pictureMetadata.getInt("x_restrict") != 0)
@@ -356,7 +358,8 @@ public class PixivArtWorker extends Worker
             {
                 int nsfwLevel = pictureMetadata.getInt("sanity_level");
                 Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel + ",checking");
-                while (nsfwLevel > nsfwFilterLevel)
+                // If it's equal it's ok
+                while (nsfwLevel > nsfwFilteringLevel)
                 {
                     Log.d(LOG_TAG, "Pulled picture exceeds set filter level, retrying");
                     pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
@@ -373,7 +376,7 @@ public class PixivArtWorker extends Worker
         Log.d(LOG_TAG, "Selecting ranking");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilteringLevel", "0"));
         JSONObject pictureMetadata;
         Random random = new Random();
 
@@ -389,7 +392,7 @@ public class PixivArtWorker extends Worker
             }
         }
         // If user does not want NSFW images to show
-        if (nsfwFilterLevel > 2)
+        if (nsfwFilteringLevel > 2)
         {
             Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
             while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
@@ -434,7 +437,8 @@ public class PixivArtWorker extends Worker
     {
         Log.d(LOG_TAG, "Getting feed or bookmark");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, sharedPrefs.getString("userId", "")), accessToken);
+        String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""))
+        Response rankingResponse = sendGetRequest(updateUri, accessToken);
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
         rankingResponse.close();
