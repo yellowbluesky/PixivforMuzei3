@@ -84,12 +84,12 @@ public class PixivArtWorker extends Worker
     private Response authRefreshToken(String refreshToken) throws IOException, JSONException
     {
         Uri authQuery = new Uri.Builder()
-            .appendQueryParameter("get_secure_url", Integer.toString(1))
-            .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
-            .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
-            .appendQueryParameter("grant_type", "refresh_token")
-            .appendQueryParameter("refresh_token", refreshToken)
-            .build();
+                .appendQueryParameter("get_secure_url", Integer.toString(1))
+                .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
+                .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
+                .appendQueryParameter("grant_type", "refresh_token")
+                .appendQueryParameter("refresh_token", refreshToken)
+                .build();
 
         Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
         return response;
@@ -135,17 +135,16 @@ public class PixivArtWorker extends Worker
         try
         {
             Response response;
-            if(sharedPrefs.getString("refreshToken", "").isEmpty())
+            if (sharedPrefs.getString("refreshToken", "").isEmpty())
             {
                 response = authLogin(sharedPrefs.getString("pref_loginId", ""), sharedPrefs.getString("pref_loginPassword", ""));
-            }
-            else
+            } else
             {
                 response = authRefreshToken(sharedPrefs.getString("refreshToken", ""));
             }
             JSONObject authResponseBody = new JSONObject(response.body().string());
             response.close();
-            
+
             if (authResponseBody.has("has_error"))
             {
                 Log.i(LOG_TAG, "Error authenticating, check username or password");
@@ -327,7 +326,7 @@ public class PixivArtWorker extends Worker
         // Random seems to be very inefficient, potentially visiting the same image multiple times
         JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
-            // If user does not want manga to display
+        // If user does not want manga to display
         if (!showManga)
         {
             Log.d(LOG_TAG, "Manga not desired");
@@ -374,6 +373,7 @@ public class PixivArtWorker extends Worker
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
         int nsfwFilterLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        Log.d(LOG_TAG, Integer.toString(nsfwFilterLevel));
         JSONObject pictureMetadata;
         Random random = new Random();
 
@@ -389,7 +389,7 @@ public class PixivArtWorker extends Worker
             }
         }
         // If user does not want NSFW images to show
-        if (nsfwFilterLevel > 2)
+        if (nsfwFilterLevel < 4)
         {
             Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
             while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
