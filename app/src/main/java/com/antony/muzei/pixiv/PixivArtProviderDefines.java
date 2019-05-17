@@ -11,8 +11,8 @@ public class PixivArtProviderDefines {
 	public static final String APP_VERSION = "6.9.0";
 	public static final String APP_USER_AGENT =
 			"PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)";
-	public static final String CLIENT_ID = "bYGKuGVw91e0NMfPGp44euvGt59s";
-	public static final String CLIENT_SECRET = "HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK";
+	public static final String CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
+	public static final String CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
 
 	// urls
 	public static final String PIXIV_HOST = "https://www.pixiv.net";

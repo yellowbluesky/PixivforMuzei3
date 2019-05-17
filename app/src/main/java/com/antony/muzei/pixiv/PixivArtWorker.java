@@ -8,6 +8,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -54,10 +55,12 @@ public class PixivArtWorker extends Worker
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
-        WorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
+                .addTag(LOG_TAG)
                 .setConstraints(constraints)
                 .build();
-        manager.enqueue(request);
+        //manager.enqueue(request);
+        manager.enqueueUniqueWork(LOG_TAG, ExistingWorkPolicy.KEEP, request);
     }
 
     // Acquires an access token and refresh token from a username / password pair
@@ -83,12 +86,14 @@ public class PixivArtWorker extends Worker
     // It is up to the caller to handle any errors
     private Response authRefreshToken(String refreshToken) throws IOException, JSONException
     {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        
         Uri authQuery = new Uri.Builder()
                 .appendQueryParameter("get_secure_url", Integer.toString(1))
                 .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
                 .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
                 .appendQueryParameter("grant_type", "refresh_token")
-                .appendQueryParameter("refresh_token", refreshToken)
+                .appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""))
                 .build();
 
         Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
@@ -104,7 +109,6 @@ public class PixivArtWorker extends Worker
         editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
         editor.putString("refreshToken", tokens.getString("refresh_token"));
         editor.putString("userId", tokens.getJSONObject("user").getString("id"));
-        editor.putString("deviceToken", tokens.getString("device_token"));
         // Not yet tested, but I believe that this needs to be a commit() and not an apply()
         // Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
         editor.commit();
@@ -119,7 +123,8 @@ public class PixivArtWorker extends Worker
         // If we possess an access token, AND it has not expired, instantly return it
         // Must be a divide by 1000, cannot be subtract 3600 * 1000
         String accessToken = sharedPrefs.getString("accessToken", "");
-        long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
+        //long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
+        long accessTokenIssueTime = 1;
         if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
         {
             Log.i(LOG_TAG, "Existing access token found");
@@ -142,10 +147,12 @@ public class PixivArtWorker extends Worker
             }
             else
             {
+                Log.d(LOG_TAG, "using refresh token");
                 String refreshToken = sharedPrefs.getString("refreshToken", "");
                 response = authRefreshToken(refreshToken);
             }
             JSONObject authResponseBody = new JSONObject(response.body().string());
+            Log.d(LOG_TAG, authResponseBody.toString());
             response.close();
 
             if (authResponseBody.has("has_error"))
@@ -322,7 +329,7 @@ public class PixivArtWorker extends Worker
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilteringLevel", "0"));
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
         Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
         Random random = new Random();
 
@@ -376,7 +383,7 @@ public class PixivArtWorker extends Worker
         Log.d(LOG_TAG, "Selecting ranking");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilteringLevel", "0"));
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
         JSONObject pictureMetadata;
         Random random = new Random();
 
@@ -392,7 +399,7 @@ public class PixivArtWorker extends Worker
             }
         }
         // If user does not want NSFW images to show
-        if (nsfwFilterLevel < 4)
+        if (nsfwFilteringLevel < 4)
         {
             Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
             while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
@@ -437,7 +444,7 @@ public class PixivArtWorker extends Worker
     {
         Log.d(LOG_TAG, "Getting feed or bookmark");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""))
+        String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""));
         Response rankingResponse = sendGetRequest(updateUri, accessToken);
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
@@ -498,8 +505,8 @@ public class PixivArtWorker extends Worker
             {
                 // TODO somehow make this Log be a toast message
                 Log.i(LOG_TAG, "Authentication failed, switching update mode to daily ranking");
-                sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
-                mode = "daily_ranking";
+//                sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
+//                mode = "daily_ranking";
             }
         }
 
