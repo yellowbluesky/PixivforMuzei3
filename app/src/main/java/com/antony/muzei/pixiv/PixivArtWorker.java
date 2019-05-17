@@ -77,8 +77,7 @@ public class PixivArtWorker extends Worker
                 .appendQueryParameter("password", loginPassword)
                 .build();
 
-        Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
-        return response;
+        return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
     }
 
     // Acquire an access token from an existing refresh token
@@ -86,18 +85,15 @@ public class PixivArtWorker extends Worker
     // It is up to the caller to handle any errors
     private Response authRefreshToken(String refreshToken) throws IOException, JSONException
     {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        
         Uri authQuery = new Uri.Builder()
                 .appendQueryParameter("get_secure_url", Integer.toString(1))
                 .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
                 .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
                 .appendQueryParameter("grant_type", "refresh_token")
-                .appendQueryParameter("refresh_token", sharedPrefs.getString("refreshToken", ""))
+                .appendQueryParameter("refresh_token", refreshToken)
                 .build();
 
-        Response response = sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
-        return response;
+        return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
     }
 
     // Upon successful authentication this function stores tokens returned from Pixiv into device memory
@@ -123,8 +119,8 @@ public class PixivArtWorker extends Worker
         // If we possess an access token, AND it has not expired, instantly return it
         // Must be a divide by 1000, cannot be subtract 3600 * 1000
         String accessToken = sharedPrefs.getString("accessToken", "");
-        //long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
-        long accessTokenIssueTime = 1;
+        long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
+        //long accessTokenIssueTime = 1;
         if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
         {
             Log.i(LOG_TAG, "Existing access token found");
@@ -144,8 +140,7 @@ public class PixivArtWorker extends Worker
                 String loginId = sharedPrefs.getString("pref_loginId", "");
                 String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
                 response = authLogin(loginId, loginPassword);
-            }
-            else
+            } else
             {
                 Log.d(LOG_TAG, "using refresh token");
                 String refreshToken = sharedPrefs.getString("refreshToken", "");
