@@ -12,7 +12,6 @@ import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -63,6 +62,67 @@ public class PixivArtWorker extends Worker
         manager.enqueueUniqueWork(LOG_TAG, ExistingWorkPolicy.KEEP, request);
     }
 
+    // Returns a string containing a valid access token
+    // Otherwise returns an empty string if authentication failed or not possible
+    private String getAccessToken()
+    {
+        Log.d(LOG_TAG, "getAccessToken(): Entered");
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        // If we possess an access token, AND it has not expired, instantly return it
+        // Must be a divide by 1000, cannot be subtract 3600 * 1000
+        String accessToken = sharedPrefs.getString("accessToken", "");
+        long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
+        //long accessTokenIssueTime = 1;
+        if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
+        {
+            Log.d(LOG_TAG, "Existing access token found");
+            return accessToken;
+        }
+
+        // call split functions here
+        // child functions will the ones to send the post request
+
+        Log.d(LOG_TAG, "Access token expired or nonexistent, proceeding to acquire a new access token");
+
+        try
+        {
+            Response response;
+            if (sharedPrefs.getString("refreshToken", "").isEmpty())
+            {
+                Log.d(LOG_TAG, "Using username and password to acquire an access token");
+                String loginId = sharedPrefs.getString("pref_loginId", "");
+                String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
+                response = authLogin(loginId, loginPassword);
+            } else
+            {
+                Log.d(LOG_TAG, "Using refresh token to acquire an access token");
+                String refreshToken = sharedPrefs.getString("refreshToken", "");
+                response = authRefreshToken(refreshToken);
+            }
+            JSONObject authResponseBody = new JSONObject(response.body().string());
+            Log.d(LOG_TAG, authResponseBody.toString());
+            response.close();
+
+            if (authResponseBody.has("has_error"))
+            {
+                Log.i(LOG_TAG, "Error authenticating, check username or password");
+                // Clearing loginPassword is a hacky way to alerting to the user that their credentials do not work
+                sharedPrefs.edit().putString("pref_loginPassword", "").apply();
+                return "";
+            }
+
+            // Authentication succeeded, storing tokens returned from Pixiv
+            storeTokens(authResponseBody.getJSONObject("response"));
+        } catch (IOException | JSONException ex)
+        {
+            ex.printStackTrace();
+            return "";
+        }
+        Log.d(LOG_TAG, "getAccessToken(): Exited");
+        return sharedPrefs.getString("accessToken", "");
+    }
+
     // Acquires an access token and refresh token from a username / password pair
     // Returns a response containing an error or the tokens
     // It is up to the caller to handle any errors
@@ -108,64 +168,6 @@ public class PixivArtWorker extends Worker
         // Not yet tested, but I believe that this needs to be a commit() and not an apply()
         // Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
         editor.commit();
-    }
-
-    // Returns a string containing a valid access token
-    // Otherwise returns an empty string if authentication failed or not possible
-    private String getAccessToken()
-    {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-        // If we possess an access token, AND it has not expired, instantly return it
-        // Must be a divide by 1000, cannot be subtract 3600 * 1000
-        String accessToken = sharedPrefs.getString("accessToken", "");
-        long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
-        //long accessTokenIssueTime = 1;
-        if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
-        {
-            Log.i(LOG_TAG, "Existing access token found");
-            return accessToken;
-        }
-
-        // call split functions here
-        // child functions will the ones to send the post request
-
-        Log.i(LOG_TAG, "No access token or access token expired, proceeding to acquire a new access token");
-
-        try
-        {
-            Response response;
-            if (sharedPrefs.getString("refreshToken", "").isEmpty())
-            {
-                String loginId = sharedPrefs.getString("pref_loginId", "");
-                String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
-                response = authLogin(loginId, loginPassword);
-            } else
-            {
-                Log.d(LOG_TAG, "using refresh token");
-                String refreshToken = sharedPrefs.getString("refreshToken", "");
-                response = authRefreshToken(refreshToken);
-            }
-            JSONObject authResponseBody = new JSONObject(response.body().string());
-            Log.d(LOG_TAG, authResponseBody.toString());
-            response.close();
-
-            if (authResponseBody.has("has_error"))
-            {
-                Log.i(LOG_TAG, "Error authenticating, check username or password");
-                // Clearing loginPassword is a hacky way to alerting to the user that their crdentials do not work
-                sharedPrefs.edit().putString("pref_loginPassword", "").apply();
-                return "";
-            }
-
-            // Authentication succeeded, storing tokens returned from Pixiv
-            storeTokens(authResponseBody.getJSONObject("response"));
-        } catch (IOException | JSONException ex)
-        {
-            ex.printStackTrace();
-            return "";
-        }
-        return sharedPrefs.getString("accessToken", "");
     }
 
     // Sends an authentication request, and returns a Response
@@ -215,8 +217,8 @@ public class PixivArtWorker extends Worker
         return urlString;
     }
 
-    // authMode = true: auth Needed
-    // TODO should there be a second overloaded method without auth features
+
+    // This function is used when authentication via an access token is required
     private Response sendGetRequest(String url, String accessToken) throws IOException
     {
         OkHttpClient httpClient = new OkHttpClient.Builder()
@@ -233,6 +235,7 @@ public class PixivArtWorker extends Worker
         return httpClient.newCall(builder.build()).execute();
     }
 
+    // This function is used when authentication is not required
     private Response sendGetRequest(String url) throws IOException
     {
         OkHttpClient httpClient = new OkHttpClient.Builder()
@@ -244,6 +247,188 @@ public class PixivArtWorker extends Worker
                 .url(url);
 
         return httpClient.newCall(builder.build()).execute();
+    }
+
+    private Artwork getArtworkRanking(String mode) throws IOException, JSONException
+    {
+        Log.d(LOG_TAG, "getArtworkRanking(): Entering");
+        Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
+
+        JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
+        rankingResponse.close();
+        JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
+
+        String title = pictureMetadata.getString("title");
+        String byline = pictureMetadata.getString("user_name");
+        String token = pictureMetadata.getString("illust_id");
+        Uri localUri = downloadFile(
+                getRemoteFileExtension(pictureMetadata.getString("url")),
+                token
+        );
+        Log.d(LOG_TAG, "getArtworkRanking(): Exited");
+
+        return new Artwork.Builder()
+                .title(title)
+                .byline(byline)
+                .persistentUri(localUri)
+                .token(token)
+                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+                .build();
+    }
+
+
+    private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
+    {
+        Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Entering");
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""));
+        Response rankingResponse = sendGetRequest(updateUri, accessToken);
+
+        JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
+        rankingResponse.close();
+        JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
+
+        String title = pictureMetadata.getString("title");
+        String byline = pictureMetadata.getJSONObject("user").getString("name");
+        String token = pictureMetadata.getString("id");
+
+        // Picture pulled is a single
+        String imageUrl;
+        if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
+        {
+            Log.d(LOG_TAG, "Picture is a single image");
+            imageUrl = pictureMetadata
+                    .getJSONObject("meta_single_page")
+                    .getString("original_image_url");
+        }
+        // Otherwise we have pulled an album, picking the first picture in album
+        else
+        {
+            Log.d(LOG_TAG, "Picture is part of an album");
+            imageUrl = pictureMetadata
+                    .getJSONArray("meta_pages")
+                    .getJSONObject(0)
+                    .getJSONObject("image_urls")
+                    .getString("original");
+        }
+        Response imageDataResponse = sendGetRequest(imageUrl);
+        Uri localUri = downloadFile(imageDataResponse, token);
+        imageDataResponse.close();
+        Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
+        return new Artwork.Builder()
+                .title(title)
+                .byline(byline)
+                .persistentUri(localUri)
+                .token(token)
+                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+                .build();
+    }
+
+    /*
+    Filters through the JSON containing the metadata of the pictures of the selected mode
+    Picks one image based on the user's setting to show manga and level of NSFW filtering
+
+    Regarding feed and bookmarks
+        For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
+            sanity_level
+                2 -> Completely SFW
+                4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
+                6 -> Very ecchi e.g. more explicit and suggestive themes
+             x_restrict
+                1 -> R18 e.g. nudity and penetration
+
+            In this code x_restrict is treated as a level 8 sanity_level
+
+        For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
+
+    Regarding rankings
+        NSFW filtering is performed by checking the value of the "sexual" JSON string
+        Manga filtering is performed by checking the value of the "illust_type" JSON string
+    */
+    private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
+    {
+        Log.d(LOG_TAG, "Selecting ranking");
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        JSONObject pictureMetadata;
+        Random random = new Random();
+
+        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+        // If user does not want manga to display
+        if (!showManga)
+        {
+            Log.d(LOG_TAG, "Manga not desired");
+            while (pictureMetadata.getInt("illust_type") != 0)
+            {
+                Log.d(LOG_TAG, "Retrying for a non-manga");
+                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+            }
+        }
+        // If user does not want NSFW images to show
+        if (nsfwFilteringLevel < 4)
+        {
+            Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
+            while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
+            {
+                Log.d(LOG_TAG, "pulled picture is NSFW, retrying");
+                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+            }
+        }
+        Log.d(LOG_TAG, "Exited selecting ranking");
+        return pictureMetadata;
+    }
+    private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
+    {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
+        Random random = new Random();
+
+        // Random seems to be very inefficient, potentially visiting the same image multiple times
+        JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+
+        // If user does not want manga to display
+        if (!showManga)
+        {
+            Log.d(LOG_TAG, "Manga not desired");
+            while (!pictureMetadata.getString("type").equals("illust"))
+            {
+                Log.d(LOG_TAG, "Retrying for a non-manga");
+                pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+            }
+        }
+        // If user does not want NSFW images to show
+        // If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
+        // TODO this can be made better
+        if (nsfwFilteringLevel < 8)
+        {
+            Log.d(LOG_TAG, "Performing some level of NSFW filtering");
+            // Allowing all sanity_level and filtering only x_restrict tagged pictures
+            if (nsfwFilteringLevel == 6)
+            {
+                Log.d(LOG_TAG, "Allowing all but x_restrict, checking");
+                while (pictureMetadata.getInt("x_restrict") != 0)
+                {
+                    Log.d(LOG_TAG, "Retrying for a non x_restrict");
+                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                }
+            } else
+            {
+                int nsfwLevel = pictureMetadata.getInt("sanity_level");
+                Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel + ",checking");
+                // If it's equal it's ok
+                while (nsfwLevel > nsfwFilteringLevel)
+                {
+                    Log.d(LOG_TAG, "Pulled picture exceeds set filtering level, retrying");
+                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+                    nsfwLevel = pictureMetadata.getInt("sanity_level");
+                }
+            }
+        }
+
+        return pictureMetadata;
     }
 
     // Downloads the selected image to cache folder on local storage
@@ -299,190 +484,6 @@ public class PixivArtWorker extends Worker
         return null;
     }
 
-    /*
-    Filters through the JSON containing the metadata of the pictures of the selected mode
-    Picks one image based on the user's setting to show manga and level of NSFW filtering
-
-    Regarding feed and bookmarks
-        For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
-            sanity_level
-                2 -> Completely SFW
-                4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
-                6 -> Very ecchi e.g. more explicit and suggestive themes
-             x_restrict
-                1 -> R18 e.g. nudity and penetration
-
-            In this code x_restrict is treated as a level 8 sanity_level
-
-        For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
-
-    Regarding rankings
-        NSFW filtering is performed by checking the value of the "sexual" JSON string
-        Manga filtering is performed by checking the value of the "illust_type" JSON string
-    */
-    private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
-    {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
-        Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
-        Random random = new Random();
-
-        // Random seems to be very inefficient, potentially visiting the same image multiple times
-        JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-
-        // If user does not want manga to display
-        if (!showManga)
-        {
-            Log.d(LOG_TAG, "Manga not desired");
-            while (!pictureMetadata.getString("type").equals("illust"))
-            {
-                Log.d(LOG_TAG, "Retrying for a non-manga");
-                pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-            }
-        }
-        // If user does not want NSFW images to show
-        // If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
-        // TODO this can be made better
-        if (nsfwFilteringLevel < 8)
-        {
-            Log.d(LOG_TAG, "Performing some level of NSFW filtering");
-            // Allowing all sanity_level and filtering only x_restrict tagged pictures
-            if (nsfwFilteringLevel == 6)
-            {
-                Log.d(LOG_TAG, "Checking for x_restrict");
-                while (pictureMetadata.getInt("x_restrict") != 0)
-                {
-                    Log.d(LOG_TAG, "Retrying for a non x_restrict");
-                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                }
-            } else
-            {
-                int nsfwLevel = pictureMetadata.getInt("sanity_level");
-                Log.d(LOG_TAG, "Filtering level set to: " + nsfwLevel + ",checking");
-                // If it's equal it's ok
-                while (nsfwLevel > nsfwFilteringLevel)
-                {
-                    Log.d(LOG_TAG, "Pulled picture exceeds set filter level, retrying");
-                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                    nsfwLevel = pictureMetadata.getInt("sanity_level");
-                }
-            }
-        }
-
-        return pictureMetadata;
-    }
-
-    private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
-    {
-        Log.d(LOG_TAG, "Selecting ranking");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
-        JSONObject pictureMetadata;
-        Random random = new Random();
-
-        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-        // If user does not want manga to display
-        if (!showManga)
-        {
-            Log.d(LOG_TAG, "Manga not desired");
-            while (pictureMetadata.getInt("illust_type") != 0)
-            {
-                Log.d(LOG_TAG, "Retrying for a non-manga");
-                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-            }
-        }
-        // If user does not want NSFW images to show
-        if (nsfwFilteringLevel < 4)
-        {
-            Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
-            while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
-            {
-                Log.d(LOG_TAG, "pulled picture is NSFW, retrying");
-                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-            }
-        }
-        Log.d(LOG_TAG, "Exited selecting ranking");
-        return pictureMetadata;
-    }
-
-    private Artwork getPictureRanking(String mode) throws IOException, JSONException
-    {
-        Log.d(LOG_TAG, "Getting ranking");
-        Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
-
-        JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.close();
-        JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
-
-        String title = pictureMetadata.getString("title");
-        String byline = pictureMetadata.getString("user_name");
-        String token = pictureMetadata.getString("illust_id");
-        Uri localUri = downloadFile(
-                getRemoteFileExtension(pictureMetadata.getString("url")),
-                token
-        );
-        Log.d(LOG_TAG, "Exited getting ranking");
-
-        final Artwork artwork = new Artwork.Builder()
-                .title(title)
-                .byline(byline)
-                .persistentUri(localUri)
-                .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
-                .build();
-        return artwork;
-    }
-
-    private Artwork getPictureFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
-    {
-        Log.d(LOG_TAG, "Getting feed or bookmark");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""));
-        Response rankingResponse = sendGetRequest(updateUri, accessToken);
-
-        JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.close();
-        JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
-
-        String title = pictureMetadata.getString("title");
-        String byline = pictureMetadata.getJSONObject("user").getString("name");
-        String token = pictureMetadata.getString("id");
-
-        // Picture pulled is a single
-        String imageUrl;
-        if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
-        {
-            Log.d(LOG_TAG, "Picture is a single image");
-            imageUrl = pictureMetadata
-                    .getJSONObject("meta_single_page")
-                    .getString("original_image_url");
-        }
-        // Otherwise we have pulled an album, picking the first picture in album
-        else
-        {
-            Log.d(LOG_TAG, "Picture is part of an album");
-            imageUrl = pictureMetadata
-                    .getJSONArray("meta_pages")
-                    .getJSONObject(0)
-                    .getJSONObject("image_urls")
-                    .getString("original");
-        }
-        Response imageDataResponse = sendGetRequest(imageUrl);
-        Uri localUri = downloadFile(imageDataResponse, token);
-        imageDataResponse.close();
-        Log.d(LOG_TAG, "Exited getting feed or bookmark");
-        final Artwork artwork = new Artwork.Builder()
-                .title(title)
-                .byline(byline)
-                .persistentUri(localUri)
-                .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
-                .build();
-        return artwork;
-    }
-
     @NonNull
     @Override
     public Result doWork()
@@ -509,10 +510,10 @@ public class PixivArtWorker extends Worker
         {
             if (mode.equals("follow") || mode.equals("bookmark"))
             {
-                artwork = getPictureFeedOrBookmark(mode, accessToken);
+                artwork = getArtworkFeedOrBookmark(mode, accessToken);
             } else
             {
-                artwork = getPictureRanking(mode);
+                artwork = getArtworkRanking(mode);
             }
         } catch (IOException | JSONException ex)
         {
