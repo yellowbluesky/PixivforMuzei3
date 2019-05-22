@@ -1,12 +1,11 @@
 package com.antony.muzei.pixiv.settings;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
@@ -54,8 +53,7 @@ public class SettingsActivity extends AppCompatActivity
                 } else if (key.equals("pref_updateMode"))
                 {
                     newUpdateMode = sharedPrefs.getString("oldUpdateMode", "");
-                }
-                else if (key.equals("pref_nsfwFilterLevel"))
+                } else if (key.equals("pref_nsfwFilterLevel"))
                 {
                     newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
                 }
@@ -115,6 +113,18 @@ public class SettingsActivity extends AppCompatActivity
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
         {
             setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
+            Preference buttonClearCache = findPreference(getString(R.string.button_clearCache));
+            buttonClearCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+            {
+                @Override
+                public boolean onPreferenceClick(Preference preference)
+                {
+                    ProviderClient client = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class);
+                    client.setArtwork(new Artwork());
+                    Toast.makeText(getContext(), "Clearing cache", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+            });
         }
     }
 }

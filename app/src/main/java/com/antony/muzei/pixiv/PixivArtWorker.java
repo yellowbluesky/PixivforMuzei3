@@ -350,7 +350,7 @@ public class PixivArtWorker extends Worker
         Log.d(LOG_TAG, "Selecting ranking");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
         JSONObject pictureMetadata;
         Random random = new Random();
 
@@ -382,7 +382,7 @@ public class PixivArtWorker extends Worker
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "0"));
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
         Log.i(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
         Random random = new Random();
 

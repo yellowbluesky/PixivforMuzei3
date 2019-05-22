@@ -14,43 +14,46 @@
   ~ limitations under the License.
   -->
 
-<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="@string/prefCat_pullFeedSettings">
-        <ListPreference
-            android:key="pref_updateMode"
-            android:title="@string/pref_updateMode"
+        <DropDownPreference
+            android:defaultValue="@string/pref_updateMode_default"
             android:dialogTitle="@string/pref_updateMode"
             android:entries="@array/pref_updateMode_entries"
             android:entryValues="@array/pref_updateMode_entryValues"
-            android:defaultValue="@string/pref_updateMode_default"
+            android:key="pref_updateMode"
             android:persistent="true"
-            android:summary="%s"/>
+            android:summary="%s"
+            android:title="@string/pref_updateMode" />
         <SwitchPreference
-            android:key="pref_showManga"
-            android:title="@string/preftitle_showManga"
             android:dialogTitle="@string/preftitle_showManga"
-            android:persistent="true" />
-        <ListPreference
-            android:key="pref_nsfwFilterLevel"
-            android:title="@string/preftitle_nswFilterLevel"
+            android:key="pref_showManga"
+            android:persistent="true"
+            android:title="@string/preftitle_showManga" />
+        <DropDownPreference
+            android:defaultValue="@string/pref_nsfwFilterLevel_default"
             android:dialogTitle="@string/preftitle_nswFilterLevel"
             android:entries="@array/pref_nsfwmode_entries"
             android:entryValues="@array/pref_nsfwmode_entryvalues"
-            android:defaultValue="@string/pref_nsfwFilterLevel_default"
+            android:key="pref_nsfwFilterLevel"
             android:persistent="true"
-            android:summary="%s"/>
+            android:summary="%s"
+            android:title="@string/preftitle_nswFilterLevel" />
+        <Preference
+            android:key="@string/button_clearCache"
+            android:title="Clear image cache" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference
-            android:key="pref_loginId"
-            android:title="@string/pref_loginId"
             android:dialogTitle="@string/pref_loginId"
-            android:persistent="true" />
+            android:key="pref_loginId"
+            android:persistent="true"
+            android:title="@string/pref_loginId" />
         <EditTextPreference
-            android:key="pref_loginPassword"
-            android:title="@string/pref_loginPassword"
             android:dialogTitle="@string/pref_loginPassword"
-            android:persistent="true" />
+            android:key="pref_loginPassword"
+            android:persistent="true"
+            android:title="@string/pref_loginPassword" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
