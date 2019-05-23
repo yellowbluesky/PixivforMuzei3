@@ -60,7 +60,7 @@ public class PixivArtWorker extends Worker
                 .setConstraints(constraints)
                 .build();
         //manager.enqueue(request);
-        manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
+        manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request);
     }
 
     // Returns a string containing a valid access token
@@ -258,7 +258,7 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.close();
+        rankingResponse.body().close();
         JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
 
         String title = pictureMetadata.getString("title");
@@ -288,7 +288,7 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(updateUri, accessToken);
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.close();
+        rankingResponse.body().close();
         JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
 
         String title = pictureMetadata.getString("title");
@@ -316,7 +316,6 @@ public class PixivArtWorker extends Worker
         }
         Response imageDataResponse = sendGetRequest(imageUrl);
         Uri localUri = downloadFile(imageDataResponse, token);
-        imageDataResponse.close();
         Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
         return new Artwork.Builder()
                 .title(title)

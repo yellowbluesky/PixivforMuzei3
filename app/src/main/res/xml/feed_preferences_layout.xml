@@ -56,4 +56,11 @@
             android:persistent="true"
             android:title="@string/pref_loginPassword" />
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/prefCat_about">
+        <Preference android:title="@string/prefTitle_openNsfwWiki">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/yellowbluesky/PixivforMuzei3/wiki/Explanation-of-NSFW-filtering-levels" />
+        </Preference>
+    </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
