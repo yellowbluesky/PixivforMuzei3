@@ -38,6 +38,7 @@ import okhttp3.Response;
 public class PixivArtWorker extends Worker
 {
     private static final String LOG_TAG = "PIXIV_DEBUG";
+    private static final String WORKER_TAG = "PIXIV";
 
     private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
@@ -55,11 +56,11 @@ public class PixivArtWorker extends Worker
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
-                .addTag(LOG_TAG)
+                .addTag(WORKER_TAG)
                 .setConstraints(constraints)
                 .build();
         //manager.enqueue(request);
-        manager.enqueueUniqueWork(LOG_TAG, ExistingWorkPolicy.KEEP, request);
+        manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
     }
 
     // Returns a string containing a valid access token
@@ -77,6 +78,7 @@ public class PixivArtWorker extends Worker
         if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
         {
             Log.d(LOG_TAG, "Existing access token found");
+            Log.d(LOG_TAG, "getAccessToken(): Exited");
             return accessToken;
         }
 
@@ -117,6 +119,7 @@ public class PixivArtWorker extends Worker
         } catch (IOException | JSONException ex)
         {
             ex.printStackTrace();
+            Log.d(LOG_TAG, "getAccessToken(): Exited with error");
             return "";
         }
         Log.d(LOG_TAG, "getAccessToken(): Exited");
