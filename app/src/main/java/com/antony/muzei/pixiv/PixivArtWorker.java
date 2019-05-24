@@ -60,7 +60,7 @@ public class PixivArtWorker extends Worker
                 .setConstraints(constraints)
                 .build();
         //manager.enqueue(request);
-        manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request);
+        manager.beginUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
     }
 
     // Returns a string containing a valid access token
