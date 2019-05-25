@@ -1,4 +1,11 @@
 # PixivforMuzei3
+
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
+      alt="Get it on Google Play"
+      height="80">][googlePlay]
+      
+[googlePlay]: https://play.google.com/store/apps/details?id=com.antony.muzei.pixiv&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1
+
 Pixiv plugin for the new Muzei 3 API
 
 Inspired by https://github.com/dahlia/muzei-pixiv, this app was originally developed to add Muzei 3 support. Now that the inspiration has Muzei 3 support, the aim of this app is to add functionality
