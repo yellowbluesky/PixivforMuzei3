@@ -59,8 +59,7 @@ public class PixivArtWorker extends Worker
                 .addTag(WORKER_TAG)
                 .setConstraints(constraints)
                 .build();
-        //manager.enqueue(request);
-        manager.beginUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
+        manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
     }
 
     // Returns a string containing a valid access token
@@ -381,7 +380,7 @@ public class PixivArtWorker extends Worker
     }
     private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
     {
-        Log.d("filterPictureFeedBookmark(): Entering");
+        Log.d(LOG_TAG, "filterPictureFeedBookmark(): Entering");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
         
