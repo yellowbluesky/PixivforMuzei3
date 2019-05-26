@@ -130,10 +130,10 @@ public class SettingsActivity extends AppCompatActivity
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             if (sharedPrefs.getString("accessToken", "").isEmpty())
             {
-                authStatus.setSummary("Not authenticated with Pixiv, check your credentials");
+                authStatus.setSummary(getString(R.string.prefSummary_authFail));
             } else
             {
-                authStatus.setSummary("Authenticated with Pixiv");
+                authStatus.setSummary(getString(R.string.prefSummary_authSuccess));
             }
         }
     }

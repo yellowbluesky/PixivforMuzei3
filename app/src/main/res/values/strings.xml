@@ -18,6 +18,8 @@
     <string name="pref_loginPassword">Login Password</string>
 
     <string name="prefTitle_authStatus">Pixiv Authentication Status</string>
+    <string name="prefSummary_authSuccess">Logged into Pixiv</string>
+    <string name="prefSummary_authFail">Not logged with Pixiv, check your credentials</string>
 
     <string name="prefCat_about">About</string>
     <string name="prefTitle_openNsfwWiki">Explanation of NSFW levels</string>
