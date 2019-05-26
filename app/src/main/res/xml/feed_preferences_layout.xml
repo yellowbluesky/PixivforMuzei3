@@ -55,6 +55,9 @@
             android:key="pref_loginPassword"
             android:persistent="true"
             android:title="@string/pref_loginPassword" />
+        <Preference
+            android:key="pref_authStatus"
+            android:selectable="false"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_about">
         <Preference android:title="@string/prefTitle_openNsfwWiki">

@@ -125,6 +125,16 @@ public class SettingsActivity extends AppCompatActivity
                     return true;
                 }
             });
+
+            Preference authStatus = findPreference("pref_authStatus");
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            if (sharedPrefs.getString("accessToken", "").isEmpty())
+            {
+                authStatus.setSummary("Not authenticated with Pixiv, check your credentials");
+            } else
+            {
+                authStatus.setSummary("Authenticated with Pixiv");
+            }
         }
     }
 }
