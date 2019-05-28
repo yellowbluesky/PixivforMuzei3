@@ -3,7 +3,10 @@ package com.antony.muzei.pixiv;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Looper;
 import android.util.Log;
+import android.os.Handler;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -378,12 +381,13 @@ public class PixivArtWorker extends Worker
         Log.d(LOG_TAG, "Exited selecting ranking");
         return pictureMetadata;
     }
+
     private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
     {
         Log.d(LOG_TAG, "filterPictureFeedBookmark(): Entering");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        
+
         Random random = new Random();
 
         // Random seems to be very inefficient, potentially visiting the same image multiple times
@@ -501,8 +505,15 @@ public class PixivArtWorker extends Worker
             accessToken = getAccessToken();
             if (accessToken.isEmpty())
             {
-                // TODO somehow make this Log be a toast message
-                Log.i(LOG_TAG, "Authentication failed, switching update mode to daily ranking");
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        Toast.makeText(getApplicationContext(), "Authentication failed, switching to daily ranking", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
                 mode = "daily_ranking";
             }
