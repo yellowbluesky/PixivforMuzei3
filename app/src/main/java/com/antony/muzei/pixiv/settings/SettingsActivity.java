@@ -99,11 +99,17 @@ public class SettingsActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), "New credentials found", Toast.LENGTH_SHORT).show();
         }
 
-        if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter))
+        if (!oldUpdateMode.equals(newUpdateMode))
         {
             ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
             client.setArtwork(new Artwork());
-            Toast.makeText(getApplicationContext(), "New update or filtering mode, clearing cache", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "New update mode, clearing cache", Toast.LENGTH_SHORT).show();
+        }
+        else if(!oldFilter.equals(newFilter))
+        {
+            ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
+            client.setArtwork(new Artwork());
+            Toast.makeText(getApplicationContext(), "New filtering mode, clearing cache", Toast.LENGTH_SHORT).show();
         }
     }
 

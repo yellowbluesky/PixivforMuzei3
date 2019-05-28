@@ -14,12 +14,12 @@
     <string name="button_clearCache">Clear image cache</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>
-    <string name="pref_loginId">Login ID</string>
-    <string name="pref_loginPassword">Login Password</string>
+    <string name="pref_loginId">Pixiv ID</string>
+    <string name="pref_loginPassword">Password</string>
 
     <string name="prefTitle_authStatus">Pixiv Authentication Status</string>
     <string name="prefSummary_authSuccess">Logged into Pixiv</string>
-    <string name="prefSummary_authFail">Not logged with Pixiv, check your credentials</string>
+    <string name="prefSummary_authFail">Not logged in</string>
 
     <string name="prefCat_about">About</string>
     <string name="prefTitle_openNsfwWiki">Explanation of NSFW levels</string>
