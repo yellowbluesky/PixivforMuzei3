@@ -20,4 +20,6 @@ Features
   - Utilises the OAuth2 authentication protocol; your inbox will not be filled with emails from Pixiv warning of a new login
   - Correctly handles the display of albums, displaying only the first image
 
-![main_screen](https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/main.png)![settings_screen](https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/settings.png)
+<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/main.png" width="400">
+
+<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/settings.png" width="400">
