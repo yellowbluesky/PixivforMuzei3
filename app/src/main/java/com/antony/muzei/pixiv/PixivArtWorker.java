@@ -84,9 +84,6 @@ public class PixivArtWorker extends Worker
             return accessToken;
         }
 
-        // call split functions here
-        // child functions will the ones to send the post request
-
         Log.d(LOG_TAG, "Access token expired or nonexistent, proceeding to acquire a new access token");
 
         try
@@ -517,13 +514,14 @@ public class PixivArtWorker extends Worker
             accessToken = getAccessToken();
             if (accessToken.isEmpty())
             {
+                // All this is needed to toast
                 Handler handler = new Handler(Looper.getMainLooper());
                 handler.post(new Runnable()
                 {
                     @Override
                     public void run()
                     {
-                        Toast.makeText(getApplicationContext(), "Authentication failed, switching to daily ranking", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Pixiv for Muzei 3: Authentication failed, switching to daily ranking", Toast.LENGTH_SHORT).show();
                     }
                 });
                 sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
