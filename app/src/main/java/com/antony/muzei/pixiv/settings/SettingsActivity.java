@@ -104,8 +104,7 @@ public class SettingsActivity extends AppCompatActivity
             ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
             client.setArtwork(new Artwork());
             Toast.makeText(getApplicationContext(), "New update mode, clearing cache", Toast.LENGTH_SHORT).show();
-        }
-        else if(!oldFilter.equals(newFilter))
+        } else if (!oldFilter.equals(newFilter))
         {
             ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
             client.setArtwork(new Artwork());
@@ -132,14 +131,15 @@ public class SettingsActivity extends AppCompatActivity
                 }
             });
 
-            Preference authStatus = findPreference("pref_authStatus");
+            Preference loginId = findPreference("pref_loginId");
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             if (sharedPrefs.getString("accessToken", "").isEmpty())
             {
-                authStatus.setSummary(getString(R.string.prefSummary_authFail));
+                loginId.setSummary(getString(R.string.prefSummary_authFail));
             } else
             {
-                authStatus.setSummary(getString(R.string.prefSummary_authSuccess));
+                String summaryString = getString(R.string.prefSummary_authSuccess) + " " + sharedPrefs.getString("pref_loginId", "");
+                loginId.setSummary(summaryString);
             }
         }
     }
