@@ -116,6 +116,9 @@ public class PixivArtWorker extends Worker
             }
 
             // Authentication succeeded, storing tokens returned from Pixiv
+            //Log.d(LOG_TAG, authResponseBody.toString());
+//            Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
+//            sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
             storeTokens(authResponseBody.getJSONObject("response"));
         } catch (IOException | JSONException ex)
         {
@@ -126,6 +129,16 @@ public class PixivArtWorker extends Worker
         Log.d(LOG_TAG, "getAccessToken(): Exited");
         return sharedPrefs.getString("accessToken", "");
     }
+
+//    private Uri storeProfileImage(JSONObject response) throws JSONException, java.io.IOException
+//    {
+//        String profileImageUrl = response
+//                .getJSONObject("user")
+//                .getJSONObject("profile_image_urls")
+//                .getString("px_170x170");
+//
+//        return downloadFile(sendGetRequest(profileImageUrl), "profile.png");
+//    }
 
     // Acquires an access token and refresh token from a username / password pair
     // Returns a response containing an error or the tokens
@@ -186,10 +199,10 @@ public class PixivArtWorker extends Worker
         RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
 
         Request.Builder builder = new Request.Builder()
-                .addHeader("User-Agent", "PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)")
-                .addHeader("App-OS", "ios")
-                .addHeader("App-OS-Version", "10.3.1")
-                .addHeader("App-Version", "6.9.0")
+                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+                .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
+                .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
+                .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
                 .addHeader("Content-type", body.contentType().toString())
                 .post(body)
                 .url(url);
@@ -228,12 +241,11 @@ public class PixivArtWorker extends Worker
         OkHttpClient httpClient = new OkHttpClient.Builder()
                 .build();
 
-        Request.Builder builder = new Request.Builder();
-
-        builder.addHeader("User-Agent", "PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)")
-                .addHeader("App-OS", "ios")
-                .addHeader("App-OS-Version", "10.3.1")
-                .addHeader("App-Version", "6.9.0")
+        Request.Builder builder = new Request.Builder()
+                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+                .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
+                .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
+                .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
                 .addHeader("Authorization", "Bearer " + accessToken)
                 .url(url);
         return httpClient.newCall(builder.build()).execute();
@@ -246,7 +258,7 @@ public class PixivArtWorker extends Worker
                 .build();
 
         Request.Builder builder = new Request.Builder()
-                .addHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0")
+                .addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
                 .addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
                 .url(url);
 
@@ -439,12 +451,12 @@ public class PixivArtWorker extends Worker
 
     // Downloads the selected image to cache folder on local storage
     // Cache folder is periodically pruned of its oldest images by Android
-    private Uri downloadFile(Response response, String token) throws IOException
+    private Uri downloadFile(Response response, String filename) throws IOException
     {
         Context context = getApplicationContext();
         // Muzei does not care about file extensions
         // Only there to more easily allow local user to open them
-        File downloadedFile = new File(context.getCacheDir(), token + ".png");
+        File downloadedFile = new File(context.getCacheDir(), filename + ".png");
         FileOutputStream fileStream = new FileOutputStream(downloadedFile);
         InputStream inputStream = response.body().byteStream();
         final byte[] buffer = new byte[1024 * 50];

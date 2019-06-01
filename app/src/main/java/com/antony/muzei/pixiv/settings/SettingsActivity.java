@@ -1,6 +1,7 @@
 package com.antony.muzei.pixiv.settings;
 
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -140,6 +141,8 @@ public class SettingsActivity extends AppCompatActivity
             {
                 String summaryString = getString(R.string.prefSummary_authSuccess) + " " + sharedPrefs.getString("pref_loginId", "");
                 loginId.setSummary(summaryString);
+//                Uri profileImageUri = Uri.parse(sharedPrefs.getString("profileImageUri", ""));
+//                loginId.setIcon();
             }
         }
     }
