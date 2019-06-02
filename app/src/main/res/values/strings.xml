@@ -11,7 +11,7 @@
 
     <string name="preftitle_nswFilterLevel">NSFW filtering level</string>
     <string name="pref_nsfwFilterLevel_default">2</string>
-    <string name="button_clearCache">Clear image cache</string>
+    <string name="button_clearCache">Clear picture cache</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>
     <string name="pref_loginId">Pixiv ID</string>

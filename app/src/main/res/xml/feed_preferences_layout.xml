@@ -47,11 +47,13 @@
     <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference
             android:dialogTitle="@string/pref_loginId"
+            android:inputType="text"
             android:key="pref_loginId"
             android:persistent="true"
             android:title="@string/pref_loginId" />
         <EditTextPreference
             android:dialogTitle="@string/pref_loginPassword"
+            android:inputType="textWebPassword"
             android:key="pref_loginPassword"
             android:persistent="true"
             android:title="@string/pref_loginPassword" />
