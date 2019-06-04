@@ -1,7 +1,6 @@
 package com.antony.muzei.pixiv.settings;
 
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -9,11 +8,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.work.WorkManager;
 
 import com.antony.muzei.pixiv.PixivArtProvider;
 import com.antony.muzei.pixiv.R;
 import com.google.android.apps.muzei.api.provider.Artwork;
-import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 public class SettingsActivity extends AppCompatActivity
@@ -97,19 +96,21 @@ public class SettingsActivity extends AppCompatActivity
             editor.putString("deviceToken", "");
             editor.putLong("accessTokenIssueTime", 0);
             editor.commit();
-            Toast.makeText(getApplicationContext(), "New credentials found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
         }
 
         if (!oldUpdateMode.equals(newUpdateMode))
         {
-            ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
-            client.setArtwork(new Artwork());
-            Toast.makeText(getApplicationContext(), "New update mode, clearing cache", Toast.LENGTH_SHORT).show();
+            WorkManager manager = WorkManager.getInstance();
+            manager.cancelAllWorkByTag("PIXIV");
+            ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
         } else if (!oldFilter.equals(newFilter))
         {
-            ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
-            client.setArtwork(new Artwork());
-            Toast.makeText(getApplicationContext(), "New filtering mode, clearing cache", Toast.LENGTH_SHORT).show();
+            WorkManager manager = WorkManager.getInstance();
+            manager.cancelAllWorkByTag("PIXIV");
+            ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -125,9 +126,8 @@ public class SettingsActivity extends AppCompatActivity
                 @Override
                 public boolean onPreferenceClick(Preference preference)
                 {
-                    ProviderClient client = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class);
-                    client.setArtwork(new Artwork());
-                    Toast.makeText(getContext(), "Clearing cache", Toast.LENGTH_SHORT).show();
+                    ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).setArtwork(new Artwork());
+                    Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }
             });

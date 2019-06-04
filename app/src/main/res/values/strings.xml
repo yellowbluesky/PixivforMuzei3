@@ -24,4 +24,10 @@
     <string name="prefCat_about">About</string>
     <string name="prefTitle_openNsfwWiki">Explanation of NSFW levels</string>
 
+    <string name="toast_authFailed">Pixiv for Muzei 3: Authentication failed, switching to daily ranking</string>
+    <string name="toast_newCredentials">New credentials found</string>
+    <string name="toast_newUpdateMode">New update mode, clearing cache</string>
+    <string name="toast_newFilterMode">New filtering mode, clearing cache</string>
+    <string name="toast_clearingCache">Clearing cache</string>
+
 </resources>
