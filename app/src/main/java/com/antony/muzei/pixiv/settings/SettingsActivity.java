@@ -32,6 +32,8 @@ public class SettingsActivity extends AppCompatActivity
                 .commit();
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        // Stores user toggleable variables into a temporary store for later comparison in onDestroy()
         oldCreds = sharedPrefs.getString("pref_loginPassword", "");
         newCreds = oldCreds;
 
@@ -98,6 +100,7 @@ public class SettingsActivity extends AppCompatActivity
     public void onDestroy()
     {
         super.onDestroy();
+        // If new user credentials were entered and saved, then clear and invalidate existing stored user credentials
         if (!oldCreds.equals(newCreds))
         {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
