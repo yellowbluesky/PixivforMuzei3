@@ -160,12 +160,12 @@ public class SettingsActivity extends AppCompatActivity
                             .setConstraints(constraints)
                             .build();
                     manager.enqueueUniquePeriodicWork("PIXIV_CACHECLEAR", ExistingPeriodicWorkPolicy.KEEP, request);
-                    Toast.makeText(getApplicationContext(), "Automatically clearing cache", Toast.LENGTH_SHORT).show();
-                }
+                    }
             } catch (InterruptedException | ExecutionException ex)
             {
                 ex.printStackTrace();
             }
+            Toast.makeText(getApplicationContext(), "Automatically clearing cache", Toast.LENGTH_SHORT).show();
         } else
         {
             WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("PIXIV_CACHECLEAR");
