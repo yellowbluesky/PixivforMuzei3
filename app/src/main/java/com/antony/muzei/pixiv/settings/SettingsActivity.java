@@ -8,11 +8,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.antony.muzei.pixiv.PixivArtProvider;
 import com.antony.muzei.pixiv.R;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
+
+import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
 {
@@ -123,6 +130,24 @@ public class SettingsActivity extends AppCompatActivity
             //WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
+        }
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if(sharedPrefs.getBoolean("prefTitle_autoClearMode", false))
+        {
+            WorkManager manager = WorkManager.getInstance();
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+                    .setInitialDelay(5, TimeUnit.HOURS)
+                    .addTag("PIXIV_CACHE")
+                    .setConstraints(constraints)
+                    .build();
+            manager.enqueueUniquePeriodicWork("PIXIV_CACHE", ExistingPeriodicWorkPolicy.KEEP, request);
+        }
+        else
+        {
+            // TODO dequeue PeriodicWorkRequest
         }
     }
 
