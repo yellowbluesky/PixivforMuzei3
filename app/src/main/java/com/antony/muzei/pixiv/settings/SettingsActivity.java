@@ -12,13 +12,18 @@ import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import com.antony.muzei.pixiv.PixivArtProvider;
 import com.antony.muzei.pixiv.R;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
+import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Calendar;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
@@ -55,7 +60,7 @@ public class SettingsActivity extends AppCompatActivity
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
             {
-                switch(key)
+                switch (key)
                 {
                     case "pref_loginPassword":
                         newCreds = sharedPrefs.getString("pref_loginPassword", "");
@@ -131,23 +136,40 @@ public class SettingsActivity extends AppCompatActivity
             ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if(sharedPrefs.getBoolean("prefTitle_autoClearMode", false))
+        if (PreferenceManager.getDefaultSharedPreferences(
+                getApplicationContext()).getBoolean("pref_autoClearMode", false))
         {
-            WorkManager manager = WorkManager.getInstance();
-            Constraints constraints = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build();
-            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
-                    .setInitialDelay(5, TimeUnit.HOURS)
-                    .addTag("PIXIV_CACHE")
-                    .setConstraints(constraints)
-                    .build();
-            manager.enqueueUniquePeriodicWork("PIXIV_CACHE", ExistingPeriodicWorkPolicy.KEEP, request);
-        }
-        else
+            WorkManager manager = WorkManager.getInstance(getApplicationContext());
+            ListenableFuture<List<WorkInfo>> future = manager.getWorkInfosByTag("PIXIV_CACHECLEAR");
+            try
+            {
+                List<WorkInfo> list = future.get();
+                if ((list == null) || (list.size() == 0))
+                {
+                    // Calculating the number of hours until 4AM
+                    Calendar timeNow = Calendar.getInstance();
+                    int hoursNow = timeNow.get(Calendar.HOUR_OF_DAY);
+                    int hoursUntilFour = hoursNow > 23 ? 4 - hoursNow : hoursNow - 4;
+
+                    Constraints constraints = new Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .build();
+                    PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+                            .setInitialDelay(hoursUntilFour, TimeUnit.HOURS)
+                            .addTag("PIXIV_CACHECLEAR")
+                            .setConstraints(constraints)
+                            .build();
+                    manager.enqueueUniquePeriodicWork("PIXIV_CACHECLEAR", ExistingPeriodicWorkPolicy.KEEP, request);
+                    Toast.makeText(getApplicationContext(), "Automatically clearing cache", Toast.LENGTH_SHORT).show();
+                }
+            } catch (InterruptedException | ExecutionException ex)
+            {
+                ex.printStackTrace();
+            }
+        } else
         {
-            // TODO dequeue PeriodicWorkRequest
+            WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("PIXIV_CACHECLEAR");
+            Toast.makeText(getApplicationContext(), "Not automatically clearing cache", Toast.LENGTH_SHORT).show();
         }
     }
 
