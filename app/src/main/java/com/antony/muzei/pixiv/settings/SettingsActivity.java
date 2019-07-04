@@ -127,12 +127,14 @@ public class SettingsActivity extends AppCompatActivity
 
         if (!oldUpdateMode.equals(newUpdateMode))
         {
-            //WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
+            WorkManager manager = WorkManager.getInstance();
+            manager.cancelAllWorkByTag("PIXIV");
             ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
         } else if (!oldFilter.equals(newFilter))
         {
-            //WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
+            WorkManager manager = WorkManager.getInstance();
+            manager.cancelAllWorkByTag("PIXIV");
             ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
