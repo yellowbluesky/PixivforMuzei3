@@ -49,18 +49,6 @@ public class SettingsActivity extends AppCompatActivity
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
             {
-//                switch (key)
-//                {
-//                    case "pref_loginPassword":
-//                        newCreds = sharedPrefs.getString("pref_loginPassword", "");
-//                        break;
-//                    case "pref_updateMode":
-//                        newUpdateMode = sharedPrefs.getString("oldUpdateMode", "");
-//                        break;
-//                    case "pref_nsfwFilterLevel":
-//                        newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
-//                        break;
-//                }
                 if (key.equals("pref_loginPassword"))
                 {
                     newCreds = sharedPrefs.getString("pref_loginPassword", "");
