@@ -8,9 +8,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
+import com.antony.muzei.pixiv.ClearCacheWorker;
 import com.antony.muzei.pixiv.PixivArtProvider;
+import com.antony.muzei.pixiv.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
@@ -83,8 +89,11 @@ public class SettingsActivity extends AppCompatActivity
     public void onStop()
     {
         super.onStop();
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        sharedPrefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
     }
 
+    // Functions in here action only on app exit
     @Override
     public void onDestroy()
     {
@@ -102,6 +111,19 @@ public class SettingsActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
         }
 
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if(sharedPrefs.getBoolean("pref_autoClearMode", false))
+        {
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
+                    .addTag("PIXIV_CACHE")
+                    .setConstraints(constraints)
+                    .build();
+            WorkManager.getInstance(getApplicationContext()).enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
+        }
+
         if (!oldUpdateMode.equals(newUpdateMode))
         {
             //WorkManager manager = WorkManager.getInstance();
@@ -115,8 +137,11 @@ public class SettingsActivity extends AppCompatActivity
             ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
+
+
     }
 
+    // Functions in here action immediately on user interaction
     public static class SettingsFragment extends PreferenceFragmentCompat
     {
         @Override
