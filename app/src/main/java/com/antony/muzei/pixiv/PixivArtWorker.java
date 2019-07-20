@@ -102,7 +102,7 @@ public class PixivArtWorker extends Worker
                 response = authRefreshToken(refreshToken);
             }
             JSONObject authResponseBody = new JSONObject(response.body().string());
-            response.close();
+            response.body().close();
 
             if (authResponseBody.has("has_error"))
             {
