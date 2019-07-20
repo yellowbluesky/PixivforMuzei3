@@ -30,16 +30,6 @@ public class ClearCacheWorker extends Worker
     @Override
     public Result doWork()
     {
-        // All this is needed to toast
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                Toast.makeText(getApplicationContext(), "auto clear cache toast within", Toast.LENGTH_SHORT).show();
-            }
-        });
         ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
         return Result.success();
     }

@@ -9,9 +9,11 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.antony.muzei.pixiv.ClearCacheWorker;
@@ -20,6 +22,9 @@ import com.antony.muzei.pixiv.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
+
+import java.sql.Time;
+import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
 {
@@ -111,17 +116,22 @@ public class SettingsActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
         }
 
+        // TODO
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if(sharedPrefs.getBoolean("pref_autoClearMode", false))
+        if (sharedPrefs.getBoolean("pref_autoClearMode", false))
         {
             Constraints constraints = new Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build();
-            OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+                    .setInitialDelay(1, TimeUnit.HOURS)
                     .addTag("PIXIV_CACHE")
                     .setConstraints(constraints)
                     .build();
-            WorkManager.getInstance(getApplicationContext()).enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
+            WorkManager.getInstance(getApplicationContext()).enqueueUniquePeriodicWork("PIXIV_CACHE", ExistingPeriodicWorkPolicy.KEEP, request);
+        } else
+        {
+            WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE");
         }
 
         if (!oldUpdateMode.equals(newUpdateMode))
