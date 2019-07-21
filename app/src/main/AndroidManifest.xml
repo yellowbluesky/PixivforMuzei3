@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".settings.SettingsActivity"
+            android:name=".SettingsActivity"
             android:label="@string/action_bar_title"
             android:exported="true"></activity>
 

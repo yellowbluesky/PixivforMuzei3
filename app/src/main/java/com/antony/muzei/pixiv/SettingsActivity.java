@@ -1,4 +1,4 @@
-package com.antony.muzei.pixiv.settings;
+package com.antony.muzei.pixiv;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -10,9 +10,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -23,7 +21,6 @@ import com.antony.muzei.pixiv.R;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
-import java.sql.Time;
 import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
@@ -165,6 +162,18 @@ public class SettingsActivity extends AppCompatActivity
                 public boolean onPreferenceClick(Preference preference)
                 {
                     ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).setArtwork(new Artwork());
+                    Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+            });
+
+            Preference buttonForcePull = findPreference(getString(R.string.button_forcePull));
+            buttonForcePull.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+            {
+                @Override
+                public boolean onPreferenceClick(Preference preference)
+                {
+                    PixivArtWorker.enqueueLoad();
                     Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }
