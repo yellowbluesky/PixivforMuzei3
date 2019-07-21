@@ -14,10 +14,6 @@ import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import com.antony.muzei.pixiv.ClearCacheWorker;
-import com.antony.muzei.pixiv.PixivArtProvider;
-import com.antony.muzei.pixiv.PixivArtWorker;
-import com.antony.muzei.pixiv.R;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
@@ -135,11 +131,13 @@ public class SettingsActivity extends AppCompatActivity
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            PixivArtWorker.enqueueLoad();
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
         } else if (!oldFilter.equals(newFilter))
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            PixivArtWorker.enqueueLoad();
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
 
