@@ -43,7 +43,10 @@
             android:title="@string/prefTitle_autoClearMode"/>
         <Preference
             android:key="@string/button_clearCache"
-            android:title="Clear image cache" />
+            android:title="@string/button_clearCache" />
+        <Preference
+            android:key="@string/button_forcePull"
+            android:title="@string/button_forcePull" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference
