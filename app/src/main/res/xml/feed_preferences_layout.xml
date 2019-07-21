@@ -19,7 +19,6 @@
     <PreferenceCategory android:title="@string/prefCat_pullFeedSettings">
         <DropDownPreference
             android:defaultValue="@string/pref_updateMode_default"
-            android:dialogTitle="@string/pref_updateMode"
             android:entries="@array/pref_updateMode_entries"
             android:entryValues="@array/pref_updateMode_entryValues"
             android:key="pref_updateMode"
@@ -27,13 +26,11 @@
             android:summary="%s"
             android:title="@string/pref_updateMode" />
         <SwitchPreference
-            android:dialogTitle="@string/prefTitle_showManga"
             android:key="pref_showManga"
             android:persistent="true"
             android:title="@string/prefTitle_showManga" />
         <DropDownPreference
             android:defaultValue="@string/pref_nsfwFilterLevel_default"
-            android:dialogTitle="@string/prefTitle_nswFilterLevel"
             android:entries="@array/pref_nsfwmode_entries"
             android:entryValues="@array/pref_nsfwmode_entryvalues"
             android:key="pref_nsfwFilterLevel"
@@ -41,7 +38,6 @@
             android:summary="%s"
             android:title="@string/prefTitle_nswFilterLevel" />
         <SwitchPreference
-            android:dialogTitle="@string/prefTitle_autoClearMode"
             android:key="pref_autoClearMode"
             android:persistent="true"
             android:title="@string/prefTitle_autoClearMode"/>

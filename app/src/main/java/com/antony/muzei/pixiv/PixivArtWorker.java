@@ -102,7 +102,6 @@ public class PixivArtWorker extends Worker
                 response = authRefreshToken(refreshToken);
             }
             JSONObject authResponseBody = new JSONObject(response.body().string());
-            response.close();
 
             if (authResponseBody.has("has_error"))
             {
@@ -268,7 +267,6 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.body().close();
         JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
 
         String title = pictureMetadata.getString("title");
@@ -298,7 +296,6 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(updateUri, accessToken);
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.body().close();
         JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
 
         String title = pictureMetadata.getString("title");
@@ -326,6 +323,7 @@ public class PixivArtWorker extends Worker
         }
         Response imageDataResponse = sendGetRequest(imageUrl);
         Uri localUri = downloadFile(imageDataResponse, token);
+        imageDataResponse.close();
         Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
         return new Artwork.Builder()
                 .title(title)
