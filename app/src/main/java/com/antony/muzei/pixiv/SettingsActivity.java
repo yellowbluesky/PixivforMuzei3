@@ -155,6 +155,8 @@ public class SettingsActivity extends AppCompatActivity
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
         {
             setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
+
+            // Immediately clear cache
             Preference buttonClearCache = findPreference(getString(R.string.button_clearCache));
             buttonClearCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
             {
@@ -167,6 +169,7 @@ public class SettingsActivity extends AppCompatActivity
                 }
             });
 
+            // Manually force pull a new unage
             Preference buttonForcePull = findPreference(getString(R.string.button_forcePull));
             buttonForcePull.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
             {
@@ -174,7 +177,6 @@ public class SettingsActivity extends AppCompatActivity
                 public boolean onPreferenceClick(Preference preference)
                 {
                     PixivArtWorker.enqueueLoad();
-                    Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }
             });
