@@ -14,9 +14,6 @@ import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import com.google.android.apps.muzei.api.provider.Artwork;
-import com.google.android.apps.muzei.api.provider.ProviderContract;
-
 import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
@@ -109,7 +106,7 @@ public class SettingsActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
         }
 
-        // TODO
+        // TODO hours until midnight
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if (sharedPrefs.getBoolean("pref_autoClearMode", false))
         {
@@ -140,8 +137,6 @@ public class SettingsActivity extends AppCompatActivity
             PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
-
-
     }
 
     // Functions in here action immediately on user interaction
@@ -166,6 +161,7 @@ public class SettingsActivity extends AppCompatActivity
                 }
             });
 
+            // Show authentication status as subline below login button
             Preference loginId = findPreference("pref_loginId");
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             if (sharedPrefs.getString("accessToken", "").isEmpty())
