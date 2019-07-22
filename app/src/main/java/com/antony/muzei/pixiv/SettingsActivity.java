@@ -166,18 +166,6 @@ public class SettingsActivity extends AppCompatActivity
                 }
             });
 
-            // Manually force pull a new unage
-//            Preference buttonForcePull = findPreference(getString(R.string.button_forcePull));
-//            buttonForcePull.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-//            {
-//                @Override
-//                public boolean onPreferenceClick(Preference preference)
-//                {
-//                    PixivArtWorker.enqueueLoad();
-//                    return true;
-//                }
-//            });
-
             Preference loginId = findPreference("pref_loginId");
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             if (sharedPrefs.getString("accessToken", "").isEmpty())

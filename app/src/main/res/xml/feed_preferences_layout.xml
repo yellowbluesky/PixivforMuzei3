@@ -44,9 +44,6 @@
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
-        <Preference
-            android:key="@string/button_forcePull"
-            android:title="@string/button_forcePull" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference
