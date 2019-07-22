@@ -116,7 +116,7 @@ public class SettingsActivity extends AppCompatActivity
             Constraints constraints = new Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build();
-            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 1, TimeUnit.HOURS)
                     .setInitialDelay(1, TimeUnit.HOURS)
                     .addTag("PIXIV_CACHE")
                     .setConstraints(constraints)
@@ -130,14 +130,14 @@ public class SettingsActivity extends AppCompatActivity
         if (!oldUpdateMode.equals(newUpdateMode))
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
-            ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            PixivArtWorker.enqueueLoad();
+            // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
         } else if (!oldFilter.equals(newFilter))
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
-            ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            PixivArtWorker.enqueueLoad();
+            // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
 
@@ -159,23 +159,24 @@ public class SettingsActivity extends AppCompatActivity
                 @Override
                 public boolean onPreferenceClick(Preference preference)
                 {
-                    ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).setArtwork(new Artwork());
+                    // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+                    PixivArtWorker.enqueueLoad(true);
                     Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }
             });
 
             // Manually force pull a new unage
-            Preference buttonForcePull = findPreference(getString(R.string.button_forcePull));
-            buttonForcePull.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-            {
-                @Override
-                public boolean onPreferenceClick(Preference preference)
-                {
-                    PixivArtWorker.enqueueLoad();
-                    return true;
-                }
-            });
+//            Preference buttonForcePull = findPreference(getString(R.string.button_forcePull));
+//            buttonForcePull.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+//            {
+//                @Override
+//                public boolean onPreferenceClick(Preference preference)
+//                {
+//                    PixivArtWorker.enqueueLoad();
+//                    return true;
+//                }
+//            });
 
             Preference loginId = findPreference("pref_loginId");
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());

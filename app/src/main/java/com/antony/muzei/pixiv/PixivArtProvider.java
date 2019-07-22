@@ -24,6 +24,6 @@ public class PixivArtProvider extends MuzeiArtProvider
     @Override
     protected void onLoadRequested(boolean initial)
     {
-        PixivArtWorker.enqueueLoad();
+        PixivArtWorker.enqueueLoad(false);
     }
 }
