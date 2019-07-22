@@ -22,7 +22,7 @@ public class ClearCacheWorker extends Worker
     @Override
     public Result doWork()
     {
-        ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+        PixivArtWorker.enqueueLoad(true);
         return Result.success();
     }
 }
