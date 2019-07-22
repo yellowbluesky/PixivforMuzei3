@@ -278,10 +278,9 @@ public class PixivArtWorker extends Worker
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getString("user_name");
         String token = pictureMetadata.getString("illust_id");
-        Uri localUri = downloadFile(
-                getRemoteFileExtension(pictureMetadata.getString("url")),
-                token
-        );
+        Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
+        Uri localUri = downloadFile(remoteFileExtension, token);
+        remoteFileExtension.close();
         Log.d(LOG_TAG, "getArtworkRanking(): Exited");
 
         return new Artwork.Builder()
@@ -468,7 +467,6 @@ public class PixivArtWorker extends Worker
         }
         fileStream.close();
         inputStream.close();
-        response.body().close();
 
         return Uri.fromFile(downloadedFile);
     }
