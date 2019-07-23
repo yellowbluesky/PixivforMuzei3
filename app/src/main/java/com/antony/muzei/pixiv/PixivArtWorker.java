@@ -551,7 +551,7 @@ public class PixivArtWorker extends Worker
     public Result doWork()
     {
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
-        Log.d(LOG_TAG, Boolean.toString(clearArtwork));
+        Log.d(LOG_TAG, "Clear cache: " + clearArtwork);
         if(!clearArtwork)
         {
             client.addArtwork(getArtwork());
