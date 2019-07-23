@@ -369,6 +369,7 @@ public class PixivArtWorker extends Worker
         JSONObject pictureMetadata;
         Random random = new Random();
 
+        // TODO replace random with something more efficient
         pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
         // If user does not want manga to display
         if (!showManga)
@@ -402,7 +403,7 @@ public class PixivArtWorker extends Worker
 
         Random random = new Random();
 
-        // Random seems to be very inefficient, potentially visiting the same image multiple times
+        // TODO replace random with something more efficient
         JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
         // If user does not want manga to display
