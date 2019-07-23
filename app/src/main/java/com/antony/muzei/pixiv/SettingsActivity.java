@@ -14,6 +14,8 @@ import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
@@ -110,11 +112,13 @@ public class SettingsActivity extends AppCompatActivity
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if (sharedPrefs.getBoolean("pref_autoClearMode", false))
         {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
+            int hoursToMidnight = 24 - Integer.parseInt(simpleDateFormat.format(new Date()));
             Constraints constraints = new Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build();
-            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 1, TimeUnit.HOURS)
-                    .setInitialDelay(1, TimeUnit.HOURS)
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+                    .setInitialDelay(hoursToMidnight, TimeUnit.HOURS)
                     .addTag("PIXIV_CACHE")
                     .setConstraints(constraints)
                     .build();
