@@ -108,12 +108,15 @@ public class SettingsActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
         }
 
-        // TODO hours until midnight
+        // Automatic cache clearing at 1AM every night for as long as the setting is toggled active
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if (sharedPrefs.getBoolean("pref_autoClearMode", false))
         {
+            // Calculates the hours to midnight
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
             int hoursToMidnight = 24 - Integer.parseInt(simpleDateFormat.format(new Date()));
+
+            // Builds and submits the work request
             Constraints constraints = new Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build();
@@ -128,12 +131,14 @@ public class SettingsActivity extends AppCompatActivity
             WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE");
         }
 
+        // If user has changed update mode
         if (!oldUpdateMode.equals(newUpdateMode))
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
+        // If user has changed filtering mode
         } else if (!oldFilter.equals(newFilter))
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
@@ -165,7 +170,7 @@ public class SettingsActivity extends AppCompatActivity
                 }
             });
 
-            // Show authentication status as subline below login button
+            // Show authentication status as summary string below login button
             Preference loginId = findPreference("pref_loginId");
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             if (sharedPrefs.getString("accessToken", "").isEmpty())
