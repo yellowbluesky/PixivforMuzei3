@@ -21,9 +21,11 @@ import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 public class PixivArtProvider extends MuzeiArtProvider
 {
+    // Pass true to clear cache and download new images
+    // Pass false to add new images to cache
     @Override
     protected void onLoadRequested(boolean initial)
     {
-        PixivArtWorker.enqueueLoad();
+        PixivArtWorker.enqueueLoad(false);
     }
 }

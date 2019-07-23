@@ -1,4 +1,4 @@
-package com.antony.muzei.pixiv.settings;
+package com.antony.muzei.pixiv;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -8,12 +8,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import com.antony.muzei.pixiv.PixivArtProvider;
-import com.antony.muzei.pixiv.R;
-import com.google.android.apps.muzei.api.provider.Artwork;
-import com.google.android.apps.muzei.api.provider.ProviderContract;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
 {
@@ -83,8 +86,11 @@ public class SettingsActivity extends AppCompatActivity
     public void onStop()
     {
         super.onStop();
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        sharedPrefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
     }
 
+    // Functions in here action only on app exit
     @Override
     public void onDestroy()
     {
@@ -102,39 +108,69 @@ public class SettingsActivity extends AppCompatActivity
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
         }
 
+        // Automatic cache clearing at 1AM every night for as long as the setting is toggled active
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (sharedPrefs.getBoolean("pref_autoClearMode", false))
+        {
+            // Calculates the hours to midnight
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
+            int hoursToMidnight = 24 - Integer.parseInt(simpleDateFormat.format(new Date()));
+
+            // Builds and submits the work request
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+                    .setInitialDelay(hoursToMidnight, TimeUnit.HOURS)
+                    .addTag("PIXIV_CACHE")
+                    .setConstraints(constraints)
+                    .build();
+            WorkManager.getInstance(getApplicationContext()).enqueueUniquePeriodicWork("PIXIV_CACHE", ExistingPeriodicWorkPolicy.KEEP, request);
+        } else
+        {
+            WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE");
+        }
+
+        // If user has changed update mode
         if (!oldUpdateMode.equals(newUpdateMode))
         {
-            //WorkManager manager = WorkManager.getInstance();
-            //manager.cancelAllWorkByTag("PIXIV");
-            ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
+            // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
+        // If user has changed filtering mode
         } else if (!oldFilter.equals(newFilter))
         {
-            //WorkManager manager = WorkManager.getInstance();
-            //manager.cancelAllWorkByTag("PIXIV");
-            ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
+            // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
     }
 
+    // Functions in here action immediately on user interaction
     public static class SettingsFragment extends PreferenceFragmentCompat
     {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
         {
             setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
+
+            // Immediately clear cache
             Preference buttonClearCache = findPreference(getString(R.string.button_clearCache));
             buttonClearCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
             {
                 @Override
                 public boolean onPreferenceClick(Preference preference)
                 {
-                    ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).setArtwork(new Artwork());
+                    // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+                    PixivArtWorker.enqueueLoad(true);
                     Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }
             });
 
+            // Show authentication status as summary string below login button
             Preference loginId = findPreference("pref_loginId");
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             if (sharedPrefs.getString("accessToken", "").isEmpty())

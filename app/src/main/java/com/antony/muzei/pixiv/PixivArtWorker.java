@@ -45,6 +45,8 @@ public class PixivArtWorker extends Worker
 
     private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
+    private static boolean clearArtwork = false;
+
     public PixivArtWorker(
             @NonNull Context context,
             @NonNull WorkerParameters params)
@@ -52,8 +54,12 @@ public class PixivArtWorker extends Worker
         super(context, params);
     }
 
-    static void enqueueLoad()
+    static void enqueueLoad(boolean mode)
     {
+        if(mode == true)
+        {
+            clearArtwork = true;
+        }
         WorkManager manager = WorkManager.getInstance();
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -102,7 +108,6 @@ public class PixivArtWorker extends Worker
                 response = authRefreshToken(refreshToken);
             }
             JSONObject authResponseBody = new JSONObject(response.body().string());
-            response.body().close();
 
             if (authResponseBody.has("has_error"))
             {
@@ -268,16 +273,14 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.body().close();
         JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
 
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getString("user_name");
         String token = pictureMetadata.getString("illust_id");
-        Uri localUri = downloadFile(
-                getRemoteFileExtension(pictureMetadata.getString("url")),
-                token
-        );
+        Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
+        Uri localUri = downloadFile(remoteFileExtension, token);
+        remoteFileExtension.close();
         Log.d(LOG_TAG, "getArtworkRanking(): Exited");
 
         return new Artwork.Builder()
@@ -298,7 +301,6 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(updateUri, accessToken);
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.body().close();
         JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
 
         String title = pictureMetadata.getString("title");
@@ -326,6 +328,7 @@ public class PixivArtWorker extends Worker
         }
         Response imageDataResponse = sendGetRequest(imageUrl);
         Uri localUri = downloadFile(imageDataResponse, token);
+        imageDataResponse.close();
         Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
         return new Artwork.Builder()
                 .title(title)
@@ -464,7 +467,6 @@ public class PixivArtWorker extends Worker
         }
         fileStream.close();
         inputStream.close();
-        response.body().close();
 
         return Uri.fromFile(downloadedFile);
     }
@@ -499,14 +501,12 @@ public class PixivArtWorker extends Worker
         return null;
     }
 
-    @NonNull
-    @Override
-    public Result doWork()
+    public Artwork getArtwork()
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String mode = sharedPrefs.getString("pref_updateMode", "daily_rank");
         Log.d(LOG_TAG, "Display mode: " + mode);
-        Artwork artwork;
+        Artwork artwork = null;
         String accessToken = "";
 
         if (mode.equals("follow") || mode.equals("bookmark"))
@@ -541,11 +541,27 @@ public class PixivArtWorker extends Worker
         } catch (IOException | JSONException ex)
         {
             ex.printStackTrace();
-            return Result.failure();
+        }
+        return artwork;
+
+    }
+
+    @NonNull
+    @Override
+    public Result doWork()
+    {
+        ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
+        Log.d(LOG_TAG, "Clear cache: " + clearArtwork);
+        if(!clearArtwork)
+        {
+            client.addArtwork(getArtwork());
+        }
+        else
+        {
+            client.setArtwork(getArtwork());
+            clearArtwork = false;
         }
 
-        ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
-        client.addArtwork(artwork);
         return Result.success();
     }
 }
