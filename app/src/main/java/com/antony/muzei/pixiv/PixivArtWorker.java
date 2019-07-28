@@ -56,7 +56,7 @@ public class PixivArtWorker extends Worker
 
     static void enqueueLoad(boolean mode)
     {
-        if (mode == true)
+        if(mode == true)
         {
             clearArtwork = true;
         }
@@ -267,7 +267,7 @@ public class PixivArtWorker extends Worker
         return httpClient.newCall(builder.build()).execute();
     }
 
-    private Artwork getArtworkRanking(String mode, boolean useProxy) throws IOException, JSONException
+    private Artwork getArtworkRanking(String mode) throws IOException, JSONException
     {
         Log.d(LOG_TAG, "getArtworkRanking(): Entering");
         Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
@@ -278,32 +278,22 @@ public class PixivArtWorker extends Worker
         String title = pictureMetadata.getString("title");
         String byline = pictureMetadata.getString("user_name");
         String token = pictureMetadata.getString("illust_id");
-
+        Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
+        Uri localUri = downloadFile(remoteFileExtension, token);
+        remoteFileExtension.close();
         Log.d(LOG_TAG, "getArtworkRanking(): Exited");
-        Artwork.Builder artworkBuilder = new Artwork.Builder()
+
+        return new Artwork.Builder()
                 .title(title)
                 .byline(byline)
+                .persistentUri(localUri)
                 .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token));
-
-        if(useProxy)
-        {
-            Log.d(LOG_TAG, "Using pixiv.cat proxy");
-            String uri = "https://pixiv.cat/" + token + ".png";
-            artworkBuilder.persistentUri(Uri.parse(uri));
-        }
-        else
-        {
-            Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
-            Uri uri = downloadFile(remoteFileExtension, token);
-            remoteFileExtension.close();
-            artworkBuilder.persistentUri(uri);
-        }
-        return artworkBuilder.build();
+                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+                .build();
     }
 
 
-    private Artwork getArtworkFeedOrBookmark(String mode, String accessToken, boolean useProxy) throws IOException, JSONException
+    private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
     {
         Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Entering");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -336,28 +326,17 @@ public class PixivArtWorker extends Worker
                     .getJSONObject("image_urls")
                     .getString("original");
         }
-
+        Response imageDataResponse = sendGetRequest(imageUrl);
+        Uri localUri = downloadFile(imageDataResponse, token);
+        imageDataResponse.close();
         Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
-        Artwork.Builder artworkBuilder = new Artwork.Builder()
+        return new Artwork.Builder()
                 .title(title)
                 .byline(byline)
+                .persistentUri(localUri)
                 .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token));
-
-        if(useProxy)
-        {
-            Log.d(LOG_TAG, "Using pixiv.cat proxy");
-            String uri = "https://pixiv.cat/" + token + ".png";
-            artworkBuilder.persistentUri(Uri.parse(uri));
-        }
-        else
-        {
-            Response imageDataResponse = sendGetRequest(imageUrl);
-            Uri uri = downloadFile(imageDataResponse, token);
-            imageDataResponse.close();
-            artworkBuilder.persistentUri(uri);
-        }
-        return artworkBuilder.build();
+                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+                .build();
     }
 
     /*
@@ -552,13 +531,12 @@ public class PixivArtWorker extends Worker
 
         try
         {
-            boolean useProxy = sharedPrefs.getBoolean("pref_usePixivCatProxy", false);
             if (mode.equals("follow") || mode.equals("bookmark"))
             {
-                artwork = getArtworkFeedOrBookmark(mode, accessToken, useProxy);
+                artwork = getArtworkFeedOrBookmark(mode, accessToken);
             } else
             {
-                artwork = getArtworkRanking(mode, useProxy);
+                artwork = getArtworkRanking(mode);
             }
         } catch (IOException | JSONException ex)
         {
@@ -574,22 +552,15 @@ public class PixivArtWorker extends Worker
     {
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         Log.d(LOG_TAG, "Clear cache: " + clearArtwork);
-        if (!clearArtwork)
+        if(!clearArtwork)
         {
             client.addArtwork(getArtwork());
-        } else
+        }
+        else
         {
             client.setArtwork(getArtwork());
             clearArtwork = false;
         }
-//        String uri = "https://pixiv.cat/" + "75863098" + ".jpg";
-//        Artwork artwork = new Artwork.Builder()
-//                .title("aaa")
-//                .byline("HITEN")
-//                .persistentUri(Uri.parse(uri))
-//                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + "66002247"))
-//                .build();
-//        client.addArtwork(artwork);
 
         return Result.success();
     }

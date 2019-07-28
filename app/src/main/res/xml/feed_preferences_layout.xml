@@ -44,10 +44,6 @@
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
-        <SwitchPreference
-            android:key="pref_usePixivCatProxy"
-            android:persistent="true"
-            android:title="@string/prefTitle_usePixivCatProxy" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference
