@@ -273,6 +273,7 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
+        rankingResponse.close();
         JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
 
         String title = pictureMetadata.getString("title");
@@ -551,6 +552,7 @@ public class PixivArtWorker extends Worker
     public Result doWork()
     {
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
+        Log.d(LOG_TAG, "Starting work");
         Log.d(LOG_TAG, "Clear cache: " + clearArtwork);
         if(!clearArtwork)
         {
