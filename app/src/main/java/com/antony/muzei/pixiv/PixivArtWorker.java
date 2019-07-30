@@ -303,6 +303,7 @@ public class PixivArtWorker extends Worker
         Response rankingResponse = sendGetRequest(updateUri, accessToken);
 
         JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
+        rankingResponse.close();
         JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
 
         String title = pictureMetadata.getString("title");
@@ -562,8 +563,13 @@ public class PixivArtWorker extends Worker
         else
         {
             client.setArtwork(getArtwork());
+            for(int i = 0; i < 4; i++)
+            {
+                client.addArtwork(getArtwork());
+            }
             clearArtwork = false;
         }
+        // https://stackoverflow.com/questions/16113783/how-to-force-a-content-provider-to-reset-when-manually-deleting-database
 
         return Result.success();
     }
