@@ -56,7 +56,7 @@ public class PixivArtWorker extends Worker
 
     static void enqueueLoad(boolean mode)
     {
-        if(mode == true)
+        if(mode)
         {
             clearArtwork = true;
         }
