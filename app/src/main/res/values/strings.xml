@@ -13,7 +13,7 @@
 
     <string name="prefTitle_nswFilterLevel">NSFW filtering level</string>
     <string name="pref_nsfwFilterLevel_default">2</string>
-    <string name="button_clearCache">Clear image cache</string>
+    <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>
     <string name="pref_loginId">Pixiv ID</string>
@@ -28,8 +28,8 @@
 
     <string name="toast_authFailed">Pixiv for Muzei 3: Authentication failed, switching to daily ranking</string>
     <string name="toast_newCredentials">New credentials found</string>
-    <string name="toast_newUpdateMode">New update mode, clearing cache</string>
-    <string name="toast_newFilterMode">New filtering mode, clearing cache</string>
-    <string name="toast_clearingCache">Clearing cache</string>
+    <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
+    <string name="toast_newFilterMode">New filtering mode, clearing image cache</string>
+    <string name="toast_clearingCache">Clearing image cache</string>
 
 </resources>
