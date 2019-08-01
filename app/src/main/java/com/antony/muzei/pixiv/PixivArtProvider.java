@@ -16,16 +16,54 @@
 */
 
 package com.antony.muzei.pixiv;
+import android.net.Uri;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
+import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 
 
 public class PixivArtProvider extends MuzeiArtProvider
 {
+    private static final String LOG_TAG = "PIXIV_DEBUG";
+
     // Pass true to clear cache and download new images
     // Pass false to add new images to cache
     @Override
     protected void onLoadRequested(boolean initial)
     {
         PixivArtWorker.enqueueLoad(false);
+    }
+
+    @Override
+    public InputStream openFile(@NonNull Artwork artwork) throws IOException
+    {
+        Log.d(LOG_TAG, "openFile() overridden");
+        TokenFilenameFilter tokenFilter = new TokenFilenameFilter(artwork.getToken());
+        File[] listFiles = getContext().getCacheDir().listFiles(tokenFilter);
+        return new FileInputStream(listFiles[0]);
+    }
+
+    public static class TokenFilenameFilter implements FilenameFilter
+    {
+        private String token;
+        public TokenFilenameFilter(String token)
+        {
+            this.token = token;
+        }
+
+        @Override
+        public boolean accept(File dir, String name)
+        {
+            return name.startsWith(token);
+        }
     }
 }
