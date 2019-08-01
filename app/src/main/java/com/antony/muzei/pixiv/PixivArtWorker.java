@@ -563,13 +563,12 @@ public class PixivArtWorker extends Worker
         else
         {
             client.setArtwork(getArtwork());
-            for(int i = 0; i < 4; i++)
+            for(int i = 0; i < 1; i++)
             {
                 client.addArtwork(getArtwork());
             }
             clearArtwork = false;
         }
-        // https://stackoverflow.com/questions/16113783/how-to-force-a-content-provider-to-reset-when-manually-deleting-database
 
         return Result.success();
     }
