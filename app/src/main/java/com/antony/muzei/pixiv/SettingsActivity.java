@@ -14,6 +14,8 @@ import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import org.apache.commons.io.FileUtils;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -138,7 +140,7 @@ public class SettingsActivity extends AppCompatActivity
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-        // If user has changed filtering mode
+            // If user has changed filtering mode
         } else if (!oldFilter.equals(newFilter))
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
@@ -164,6 +166,7 @@ public class SettingsActivity extends AppCompatActivity
                 public boolean onPreferenceClick(Preference preference)
                 {
                     // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+                    FileUtils.deleteQuietly(getContext().getCacheDir());
                     PixivArtWorker.enqueueLoad(true);
                     Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
