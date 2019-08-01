@@ -564,7 +564,7 @@ public class PixivArtWorker extends Worker
         else
         {
             client.setArtwork(getArtwork());
-            for(int i = 0; i < 1; i++)
+            for(int i = 0; i < 2; i++)
             {
                 client.addArtwork(getArtwork());
             }
