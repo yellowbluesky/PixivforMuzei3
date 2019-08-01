@@ -19,6 +19,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.google.android.apps.muzei.api.provider.Artwork;
+import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 

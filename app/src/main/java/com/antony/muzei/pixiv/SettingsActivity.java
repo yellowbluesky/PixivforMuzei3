@@ -138,6 +138,7 @@ public class SettingsActivity extends AppCompatActivity
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
             PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
             // If user has changed filtering mode
@@ -145,6 +146,7 @@ public class SettingsActivity extends AppCompatActivity
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
+            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
             PixivArtWorker.enqueueLoad(true);
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
