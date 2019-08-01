@@ -138,16 +138,16 @@ public class SettingsActivity extends AppCompatActivity
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
             PixivArtWorker.enqueueLoad(true);
+            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
             // If user has changed filtering mode
         } else if (!oldFilter.equals(newFilter))
         {
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
             PixivArtWorker.enqueueLoad(true);
+            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
     }
@@ -168,8 +168,8 @@ public class SettingsActivity extends AppCompatActivity
                 public boolean onPreferenceClick(Preference preference)
                 {
                     // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-                    FileUtils.deleteQuietly(getContext().getCacheDir());
                     PixivArtWorker.enqueueLoad(true);
+                    FileUtils.deleteQuietly(getContext().getCacheDir());
                     Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }
