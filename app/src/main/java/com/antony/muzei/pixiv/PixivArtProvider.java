@@ -25,6 +25,7 @@ import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,6 +49,10 @@ public class PixivArtProvider extends MuzeiArtProvider
         Log.d(LOG_TAG, "openFile() overridden");
         TokenFilenameFilter tokenFilter = new TokenFilenameFilter(artwork.getToken());
         File[] listFiles = getContext().getCacheDir().listFiles(tokenFilter);
+        if(listFiles.length == 0)
+        {
+            throw new FileNotFoundException("No file with token: " + artwork.getToken());
+        }
         return new FileInputStream(listFiles[0]);
     }
 
