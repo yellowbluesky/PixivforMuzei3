@@ -91,7 +91,7 @@ public class PixivArtWorker extends Worker
             return accessToken;
         }
 
-        Log.d(LOG_TAG, "Access token expired or nonexistent, proceeding to acquire a new access token");
+        Log.d(LOG_TAG, "Access token expired or non-existent, proceeding to acquire a new access token");
 
         try
         {
@@ -130,6 +130,7 @@ public class PixivArtWorker extends Worker
             Log.d(LOG_TAG, "getAccessToken(): Exited with error");
             return "";
         }
+        Log.d(LOG_TAG, "Acquired access token");
         Log.d(LOG_TAG, "getAccessToken(): Exited");
         return sharedPrefs.getString("accessToken", "");
     }
@@ -457,6 +458,7 @@ public class PixivArtWorker extends Worker
     // Cache folder is periodically pruned of its oldest images by Android
     private Uri downloadFile(Response response, String filename) throws IOException
     {
+        Log.d(LOG_TAG, "Size of image to be downloaded: " + response.body().contentLength());
         Context context = getApplicationContext();
         // Muzei does not care about file extensions
         // Only there to more easily allow local user to open them
@@ -556,13 +558,13 @@ public class PixivArtWorker extends Worker
     {
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         Log.d(LOG_TAG, "Starting work");
-        Log.d(LOG_TAG, "Clear cache: " + clearArtwork);
         if(!clearArtwork)
         {
             client.addArtwork(getArtwork());
         }
         else
         {
+            Log.d(LOG_TAG, "Clearing cache");
             client.setArtwork(getArtwork());
             for(int i = 0; i < 2; i++)
             {

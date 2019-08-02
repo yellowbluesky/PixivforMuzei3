@@ -127,7 +127,8 @@ public class SettingsActivity extends AppCompatActivity
                     .addTag("PIXIV_CACHE")
                     .setConstraints(constraints)
                     .build();
-            WorkManager.getInstance(getApplicationContext()).enqueueUniquePeriodicWork("PIXIV_CACHE", ExistingPeriodicWorkPolicy.KEEP, request);
+            WorkManager.getInstance(getApplicationContext())
+                    .enqueueUniquePeriodicWork("PIXIV_CACHE", ExistingPeriodicWorkPolicy.KEEP, request);
         } else
         {
             WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE");

@@ -44,6 +44,7 @@ public class PixivArtProvider extends MuzeiArtProvider
     }
 
     @Override
+    @NonNull
     public InputStream openFile(@NonNull Artwork artwork) throws IOException
     {
         Log.d(LOG_TAG, "openFile() overridden");
@@ -59,7 +60,7 @@ public class PixivArtProvider extends MuzeiArtProvider
     public static class TokenFilenameFilter implements FilenameFilter
     {
         private String token;
-        public TokenFilenameFilter(String token)
+        TokenFilenameFilter(String token)
         {
             this.token = token;
         }
