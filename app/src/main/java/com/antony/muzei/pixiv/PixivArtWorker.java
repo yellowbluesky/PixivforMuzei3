@@ -202,28 +202,16 @@ public class PixivArtWorker extends Worker
 
         RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
 
-        Request.Builder builder = new Request.Builder()
+        Request request = new Request.Builder()
                 .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
                 .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
                 .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
                 .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
                 .addHeader("Content-type", body.contentType().toString())
                 .post(body)
-                .url(url);
-        return httpClient.newCall(builder.build()).execute();
-    }
-
-    private Response sendHeadRequest(String url)
-    {
-        OkHttpClient httpClient = new OkHttpClient();
-
-        Request request = new Request.Builder().url(url).head().build();
-        return null;
-    }
-
-    private int getRemoteFileSize()
-    {
-        return 0;
+                .url(url)
+                .build();
+        return httpClient.newCall(request).execute();
     }
 
     // Returns the requested Pixiv API endpoint as a String
@@ -251,20 +239,53 @@ public class PixivArtWorker extends Worker
         return urlString;
     }
 
+    private Response sendHeadRequest(String url)
+    {
+        OkHttpClient httpClient = new OkHttpClient();
+
+        Request request = new Request.Builder().url(url).head().build();
+        return null;
+    }
+
+    private long getRemoteFileSize(String url)
+    {
+        OkHttpClient client = new OkHttpClient();
+        // get only the head not the whole file
+        Request request = new Request.Builder().url(url).head().build();
+        Response response = null;
+        try
+        {
+            response = client.newCall(request).execute();
+            // OKHTTP put the length from the header here even though the body is empty
+            long size = response.body().contentLength();
+            return size;
+        } catch (IOException e)
+        {
+            if (response != null)
+            {
+                response.close();
+
+            }
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
     // This function is used when authentication via an access token is required
     private Response sendGetRequest(String url, String accessToken) throws IOException
     {
         OkHttpClient httpClient = new OkHttpClient();
 
-        Request.Builder builder = new Request.Builder()
+        Request request = new Request.Builder()
                 .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
                 .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
                 .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
                 .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
                 .addHeader("Authorization", "Bearer " + accessToken)
-                .url(url);
-        return httpClient.newCall(builder.build()).execute();
+                .get()
+                .url(url)
+                .build();
+        return httpClient.newCall(request).execute();
     }
 
     // This function is used when authentication is not required
@@ -272,12 +293,14 @@ public class PixivArtWorker extends Worker
     {
         OkHttpClient httpClient = new OkHttpClient();
 
-        Request.Builder builder = new Request.Builder()
+        Request request = new Request.Builder()
                 .addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
                 .addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
-                .url(url);
+                .get()
+                .url(url)
+                .build();
 
-        return httpClient.newCall(builder.build()).execute();
+        return httpClient.newCall(request).execute();
     }
 
     private Artwork getArtworkRanking(String mode) throws IOException, JSONException
