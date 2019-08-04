@@ -57,7 +57,7 @@ public class PixivArtWorker extends Worker
 
     static void enqueueLoad(boolean mode)
     {
-        if(mode)
+        if (mode)
         {
             clearArtwork = true;
         }
@@ -558,7 +558,6 @@ public class PixivArtWorker extends Worker
             ex.printStackTrace();
         }
         return artwork;
-
     }
 
     @NonNull
@@ -567,15 +566,14 @@ public class PixivArtWorker extends Worker
     {
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         Log.d(LOG_TAG, "Starting work");
-        if(!clearArtwork)
+        if (!clearArtwork)
         {
             client.addArtwork(getArtwork());
-        }
-        else
+        } else
         {
             Log.d(LOG_TAG, "Clearing cache");
             client.setArtwork(getArtwork());
-            for(int i = 0; i < 2; i++)
+            for (int i = 0; i < 2; i++)
             {
                 client.addArtwork(getArtwork());
             }
