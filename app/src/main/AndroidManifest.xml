@@ -18,7 +18,7 @@
 
         <provider
             android:name=".PixivArtProvider"
-            android:authorities=".PixivArtProvider"
+            android:authorities="com.antony.muzei.pixiv.PixivArtProvider"
             android:exported="true"
             android:label="Pixiv source for Muzei 3.0"
             android:permission="com.google.android.apps.muzei.api.ACCESS_PROVIDER">
@@ -30,5 +30,4 @@
             <meta-data android:name="color" android:value="#0096db" />
         </provider>
     </application>
-
 </manifest>
