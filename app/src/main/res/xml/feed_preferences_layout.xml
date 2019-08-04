@@ -48,9 +48,6 @@
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
-        <Preference
-            android:key="@string/button_resetAppSettings"
-            android:title="@string/button_resetAppSettings"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference
