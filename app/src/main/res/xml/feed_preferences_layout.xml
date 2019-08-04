@@ -38,12 +38,19 @@
             android:summary="%s"
             android:title="@string/prefTitle_nswFilterLevel" />
         <SwitchPreference
+            android:key="pref_limitDownloads"
+            android:persistent="true"
+            android:title="Limit downloads to 5MB"/>
+        <SwitchPreference
             android:key="pref_autoClearMode"
             android:persistent="true"
             android:title="@string/prefTitle_autoClearMode"/>
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
+        <Preference
+            android:key="@string/button_resetAppSettings"
+            android:title="@string/button_resetAppSettings"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_authSettings">
         <EditTextPreference

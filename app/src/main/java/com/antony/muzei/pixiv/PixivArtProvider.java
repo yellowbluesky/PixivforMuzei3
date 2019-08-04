@@ -43,6 +43,7 @@ public class PixivArtProvider extends MuzeiArtProvider
         PixivArtWorker.enqueueLoad(false);
     }
 
+    // This method called on insertion of new images.
     @Override
     @NonNull
     public InputStream openFile(@NonNull Artwork artwork) throws IOException

@@ -198,8 +198,7 @@ public class PixivArtWorker extends Worker
     private Response sendPostRequest(String url, Uri authQuery) throws IOException
     {
         String contentType = "application/x-www-form-urlencoded";
-        OkHttpClient httpClient = new OkHttpClient.Builder()
-                .build();
+        OkHttpClient httpClient = new OkHttpClient();
 
         RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
 
@@ -212,6 +211,19 @@ public class PixivArtWorker extends Worker
                 .post(body)
                 .url(url);
         return httpClient.newCall(builder.build()).execute();
+    }
+
+    private Response sendHeadRequest(String url)
+    {
+        OkHttpClient httpClient = new OkHttpClient();
+
+        Request request = new Request.Builder().url(url).head().build();
+        return null;
+    }
+
+    private int getRemoteFileSize()
+    {
+        return 0;
     }
 
     // Returns the requested Pixiv API endpoint as a String
@@ -243,8 +255,7 @@ public class PixivArtWorker extends Worker
     // This function is used when authentication via an access token is required
     private Response sendGetRequest(String url, String accessToken) throws IOException
     {
-        OkHttpClient httpClient = new OkHttpClient.Builder()
-                .build();
+        OkHttpClient httpClient = new OkHttpClient();
 
         Request.Builder builder = new Request.Builder()
                 .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
@@ -259,8 +270,7 @@ public class PixivArtWorker extends Worker
     // This function is used when authentication is not required
     private Response sendGetRequest(String url) throws IOException
     {
-        OkHttpClient httpClient = new OkHttpClient.Builder()
-                .build();
+        OkHttpClient httpClient = new OkHttpClient();
 
         Request.Builder builder = new Request.Builder()
                 .addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
@@ -458,7 +468,6 @@ public class PixivArtWorker extends Worker
     // Cache folder is periodically pruned of its oldest images by Android
     private Uri downloadFile(Response response, String filename) throws IOException
     {
-        Log.d(LOG_TAG, "Size of image to be downloaded: " + response.body().contentLength());
         Context context = getApplicationContext();
         // Muzei does not care about file extensions
         // Only there to more easily allow local user to open them
