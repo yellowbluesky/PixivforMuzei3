@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 import org.apache.commons.io.FileUtils;
@@ -28,9 +27,8 @@ public class ClearCacheWorker extends Worker
     public Result doWork()
     {
         Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
-        ContentResolver conRes = getApplicationContext().getContentResolver();
-        conRes.delete(conResUri, null, null);
-        PixivArtWorker.enqueueLoad(false);
+        getApplicationContext().getContentResolver().delete(conResUri, null, null);
+        PixivArtWorker.enqueueLoad();
         FileUtils.deleteQuietly(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
         return Result.success();
     }

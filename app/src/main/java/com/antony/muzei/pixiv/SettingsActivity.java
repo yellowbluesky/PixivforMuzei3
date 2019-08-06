@@ -1,10 +1,7 @@
 package com.antony.muzei.pixiv;
 
-import android.content.ContentResolver;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,13 +10,11 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
-
-import com.google.android.apps.muzei.api.provider.ProviderContract;
-
-import org.apache.commons.io.FileUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -139,30 +134,25 @@ public class SettingsActivity extends AppCompatActivity
             WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE");
         }
 
-        // If user has changed update mode
-        if (!oldUpdateMode.equals(newUpdateMode))
+        // If user has changed update or filter mode
+        if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter))
         {
-            Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
-            ContentResolver conRes = getApplicationContext().getContentResolver();
-            conRes.delete(conResUri, null, null);
-            WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
-            // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            PixivArtWorker.enqueueLoad(false);
-            FileUtils.deleteQuietly(getApplicationContext().getExternalFilesDir(
-                    Environment.DIRECTORY_PICTURES));
-            Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-            // If user has changed filtering mode
-        } else if (!oldFilter.equals(newFilter))
-        {
-            Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
-            ContentResolver conRes = getApplicationContext().getContentResolver();
-            conRes.delete(conResUri, null, null);
-            WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
-            // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            PixivArtWorker.enqueueLoad(false);
-            FileUtils.deleteQuietly(getApplicationContext().getExternalFilesDir(
-                    Environment.DIRECTORY_PICTURES));
-            Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
+            WorkManager manager = WorkManager.getInstance();
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
+                    .addTag("PIXIV_CACHE")
+                    .setConstraints(constraints)
+                    .build();
+            manager.enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
+            if (!oldUpdateMode.equals(newUpdateMode))
+            {
+                Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
+            } else
+            {
+                Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -181,13 +171,15 @@ public class SettingsActivity extends AppCompatActivity
                 @Override
                 public boolean onPreferenceClick(Preference preference)
                 {
-                    Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
-                    ContentResolver conRes = getContext().getContentResolver();
-                    conRes.delete(conResUri, null, null);
-                    // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-                    PixivArtWorker.enqueueLoad(false);
-                    FileUtils.deleteQuietly(getContext().getExternalFilesDir(
-                            Environment.DIRECTORY_PICTURES));
+                    WorkManager manager = WorkManager.getInstance();
+                    Constraints constraints = new Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .build();
+                    OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
+                            .addTag("PIXIV_CACHE")
+                            .setConstraints(constraints)
+                            .build();
+                    manager.enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
                     Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }

@@ -55,12 +55,8 @@ public class PixivArtWorker extends Worker
         super(context, params);
     }
 
-    static void enqueueLoad(boolean mode)
+    static void enqueueLoad()
     {
-        if (mode)
-        {
-            clearArtwork = true;
-        }
         WorkManager manager = WorkManager.getInstance();
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)

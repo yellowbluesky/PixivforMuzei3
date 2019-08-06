@@ -41,7 +41,7 @@ public class PixivArtProvider extends MuzeiArtProvider
     @Override
     protected void onLoadRequested(boolean initial)
     {
-        PixivArtWorker.enqueueLoad(false);
+        PixivArtWorker.enqueueLoad();
     }
 
     // This method called on insertion of new images.
