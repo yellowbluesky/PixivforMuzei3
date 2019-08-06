@@ -1,6 +1,8 @@
 package com.antony.muzei.pixiv;
 
+import android.content.ContentResolver;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -13,6 +15,8 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+
+import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 import org.apache.commons.io.FileUtils;
 
@@ -137,6 +141,9 @@ public class SettingsActivity extends AppCompatActivity
         // If user has changed update mode
         if (!oldUpdateMode.equals(newUpdateMode))
         {
+            Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
+            ContentResolver conRes = getApplicationContext().getContentResolver();
+            conRes.delete(conResUri, null, null);
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             PixivArtWorker.enqueueLoad(true);
@@ -145,6 +152,9 @@ public class SettingsActivity extends AppCompatActivity
             // If user has changed filtering mode
         } else if (!oldFilter.equals(newFilter))
         {
+            Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
+            ContentResolver conRes = getApplicationContext().getContentResolver();
+            conRes.delete(conResUri, null, null);
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
             PixivArtWorker.enqueueLoad(true);
@@ -168,6 +178,9 @@ public class SettingsActivity extends AppCompatActivity
                 @Override
                 public boolean onPreferenceClick(Preference preference)
                 {
+                    Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
+                    ContentResolver conRes = getContext().getContentResolver();
+                    conRes.delete(conResUri, null, null);
                     // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
                     PixivArtWorker.enqueueLoad(true);
                     FileUtils.deleteQuietly(getContext().getCacheDir());
