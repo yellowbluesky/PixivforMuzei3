@@ -19,7 +19,6 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.google.android.apps.muzei.api.provider.Artwork;
-import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
@@ -247,28 +246,34 @@ public class PixivArtWorker extends Worker
         return null;
     }
 
-    private long getRemoteFileSize(String url)
+    // ranking
+    private long getRemoteFileSize(String url) throws IOException
     {
         OkHttpClient client = new OkHttpClient();
         // get only the head not the whole file
-        Request request = new Request.Builder().url(url).head().build();
-        Response response = null;
-        try
-        {
-            response = client.newCall(request).execute();
-            // OKHTTP put the length from the header here even though the body is empty
-            long size = response.body().contentLength();
-            return size;
-        } catch (IOException e)
-        {
-            if (response != null)
-            {
-                response.close();
+        Request request = new Request.Builder()
+                .url(url)
+                .head()
+                .build();
+        Response response = client.newCall(request).execute();
+        // OKHTTP put the length from the header here even though the body is empty
+        long size = response.body().contentLength();
+        return size;
+    }
 
-            }
-            e.printStackTrace();
-        }
-        return 0;
+    // feed or bookmark
+    private long getRemoteFileSize(String url, String accessToken) throws IOException
+    {
+        OkHttpClient client = new OkHttpClient();
+        // get only the head not the whole file
+        Request request = new Request.Builder()
+                .url(url)
+                .head()
+                .build();
+        Response response = client.newCall(request).execute();
+        // OKHTTP put the length from the header here even though the body is empty
+        long size = response.body().contentLength();
+        return size;
     }
 
     // This function is used when authentication via an access token is required
@@ -491,6 +496,7 @@ public class PixivArtWorker extends Worker
     // Cache folder is periodically pruned of its oldest images by Android
     private Uri downloadFile(Response response, String filename) throws IOException
     {
+        Log.d(LOG_TAG, "Downloading file");
         Context context = getApplicationContext();
         // Muzei does not care about file extensions
         // Only there to more easily allow local user to open them
