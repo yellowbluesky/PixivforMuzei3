@@ -16,6 +16,7 @@
 */
 
 package com.antony.muzei.pixiv;
+import android.os.Environment;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -50,7 +51,8 @@ public class PixivArtProvider extends MuzeiArtProvider
     {
         Log.d(LOG_TAG, "openFile() overridden");
         TokenFilenameFilter tokenFilter = new TokenFilenameFilter(artwork.getToken());
-        File[] listFiles = getContext().getCacheDir().listFiles(tokenFilter);
+        File[] listFiles = getContext().getExternalFilesDir(
+                Environment.DIRECTORY_PICTURES).listFiles(tokenFilter);
         if(listFiles.length == 0)
         {
             throw new FileNotFoundException("No file with token: " + artwork.getToken());

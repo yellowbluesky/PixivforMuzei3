@@ -3,6 +3,7 @@ package com.antony.muzei.pixiv;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Looper;
 import android.util.Log;
 import android.os.Handler;
@@ -500,7 +501,7 @@ public class PixivArtWorker extends Worker
         Context context = getApplicationContext();
         // Muzei does not care about file extensions
         // Only there to more easily allow local user to open them
-        File downloadedFile = new File(context.getCacheDir(), filename + ".png");
+        File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
         FileOutputStream fileStream = new FileOutputStream(downloadedFile);
         InputStream inputStream = response.body().byteStream();
         final byte[] buffer = new byte[1024 * 50];

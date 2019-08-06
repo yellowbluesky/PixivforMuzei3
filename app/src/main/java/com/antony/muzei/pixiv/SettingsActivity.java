@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -146,8 +147,9 @@ public class SettingsActivity extends AppCompatActivity
             conRes.delete(conResUri, null, null);
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            PixivArtWorker.enqueueLoad(true);
-            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
+            PixivArtWorker.enqueueLoad(false);
+            FileUtils.deleteQuietly(getApplicationContext().getExternalFilesDir(
+                    Environment.DIRECTORY_PICTURES));
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
             // If user has changed filtering mode
         } else if (!oldFilter.equals(newFilter))
@@ -157,8 +159,9 @@ public class SettingsActivity extends AppCompatActivity
             conRes.delete(conResUri, null, null);
             WorkManager.getInstance().cancelAllWorkByTag("PIXIV");
             // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-            PixivArtWorker.enqueueLoad(true);
-            FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
+            PixivArtWorker.enqueueLoad(false);
+            FileUtils.deleteQuietly(getApplicationContext().getExternalFilesDir(
+                    Environment.DIRECTORY_PICTURES));
             Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
         }
     }
@@ -182,8 +185,9 @@ public class SettingsActivity extends AppCompatActivity
                     ContentResolver conRes = getContext().getContentResolver();
                     conRes.delete(conResUri, null, null);
                     // ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).setArtwork(new Artwork());
-                    PixivArtWorker.enqueueLoad(true);
-                    FileUtils.deleteQuietly(getContext().getCacheDir());
+                    PixivArtWorker.enqueueLoad(false);
+                    FileUtils.deleteQuietly(getContext().getExternalFilesDir(
+                            Environment.DIRECTORY_PICTURES));
                     Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
                     return true;
                 }
