@@ -592,19 +592,20 @@ public class PixivArtWorker extends Worker
     {
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         Log.d(LOG_TAG, "Starting work");
-        if (!clearArtwork)
-        {
-            client.addArtwork(getArtwork());
-        } else
-        {
-            Log.d(LOG_TAG, "Clearing cache");
-            client.setArtwork(getArtwork());
-            for (int i = 0; i < 2; i++)
-            {
-                client.addArtwork(getArtwork());
-            }
-            clearArtwork = false;
-        }
+        client.addArtwork(getArtwork());
+//        if (!clearArtwork)
+//        {
+//            client.addArtwork(getArtwork());
+//        } else
+//        {
+//            Log.d(LOG_TAG, "Clearing cache");
+//            client.setArtwork(getArtwork());
+//            for (int i = 0; i < 2; i++)
+//            {
+//                client.addArtwork(getArtwork());
+//            }
+//            clearArtwork = false;
+//        }
 
         return Result.success();
     }
