@@ -124,14 +124,14 @@ public class SettingsActivity extends AppCompatActivity
                     .build();
             PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
                     .setInitialDelay(hoursToMidnight, TimeUnit.HOURS)
-                    .addTag("PIXIV_CACHE")
+                    .addTag("PIXIV_CACHE_AUTO")
                     .setConstraints(constraints)
                     .build();
             WorkManager.getInstance(getApplicationContext())
-                    .enqueueUniquePeriodicWork("PIXIV_CACHE", ExistingPeriodicWorkPolicy.KEEP, request);
+                    .enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request);
         } else
         {
-            WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE");
+            WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
         }
 
         // If user has changed update or filter mode
