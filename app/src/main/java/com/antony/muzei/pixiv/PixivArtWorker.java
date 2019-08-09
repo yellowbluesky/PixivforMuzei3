@@ -542,6 +542,10 @@ public class PixivArtWorker extends Worker
             {
                 return response;
             }
+            else
+            {
+                response.close();
+            }
         }
         return null;
     }
