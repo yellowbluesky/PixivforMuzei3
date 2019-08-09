@@ -26,10 +26,11 @@ public class ClearCacheWorker extends Worker
     @Override
     public Result doWork()
     {
-        Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
-        getApplicationContext().getContentResolver().delete(conResUri, null, null);
-        PixivArtWorker.enqueueLoad();
+//        Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
+//        getApplicationContext().getContentResolver().delete(conResUri, null, null);
+        PixivArtWorker.enqueueLoad(true);
         FileUtils.deleteQuietly(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+        FileUtils.deleteQuietly(getApplicationContext().getCacheDir());
         return Result.success();
     }
 }
