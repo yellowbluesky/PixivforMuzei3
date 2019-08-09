@@ -55,8 +55,12 @@ public class PixivArtWorker extends Worker
         super(context, params);
     }
 
-    static void enqueueLoad()
+    static void enqueueLoad(boolean clear)
     {
+        if(clear)
+        {
+            clearArtwork = true;
+        }
         WorkManager manager = WorkManager.getInstance();
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -592,20 +596,19 @@ public class PixivArtWorker extends Worker
     {
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         Log.d(LOG_TAG, "Starting work");
-        client.addArtwork(getArtwork());
-//        if (!clearArtwork)
-//        {
-//            client.addArtwork(getArtwork());
-//        } else
-//        {
-//            Log.d(LOG_TAG, "Clearing cache");
-//            client.setArtwork(getArtwork());
-//            for (int i = 0; i < 2; i++)
-//            {
-//                client.addArtwork(getArtwork());
-//            }
-//            clearArtwork = false;
-//        }
+        if (!clearArtwork)
+        {
+            client.addArtwork(getArtwork());
+        } else
+        {
+            Log.d(LOG_TAG, "Clearing cache");
+            client.setArtwork(getArtwork());
+            for (int i = 0; i < 2; i++)
+            {
+                client.addArtwork(getArtwork());
+            }
+            clearArtwork = false;
+        }
 
         return Result.success();
     }
