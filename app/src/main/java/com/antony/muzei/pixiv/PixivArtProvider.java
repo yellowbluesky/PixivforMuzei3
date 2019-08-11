@@ -16,6 +16,7 @@
 */
 
 package com.antony.muzei.pixiv;
+
 import android.os.Environment;
 import android.util.Log;
 
@@ -23,6 +24,8 @@ import androidx.annotation.NonNull;
 
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
+
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,10 +54,17 @@ public class PixivArtProvider extends MuzeiArtProvider
     {
         Log.d(LOG_TAG, "openFile() overridden");
         TokenFilenameFilter tokenFilter = new TokenFilenameFilter(artwork.getToken());
-        File[] listFiles = getContext().getExternalFilesDir(
-                Environment.DIRECTORY_PICTURES).listFiles(tokenFilter);
-        if(listFiles.length == 0)
+        File[] listFiles = getContext()
+                .getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                .listFiles(tokenFilter);
+        if (listFiles.length == 0)
         {
+            Log.d("PIXIV_DEBUG", "Missing file");
+            //Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
+            //getContext().getContentResolver().delete(conResUri, null, null);
+            FileUtils.deleteQuietly(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+            FileUtils.deleteQuietly(getContext().getCacheDir());
+            PixivArtWorker.enqueueLoad(true);
             throw new FileNotFoundException("No file with token: " + artwork.getToken());
         }
         return new FileInputStream(listFiles[0]);
@@ -63,6 +73,7 @@ public class PixivArtProvider extends MuzeiArtProvider
     public static class TokenFilenameFilter implements FilenameFilter
     {
         private String token;
+
         TokenFilenameFilter(String token)
         {
             this.token = token;
