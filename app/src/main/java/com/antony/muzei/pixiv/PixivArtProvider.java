@@ -17,6 +17,7 @@
 
 package com.antony.muzei.pixiv;
 
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
@@ -24,6 +25,7 @@ import androidx.annotation.NonNull;
 
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
+import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 import org.apache.commons.io.FileUtils;
 
@@ -60,8 +62,8 @@ public class PixivArtProvider extends MuzeiArtProvider
         if (listFiles.length == 0)
         {
             Log.d("PIXIV_DEBUG", "Missing file");
-            //Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
-            //getContext().getContentResolver().delete(conResUri, null, null);
+            Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
+            getContext().getContentResolver().delete(conResUri, null, null);
             FileUtils.deleteQuietly(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
             FileUtils.deleteQuietly(getContext().getCacheDir());
             PixivArtWorker.enqueueLoad(true);

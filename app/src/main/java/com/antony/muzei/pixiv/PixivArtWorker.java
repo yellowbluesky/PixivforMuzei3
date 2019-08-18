@@ -74,7 +74,7 @@ public class PixivArtWorker extends Worker
 
     static void enqueueLoad(boolean clear)
     {
-        if(clear)
+        if (clear)
         {
             clearArtwork = true;
         }
@@ -88,6 +88,10 @@ public class PixivArtWorker extends Worker
                 .build();
         manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
     }
+
+    /*
+        AUTH
+     */
 
     // Returns a string containing a valid access token
     // Otherwise returns an empty string if authentication failed or not possible
@@ -209,6 +213,66 @@ public class PixivArtWorker extends Worker
         editor.commit();
     }
 
+    /*
+        NETWORK
+     */
+
+    // This function is used when authentication via an access token is required
+    private Response sendGetRequest(String url, String accessToken) throws IOException
+    {
+        OkHttpClient httpClient = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+                .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
+                .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
+                .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
+                .addHeader("Authorization", "Bearer " + accessToken)
+                .get()
+                .url(url)
+                .build();
+        return httpClient.newCall(request).execute();
+    }
+
+    // This function is used when authentication is not required
+    private Response sendGetRequest(String url) throws IOException
+    {
+        OkHttpClient httpClient = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
+                .addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
+                .get()
+                .url(url)
+                .build();
+
+        return httpClient.newCall(request).execute();
+    }
+
+
+    private Response sendHeadRequest(String url)
+    {
+        OkHttpClient httpClient = new OkHttpClient();
+
+        Request request = new Request.Builder().url(url).head().build();
+        return null;
+    }
+
+    // ranking
+    private long getRemoteFileSize(String url) throws IOException
+    {
+        OkHttpClient client = new OkHttpClient();
+        // get only the head not the whole file
+        Request request = new Request.Builder()
+                .url(url)
+                .head()
+                .build();
+        Response response = client.newCall(request).execute();
+        // OKHTTP put the length from the header here even though the body is empty
+        long size = response.body().contentLength();
+        return size;
+    }
+
     // Sends an authentication request, and returns a Response
     // The Response is decoded by the caller; it contains authentication tokens or an error
     // this method is called by only one method, so all values are hardcoded
@@ -256,29 +320,6 @@ public class PixivArtWorker extends Worker
         return urlString;
     }
 
-    private Response sendHeadRequest(String url)
-    {
-        OkHttpClient httpClient = new OkHttpClient();
-
-        Request request = new Request.Builder().url(url).head().build();
-        return null;
-    }
-
-    // ranking
-    private long getRemoteFileSize(String url) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient();
-        // get only the head not the whole file
-        Request request = new Request.Builder()
-                .url(url)
-                .head()
-                .build();
-        Response response = client.newCall(request).execute();
-        // OKHTTP put the length from the header here even though the body is empty
-        long size = response.body().contentLength();
-        return size;
-    }
-
     // feed or bookmark
     private long getRemoteFileSize(String url, String accessToken) throws IOException
     {
@@ -294,37 +335,65 @@ public class PixivArtWorker extends Worker
         return size;
     }
 
-    // This function is used when authentication via an access token is required
-    private Response sendGetRequest(String url, String accessToken) throws IOException
+    // Downloads the selected image to cache folder on local storage
+    // Cache folder is periodically pruned of its oldest images by Android
+    private Uri downloadFile(Response response, String filename) throws IOException
     {
-        OkHttpClient httpClient = new OkHttpClient();
+        Log.d(LOG_TAG, "Downloading file");
+        Context context = getApplicationContext();
+        // Muzei does not care about file extensions
+        // Only there to more easily allow local user to open them
+        File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+        FileOutputStream fileStream = new FileOutputStream(downloadedFile);
+        InputStream inputStream = response.body().byteStream();
+        final byte[] buffer = new byte[1024 * 50];
+        int read;
+        while ((read = inputStream.read(buffer)) > 0)
+        {
+            fileStream.write(buffer, 0, read);
+        }
+        fileStream.close();
+        inputStream.close();
 
-        Request request = new Request.Builder()
-                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-                .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
-                .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
-                .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
-                .addHeader("Authorization", "Bearer " + accessToken)
-                .get()
-                .url(url)
-                .build();
-        return httpClient.newCall(request).execute();
+        return Uri.fromFile(downloadedFile);
     }
 
-    // This function is used when authentication is not required
-    private Response sendGetRequest(String url) throws IOException
+    /*
+    Ranking images are only provided with an illustration id
+    We require the correct file extension in order to successfully pull the picture
+    This method cycles though all possible file extensions until a good response is received
+        i.e. a response that is not a 400 error
+    Returns a Response whose body contains the picture selected to be downloaded
+    */
+    private Response getRemoteFileExtension(String url) throws IOException
     {
-        OkHttpClient httpClient = new OkHttpClient();
+        Response response;
 
-        Request request = new Request.Builder()
-                .addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
-                .addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
-                .get()
-                .url(url)
-                .build();
+        // All urls have predictable formats, so we can simply do substring replacement
+        String uri0 = url
+                .replace("c/240x480/", "")
+                .replace("img-master", "img-original")
+                .replace("_master1200", "");
+        String uri1 = uri0.substring(0, uri0.length() - 4);
 
-        return httpClient.newCall(request).execute();
+        for (String suffix : IMAGE_SUFFIXS)
+        {
+            String uri = uri1 + suffix;
+            response = sendGetRequest(uri);
+            if (response.code() == 200)
+            {
+                return response;
+            } else
+            {
+                response.close();
+            }
+        }
+        return null;
     }
+
+    /*
+        RANKING
+     */
 
     private Artwork getArtworkRanking(String mode) throws IOException, JSONException
     {
@@ -351,6 +420,65 @@ public class PixivArtWorker extends Worker
                 .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
                 .build();
     }
+
+    /*
+Filters through the JSON containing the metadata of the pictures of the selected mode
+Picks one image based on the user's setting to show manga and level of NSFW filtering
+
+Regarding feed and bookmarks
+    For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
+        sanity_level
+            2 -> Completely SFW
+            4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
+            6 -> Very ecchi e.g. more explicit and suggestive themes
+         x_restrict
+            1 -> R18 e.g. nudity and penetration
+
+        In this code x_restrict is treated as a level 8 sanity_level
+
+    For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
+
+Regarding rankings
+    NSFW filtering is performed by checking the value of the "sexual" JSON string
+    Manga filtering is performed by checking the value of the "illust_type" JSON string
+*/
+    private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
+    {
+        Log.d(LOG_TAG, "filterPictureRanking(): Entering");
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
+        JSONObject pictureMetadata;
+        Random random = new Random();
+
+        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+        // If user does not want manga to display
+        if (!showManga)
+        {
+            Log.d(LOG_TAG, "Manga not desired");
+            while (pictureMetadata.getInt("illust_type") != 0)
+            {
+                Log.d(LOG_TAG, "Retrying for a non-manga");
+                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+            }
+        }
+        // If user does not want NSFW images to show
+        if (nsfwFilteringLevel < 4)
+        {
+            Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
+            while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
+            {
+                Log.d(LOG_TAG, "Pulled picture is NSFW, retrying");
+                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+            }
+        }
+        Log.d(LOG_TAG, "Exited selecting ranking");
+        return pictureMetadata;
+    }
+
+    /*
+        FEED OR BOOKMARK
+     */
 
 
     private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
@@ -398,61 +526,6 @@ public class PixivArtWorker extends Worker
                 .token(token)
                 .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
                 .build();
-    }
-
-    /*
-    Filters through the JSON containing the metadata of the pictures of the selected mode
-    Picks one image based on the user's setting to show manga and level of NSFW filtering
-
-    Regarding feed and bookmarks
-        For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
-            sanity_level
-                2 -> Completely SFW
-                4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
-                6 -> Very ecchi e.g. more explicit and suggestive themes
-             x_restrict
-                1 -> R18 e.g. nudity and penetration
-
-            In this code x_restrict is treated as a level 8 sanity_level
-
-        For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
-
-    Regarding rankings
-        NSFW filtering is performed by checking the value of the "sexual" JSON string
-        Manga filtering is performed by checking the value of the "illust_type" JSON string
-    */
-    private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
-    {
-        Log.d(LOG_TAG, "filterPictureRanking(): Entering");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
-        JSONObject pictureMetadata;
-        Random random = new Random();
-
-        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-        // If user does not want manga to display
-        if (!showManga)
-        {
-            Log.d(LOG_TAG, "Manga not desired");
-            while (pictureMetadata.getInt("illust_type") != 0)
-            {
-                Log.d(LOG_TAG, "Retrying for a non-manga");
-                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-            }
-        }
-        // If user does not want NSFW images to show
-        if (nsfwFilteringLevel < 4)
-        {
-            Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
-            while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
-            {
-                Log.d(LOG_TAG, "Pulled picture is NSFW, retrying");
-                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-            }
-        }
-        Log.d(LOG_TAG, "Exited selecting ranking");
-        return pictureMetadata;
     }
 
     private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
@@ -508,63 +581,6 @@ public class PixivArtWorker extends Worker
         }
 
         return pictureMetadata;
-    }
-
-    // Downloads the selected image to cache folder on local storage
-    // Cache folder is periodically pruned of its oldest images by Android
-    private Uri downloadFile(Response response, String filename) throws IOException
-    {
-        Log.d(LOG_TAG, "Downloading file");
-        Context context = getApplicationContext();
-        // Muzei does not care about file extensions
-        // Only there to more easily allow local user to open them
-        File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-        FileOutputStream fileStream = new FileOutputStream(downloadedFile);
-        InputStream inputStream = response.body().byteStream();
-        final byte[] buffer = new byte[1024 * 50];
-        int read;
-        while ((read = inputStream.read(buffer)) > 0)
-        {
-            fileStream.write(buffer, 0, read);
-        }
-        fileStream.close();
-        inputStream.close();
-
-        return Uri.fromFile(downloadedFile);
-    }
-
-    /*
-    Ranking images are only provided with an illustration id
-    We require the correct file extension in order to successfully pull the picture
-    This method cycles though all possible file extensions until a good response is received
-        i.e. a response that is not a 400 error
-    Returns a Response whose body contains the picture selected to be downloaded
-    */
-    private Response getRemoteFileExtension(String url) throws IOException
-    {
-        Response response;
-
-        // All urls have predictable formats, so we can simply do substring replacement
-        String uri0 = url
-                .replace("c/240x480/", "")
-                .replace("img-master", "img-original")
-                .replace("_master1200", "");
-        String uri1 = uri0.substring(0, uri0.length() - 4);
-
-        for (String suffix : IMAGE_SUFFIXS)
-        {
-            String uri = uri1 + suffix;
-            response = sendGetRequest(uri);
-            if (response.code() == 200)
-            {
-                return response;
-            }
-            else
-            {
-                response.close();
-            }
-        }
-        return null;
     }
 
     public Artwork getArtwork()
