@@ -50,27 +50,27 @@ public class PixivArtProvider extends MuzeiArtProvider
 	}
 
 	// This method called on insertion of new images.
-	@Override
-	@NonNull
-	public InputStream openFile(@NonNull Artwork artwork) throws IOException
-	{
-		Log.d(LOG_TAG, "openFile() overridden");
-		TokenFilenameFilter tokenFilter = new TokenFilenameFilter(artwork.getToken());
-		File[] listFiles = getContext()
-				.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-				.listFiles(tokenFilter);
-		if (listFiles.length == 0)
-		{
-			Log.d("PIXIV_DEBUG", "Missing file");
-			Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
-			getContext().getContentResolver().delete(conResUri, null, null);
-			FileUtils.deleteQuietly(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
-			FileUtils.deleteQuietly(getContext().getCacheDir());
-			PixivArtWorker.enqueueLoad(true);
-			throw new FileNotFoundException("No file with token: " + artwork.getToken());
-		}
-		return new FileInputStream(listFiles[0]);
-	}
+//	@Override
+//	@NonNull
+//	public InputStream openFile(@NonNull Artwork artwork) throws IOException
+//	{
+//		Log.d(LOG_TAG, "openFile() overridden");
+//		TokenFilenameFilter tokenFilter = new TokenFilenameFilter(artwork.getToken());
+//		File[] listFiles = getContext()
+//				.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+//				.listFiles(tokenFilter);
+//		if (listFiles.length == 0)
+//		{
+//			Log.d("PIXIV_DEBUG", "Missing file");
+//			Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
+//			getContext().getContentResolver().delete(conResUri, null, null);
+//			FileUtils.deleteQuietly(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+//			FileUtils.deleteQuietly(getContext().getCacheDir());
+//			PixivArtWorker.enqueueLoad(true);
+//			throw new FileNotFoundException("No file with token: " + artwork.getToken());
+//		}
+//		return new FileInputStream(listFiles[0]);
+//	}
 
 	public static class TokenFilenameFilter implements FilenameFilter
 	{
