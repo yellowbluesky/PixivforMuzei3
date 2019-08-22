@@ -129,7 +129,7 @@ public class SettingsActivity extends AppCompatActivity
 
 		// Automatic cache clearing at 1AM every night for as long as the setting is toggled active
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		if (sharedPrefs.getBoolean("pref_autoClearMode", false))
+		if (sharedPrefs.getBoolean("pref_autoClearMode", true))
 		{
 			// Calculates the hours to midnight
 			SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
