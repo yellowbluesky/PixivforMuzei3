@@ -58,103 +58,103 @@ import okhttp3.Response;
 
 public class PixivArtWorker extends Worker
 {
-    private static final String LOG_TAG = "PIXIV_DEBUG";
-    private static final String WORKER_TAG = "PIXIV";
+	private static final String LOG_TAG = "PIXIV_DEBUG";
+	private static final String WORKER_TAG = "PIXIV";
 
-    private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
+	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 
-    private static boolean clearArtwork = false;
+	private static boolean clearArtwork = false;
 
-    public PixivArtWorker(
-            @NonNull Context context,
-            @NonNull WorkerParameters params)
-    {
-        super(context, params);
-    }
+	public PixivArtWorker(
+			@NonNull Context context,
+			@NonNull WorkerParameters params)
+	{
+		super(context, params);
+	}
 
-    static void enqueueLoad(boolean clear)
-    {
-        if (clear)
-        {
-            clearArtwork = true;
-        }
-        WorkManager manager = WorkManager.getInstance();
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
-                .addTag(WORKER_TAG)
-                .setConstraints(constraints)
-                .build();
-        manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
-    }
+	static void enqueueLoad(boolean clear)
+	{
+		if (clear)
+		{
+			clearArtwork = true;
+		}
+		WorkManager manager = WorkManager.getInstance();
+		Constraints constraints = new Constraints.Builder()
+				.setRequiredNetworkType(NetworkType.CONNECTED)
+				.build();
+		OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
+				.addTag(WORKER_TAG)
+				.setConstraints(constraints)
+				.build();
+		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
+	}
 
     /*
         AUTH
      */
 
-    // Returns a string containing a valid access token
-    // Otherwise returns an empty string if authentication failed or not possible
-    private String getAccessToken()
-    {
-        Log.d(LOG_TAG, "getAccessToken(): Entered");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+	// Returns a string containing a valid access token
+	// Otherwise returns an empty string if authentication failed or not possible
+	private String getAccessToken()
+	{
+		Log.d(LOG_TAG, "getAccessToken(): Entered");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        // If we possess an access token, AND it has not expired, instantly return it
-        // Must be a divide by 1000, cannot be subtract 3600 * 1000
-        String accessToken = sharedPrefs.getString("accessToken", "");
-        long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
-        //long accessTokenIssueTime = 1;
-        if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
-        {
-            Log.i(LOG_TAG, "Existing access token found, using it");
-            Log.d(LOG_TAG, "getAccessToken(): Exited");
-            return accessToken;
-        }
+		// If we possess an access token, AND it has not expired, instantly return it
+		// Must be a divide by 1000, cannot be subtract 3600 * 1000
+		String accessToken = sharedPrefs.getString("accessToken", "");
+		long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
+		//long accessTokenIssueTime = 1;
+		if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
+		{
+			Log.i(LOG_TAG, "Existing access token found, using it");
+			Log.d(LOG_TAG, "getAccessToken(): Exited");
+			return accessToken;
+		}
 
-        Log.d(LOG_TAG, "Access token expired or non-existent, proceeding to acquire a new access token");
+		Log.d(LOG_TAG, "Access token expired or non-existent, proceeding to acquire a new access token");
 
-        try
-        {
-            Response response;
-            if (sharedPrefs.getString("refreshToken", "").isEmpty())
-            {
-                Log.i(LOG_TAG, "Using username and password to acquire an access token");
-                String loginId = sharedPrefs.getString("pref_loginId", "");
-                String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
-                response = authLogin(loginId, loginPassword);
-            } else
-            {
-                Log.i(LOG_TAG, "Using refresh token to acquire an access token");
-                String refreshToken = sharedPrefs.getString("refreshToken", "");
-                response = authRefreshToken(refreshToken);
-            }
-            JSONObject authResponseBody = new JSONObject(response.body().string());
-            response.close();
+		try
+		{
+			Response response;
+			if (sharedPrefs.getString("refreshToken", "").isEmpty())
+			{
+				Log.i(LOG_TAG, "Using username and password to acquire an access token");
+				String loginId = sharedPrefs.getString("pref_loginId", "");
+				String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
+				response = authLogin(loginId, loginPassword);
+			} else
+			{
+				Log.i(LOG_TAG, "Using refresh token to acquire an access token");
+				String refreshToken = sharedPrefs.getString("refreshToken", "");
+				response = authRefreshToken(refreshToken);
+			}
+			JSONObject authResponseBody = new JSONObject(response.body().string());
+			response.close();
 
-            if (authResponseBody.has("has_error"))
-            {
-                Log.i(LOG_TAG, "Error authenticating, check username or password");
-                // Clearing loginPassword is a hacky way to alerting to the user that their credentials do not work
-                sharedPrefs.edit().putString("pref_loginPassword", "").apply();
-                return "";
-            }
+			if (authResponseBody.has("has_error"))
+			{
+				Log.i(LOG_TAG, "Error authenticating, check username or password");
+				// Clearing loginPassword is a hacky way to alerting to the user that their credentials do not work
+				sharedPrefs.edit().putString("pref_loginPassword", "").apply();
+				return "";
+			}
 
-            // Authentication succeeded, storing tokens returned from Pixiv
-            //Log.d(LOG_TAG, authResponseBody.toString());
+			// Authentication succeeded, storing tokens returned from Pixiv
+			//Log.d(LOG_TAG, authResponseBody.toString());
 //            Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
 //            sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
-            storeTokens(authResponseBody.getJSONObject("response"));
-        } catch (IOException | JSONException ex)
-        {
-            ex.printStackTrace();
-            Log.d(LOG_TAG, "getAccessToken(): Exited with error");
-            return "";
-        }
-        Log.d(LOG_TAG, "Acquired access token");
-        Log.d(LOG_TAG, "getAccessToken(): Exited");
-        return sharedPrefs.getString("accessToken", "");
-    }
+			storeTokens(authResponseBody.getJSONObject("response"));
+		} catch (IOException | JSONException ex)
+		{
+			ex.printStackTrace();
+			Log.d(LOG_TAG, "getAccessToken(): Exited with error");
+			return "";
+		}
+		Log.d(LOG_TAG, "Acquired access token");
+		Log.d(LOG_TAG, "getAccessToken(): Exited");
+		return sharedPrefs.getString("accessToken", "");
+	}
 
 //    private Uri storeProfileImage(JSONObject response) throws JSONException, java.io.IOException
 //    {
@@ -166,487 +166,487 @@ public class PixivArtWorker extends Worker
 //        return downloadFile(sendGetRequest(profileImageUrl), "profile.png");
 //    }
 
-    // Acquires an access token and refresh token from a username / password pair
-    // Returns a response containing an error or the tokens
-    // It is up to the caller to handle any errors
-    private Response authLogin(String loginId, String loginPassword) throws IOException, JSONException
-    {
-        Uri authQuery = new Uri.Builder()
-                .appendQueryParameter("get_secure_url", Integer.toString(1))
-                .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
-                .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
-                .appendQueryParameter("grant_type", "password")
-                .appendQueryParameter("username", loginId)
-                .appendQueryParameter("password", loginPassword)
-                .build();
+	// Acquires an access token and refresh token from a username / password pair
+	// Returns a response containing an error or the tokens
+	// It is up to the caller to handle any errors
+	private Response authLogin(String loginId, String loginPassword) throws IOException, JSONException
+	{
+		Uri authQuery = new Uri.Builder()
+				.appendQueryParameter("get_secure_url", Integer.toString(1))
+				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
+				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
+				.appendQueryParameter("grant_type", "password")
+				.appendQueryParameter("username", loginId)
+				.appendQueryParameter("password", loginPassword)
+				.build();
 
-        return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
-    }
+		return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
+	}
 
-    // Acquire an access token from an existing refresh token
-    // Returns a response containing an error or the tokens
-    // It is up to the caller to handle any errors
-    private Response authRefreshToken(String refreshToken) throws IOException, JSONException
-    {
-        Uri authQuery = new Uri.Builder()
-                .appendQueryParameter("get_secure_url", Integer.toString(1))
-                .appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
-                .appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
-                .appendQueryParameter("grant_type", "refresh_token")
-                .appendQueryParameter("refresh_token", refreshToken)
-                .build();
+	// Acquire an access token from an existing refresh token
+	// Returns a response containing an error or the tokens
+	// It is up to the caller to handle any errors
+	private Response authRefreshToken(String refreshToken) throws IOException, JSONException
+	{
+		Uri authQuery = new Uri.Builder()
+				.appendQueryParameter("get_secure_url", Integer.toString(1))
+				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
+				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
+				.appendQueryParameter("grant_type", "refresh_token")
+				.appendQueryParameter("refresh_token", refreshToken)
+				.build();
 
-        return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
-    }
+		return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
+	}
 
-    // Upon successful authentication this function stores tokens returned from Pixiv into device memory
-    private void storeTokens(JSONObject tokens) throws JSONException
-    {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("accessToken", tokens.getString("access_token"));
-        editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
-        editor.putString("refreshToken", tokens.getString("refresh_token"));
-        editor.putString("userId", tokens.getJSONObject("user").getString("id"));
-        // Not yet tested, but I believe that this needs to be a commit() and not an apply()
-        // Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
-        editor.commit();
-    }
+	// Upon successful authentication this function stores tokens returned from Pixiv into device memory
+	private void storeTokens(JSONObject tokens) throws JSONException
+	{
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		SharedPreferences.Editor editor = sharedPrefs.edit();
+		editor.putString("accessToken", tokens.getString("access_token"));
+		editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
+		editor.putString("refreshToken", tokens.getString("refresh_token"));
+		editor.putString("userId", tokens.getJSONObject("user").getString("id"));
+		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
+		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
+		editor.commit();
+	}
 
     /*
         NETWORK
      */
 
-    // This function is used when authentication via an access token is required
-    private Response sendGetRequest(String url, String accessToken) throws IOException
-    {
-        OkHttpClient httpClient = new OkHttpClient();
+	// This function is used when authentication via an access token is required
+	private Response sendGetRequest(String url, String accessToken) throws IOException
+	{
+		OkHttpClient httpClient = new OkHttpClient();
 
-        Request request = new Request.Builder()
-                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-                .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
-                .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
-                .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
-                .addHeader("Authorization", "Bearer " + accessToken)
-                .get()
-                .url(url)
-                .build();
-        return httpClient.newCall(request).execute();
-    }
+		Request request = new Request.Builder()
+				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+				.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
+				.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
+				.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
+				.addHeader("Authorization", "Bearer " + accessToken)
+				.get()
+				.url(url)
+				.build();
+		return httpClient.newCall(request).execute();
+	}
 
-    // This function is used when authentication is not required
-    private Response sendGetRequest(String url) throws IOException
-    {
-        OkHttpClient httpClient = new OkHttpClient();
+	// This function is used when authentication is not required
+	private Response sendGetRequest(String url) throws IOException
+	{
+		OkHttpClient httpClient = new OkHttpClient();
 
-        Request request = new Request.Builder()
-                .addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
-                .addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
-                .get()
-                .url(url)
-                .build();
+		Request request = new Request.Builder()
+				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
+				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
+				.get()
+				.url(url)
+				.build();
 
-        return httpClient.newCall(request).execute();
-    }
+		return httpClient.newCall(request).execute();
+	}
 
 
-    private Response sendHeadRequest(String url)
-    {
-        OkHttpClient httpClient = new OkHttpClient();
+	private Response sendHeadRequest(String url)
+	{
+		OkHttpClient httpClient = new OkHttpClient();
 
-        Request request = new Request.Builder().url(url).head().build();
-        return null;
-    }
+		Request request = new Request.Builder().url(url).head().build();
+		return null;
+	}
 
-    // ranking
-    private long getRemoteFileSize(String url) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient();
-        // get only the head not the whole file
-        Request request = new Request.Builder()
-                .url(url)
-                .head()
-                .build();
-        Response response = client.newCall(request).execute();
-        // OKHTTP put the length from the header here even though the body is empty
-        long size = response.body().contentLength();
-        return size;
-    }
+	// ranking
+	private long getRemoteFileSize(String url) throws IOException
+	{
+		OkHttpClient client = new OkHttpClient();
+		// get only the head not the whole file
+		Request request = new Request.Builder()
+				.url(url)
+				.head()
+				.build();
+		Response response = client.newCall(request).execute();
+		// OKHTTP put the length from the header here even though the body is empty
+		long size = response.body().contentLength();
+		return size;
+	}
 
-    // Sends an authentication request, and returns a Response
-    // The Response is decoded by the caller; it contains authentication tokens or an error
-    // this method is called by only one method, so all values are hardcoded
-    private Response sendPostRequest(String url, Uri authQuery) throws IOException
-    {
-        String contentType = "application/x-www-form-urlencoded";
-        OkHttpClient httpClient = new OkHttpClient();
+	// Sends an authentication request, and returns a Response
+	// The Response is decoded by the caller; it contains authentication tokens or an error
+	// this method is called by only one method, so all values are hardcoded
+	private Response sendPostRequest(String url, Uri authQuery) throws IOException
+	{
+		String contentType = "application/x-www-form-urlencoded";
+		OkHttpClient httpClient = new OkHttpClient();
 
-        RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
+		RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
 
-        Request request = new Request.Builder()
-                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-                .addHeader("App-OS", PixivArtProviderDefines.APP_OS)
-                .addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
-                .addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
-                .addHeader("Content-type", body.contentType().toString())
-                .post(body)
-                .url(url)
-                .build();
-        return httpClient.newCall(request).execute();
-    }
+		Request request = new Request.Builder()
+				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+				.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
+				.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
+				.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
+				.addHeader("Content-type", body.contentType().toString())
+				.post(body)
+				.url(url)
+				.build();
+		return httpClient.newCall(request).execute();
+	}
 
-    // Returns the requested Pixiv API endpoint as a String
-    private String getUpdateUriInfo(String mode, String userId)
-    {
-        String urlString;
-        switch (mode)
-        {
-            case "follow":
-                urlString = PixivArtProviderDefines.FOLLOW_URL + "?restrict=public";
-                break;
-            case "bookmark":
-                urlString = PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public";
-                break;
-            case "weekly_rank":
-                urlString = PixivArtProviderDefines.WEEKLY_RANKING_URL;
-                break;
-            case "monthly_rank":
-                urlString = PixivArtProviderDefines.MONTHLY_RANKING_URL;
-                break;
-            case "daily_rank":
-            default:
-                urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
-        }
-        return urlString;
-    }
+	// Returns the requested Pixiv API endpoint as a String
+	private String getUpdateUriInfo(String mode, String userId)
+	{
+		String urlString;
+		switch (mode)
+		{
+			case "follow":
+				urlString = PixivArtProviderDefines.FOLLOW_URL + "?restrict=public";
+				break;
+			case "bookmark":
+				urlString = PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public";
+				break;
+			case "weekly_rank":
+				urlString = PixivArtProviderDefines.WEEKLY_RANKING_URL;
+				break;
+			case "monthly_rank":
+				urlString = PixivArtProviderDefines.MONTHLY_RANKING_URL;
+				break;
+			case "daily_rank":
+			default:
+				urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
+		}
+		return urlString;
+	}
 
-    // feed or bookmark
-    private long getRemoteFileSize(String url, String accessToken) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient();
-        // get only the head not the whole file
-        Request request = new Request.Builder()
-                .url(url)
-                .head()
-                .build();
-        Response response = client.newCall(request).execute();
-        // OKHTTP put the length from the header here even though the body is empty
-        long size = response.body().contentLength();
-        return size;
-    }
+	// feed or bookmark
+	private long getRemoteFileSize(String url, String accessToken) throws IOException
+	{
+		OkHttpClient client = new OkHttpClient();
+		// get only the head not the whole file
+		Request request = new Request.Builder()
+				.url(url)
+				.head()
+				.build();
+		Response response = client.newCall(request).execute();
+		// OKHTTP put the length from the header here even though the body is empty
+		long size = response.body().contentLength();
+		return size;
+	}
 
-    // Downloads the selected image to cache folder on local storage
-    // Cache folder is periodically pruned of its oldest images by Android
-    private Uri downloadFile(Response response, String filename) throws IOException
-    {
-        Log.d(LOG_TAG, "Downloading file");
-        Context context = getApplicationContext();
-        // Muzei does not care about file extensions
-        // Only there to more easily allow local user to open them
-        File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-        FileOutputStream fileStream = new FileOutputStream(downloadedFile);
-        InputStream inputStream = response.body().byteStream();
-        final byte[] buffer = new byte[1024 * 50];
-        int read;
-        while ((read = inputStream.read(buffer)) > 0)
-        {
-            fileStream.write(buffer, 0, read);
-        }
-        fileStream.close();
-        inputStream.close();
+	// Downloads the selected image to cache folder on local storage
+	// Cache folder is periodically pruned of its oldest images by Android
+	private Uri downloadFile(Response response, String filename) throws IOException
+	{
+		Log.d(LOG_TAG, "Downloading file");
+		Context context = getApplicationContext();
+		// Muzei does not care about file extensions
+		// Only there to more easily allow local user to open them
+		File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		FileOutputStream fileStream = new FileOutputStream(downloadedFile);
+		InputStream inputStream = response.body().byteStream();
+		final byte[] buffer = new byte[1024 * 50];
+		int read;
+		while ((read = inputStream.read(buffer)) > 0)
+		{
+			fileStream.write(buffer, 0, read);
+		}
+		fileStream.close();
+		inputStream.close();
 
-        return Uri.fromFile(downloadedFile);
-    }
+		return Uri.fromFile(downloadedFile);
+	}
 
-    /*
-    Ranking images are only provided with an illustration id
-    We require the correct file extension in order to successfully pull the picture
-    This method cycles though all possible file extensions until a good response is received
-        i.e. a response that is not a 400 error
-    Returns a Response whose body contains the picture selected to be downloaded
-    */
-    private Response getRemoteFileExtension(String url) throws IOException
-    {
-        Response response;
+	/*
+	Ranking images are only provided with an illustration id
+	We require the correct file extension in order to successfully pull the picture
+	This method cycles though all possible file extensions until a good response is received
+		i.e. a response that is not a 400 error
+	Returns a Response whose body contains the picture selected to be downloaded
+	*/
+	private Response getRemoteFileExtension(String url) throws IOException
+	{
+		Response response;
 
-        // All urls have predictable formats, so we can simply do substring replacement
-        String uri0 = url
-                .replace("c/240x480/", "")
-                .replace("img-master", "img-original")
-                .replace("_master1200", "");
-        String uri1 = uri0.substring(0, uri0.length() - 4);
+		// All urls have predictable formats, so we can simply do substring replacement
+		String uri0 = url
+				.replace("c/240x480/", "")
+				.replace("img-master", "img-original")
+				.replace("_master1200", "");
+		String uri1 = uri0.substring(0, uri0.length() - 4);
 
-        for (String suffix : IMAGE_SUFFIXS)
-        {
-            String uri = uri1 + suffix;
-            response = sendGetRequest(uri);
-            if (response.code() == 200)
-            {
-                return response;
-            } else
-            {
-                response.close();
-            }
-        }
-        return null;
-    }
+		for (String suffix : IMAGE_SUFFIXS)
+		{
+			String uri = uri1 + suffix;
+			response = sendGetRequest(uri);
+			if (response.code() == 200)
+			{
+				return response;
+			} else
+			{
+				response.close();
+			}
+		}
+		return null;
+	}
 
     /*
         RANKING
      */
 
-    private Artwork getArtworkRanking(String mode) throws IOException, JSONException
-    {
-        Log.d(LOG_TAG, "getArtworkRanking(): Entering");
-        Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
+	private Artwork getArtworkRanking(String mode) throws IOException, JSONException
+	{
+		Log.d(LOG_TAG, "getArtworkRanking(): Entering");
+		Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
 
-        JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.close();
-        JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
+		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
+		rankingResponse.close();
+		JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
 
-        String title = pictureMetadata.getString("title");
-        String byline = pictureMetadata.getString("user_name");
-        String token = pictureMetadata.getString("illust_id");
-        Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
-        Uri localUri = downloadFile(remoteFileExtension, token);
-        remoteFileExtension.close();
-        Log.d(LOG_TAG, "getArtworkRanking(): Exited");
+		String title = pictureMetadata.getString("title");
+		String byline = pictureMetadata.getString("user_name");
+		String token = pictureMetadata.getString("illust_id");
+		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
+		Uri localUri = downloadFile(remoteFileExtension, token);
+		remoteFileExtension.close();
+		Log.d(LOG_TAG, "getArtworkRanking(): Exited");
 
-        return new Artwork.Builder()
-                .title(title)
-                .byline(byline)
-                .persistentUri(localUri)
-                .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
-                .build();
-    }
+		return new Artwork.Builder()
+				.title(title)
+				.byline(byline)
+				.persistentUri(localUri)
+				.token(token)
+				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+				.build();
+	}
 
-    /*
+	/*
 Filters through the JSON containing the metadata of the pictures of the selected mode
 Picks one image based on the user's setting to show manga and level of NSFW filtering
 
 Regarding feed and bookmarks
-    For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
-        sanity_level
-            2 -> Completely SFW
-            4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
-            6 -> Very ecchi e.g. more explicit and suggestive themes
-         x_restrict
-            1 -> R18 e.g. nudity and penetration
+	For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
+		sanity_level
+			2 -> Completely SFW
+			4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
+			6 -> Very ecchi e.g. more explicit and suggestive themes
+		 x_restrict
+			1 -> R18 e.g. nudity and penetration
 
-        In this code x_restrict is treated as a level 8 sanity_level
+		In this code x_restrict is treated as a level 8 sanity_level
 
-    For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
+	For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
 
 Regarding rankings
-    NSFW filtering is performed by checking the value of the "sexual" JSON string
-    Manga filtering is performed by checking the value of the "illust_type" JSON string
+	NSFW filtering is performed by checking the value of the "sexual" JSON string
+	Manga filtering is performed by checking the value of the "illust_type" JSON string
 */
-    private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
-    {
-        Log.d(LOG_TAG, "filterPictureRanking(): Entering");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
-        JSONObject pictureMetadata;
-        Random random = new Random();
+	private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
+	{
+		Log.d(LOG_TAG, "filterPictureRanking(): Entering");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
+		JSONObject pictureMetadata;
+		Random random = new Random();
 
-        pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-        // If user does not want manga to display
-        if (!showManga)
-        {
-            Log.d(LOG_TAG, "Manga not desired");
-            while (pictureMetadata.getInt("illust_type") != 0)
-            {
-                Log.d(LOG_TAG, "Retrying for a non-manga");
-                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-            }
-        }
-        // If user does not want NSFW images to show
-        if (nsfwFilteringLevel < 4)
-        {
-            Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
-            while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
-            {
-                Log.d(LOG_TAG, "Pulled picture is NSFW, retrying");
-                pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
-            }
-        }
-        Log.d(LOG_TAG, "Exited selecting ranking");
-        return pictureMetadata;
-    }
+		pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+		// If user does not want manga to display
+		if (!showManga)
+		{
+			Log.d(LOG_TAG, "Manga not desired");
+			while (pictureMetadata.getInt("illust_type") != 0)
+			{
+				Log.d(LOG_TAG, "Retrying for a non-manga");
+				pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+			}
+		}
+		// If user does not want NSFW images to show
+		if (nsfwFilteringLevel < 4)
+		{
+			Log.d(LOG_TAG, "Checking NSFW level of pulled picture");
+			while (pictureMetadata.getJSONObject("illust_content_type").getInt("sexual") != 0)
+			{
+				Log.d(LOG_TAG, "Pulled picture is NSFW, retrying");
+				pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+			}
+		}
+		Log.d(LOG_TAG, "Exited selecting ranking");
+		return pictureMetadata;
+	}
 
     /*
         FEED OR BOOKMARK
      */
 
 
-    private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
-    {
-        Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Entering");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""));
-        Response rankingResponse = sendGetRequest(updateUri, accessToken);
+	private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
+	{
+		Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Entering");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""));
+		Response rankingResponse = sendGetRequest(updateUri, accessToken);
 
-        JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-        rankingResponse.close();
-        JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
+		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
+		rankingResponse.close();
+		JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
 
-        String title = pictureMetadata.getString("title");
-        String byline = pictureMetadata.getJSONObject("user").getString("name");
-        String token = pictureMetadata.getString("id");
+		String title = pictureMetadata.getString("title");
+		String byline = pictureMetadata.getJSONObject("user").getString("name");
+		String token = pictureMetadata.getString("id");
 
-        // Picture pulled is a single
-        String imageUrl;
-        if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
-        {
-            Log.d(LOG_TAG, "Picture is a single image");
-            imageUrl = pictureMetadata
-                    .getJSONObject("meta_single_page")
-                    .getString("original_image_url");
-        }
-        // Otherwise we have pulled an album, picking the first picture in album
-        else
-        {
-            Log.d(LOG_TAG, "Picture is part of an album");
-            imageUrl = pictureMetadata
-                    .getJSONArray("meta_pages")
-                    .getJSONObject(0)
-                    .getJSONObject("image_urls")
-                    .getString("original");
-        }
-        Response imageDataResponse = sendGetRequest(imageUrl);
-        Uri localUri = downloadFile(imageDataResponse, token);
-        imageDataResponse.close();
-        Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
-        return new Artwork.Builder()
-                .title(title)
-                .byline(byline)
-                .persistentUri(localUri)
-                .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
-                .build();
-    }
+		// Picture pulled is a single
+		String imageUrl;
+		if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
+		{
+			Log.d(LOG_TAG, "Picture is a single image");
+			imageUrl = pictureMetadata
+					.getJSONObject("meta_single_page")
+					.getString("original_image_url");
+		}
+		// Otherwise we have pulled an album, picking the first picture in album
+		else
+		{
+			Log.d(LOG_TAG, "Picture is part of an album");
+			imageUrl = pictureMetadata
+					.getJSONArray("meta_pages")
+					.getJSONObject(0)
+					.getJSONObject("image_urls")
+					.getString("original");
+		}
+		Response imageDataResponse = sendGetRequest(imageUrl);
+		Uri localUri = downloadFile(imageDataResponse, token);
+		imageDataResponse.close();
+		Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
+		return new Artwork.Builder()
+				.title(title)
+				.byline(byline)
+				.persistentUri(localUri)
+				.token(token)
+				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+				.build();
+	}
 
-    private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
-    {
-        Log.d(LOG_TAG, "filterPictureFeedBookmark(): Entering");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+	private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
+	{
+		Log.d(LOG_TAG, "filterPictureFeedBookmark(): Entering");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 
-        Random random = new Random();
+		Random random = new Random();
 
-        // Random seems to be very inefficient, potentially visiting the same image multiple times
-        JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+		// Random seems to be very inefficient, potentially visiting the same image multiple times
+		JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
-        // If user does not want manga to display
-        if (!showManga)
-        {
-            Log.d(LOG_TAG, "Manga not desired");
-            while (!pictureMetadata.getString("type").equals("illust"))
-            {
-                Log.d(LOG_TAG, "Retrying for a non-manga");
-                pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-            }
-        }
-        // If user does not want NSFW images to show
-        // If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
-        // TODO this can be made better
-        int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
-        Log.d(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
-        if (nsfwFilteringLevel < 8)
-        {
-            Log.d(LOG_TAG, "Performing some level of NSFW filtering");
-            // Allowing all sanity_level and filtering only x_restrict tagged pictures
-            if (nsfwFilteringLevel == 6)
-            {
-                Log.d(LOG_TAG, "Allowing all but x_restrict, checking");
-                while (pictureMetadata.getInt("x_restrict") != 0)
-                {
-                    Log.d(LOG_TAG, "Retrying for a non x_restrict");
-                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                }
-            } else
-            {
-                int nsfwLevel = pictureMetadata.getInt("sanity_level");
-                Log.d(LOG_TAG, "Sanity level of pulled picture is: " + nsfwLevel);
-                // If it's equal it's ok
-                while (nsfwLevel > nsfwFilteringLevel)
-                {
-                    Log.d(LOG_TAG, "Pulled picture exceeds set filtering level, retrying");
-                    pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-                    nsfwLevel = pictureMetadata.getInt("sanity_level");
-                }
-            }
-        }
+		// If user does not want manga to display
+		if (!showManga)
+		{
+			Log.d(LOG_TAG, "Manga not desired");
+			while (!pictureMetadata.getString("type").equals("illust"))
+			{
+				Log.d(LOG_TAG, "Retrying for a non-manga");
+				pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+			}
+		}
+		// If user does not want NSFW images to show
+		// If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
+		// TODO this can be made better
+		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
+		Log.d(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
+		if (nsfwFilteringLevel < 8)
+		{
+			Log.d(LOG_TAG, "Performing some level of NSFW filtering");
+			// Allowing all sanity_level and filtering only x_restrict tagged pictures
+			if (nsfwFilteringLevel == 6)
+			{
+				Log.d(LOG_TAG, "Allowing all but x_restrict, checking");
+				while (pictureMetadata.getInt("x_restrict") != 0)
+				{
+					Log.d(LOG_TAG, "Retrying for a non x_restrict");
+					pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+				}
+			} else
+			{
+				int nsfwLevel = pictureMetadata.getInt("sanity_level");
+				Log.d(LOG_TAG, "Sanity level of pulled picture is: " + nsfwLevel);
+				// If it's equal it's ok
+				while (nsfwLevel > nsfwFilteringLevel)
+				{
+					Log.d(LOG_TAG, "Pulled picture exceeds set filtering level, retrying");
+					pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+					nsfwLevel = pictureMetadata.getInt("sanity_level");
+				}
+			}
+		}
 
-        return pictureMetadata;
-    }
+		return pictureMetadata;
+	}
 
-    public Artwork getArtwork()
-    {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String mode = sharedPrefs.getString("pref_updateMode", "daily_rank");
-        Log.d(LOG_TAG, "Display mode: " + mode);
-        Artwork artwork = null;
-        String accessToken = "";
+	public Artwork getArtwork()
+	{
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		String mode = sharedPrefs.getString("pref_updateMode", "daily_rank");
+		Log.d(LOG_TAG, "Display mode: " + mode);
+		Artwork artwork = null;
+		String accessToken = "";
 
-        if (mode.equals("follow") || mode.equals("bookmark"))
-        {
-            accessToken = getAccessToken();
-            if (accessToken.isEmpty())
-            {
-                // All this is needed to toast
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        Toast.makeText(getApplicationContext(), "Pixiv for Muzei 3: Authentication failed, switching to daily ranking", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
-                mode = "daily_ranking";
-            }
-        }
+		if (mode.equals("follow") || mode.equals("bookmark"))
+		{
+			accessToken = getAccessToken();
+			if (accessToken.isEmpty())
+			{
+				// All this is needed to toast
+				Handler handler = new Handler(Looper.getMainLooper());
+				handler.post(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						Toast.makeText(getApplicationContext(), "Pixiv for Muzei 3: Authentication failed, switching to daily ranking", Toast.LENGTH_SHORT).show();
+					}
+				});
+				sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
+				mode = "daily_ranking";
+			}
+		}
 
-        try
-        {
-            if (mode.equals("follow") || mode.equals("bookmark"))
-            {
-                artwork = getArtworkFeedOrBookmark(mode, accessToken);
-            } else
-            {
-                artwork = getArtworkRanking(mode);
-            }
-        } catch (IOException | JSONException ex)
-        {
-            ex.printStackTrace();
-        }
-        return artwork;
-    }
+		try
+		{
+			if (mode.equals("follow") || mode.equals("bookmark"))
+			{
+				artwork = getArtworkFeedOrBookmark(mode, accessToken);
+			} else
+			{
+				artwork = getArtworkRanking(mode);
+			}
+		} catch (IOException | JSONException ex)
+		{
+			ex.printStackTrace();
+		}
+		return artwork;
+	}
 
-    @NonNull
-    @Override
-    public Result doWork()
-    {
-        ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
-        Log.d(LOG_TAG, "Starting work");
-        if (!clearArtwork)
-        {
-            client.addArtwork(getArtwork());
-        } else
-        {
-            Log.d(LOG_TAG, "Clearing cache");
-            client.setArtwork(getArtwork());
-            for (int i = 0; i < 2; i++)
-            {
-                client.addArtwork(getArtwork());
-            }
-            clearArtwork = false;
-        }
+	@NonNull
+	@Override
+	public Result doWork()
+	{
+		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
+		Log.d(LOG_TAG, "Starting work");
+		if (!clearArtwork)
+		{
+			client.addArtwork(getArtwork());
+		} else
+		{
+			Log.d(LOG_TAG, "Clearing cache");
+			client.setArtwork(getArtwork());
+			for (int i = 0; i < 2; i++)
+			{
+				client.addArtwork(getArtwork());
+			}
+			clearArtwork = false;
+		}
 
-        return Result.success();
-    }
+		return Result.success();
+	}
 }
