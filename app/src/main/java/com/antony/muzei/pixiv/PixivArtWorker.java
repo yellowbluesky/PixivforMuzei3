@@ -21,9 +21,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.os.Handler;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -346,9 +346,9 @@ public class PixivArtWorker extends Worker
 		File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 		FileOutputStream fileStream = new FileOutputStream(downloadedFile);
 		InputStream inputStream = response.body().byteStream();
-		final byte[] buffer = new byte[1024 * 50];
+		final byte[] buffer = new byte[32768];
 		int read;
-		while ((read = inputStream.read(buffer)) > 0)
+		while ((read = inputStream.read(buffer)) != -1)
 		{
 			fileStream.write(buffer, 0, read);
 		}

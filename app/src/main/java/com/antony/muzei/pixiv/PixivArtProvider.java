@@ -17,24 +17,7 @@
 
 package com.antony.muzei.pixiv;
 
-import android.net.Uri;
-import android.os.Environment;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
-
-import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
-import com.google.android.apps.muzei.api.provider.ProviderContract;
-
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
 
 
 public class PixivArtProvider extends MuzeiArtProvider
@@ -49,42 +32,4 @@ public class PixivArtProvider extends MuzeiArtProvider
 		PixivArtWorker.enqueueLoad(false);
 	}
 
-	// This method called on insertion of new images.
-//	@Override
-//	@NonNull
-//	public InputStream openFile(@NonNull Artwork artwork) throws IOException
-//	{
-//		Log.d(LOG_TAG, "openFile() overridden");
-//		TokenFilenameFilter tokenFilter = new TokenFilenameFilter(artwork.getToken());
-//		File[] listFiles = getContext()
-//				.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-//				.listFiles(tokenFilter);
-//		if (listFiles.length == 0)
-//		{
-//			Log.d("PIXIV_DEBUG", "Missing file");
-//			Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
-//			getContext().getContentResolver().delete(conResUri, null, null);
-//			FileUtils.deleteQuietly(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
-//			FileUtils.deleteQuietly(getContext().getCacheDir());
-//			PixivArtWorker.enqueueLoad(true);
-//			throw new FileNotFoundException("No file with token: " + artwork.getToken());
-//		}
-//		return new FileInputStream(listFiles[0]);
-//	}
-
-	public static class TokenFilenameFilter implements FilenameFilter
-	{
-		private String token;
-
-		TokenFilenameFilter(String token)
-		{
-			this.token = token;
-		}
-
-		@Override
-		public boolean accept(File dir, String name)
-		{
-			return name.startsWith(token);
-		}
-	}
 }
