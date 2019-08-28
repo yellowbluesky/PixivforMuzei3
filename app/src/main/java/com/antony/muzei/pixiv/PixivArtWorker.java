@@ -169,7 +169,7 @@ public class PixivArtWorker extends Worker
 	// Acquires an access token and refresh token from a username / password pair
 	// Returns a response containing an error or the tokens
 	// It is up to the caller to handle any errors
-	private Response authLogin(String loginId, String loginPassword) throws IOException, JSONException
+	private Response authLogin(String loginId, String loginPassword) throws IOException
 	{
 		Uri authQuery = new Uri.Builder()
 				.appendQueryParameter("get_secure_url", Integer.toString(1))
@@ -186,7 +186,7 @@ public class PixivArtWorker extends Worker
 	// Acquire an access token from an existing refresh token
 	// Returns a response containing an error or the tokens
 	// It is up to the caller to handle any errors
-	private Response authRefreshToken(String refreshToken) throws IOException, JSONException
+	private Response authRefreshToken(String refreshToken) throws IOException
 	{
 		Uri authQuery = new Uri.Builder()
 				.appendQueryParameter("get_secure_url", Integer.toString(1))
