@@ -573,7 +573,7 @@ Regarding rankings
 		return pictureMetadata;
 	}
 
-	public Artwork getArtwork()
+	private Artwork getArtwork()
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		String mode = sharedPrefs.getString("pref_updateMode", "daily_rank");
