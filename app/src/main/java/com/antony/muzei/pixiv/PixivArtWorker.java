@@ -623,16 +623,24 @@ Regarding rankings
 	{
 		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		Log.d(LOG_TAG, "Starting work");
+
+		Artwork artwork = getArtwork();
+		if (artwork == null)
+		{
+			Log.e(LOG_TAG, "Null Artwork found, retrying at later date");
+			return Result.retry();
+		}
+
 		if (!clearArtwork)
 		{
-			client.addArtwork(getArtwork());
+			client.addArtwork(artwork);
 		} else
 		{
 			Log.d(LOG_TAG, "Clearing cache");
-			client.setArtwork(getArtwork());
+			client.setArtwork(artwork);
 			for (int i = 0; i < 2; i++)
 			{
-				client.addArtwork(getArtwork());
+				client.addArtwork(artwork);
 			}
 			clearArtwork = false;
 		}
