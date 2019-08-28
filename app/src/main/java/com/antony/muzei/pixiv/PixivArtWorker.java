@@ -62,8 +62,8 @@ public class PixivArtWorker extends Worker
 	private static final String WORKER_TAG = "PIXIV";
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
-
 	private static boolean clearArtwork = false;
+	public final OkHttpClient httpClient = new OkHttpClient();
 
 	public PixivArtWorker(
 			@NonNull Context context,
@@ -220,8 +220,6 @@ public class PixivArtWorker extends Worker
 	// This function is used when authentication via an access token is required
 	private Response sendGetRequest(String url, String accessToken) throws IOException
 	{
-		OkHttpClient httpClient = new OkHttpClient();
-
 		Request request = new Request.Builder()
 				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
 				.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
@@ -237,8 +235,6 @@ public class PixivArtWorker extends Worker
 	// This function is used when authentication is not required
 	private Response sendGetRequest(String url) throws IOException
 	{
-		OkHttpClient httpClient = new OkHttpClient();
-
 		Request request = new Request.Builder()
 				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
 				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
@@ -252,8 +248,6 @@ public class PixivArtWorker extends Worker
 
 	private Response sendHeadRequest(String url)
 	{
-		OkHttpClient httpClient = new OkHttpClient();
-
 		Request request = new Request.Builder().url(url).head().build();
 		return null;
 	}
@@ -261,13 +255,12 @@ public class PixivArtWorker extends Worker
 	// ranking
 	private long getRemoteFileSize(String url) throws IOException
 	{
-		OkHttpClient client = new OkHttpClient();
 		// get only the head not the whole file
 		Request request = new Request.Builder()
 				.url(url)
 				.head()
 				.build();
-		Response response = client.newCall(request).execute();
+		Response response = httpClient.newCall(request).execute();
 		// OKHTTP put the length from the header here even though the body is empty
 		long size = response.body().contentLength();
 		return size;
@@ -279,8 +272,6 @@ public class PixivArtWorker extends Worker
 	private Response sendPostRequest(String url, Uri authQuery) throws IOException
 	{
 		String contentType = "application/x-www-form-urlencoded";
-		OkHttpClient httpClient = new OkHttpClient();
-
 		RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
 
 		Request request = new Request.Builder()
@@ -323,13 +314,12 @@ public class PixivArtWorker extends Worker
 	// feed or bookmark
 	private long getRemoteFileSize(String url, String accessToken) throws IOException
 	{
-		OkHttpClient client = new OkHttpClient();
 		// get only the head not the whole file
 		Request request = new Request.Builder()
 				.url(url)
 				.head()
 				.build();
-		Response response = client.newCall(request).execute();
+		Response response = httpClient.newCall(request).execute();
 		// OKHTTP put the length from the header here even though the body is empty
 		long size = response.body().contentLength();
 		return size;
