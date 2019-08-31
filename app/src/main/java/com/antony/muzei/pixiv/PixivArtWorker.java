@@ -653,6 +653,7 @@ Regarding rankings
 				Artwork artwork = getArtwork();
 				if(isArtworkNull(artwork))
 				{
+					client.setArtwork(artworkArrayList);
 					return Result.retry();
 				}
 				artworkArrayList.add(artwork);
