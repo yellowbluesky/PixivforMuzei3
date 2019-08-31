@@ -620,7 +620,7 @@ Regarding rankings
 
 	private boolean isArtworkNull(Artwork artwork)
 	{
-		if(artwork == null)
+		if (artwork == null)
 		{
 			Log.e(LOG_TAG, "Null artwork returned, retrying at later time");
 			return true;
@@ -635,23 +635,22 @@ Regarding rankings
 		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		Log.d(LOG_TAG, "Starting work");
 
-		if(!clearArtwork)
+		if (!clearArtwork)
 		{
 			Artwork artwork = getArtwork();
-			if(isArtworkNull(artwork))
+			if (isArtworkNull(artwork))
 			{
 				return Result.retry();
 			}
 			client.addArtwork(artwork);
-		}
-		else
+		} else
 		{
 			clearArtwork = false;
 			ArrayList<Artwork> artworkArrayList = new ArrayList<Artwork>();
-			for(int i = 0; i < 3; i++)
+			for (int i = 0; i < 3; i++)
 			{
 				Artwork artwork = getArtwork();
-				if(isArtworkNull(artwork))
+				if (isArtworkNull(artwork))
 				{
 					client.setArtwork(artworkArrayList);
 					return Result.retry();
