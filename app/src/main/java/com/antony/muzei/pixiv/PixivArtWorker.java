@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Random;
 
 import okhttp3.MediaType;
@@ -619,7 +620,12 @@ Regarding rankings
 
 	private boolean isArtworkNull(Artwork artwork)
 	{
-		return artwork == null;
+		if(artwork == null)
+		{
+			Log.e(LOG_TAG, "Null artwork returned, retrying at later time");
+			return true;
+		}
+		return false;
 	}
 
 	@NonNull
@@ -629,25 +635,29 @@ Regarding rankings
 		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		Log.d(LOG_TAG, "Starting work");
 
-		Artwork artwork = getArtwork();
-		if (isArtworkNull(artwork))
+		if(!clearArtwork)
 		{
-			Log.e(LOG_TAG, "Null Artwork found, retrying at later date");
-			return Result.retry();
-		}
-
-		if (!clearArtwork)
-		{
-			client.addArtwork(artwork);
-		} else
-		{
-			Log.d(LOG_TAG, "Clearing cache");
-			client.setArtwork(artwork);
-			for (int i = 0; i < 2; i++)
+			Artwork artwork = getArtwork();
+			if(isArtworkNull(artwork))
 			{
-				client.addArtwork(artwork);
+				return Result.retry();
 			}
+			client.addArtwork(artwork);
+		}
+		else
+		{
 			clearArtwork = false;
+			ArrayList<Artwork> artworkArrayList = new ArrayList<Artwork>();
+			for(int i = 0; i < 3; i++)
+			{
+				Artwork artwork = getArtwork();
+				if(isArtworkNull(artwork))
+				{
+					return Result.retry();
+				}
+				artworkArrayList.add(artwork);
+			}
+			client.setArtwork(artworkArrayList);
 		}
 
 		return Result.success();
