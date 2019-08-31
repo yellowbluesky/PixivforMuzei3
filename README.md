@@ -19,6 +19,7 @@ Features
   - Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv
   - Correctly handles the display of albums, displaying only the first image
   - Option to automatically clear cache on a daily basis
+  - Pictures are downloaded and saved to user accessible storage
   
   - No tracking or collection of user details
 
