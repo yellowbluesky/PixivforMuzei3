@@ -62,7 +62,7 @@ public class PixivArtWorker extends Worker
 	private static final String WORKER_TAG = "PIXIV";
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
-	private static boolean clearArtwork = false;
+	private static boolean clearArtwork = true;
 	public final OkHttpClient httpClient = new OkHttpClient();
 
 	public PixivArtWorker(
@@ -617,6 +617,11 @@ Regarding rankings
 		return artwork;
 	}
 
+	private boolean isArtworkNull(Artwork artwork)
+	{
+		return artwork == null;
+	}
+
 	@NonNull
 	@Override
 	public Result doWork()
@@ -625,7 +630,7 @@ Regarding rankings
 		Log.d(LOG_TAG, "Starting work");
 
 		Artwork artwork = getArtwork();
-		if (artwork == null)
+		if (isArtworkNull(artwork))
 		{
 			Log.e(LOG_TAG, "Null Artwork found, retrying at later date");
 			return Result.retry();
