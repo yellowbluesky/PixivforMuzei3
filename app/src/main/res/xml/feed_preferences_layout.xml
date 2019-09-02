@@ -40,8 +40,7 @@
         <SwitchPreference
             android:key="pref_autoClearMode"
             android:persistent="true"
-            android:title="@string/prefTitle_autoClearMode"
-            android:defaultValue="true"/>
+            android:title="@string/prefTitle_autoClearMode" />
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
