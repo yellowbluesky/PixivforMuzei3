@@ -101,28 +101,20 @@ public class SettingsActivity extends AppCompatActivity
 		sharedPrefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 	}
 
+	// Functions in here action only on app exit
 	@Override
 	public void onStop()
 	{
 		super.onStop();
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		sharedPrefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
-	}
-
-	// Functions in here action only on app exit
-	@Override
-	public void onDestroy()
-	{
-		super.onDestroy();
 		// If new user credentials were entered and saved, then clear and invalidate existing stored user credentials
 		if (!oldCreds.equals(newCreds))
 		{
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 			SharedPreferences.Editor editor = sharedPrefs.edit();
-			editor.putString("accessToken", "");
-			editor.putString("refreshToken", "");
-			editor.putString("deviceToken", "");
-			editor.putLong("accessTokenIssueTime", 0);
+			editor.remove("accessToken");
+			editor.remove("refreshToken");
+			editor.remove("deviceToken");
+			editor.remove("accessTokenIssueTime");
 			editor.commit();
 			Toast.makeText(getApplicationContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
 		}
