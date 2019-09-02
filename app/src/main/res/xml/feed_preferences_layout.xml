@@ -65,5 +65,8 @@
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/yellowbluesky/PixivforMuzei3/wiki/Explanation-of-NSFW-filtering-levels" />
         </Preference>
+        <Preference
+            android:key="@string/appStatus"
+            android:title="@string/appStatus" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

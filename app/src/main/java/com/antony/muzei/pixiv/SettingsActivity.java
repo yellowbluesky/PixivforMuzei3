@@ -200,6 +200,7 @@ public class SettingsActivity extends AppCompatActivity
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
 				loginId.setSummary(getString(R.string.prefSummary_authFail));
+				//loginId.setSummary(Long.toString(System.currentTimeMillis()));
 			} else
 			{
 				String summaryString = getString(R.string.prefSummary_authSuccess) + " " + sharedPrefs.getString("pref_loginId", "");
