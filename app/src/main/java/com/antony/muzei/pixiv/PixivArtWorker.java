@@ -471,7 +471,9 @@ Regarding rankings
         FEED OR BOOKMARK
      */
 
-
+    /*
+        Method that submits the Artwork object for inclusion in the ContentProvider
+     */
 	private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Entering");
@@ -519,6 +521,10 @@ Regarding rankings
 				.build();
 	}
 
+	/*
+		Called by getArtworkFeedOrBookmark to return details about an artwork that complies with
+		filtering restrictions set by the user
+	 */
 	private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
 	{
 		Log.d(LOG_TAG, "filterPictureFeedBookmark(): Entering");
@@ -574,6 +580,12 @@ Regarding rankings
 		return pictureMetadata;
 	}
 
+	/*
+		First method to be called
+		Sets program flow into ranking or feed/bookmark paths
+		Also acquires an access token to be passed into getArtworkFeedOrBookmark()
+			Why is this function the one acquiring the access token?
+	 */
 	private Artwork getArtwork()
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -618,6 +630,12 @@ Regarding rankings
 		return artwork;
 	}
 
+	/*
+		On any error/exception in the program (JSONException, network error, cannot access storage)
+		this method will return true/artwork is null.
+		Without this function, null Artwork's would have been added to the ContentProvider, resulting
+		in app freezing until storage was cleared.
+	 */
 	private boolean isArtworkNull(Artwork artwork)
 	{
 		if (artwork == null)
