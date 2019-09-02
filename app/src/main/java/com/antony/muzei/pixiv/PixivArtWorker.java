@@ -66,6 +66,20 @@ public class PixivArtWorker extends Worker
 	private static boolean clearArtwork = true;
 	public final OkHttpClient httpClient = new OkHttpClient();
 
+	enum appStatus
+	{
+		IDLE,
+		NETWORK_POST,
+		GET_RANKING_JSON,
+		FILTER_RANKING,
+		GET_FILE_EXTENSION,
+		GET_FEED_JSON,
+		FILTER_FEED,
+		NETWORK_GET,
+		ADDING_ARTWORK,
+		DOWNLOADING,
+	}
+
 	public PixivArtWorker(
 			@NonNull Context context,
 			@NonNull WorkerParameters params)
