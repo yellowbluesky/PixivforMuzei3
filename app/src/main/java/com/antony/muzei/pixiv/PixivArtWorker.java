@@ -48,7 +48,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Random;
 
 import okhttp3.MediaType;
@@ -56,6 +59,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
+import static com.antony.muzei.pixiv.PixivArtProviderDefines.HASH_SECRET;
 
 public class PixivArtWorker extends Worker
 {
@@ -289,12 +294,40 @@ public class PixivArtWorker extends Worker
 		String contentType = "application/x-www-form-urlencoded";
 		RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
 
+		String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
+		String password = rfc3339Date + HASH_SECRET;
+		String hashedPassword = new String();
+		try
+		{
+			MessageDigest digest = MessageDigest.getInstance("MD5");
+			digest.update(password.getBytes());
+			byte messageDigest[] = digest.digest();
+			StringBuilder hexString = new StringBuilder();
+			for (byte aMessageDigest : messageDigest) {
+				String h = Integer.toHexString(0xFF & aMessageDigest);
+				while (h.length() < 2)
+					h = "0" + h;
+				hexString.append(h);
+			}
+			hashedPassword = hexString.toString();
+		}
+		catch (java.security.NoSuchAlgorithmException ex)
+		{
+			ex.printStackTrace();
+		}
+
+		Log.d(LOG_TAG, rfc3339Date);
+		Log.d(LOG_TAG, hashedPassword);
+
 		Request request = new Request.Builder()
+				//.addHeader("host", "oauth.secure.pixiv.net")
 				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-				.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
-				.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
-				.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
-				.addHeader("Content-type", body.contentType().toString())
+				//.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
+				//.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
+				//.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
+				//.addHeader("Content-type", body.contentType().toString())
+				.addHeader("x-client-time", rfc3339Date)
+				.addHeader("x-client-hash", hashedPassword)
 				.post(body)
 				.url(url)
 				.build();
