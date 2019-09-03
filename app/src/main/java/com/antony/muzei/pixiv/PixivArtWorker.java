@@ -63,8 +63,8 @@ public class PixivArtWorker extends Worker
 	private static final String WORKER_TAG = "PIXIV";
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
-	private static boolean clearArtwork = true;
-	public final OkHttpClient httpClient = new OkHttpClient();
+	private static boolean clearArtwork = false;
+	private final OkHttpClient httpClient = new OkHttpClient();
 
 	enum appStatus
 	{
