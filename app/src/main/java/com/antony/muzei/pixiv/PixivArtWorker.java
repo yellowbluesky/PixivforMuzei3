@@ -71,20 +71,6 @@ public class PixivArtWorker extends Worker
 	private static boolean clearArtwork = false;
 	private final OkHttpClient httpClient = new OkHttpClient();
 
-	enum appStatus
-	{
-		IDLE,
-		NETWORK_POST,
-		GET_RANKING_JSON,
-		FILTER_RANKING,
-		GET_FILE_EXTENSION,
-		GET_FEED_JSON,
-		FILTER_FEED,
-		NETWORK_GET,
-		ADDING_ARTWORK,
-		DOWNLOADING,
-	}
-
 	public PixivArtWorker(
 			@NonNull Context context,
 			@NonNull WorkerParameters params)
@@ -108,10 +94,6 @@ public class PixivArtWorker extends Worker
 				.build();
 		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
 	}
-
-    /*
-        AUTH
-     */
 
 	// Returns a string containing a valid access token
 	// Otherwise returns an empty string if authentication failed or not possible
@@ -176,16 +158,6 @@ public class PixivArtWorker extends Worker
 		return sharedPrefs.getString("accessToken", "");
 	}
 
-//    private Uri storeProfileImage(JSONObject response) throws JSONException, java.io.IOException
-//    {
-//        String profileImageUrl = response
-//                .getJSONObject("user")
-//                .getJSONObject("profile_image_urls")
-//                .getString("px_170x170");
-//
-//        return downloadFile(sendGetRequest(profileImageUrl), "profile.png");
-//    }
-
 	// Acquires an access token and refresh token from a username / password pair
 	// Returns a response containing an error or the tokens
 	// It is up to the caller to handle any errors
@@ -203,6 +175,10 @@ public class PixivArtWorker extends Worker
 		return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
 	}
 
+    /*
+        AUTH
+     */
+
 	// Acquire an access token from an existing refresh token
 	// Returns a response containing an error or the tokens
 	// It is up to the caller to handle any errors
@@ -219,6 +195,16 @@ public class PixivArtWorker extends Worker
 		return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
 	}
 
+//    private Uri storeProfileImage(JSONObject response) throws JSONException, java.io.IOException
+//    {
+//        String profileImageUrl = response
+//                .getJSONObject("user")
+//                .getJSONObject("profile_image_urls")
+//                .getString("px_170x170");
+//
+//        return downloadFile(sendGetRequest(profileImageUrl), "profile.png");
+//    }
+
 	// Upon successful authentication this function stores tokens returned from Pixiv into device memory
 	private void storeTokens(JSONObject tokens) throws JSONException
 	{
@@ -232,10 +218,6 @@ public class PixivArtWorker extends Worker
 		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
 		editor.commit();
 	}
-
-    /*
-        NETWORK
-     */
 
 	// This function is used when authentication via an access token is required
 	private Response sendGetRequest(String url, String accessToken) throws IOException
@@ -265,6 +247,9 @@ public class PixivArtWorker extends Worker
 		return httpClient.newCall(request).execute();
 	}
 
+    /*
+        NETWORK
+     */
 
 	private Response sendHeadRequest(String url)
 	{
@@ -303,15 +288,15 @@ public class PixivArtWorker extends Worker
 			digest.update(password.getBytes());
 			byte messageDigest[] = digest.digest();
 			StringBuilder hexString = new StringBuilder();
-			for (byte aMessageDigest : messageDigest) {
+			for (byte aMessageDigest : messageDigest)
+			{
 				String h = Integer.toHexString(0xFF & aMessageDigest);
 				while (h.length() < 2)
 					h = "0" + h;
 				hexString.append(h);
 			}
 			hashedPassword = hexString.toString();
-		}
-		catch (java.security.NoSuchAlgorithmException ex)
+		} catch (java.security.NoSuchAlgorithmException ex)
 		{
 			ex.printStackTrace();
 		}
@@ -429,10 +414,6 @@ public class PixivArtWorker extends Worker
 		return null;
 	}
 
-    /*
-        RANKING
-     */
-
 	private Artwork getArtworkRanking(String mode) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "getArtworkRanking(): Entering");
@@ -515,12 +496,12 @@ Regarding rankings
 	}
 
     /*
-        FEED OR BOOKMARK
+        RANKING
      */
 
-    /*
-        Method that submits the Artwork object for inclusion in the ContentProvider
-     */
+	/*
+		Method that submits the Artwork object for inclusion in the ContentProvider
+	 */
 	private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Entering");
@@ -627,6 +608,10 @@ Regarding rankings
 		return pictureMetadata;
 	}
 
+    /*
+        FEED OR BOOKMARK
+     */
+
 	/*
 		First method to be called
 		Sets program flow into ranking or feed/bookmark paths
@@ -726,5 +711,19 @@ Regarding rankings
 		}
 
 		return Result.success();
+	}
+
+	enum appStatus
+	{
+		IDLE,
+		NETWORK_POST,
+		GET_RANKING_JSON,
+		FILTER_RANKING,
+		GET_FILE_EXTENSION,
+		GET_FEED_JSON,
+		FILTER_FEED,
+		NETWORK_GET,
+		ADDING_ARTWORK,
+		DOWNLOADING,
 	}
 }
