@@ -17,7 +17,10 @@
 
 package com.antony.muzei.pixiv;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -53,6 +56,20 @@ public class SettingsActivity extends AppCompatActivity
 				.beginTransaction()
 				.add(R.id.FeedPreferencesFragment, new SettingsFragment())
 				.commit();
+
+		if (!isMuzeiInstalled())
+		{
+			// You must have Muzei installed for this app to work
+			// Click here to install Muzei
+			final String appPackageName = "net.nurik.roman.muzei"; // getPackageName() from Context or Activity object
+			try
+			{
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+			} catch (android.content.ActivityNotFoundException anfe)
+			{
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+			}
+		}
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -163,6 +180,22 @@ public class SettingsActivity extends AppCompatActivity
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
 			}
 		}
+
+
+	}
+
+	public boolean isMuzeiInstalled()
+	{
+		boolean found = true;
+		try
+		{
+			PackageManager packageManager = getApplicationContext().getPackageManager();
+			packageManager.getPackageInfo("net.nurik.roman.muzei", 0);
+		} catch (PackageManager.NameNotFoundException ex)
+		{
+			found = false;
+		}
+		return found;
 	}
 
 	// Functions in here action immediately on user interaction
@@ -208,6 +241,8 @@ public class SettingsActivity extends AppCompatActivity
 //                Uri profileImageUri = Uri.parse(sharedPrefs.getString("profileImageUri", ""));
 //                loginId.setIcon();
 			}
+
+
 		}
 	}
 }
