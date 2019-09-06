@@ -17,6 +17,8 @@
 
 package com.antony.muzei.pixiv;
 
+import android.util.Log;
+
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 
