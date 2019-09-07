@@ -22,10 +22,8 @@ import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 public class PixivArtProvider extends MuzeiArtProvider
 {
-	private static final String LOG_TAG = "PIXIV_DEBUG";
-
 	// Pass true to clear cache and download new images
-	// Pass false to add new images to cache
+	// Pass false to append new images to cache
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{

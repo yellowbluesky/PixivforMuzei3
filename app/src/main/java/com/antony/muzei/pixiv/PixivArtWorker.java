@@ -99,13 +99,13 @@ public class PixivArtWorker extends Worker
 		builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
 		{
 			@Override
-			public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException
+			public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
 			{
 
 			}
 
 			@Override
-			public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException
+			public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
 			{
 
 			}
@@ -269,6 +269,10 @@ public class PixivArtWorker extends Worker
 		editor.commit();
 	}
 
+    /*
+        NETWORK
+     */
+
 	// This function is used when authentication via an access token is required
 	private Response sendGetRequest(String url, String accessToken) throws IOException
 	{
@@ -296,10 +300,6 @@ public class PixivArtWorker extends Worker
 
 		return httpClient.newCall(request).execute();
 	}
-
-    /*
-        NETWORK
-     */
 
 	private Response sendHeadRequest(String url)
 	{

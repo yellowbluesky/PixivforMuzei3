@@ -48,25 +48,25 @@ public class RubySSLSocketFactory extends SSLSocketFactory
 	}//disable sni
 
 	@Override
-	public Socket createSocket(String s, int i) throws IOException, UnknownHostException
+	public Socket createSocket(String s, int i)
 	{
 		return null;
 	}
 
 	@Override
-	public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException, UnknownHostException
+	public Socket createSocket(String s, int i, InetAddress inetAddress, int i1)
 	{
 		return null;
 	}
 
 	@Override
-	public Socket createSocket(InetAddress inetAddress, int i) throws IOException
+	public Socket createSocket(InetAddress inetAddress, int i)
 	{
 		return null;
 	}
 
 	@Override
-	public Socket createSocket(InetAddress inetAddress, int i, InetAddress inetAddress1, int i1) throws IOException
+	public Socket createSocket(InetAddress inetAddress, int i, InetAddress inetAddress1, int i1)
 	{
 		return null;
 	}
