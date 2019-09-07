@@ -50,7 +50,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -89,7 +88,7 @@ public class PixivArtWorker extends Worker
 			@Override
 			public void log(@NotNull String s)
 			{
-				Log.i("aaa", "message====" + s);
+				Log.v("aaa", "message====" + s);
 			}
 		});
 
@@ -342,7 +341,9 @@ public class PixivArtWorker extends Worker
 			{
 				String h = Integer.toHexString(0xFF & aMessageDigest);
 				while (h.length() < 2)
+				{
 					h = "0" + h;
+				}
 				hexString.append(h);
 			}
 			hashedPassword = hexString.toString();

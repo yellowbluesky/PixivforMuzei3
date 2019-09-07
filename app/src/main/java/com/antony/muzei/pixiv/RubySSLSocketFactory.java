@@ -42,8 +42,8 @@ public class RubySSLSocketFactory extends SSLSocketFactory
 		SSLSocket ssl = (SSLSocket) sslSocketFactory.createSocket(address, port);
 		ssl.setEnabledProtocols(ssl.getSupportedProtocols());
 		SSLSession session = ssl.getSession();
-		Log.i("!", "Protocol " + session.getProtocol() + "PeerHost " + session.getPeerHost() +
-				"CipherSuite " + session.getCipherSuite());
+		Log.i("!", "Protocol " + session.getProtocol() + " PeerHost " + session.getPeerHost() +
+				" CipherSuite " + session.getCipherSuite());
 		return ssl;
 	}//disable sni
 
