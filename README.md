@@ -8,7 +8,7 @@
 
 Pixiv plugin for the new Muzei 3 API
 
-Inspired by https://github.com/dahlia/muzei-pixiv, the aim of this app is to extend functionality and usability.
+Inspired by [Pixiv for Muzei](https://github.com/dahlia/muzei-pixiv), the aim of this app is to extend functionality and usability.
 
 All SNI bypass capability was contributed by [Notsfsssf](https://github.com/Notsfsssf), author of [Pix-EzViewer](https://github.com/Notsfsssf/Pix-ezviewer) 
 
@@ -22,6 +22,7 @@ Features
   - Correctly handles the display of albums, displaying only the first image
   - Option to automatically clear cache on a daily basis
   - Pictures are downloaded and saved to user accessible storage
+  - Works in China, SNI bypass
   
   - No tracking or collection of user details
 
