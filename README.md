@@ -10,6 +10,8 @@ Pixiv plugin for the new Muzei 3 API
 
 Inspired by https://github.com/dahlia/muzei-pixiv, the aim of this app is to extend functionality and usability.
 
+All SNI bypass capability was contributed by [Notsfsssf](https://github.com/Notsfsssf), author of [Pix-EzViewer](https://github.com/Notsfsssf/Pix-ezviewer) 
+
 Features
   - Can pull pictures from rankings, feed, or bookmarks
     - Up to 50 pictures from the latest rankings
