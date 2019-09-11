@@ -70,7 +70,7 @@
             android:summary="Key Contributor" >
             <intent
                 android:action="android.intent.action.VIEW"
-                android:data="https://github.com/Notsfsssf" />
+                android:data="https://github.com/Notsfsssf/Pix-EzViewer" />
         </Preference>
         <Preference android:title="@string/prefTitle_openNsfwWiki">
             <intent
