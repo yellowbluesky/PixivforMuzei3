@@ -25,10 +25,6 @@
             android:persistent="true"
             android:summary="%s"
             android:title="@string/pref_updateMode" />
-        <SwitchPreference
-            android:key="pref_showManga"
-            android:persistent="true"
-            android:title="@string/prefTitle_showManga" />
         <DropDownPreference
             android:defaultValue="@string/pref_nsfwFilterLevel_default"
             android:entries="@array/pref_nsfwmode_entries"
@@ -37,6 +33,10 @@
             android:persistent="true"
             android:summary="%s"
             android:title="@string/prefTitle_nswFilterLevel" />
+        <SwitchPreference
+            android:key="pref_showManga"
+            android:persistent="true"
+            android:title="@string/prefTitle_showManga" />
         <SwitchPreference
             android:key="pref_autoClearMode"
             android:persistent="true"
