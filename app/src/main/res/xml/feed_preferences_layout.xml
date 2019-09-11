@@ -60,6 +60,18 @@
             android:title="@string/pref_loginPassword" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_about">
+        <Preference android:title="yellowbluesky"
+            android:summary="Main developer" >
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/yellowbluesky/PixivforMuzei3" />
+        </Preference>
+        <Preference android:title="Perol_Notsfsssf"
+            android:summary="Key Contributor" >
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/Notsfsssf" />
+        </Preference>
         <Preference android:title="@string/prefTitle_openNsfwWiki">
             <intent
                 android:action="android.intent.action.VIEW"
