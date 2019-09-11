@@ -31,5 +31,7 @@
     <string name="toast_newUpdateMode">新更新模式，清除图像缓存</string>
     <string name="toast_newFilterMode">新过滤模式，清除图像缓存</string>
     <string name="toast_clearingCache">清除图像缓存</string>
+    <string name="prefTitle_keyContributor">关键贡献者</string>
+    <string name="prefTitle_mainDeveloper">主要开发者</string>
 
 </resources>
