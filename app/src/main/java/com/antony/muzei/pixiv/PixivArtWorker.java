@@ -682,18 +682,23 @@ Regarding rankings
 			accessToken = getAccessToken();
 			if (accessToken.isEmpty())
 			{
-				// All this is needed to toast
 				Handler handler = new Handler(Looper.getMainLooper());
-				handler.post(new Runnable()
+				String authFailMode = sharedPrefs.getString("pref_authFailAction", "changeDaily");
+				switch (authFailMode)
 				{
-					@Override
-					public void run()
-					{
-						Toast.makeText(getApplicationContext(), "Pixiv for Muzei 3: Authentication failed, switching to daily ranking", Toast.LENGTH_SHORT).show();
-					}
-				});
-				sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
-				mode = "daily_ranking";
+					case "changeDaily":
+						sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
+						mode = "daily_ranking";
+						handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedSwitch, Toast.LENGTH_SHORT).show());
+						break;
+					case "doNotChange_downDaily":
+						mode = "daily_ranking";
+						handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedDown, Toast.LENGTH_SHORT).show());
+						break;
+					case "doNotChange_doNotDown":
+						//handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedRetry, Toast.LENGTH_SHORT).show());
+						return null;
+				}
 			}
 		}
 

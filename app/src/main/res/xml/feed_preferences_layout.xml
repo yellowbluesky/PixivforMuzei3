@@ -58,6 +58,14 @@
             android:key="pref_loginPassword"
             android:persistent="true"
             android:title="@string/pref_loginPassword" />
+        <DropDownPreference
+            android:defaultValue="@string/pref_nsfwFilterLevel_default"
+            android:entries="@array/array_authFailActions_entries"
+            android:entryValues="@array/array_authFailActions_entryvalues"
+            android:key="pref_authFailAction"
+            android:persistent="true"
+            android:summary="%s"
+            android:title="@string/pref_authFailActionDropDown" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_about">
         <Preference android:title="yellowbluesky"
