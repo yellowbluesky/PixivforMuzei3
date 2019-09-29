@@ -1,10 +1,10 @@
 <resources>
     <string-array name="pref_updateMode_entries">
-        <item>Daily ranking</item>
-        <item>Weekly ranking</item>
-        <item>Monthly ranking</item>
-        <item>Follow feed (Login required)</item>
-        <item>Bookmark images (Login Required)</item>
+        <item>今日排行榜</item>
+        <item>本周排行榜</item>
+        <item>本月排行榜</item>
+        <item>关注的新作品</item>
+        <item>你的收藏</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
@@ -26,13 +26,13 @@
         <item>"8"</item>
     </string-array>
     <string-array name="array_authFailActions_entries">
-        <item>Change mode to Daily Ranking</item>
-        <item>Do not change mode, download Daily Ranking</item>
-        <item>Do not change mode, do not download picture</item>
+        <item>将模式更改为今天的排行榜</item>
+        <item>不要将模式更改为今天的排行榜，请从今天的排行榜下载单个图像</item>
+        <item>不要将模式更改为今天的页首横幅，不要下载新图片</item>
     </string-array>
     <string-array name="array_authFailActions_entryvalues">
-        <item>"changeDaily</item>
-        <item>"doNotChange_downDaily</item>
-        <item>"doNotChange_doNotDown</item>
+        <item>changeDaily</item>
+        <item>doNotChange_downDaily</item>
+        <item>doNotChange_doNotDown</item>
     </string-array>
 </resources>

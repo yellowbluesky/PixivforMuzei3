@@ -26,7 +26,6 @@
     <string name="prefCat_about">关于</string>
     <string name="prefTitle_openNsfwWiki">NSFW级别解释</string>
 
-    <string name="toast_authFailed">Pixiv for Muzei 3：身份验证失败，切换到每日排名</string>
     <string name="toast_newCredentials">找到新凭证</string>
     <string name="toast_newUpdateMode">新更新模式，清除图像缓存</string>
     <string name="toast_newFilterMode">新过滤模式，清除图像缓存</string>
