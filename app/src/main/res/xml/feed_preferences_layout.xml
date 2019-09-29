@@ -69,13 +69,13 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_about">
         <Preference android:title="yellowbluesky"
-            android:summary="Main developer" >
+            android:summary="@string/prefTitle_mainDeveloper" >
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/yellowbluesky/PixivforMuzei3" />
         </Preference>
         <Preference android:title="Perol_Notsfsssf"
-            android:summary="Key Contributor" >
+            android:summary="@string/prefTitle_keyContributor" >
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/Notsfsssf/Pix-EzViewer" />

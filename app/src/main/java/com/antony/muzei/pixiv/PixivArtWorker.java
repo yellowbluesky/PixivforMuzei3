@@ -687,16 +687,19 @@ Regarding rankings
 				switch (authFailMode)
 				{
 					case "changeDaily":
+						Log.d(LOG_TAG, "Auth failed, changing mode to daily");
 						sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
 						mode = "daily_ranking";
 						handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedSwitch, Toast.LENGTH_SHORT).show());
 						break;
 					case "doNotChange_downDaily":
+						Log.d(LOG_TAG, "Auth failed, downloading a single daily");
 						mode = "daily_ranking";
 						handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedDown, Toast.LENGTH_SHORT).show());
 						break;
 					case "doNotChange_doNotDown":
-						//handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedRetry, Toast.LENGTH_SHORT).show());
+						Log.d(LOG_TAG, "Auth failed, retrying with no changes");
+						handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedRetry, Toast.LENGTH_SHORT).show());
 						return null;
 				}
 			}
