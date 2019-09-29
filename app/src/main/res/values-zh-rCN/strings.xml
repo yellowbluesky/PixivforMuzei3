@@ -32,5 +32,8 @@
     <string name="toast_clearingCache">清除图像缓存</string>
     <string name="prefTitle_keyContributor">关键贡献者</string>
     <string name="prefTitle_mainDeveloper">主要开发者</string>
+    <string name="pref_authFailActionDropDown">身份验证失败后的选择</string>
+    <string name="toast_authFailedDown">登录失败后，下载临时的今日排行榜</string>
+    <string name="toast_authFailedRetry">登录失败后， 应用自己会再次尝试</string>
 
 </resources>

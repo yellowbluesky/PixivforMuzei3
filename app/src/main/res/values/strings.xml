@@ -32,7 +32,7 @@
 
     <string name="toast_authFailedSwitch">Pixiv for Muzei 3: Login failed, switching to daily ranking</string>
     <string name="toast_authFailedDown">Pixiv for Muzei 3: Login failed, temporarily downloading daily ranking</string>
-    <string name="toast_authFailedRetry">Pixiv for Muzei 3: Login failed, retrying in the future</string>
+    <string name="toast_authFailedRetry">Pixiv for Muzei 3: Login failed, will try again</string>
     <string name="toast_newCredentials">New credentials found</string>
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
     <string name="toast_newFilterMode">New filtering mode, clearing image cache</string>
