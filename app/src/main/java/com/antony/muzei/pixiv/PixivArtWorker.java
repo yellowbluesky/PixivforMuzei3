@@ -337,6 +337,9 @@ public class PixivArtWorker extends Worker
 			digest.update(password.getBytes());
 			byte messageDigest[] = digest.digest();
 			StringBuilder hexString = new StringBuilder();
+			// this loop is horrifically inefficient on CPU and memory
+			// but is only executed once to acquire a new access token
+			// i.e. at most once per hour
 			for (byte aMessageDigest : messageDigest)
 			{
 				String h = Integer.toHexString(0xFF & aMessageDigest);
