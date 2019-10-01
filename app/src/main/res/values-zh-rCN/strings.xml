@@ -4,19 +4,19 @@
 
     <string name="prefCat_pullFeedSettings">图片动态消息设置</string>
     <string name="pref_updateMode">更新模式</string>
-    <string name="pref_updateMode_default">每日_排名</string>
+    <string name="pref_updateMode_default">daily_rank</string>
 
     <string name="prefTitle_showManga">显示漫画</string>
     <string name="pref_restrictMode">显示NSFW图像</string>
 
     <string name="prefTitle_autoClearMode">每天凌晨1点自动清除缓存</string>
 
-    <string name="prefTitle_nswFilterLevel">NSFW过滤级别</string>
+    <string name="prefTitle_nswFilterLevel">安全级别</string>
     <string name="pref_nsfwFilterLevel_default">2</string>
     <string name="button_clearCache">立即清除图像缓存</string>
 
-    <string name="prefCat_authSettings">Pixiv登录</string>
-    <string name="pref_loginId">Pixiv用户名</string>
+    <string name="prefCat_authSettings">登录设定</string>
+    <string name="pref_loginId">帐号</string>
     <string name="pref_loginPassword">密码</string>
 
     <string name="prefTitle_authStatus">Pixiv身份验证状态</string>
@@ -27,13 +27,13 @@
     <string name="prefTitle_openNsfwWiki">NSFW级别解释</string>
 
     <string name="toast_newCredentials">找到新凭证</string>
-    <string name="toast_newUpdateMode">新更新模式，清除图像缓存</string>
-    <string name="toast_newFilterMode">新过滤模式，清除图像缓存</string>
+    <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
+    <string name="toast_newFilterMode">过滤更新，清除图像缓存</string>
     <string name="toast_clearingCache">清除图像缓存</string>
-    <string name="prefTitle_keyContributor">关键贡献者</string>
-    <string name="prefTitle_mainDeveloper">主要开发者</string>
-    <string name="pref_authFailActionDropDown">身份验证失败后的选择</string>
-    <string name="toast_authFailedDown">登录失败后，下载临时的今日排行榜</string>
-    <string name="toast_authFailedRetry">登录失败后， 应用自己会再次尝试</string>
+    <string name="prefTitle_keyContributor">贡献者</string>
+    <string name="prefTitle_mainDeveloper">开发者</string>
+    <string name="pref_authFailActionDropDown">验证失败后措施</string>
+    <string name="toast_authFailedDown">验证失败，尝试日排行榜</string>
+    <string name="toast_authFailedRetry">验证失败，正在重试</string>
 
 </resources>
