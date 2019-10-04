@@ -27,6 +27,7 @@ class PixivArtProviderDefines
 			PIXIV_API_HOST + "/v1/user/bookmarks/illust";
 	static final String FOLLOW_URL =
 			PIXIV_API_HOST + "/v2/illust/follow";
+	static final String PIVIV_SEARCH_ILLUST_URL = PIXIV_API_HOST + "/v1/search/illust";
 	private static final String PIXIV_UNAUTH_RANKING_URL = PIXIV_HOST + "/ranking.php";
 	static final String DAILY_RANKING_URL =
 			PIXIV_UNAUTH_RANKING_URL + "?mode=daily&format=json";
