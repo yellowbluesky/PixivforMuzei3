@@ -16,7 +16,9 @@
 
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory android:title="@string/prefCat_pullFeedSettings">
+    <PreferenceCategory
+        android:key="prefCat_feedSettings"
+        android:title="@string/prefCat_pullFeedSettings">
         <DropDownPreference
             android:defaultValue="@string/pref_updateMode_default"
             android:entries="@array/pref_updateMode_entries"
@@ -25,6 +27,12 @@
             android:persistent="true"
             android:summary="%s"
             android:title="@string/pref_updateMode" />
+        <EditTextPreference
+            android:dialogTitle="@string/prefTitle_tagSearch"
+            android:inputType="text"
+            android:key="pref_tagSearch"
+            android:persistent="true"
+            android:title="@string/prefTitle_tagSearch" />
         <DropDownPreference
             android:defaultValue="@string/pref_nsfwFilterLevel_default"
             android:entries="@array/pref_nsfwmode_entries"

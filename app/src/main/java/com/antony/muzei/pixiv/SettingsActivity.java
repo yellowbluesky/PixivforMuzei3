@@ -25,9 +25,12 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.EditTextPreference;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.preference.PreferenceScreen;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
@@ -242,6 +245,12 @@ public class SettingsActivity extends AppCompatActivity
 //                loginId.setIcon();
 			}
 
+			if(!sharedPrefs.getString("pref_updateMode", "daily_rank").equals("tag_search"))
+			{
+				EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
+				PreferenceCategory preferenceCategory = (PreferenceCategory) findPreference("prefCat_feedSettings");
+				preferenceCategory.removePreference(tagSearchPref);
+			}
 
 		}
 	}
