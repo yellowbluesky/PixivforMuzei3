@@ -32,7 +32,8 @@
             android:inputType="text"
             android:key="pref_tagSearch"
             android:persistent="true"
-            android:title="@string/prefTitle_tagSearch" />
+            android:title="@string/prefTitle_tagSearch"
+            app:isPreferenceVisible="false" />
         <DropDownPreference
             android:defaultValue="@string/pref_nsfwFilterLevel_default"
             android:entries="@array/pref_nsfwmode_entries"
