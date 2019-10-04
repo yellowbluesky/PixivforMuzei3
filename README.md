@@ -25,5 +25,7 @@ Features
   - Works in China, SNI bypass
   
   - No tracking or collection of user details
+  
+  [![Scc Count Badge](https://sloc.xyz/github/yellowbluesky/PixivforMuzei3/)](https://github.com/yellowbluesky/PixivforMuzei3/)
 
 <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/main.png" width="400"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/artwork/settings.png" width="400">
