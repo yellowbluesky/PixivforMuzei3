@@ -48,6 +48,7 @@ public class SettingsActivity extends AppCompatActivity
 	private String newCreds, oldCreds;
 	private String oldUpdateMode, newUpdateMode;
 	private String oldFilter, newFilter;
+	private String oldTag, newTag;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -98,6 +99,10 @@ public class SettingsActivity extends AppCompatActivity
 				} else if (key.equals("pref_nsfwFilterLevel"))
 				{
 					newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
+				}
+				else if (key.equals("pref_tagSearch"))
+				{
+					newTag = sharedPrefs.getString("pref_tagSearch", "");
 				}
 			}
 		};
@@ -161,8 +166,8 @@ public class SettingsActivity extends AppCompatActivity
 			WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
 		}
 
-		// If user has changed update or filter mode
-		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter))
+		// If user has changed update, filter mode, or search tag
+		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag))
 		{
 			WorkManager manager = WorkManager.getInstance();
 			Constraints constraints = new Constraints.Builder()
@@ -176,13 +181,15 @@ public class SettingsActivity extends AppCompatActivity
 			if (!oldUpdateMode.equals(newUpdateMode))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-			} else
+			} else if(!oldFilter.equals(newFilter))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
 			}
+			else
+			{
+				Toast.makeText(getApplicationContext(), "New search tag, clearing image cache", Toast.LENGTH_SHORT).show();
+			}
 		}
-
-
 	}
 
 	public boolean isMuzeiInstalled()
