@@ -612,6 +612,18 @@ Regarding rankings
 					.addQueryParameter("restrict", "public")
 					.build();
 		}
+		else if(mode.equals("tag_search"))
+		{
+			feedBookmarkUrl = new HttpUrl.Builder()
+					.scheme("https")
+					.host("app-api.pixiv.net")
+					.addPathSegments("v1/search/illust")
+					.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
+					.addQueryParameter("search_target", "partial_match_for_tags")
+					.addQueryParameter("sort", "date_desc")
+					.addQueryParameter("filter", "for_ios")
+					.build();
+		}
 
 		Response rankingResponse = sendGetRequestAuth(feedBookmarkUrl, accessToken);
 
