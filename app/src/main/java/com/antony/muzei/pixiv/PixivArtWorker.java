@@ -60,6 +60,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.X509TrustManager;
 
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -273,7 +274,7 @@ public class PixivArtWorker extends Worker
      */
 
 	// This function is used when authentication via an access token is required
-	private Response sendGetRequest(String url, String accessToken) throws IOException
+	private Response sendGetRequestAuth(HttpUrl url, String accessToken) throws IOException
 	{
 		Request request = new Request.Builder()
 				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
@@ -288,7 +289,7 @@ public class PixivArtWorker extends Worker
 	}
 
 	// This function is used when authentication is not required
-	private Response sendGetRequest(String url) throws IOException
+	private Response sendGetRequestRanking(HttpUrl url) throws IOException
 	{
 		Request request = new Request.Builder()
 				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
@@ -468,14 +469,47 @@ public class PixivArtWorker extends Worker
 		return null;
 	}
 
+	/*
+        RANKING
+    */
+
 	private Artwork getArtworkRanking(String mode) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "getArtworkRanking(): Entering");
-		Response rankingResponse = sendGetRequest(getUpdateUriInfo(mode, ""));
+		HttpUrl rankingUrl = null;
+		if (mode.equals("daily_rank"))
+		{
+			rankingUrl = new HttpUrl.Builder()
+					.scheme("https")
+					.host("www.pixiv.net")
+					.addPathSegment("ranking.php")
+					.addQueryParameter("mode", "daily")
+					.addQueryParameter("format", "json")
+					.build();
+		} else if (mode.equals("weekly_rank"))
+		{
+			rankingUrl = new HttpUrl.Builder()
+					.scheme("https")
+					.host("www.pixiv.net")
+					.addPathSegment("ranking.php")
+					.addQueryParameter("mode", "weekly")
+					.addQueryParameter("format", "json")
+					.build();
+		} else if (mode.equals("monthly_rank"))
+		{
+			rankingUrl = new HttpUrl.Builder()
+					.scheme("https")
+					.host("www.pixiv.net")
+					.addPathSegment("ranking.php")
+					.addQueryParameter("mode", "monthly")
+					.addQueryParameter("format", "json")
+					.build();
+		}
+		Response rankingResponse = sendGetRequestRanking(rankingUrl);
 
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
-		JSONObject pictureMetadata = filterPictureRanking(overallJson.getJSONArray("contents"));
+		JSONObject pictureMetadata = filterRanking(overallJson.getJSONArray("contents"));
 
 		String title = pictureMetadata.getString("title");
 		String byline = pictureMetadata.getString("user_name");
@@ -556,16 +590,37 @@ Regarding rankings
 	/*
 		Method that submits the Artwork object for inclusion in the ContentProvider
 	 */
-	private Artwork getArtworkFeedOrBookmark(String mode, String accessToken) throws IOException, JSONException
+	private Artwork getArtworkFeedBookmarkTag(String mode, String accessToken) throws IOException, JSONException
 	{
-		Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Entering");
+		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Entering");
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		String updateUri = getUpdateUriInfo(mode, sharedPrefs.getString("userId", ""));
-		Response rankingResponse = sendGetRequest(updateUri, accessToken);
+
+		HttpUrl feedBookmarkUrl = null;
+		if (mode.equals("follow"))
+		{
+			feedBookmarkUrl = new HttpUrl.Builder()
+					.scheme("https")
+					.host("app-api.pixiv.net")
+					.addPathSegments("v2/illust/follow")
+					.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
+					.addQueryParameter("restrict", "public")
+					.build();
+		} else if (mode.equals("bookmark"))
+		{
+			feedBookmarkUrl = new HttpUrl.Builder()
+					.scheme("https")
+					.host("app-api.pixiv.net")
+					.addPathSegments("v1/user/bookmarks/illust")
+					.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
+					.addQueryParameter("restrict", "public")
+					.build();
+		}
+
+		Response rankingResponse = sendGetRequestAuth(feedBookmarkUrl, accessToken);
 
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
-		JSONObject pictureMetadata = filterPictureFeedBookmark(overallJson.getJSONArray("illusts"));
+		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"));
 
 		String title = pictureMetadata.getString("title");
 		String byline = pictureMetadata.getJSONObject("user").getString("name");
