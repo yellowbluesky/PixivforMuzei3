@@ -36,5 +36,6 @@
     <string name="toast_authFailedDown">Pixiv for Muzei 3: 登录失败后，下载临时的今日排行榜</string>
     <string name="toast_authFailedRetry">Pixiv for Muzei 3: 登录失败后， 应用自己会再次尝试</string>
     <string name="toast_authFailedSwitch">Pixiv for Muzei 3: 登录失败后，更改为日排行榜</string>
+    <string name="prefTitle_tagSearch">搜索类型</string>
 
 </resources>

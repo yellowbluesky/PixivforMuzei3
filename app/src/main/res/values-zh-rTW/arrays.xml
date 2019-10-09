@@ -5,6 +5,7 @@
         <item>本月排行榜</item>
         <item>关注的新作品</item>
         <item>你的收藏</item>
+        <item>搜索</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
@@ -12,6 +13,7 @@
         <item>monthly_rank</item>
         <item>follow</item>
         <item>bookmark</item>
+        <item>tag_search</item>
     </string-array>
     <string-array name="pref_nsfwmode_entries">
         <item>SFW</item>
