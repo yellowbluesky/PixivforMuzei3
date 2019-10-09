@@ -390,7 +390,7 @@ public class PixivArtWorker extends Worker
 		File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 		FileOutputStream fileStream = new FileOutputStream(downloadedFile);
 		InputStream inputStream = response.body().byteStream();
-		final byte[] buffer = new byte[32768];
+		final byte[] buffer = new byte[8192];
 		int read;
 		while ((read = inputStream.read(buffer)) != -1)
 		{
