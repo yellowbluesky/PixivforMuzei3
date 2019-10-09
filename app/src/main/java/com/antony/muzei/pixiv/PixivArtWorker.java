@@ -331,12 +331,12 @@ public class PixivArtWorker extends Worker
 
 		String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
 		String password = rfc3339Date + HASH_SECRET;
-		String hashedPassword = new String();
+		String hashedPassword = "";
 		try
 		{
 			MessageDigest digest = MessageDigest.getInstance("MD5");
 			digest.update(password.getBytes());
-			byte messageDigest[] = digest.digest();
+			byte[] messageDigest = digest.digest();
 			StringBuilder hexString = new StringBuilder();
 			// this loop is horrifically inefficient on CPU and memory
 			// but is only executed once to acquire a new access token
@@ -355,9 +355,6 @@ public class PixivArtWorker extends Worker
 		{
 			ex.printStackTrace();
 		}
-
-		Log.d(LOG_TAG, rfc3339Date);
-		Log.d(LOG_TAG, hashedPassword);
 
 		Request request = new Request.Builder()
 				//.addHeader("host", "oauth.secure.pixiv.net")
@@ -457,7 +454,7 @@ public class PixivArtWorker extends Worker
 		for (String suffix : IMAGE_SUFFIXS)
 		{
 			String uri = uri1 + suffix;
-			response = sendGetRequest(uri);
+			response = sendGetRequestRanking(HttpUrl.parse(uri));
 			if (response.code() == 200)
 			{
 				return response;
@@ -549,9 +546,9 @@ Regarding rankings
 	NSFW filtering is performed by checking the value of the "sexual" JSON string
 	Manga filtering is performed by checking the value of the "illust_type" JSON string
 */
-	private JSONObject filterPictureRanking(JSONArray contents) throws JSONException
+	private JSONObject filterRanking(JSONArray contents) throws JSONException
 	{
-		Log.d(LOG_TAG, "filterPictureRanking(): Entering");
+		Log.d(LOG_TAG, "filterRanking(): Entering");
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
@@ -645,10 +642,10 @@ Regarding rankings
 					.getJSONObject("image_urls")
 					.getString("original");
 		}
-		Response imageDataResponse = sendGetRequest(imageUrl);
+		Response imageDataResponse = sendGetRequestRanking(HttpUrl.parse(imageUrl));
 		Uri localUri = downloadFile(imageDataResponse, token);
 		imageDataResponse.close();
-		Log.d(LOG_TAG, "getArtworkFeedOrBookmark(): Exited");
+		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Exited");
 		return new Artwork.Builder()
 				.title(title)
 				.byline(byline)
