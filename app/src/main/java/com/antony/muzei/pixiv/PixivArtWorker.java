@@ -371,31 +371,6 @@ public class PixivArtWorker extends Worker
 		return httpClient.newCall(request).execute();
 	}
 
-	// Returns the requested Pixiv API endpoint as a String
-	private String getUpdateUriInfo(String mode, String userId)
-	{
-		String urlString;
-		switch (mode)
-		{
-			case "follow":
-				urlString = PixivArtProviderDefines.FOLLOW_URL + "?restrict=public";
-				break;
-			case "bookmark":
-				urlString = PixivArtProviderDefines.BOOKMARK_URL + "?user_id=" + userId + "&restrict=public";
-				break;
-			case "weekly_rank":
-				urlString = PixivArtProviderDefines.WEEKLY_RANKING_URL;
-				break;
-			case "monthly_rank":
-				urlString = PixivArtProviderDefines.MONTHLY_RANKING_URL;
-				break;
-			case "daily_rank":
-			default:
-				urlString = PixivArtProviderDefines.DAILY_RANKING_URL;
-		}
-		return urlString;
-	}
-
 	// feed or bookmark
 	private long getRemoteFileSize(String url, String accessToken) throws IOException
 	{
