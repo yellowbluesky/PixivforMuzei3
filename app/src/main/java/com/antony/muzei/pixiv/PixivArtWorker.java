@@ -731,7 +731,8 @@ Regarding rankings
 		Artwork artwork = null;
 		String accessToken = "";
 
-		if (mode.equals("follow") || mode.equals("bookmark"))
+		// These modes require an access token, so we check for and acquire one
+		if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search"))
 		{
 			accessToken = getAccessToken();
 			if (accessToken.isEmpty())
@@ -761,9 +762,9 @@ Regarding rankings
 
 		try
 		{
-			if (mode.equals("follow") || mode.equals("bookmark"))
+			if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search"))
 			{
-				artwork = getArtworkFeedOrBookmark(mode, accessToken);
+				artwork = getArtworkFeedBookmarkTag(mode, accessToken);
 			} else
 			{
 				artwork = getArtworkRanking(mode);
