@@ -40,7 +40,6 @@ import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -84,14 +83,8 @@ public class PixivArtWorker extends Worker
 			@NonNull WorkerParameters params)
 	{
 		super(context, params);
-		HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger()
-		{
-			@Override
-			public void log(@NotNull String s)
-			{
-				Log.v("aaa", "message====" + s);
-			}
-		});
+		HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
+				s -> Log.v("aaa", "message====" + s));
 
 		httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -140,6 +133,7 @@ public class PixivArtWorker extends Worker
 				.setRequiredNetworkType(NetworkType.CONNECTED)
 				.build();
 		OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
+				.setConstraints(constraints)
 				.addTag(WORKER_TAG)
 				.build();
 		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
@@ -586,8 +580,7 @@ Regarding rankings
 					.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
 					.addQueryParameter("restrict", "public")
 					.build();
-		}
-		else if(mode.equals("tag_search"))
+		} else if (mode.equals("tag_search"))
 		{
 			feedBookmarkUrl = new HttpUrl.Builder()
 					.scheme("https")

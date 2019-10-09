@@ -84,7 +84,6 @@ public class SettingsActivity extends AppCompatActivity
 
 		oldFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
 		newFilter = oldFilter;
-
 		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
 		{
 			@Override
@@ -210,23 +209,19 @@ public class SettingsActivity extends AppCompatActivity
 
 			// Immediately clear cache
 			Preference buttonClearCache = findPreference(getString(R.string.button_clearCache));
-			buttonClearCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+			buttonClearCache.setOnPreferenceClickListener(preference ->
 			{
-				@Override
-				public boolean onPreferenceClick(Preference preference)
-				{
-					WorkManager manager = WorkManager.getInstance();
-					Constraints constraints = new Constraints.Builder()
-							.setRequiredNetworkType(NetworkType.CONNECTED)
-							.build();
-					OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
-							.addTag("PIXIV_CACHE")
-							.setConstraints(constraints)
-							.build();
-					manager.enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
-					Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
-					return true;
-				}
+				WorkManager manager = WorkManager.getInstance();
+				Constraints constraints = new Constraints.Builder()
+						.setRequiredNetworkType(NetworkType.CONNECTED)
+						.build();
+				OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
+						.addTag("PIXIV_CACHE")
+						.setConstraints(constraints)
+						.build();
+				manager.enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
+				Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
+				return true;
 			});
 
 			// Show authentication status as summary string below login button
@@ -251,21 +246,17 @@ public class SettingsActivity extends AppCompatActivity
 			}
 
 			DropDownPreference updateMode = (DropDownPreference) findPreference("pref_updateMode");
-			updateMode.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
+			updateMode.setOnPreferenceChangeListener((preference, newValue) ->
 			{
-				@Override
-				public boolean onPreferenceChange(Preference preference, Object newValue)
+				EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
+				if (newValue.toString().equals("tag_search"))
 				{
-					EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
-					if (newValue.toString().equals("tag_search"))
-					{
-						tagSearchPref.setVisible(true);
-					} else
-					{
-						tagSearchPref.setVisible(false);
-					}
-					return true;
+					tagSearchPref.setVisible(true);
+				} else
+				{
+					tagSearchPref.setVisible(false);
 				}
+				return true;
 			});
 		}
 	}
