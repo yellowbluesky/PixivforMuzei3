@@ -5,7 +5,7 @@
         <item>Monthly ranking</item>
         <item>Follow feed (Login required)</item>
         <item>Bookmark images (Login Required)</item>
-        <item>Tag search</item>
+        <item>Tag search (Login Required)</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>

@@ -5,7 +5,7 @@
         <item>月排行榜</item>
         <item>关注的新作品</item>
         <item>收藏夹</item>
-        <item>搜索</item>
+        <item>搜索(Login Required)</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>

@@ -1,11 +1,11 @@
 <resources>
     <string-array name="pref_updateMode_entries">
-        <item>今日排行榜</item>
-        <item>本周排行榜</item>
-        <item>本月排行榜</item>
+        <item>日排行榜</item>
+        <item>周排行榜</item>
+        <item>月排行榜</item>
         <item>关注的新作品</item>
-        <item>你的收藏</item>
-        <item>搜索</item>
+        <item>收藏夹</item>
+        <item>搜索(Login Required)</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
@@ -16,10 +16,10 @@
         <item>tag_search</item>
     </string-array>
     <string-array name="pref_nsfwmode_entries">
-        <item>SFW</item>
-        <item>Slightly ecchi</item>
-        <item>Fairly ecchi</item>
-        <item>R18</item>
+        <item>安全</item>
+        <item>存疑</item>
+        <item>危险</item>
+        <item>暴露</item>
     </string-array>
     <string-array name="pref_nsfwmode_entryvalues">
         <item>"2"</item>
@@ -28,9 +28,9 @@
         <item>"8"</item>
     </string-array>
     <string-array name="array_authFailActions_entries">
-        <item>将模式更改为今天的排行榜</item>
-        <item>不要将模式更改为今天的排行榜，请从今天的排行榜下载单个图像</item>
-        <item>不要将模式更改为今天的页首横幅，不要下载新图片</item>
+        <item>更改为日排行榜</item>
+        <item>不更改模式，使用日排行榜</item>
+        <item>不更改模式，且不下载新图片</item>
     </string-array>
     <string-array name="array_authFailActions_entryvalues">
         <item>changeDaily</item>
