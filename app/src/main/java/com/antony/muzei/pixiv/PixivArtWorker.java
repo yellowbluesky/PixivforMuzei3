@@ -252,7 +252,7 @@ public class PixivArtWorker extends Worker
 //                .getJSONObject("profile_image_urls")
 //                .getString("px_170x170");
 //
-//        return downloadFile(sendGetRequest(profileImageUrl), "profile.png");
+//        return downloadFile(sendGetRequestAuth(profileImageUrl), "profile.png");
 //    }
 
 	// Upon successful authentication this function stores tokens returned from Pixiv into device memory
@@ -659,12 +659,12 @@ Regarding rankings
 	}
 
 	/*
-		Called by getArtworkFeedOrBookmark to return details about an artwork that complies with
+		Called by getArtworkFeedBookmarkTag to return details about an artwork that complies with
 		filtering restrictions set by the user
 	 */
-	private JSONObject filterPictureFeedBookmark(JSONArray illusts) throws JSONException
+	private JSONObject filterFeedBookmarkTag(JSONArray illusts) throws JSONException
 	{
-		Log.d(LOG_TAG, "filterPictureFeedBookmark(): Entering");
+		Log.d(LOG_TAG, "filterFeedBookmarkTag(): Entering");
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 
@@ -717,14 +717,10 @@ Regarding rankings
 		return pictureMetadata;
 	}
 
-    /*
-        FEED OR BOOKMARK
-     */
-
 	/*
 		First method to be called
 		Sets program flow into ranking or feed/bookmark paths
-		Also acquires an access token to be passed into getArtworkFeedOrBookmark()
+		Also acquires an access token to be passed into getArtworkFeedBookmarkTag()
 			Why is this function the one acquiring the access token?
 	 */
 	private Artwork getArtwork()
