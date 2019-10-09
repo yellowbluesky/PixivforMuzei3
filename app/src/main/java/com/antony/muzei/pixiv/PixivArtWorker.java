@@ -442,34 +442,29 @@ public class PixivArtWorker extends Worker
 	private Artwork getArtworkRanking(String mode) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "getArtworkRanking(): Entering");
+		HttpUrl.Builder rankingUrlBuilder = new HttpUrl.Builder()
+				.scheme("https")
+				.host("www.pixiv.net")
+				.addPathSegment("ranking.php")
+				.addQueryParameter("format", "json");
 		HttpUrl rankingUrl = null;
-		if (mode.equals("daily_rank"))
+		switch (mode)
 		{
-			rankingUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("www.pixiv.net")
-					.addPathSegment("ranking.php")
-					.addQueryParameter("mode", "daily")
-					.addQueryParameter("format", "json")
-					.build();
-		} else if (mode.equals("weekly_rank"))
-		{
-			rankingUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("www.pixiv.net")
-					.addPathSegment("ranking.php")
-					.addQueryParameter("mode", "weekly")
-					.addQueryParameter("format", "json")
-					.build();
-		} else if (mode.equals("monthly_rank"))
-		{
-			rankingUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("www.pixiv.net")
-					.addPathSegment("ranking.php")
-					.addQueryParameter("mode", "monthly")
-					.addQueryParameter("format", "json")
-					.build();
+			case "daily_rank":
+				rankingUrl = rankingUrlBuilder
+						.addQueryParameter("mode", "daily")
+						.build();
+				break;
+			case "weekly_rank":
+				rankingUrl = rankingUrlBuilder
+						.addQueryParameter("mode", "weekly")
+						.build();
+				break;
+			case "monthly_rank":
+				rankingUrl = rankingUrlBuilder
+						.addQueryParameter("mode", "monthly")
+						.build();
+				break;
 		}
 		Response rankingResponse = sendGetRequestRanking(rankingUrl);
 
@@ -561,39 +556,38 @@ Regarding rankings
 		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Entering");
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-		HttpUrl feedBookmarkUrl = null;
-		if (mode.equals("follow"))
+		HttpUrl feedBookmarkTagUrl = null;
+		HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
+				.scheme("https")
+				.host("app-api.pixiv.net");
+		switch (mode)
 		{
-			feedBookmarkUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("app-api.pixiv.net")
-					.addPathSegments("v2/illust/follow")
-					.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
-					.addQueryParameter("restrict", "public")
-					.build();
-		} else if (mode.equals("bookmark"))
-		{
-			feedBookmarkUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("app-api.pixiv.net")
-					.addPathSegments("v1/user/bookmarks/illust")
-					.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
-					.addQueryParameter("restrict", "public")
-					.build();
-		} else if (mode.equals("tag_search"))
-		{
-			feedBookmarkUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("app-api.pixiv.net")
-					.addPathSegments("v1/search/illust")
-					.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
-					.addQueryParameter("search_target", "partial_match_for_tags")
-					.addQueryParameter("sort", "date_desc")
-					.addQueryParameter("filter", "for_ios")
-					.build();
+			case "follow":
+				feedBookmarkTagUrl = urlBuilder
+						.addPathSegments("v2/illust/follow")
+						.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
+						.addQueryParameter("restrict", "public")
+						.build();
+				break;
+			case "bookmark":
+				feedBookmarkTagUrl = urlBuilder
+						.addPathSegments("v1/user/bookmarks/illust")
+						.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
+						.addQueryParameter("restrict", "public")
+						.build();
+				break;
+			case "tag_search":
+				feedBookmarkTagUrl = urlBuilder
+						.addPathSegments("v1/search/illust")
+						.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
+						.addQueryParameter("search_target", "partial_match_for_tags")
+						.addQueryParameter("sort", "date_desc")
+						.addQueryParameter("filter", "for_ios")
+						.build();
+				break;
 		}
 
-		Response rankingResponse = sendGetRequestAuth(feedBookmarkUrl, accessToken);
+		Response rankingResponse = sendGetRequestAuth(feedBookmarkTagUrl, accessToken);
 
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
