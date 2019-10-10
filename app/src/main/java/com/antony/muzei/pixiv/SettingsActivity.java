@@ -25,7 +25,6 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.preference.DropDownPreference;
 import androidx.preference.EditTextPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -85,6 +84,8 @@ public class SettingsActivity extends AppCompatActivity
 
 		oldFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
 		newFilter = oldFilter;
+
+		oldTag = sharedPrefs.getString("pref_tagSearch", "");
 		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
 		{
 			@Override
@@ -99,8 +100,7 @@ public class SettingsActivity extends AppCompatActivity
 				} else if (key.equals("pref_nsfwFilterLevel"))
 				{
 					newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
-				}
-				else if (key.equals("pref_tagSearch"))
+				} else if (key.equals("pref_tagSearch"))
 				{
 					newTag = sharedPrefs.getString("pref_tagSearch", "");
 				}
@@ -181,11 +181,10 @@ public class SettingsActivity extends AppCompatActivity
 			if (!oldUpdateMode.equals(newUpdateMode))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-			} else if(!oldFilter.equals(newFilter))
+			} else if (!oldFilter.equals(newFilter))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
-			}
-			else
+			} else
 			{
 				Toast.makeText(getApplicationContext(), "New search tag, clearing image cache", Toast.LENGTH_SHORT).show();
 			}
