@@ -246,22 +246,38 @@ public class SettingsActivity extends AppCompatActivity
 //                loginId.setIcon();
 			}
 
-			if (sharedPrefs.getString("pref_updateMode", "daily_rank").equals("tag_search"))
+			String updateMode = sharedPrefs.getString("pref_updateMode", "daily_rank");
+			// If existing update mode is tag search, reveal tag search EditTextPreference
+			if (updateMode.equals("tag_search"))
 			{
-				EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
-				tagSearchPref.setVisible(true);
+				findPreference("pref_tagSearch").setVisible(true);
 			}
 
-			DropDownPreference updateMode = (DropDownPreference) findPreference("pref_updateMode");
-			updateMode.setOnPreferenceChangeListener((preference, newValue) ->
+			// if existing update mode is feed, bookmark, or tag, reveal login category
+			if(updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search"))
+			{
+				findPreference("prefCat_loginSettings").setVisible(true);
+			}
+
+			// Hide or show elements depending on update mode chosen
+			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
 				EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
-				if (newValue.toString().equals("tag_search"))
+				if (newValue.toString().equals("follow") || newValue.toString().equals("bookmark")
+						|| newValue.toString().equals("tag_search"))
 				{
-					tagSearchPref.setVisible(true);
-				} else
+					findPreference("prefCat_loginSettings").setVisible(true);
+					if (newValue.toString().equals("tag_search"))
+					{
+						tagSearchPref.setVisible(true);
+					} else
+					{
+						tagSearchPref.setVisible(false);
+					}
+				}
+				else
 				{
-					tagSearchPref.setVisible(false);
+					findPreference("prefCat_loginSettings").setVisible(false);
 				}
 				return true;
 			});

@@ -54,7 +54,10 @@
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/prefCat_authSettings">
+    <PreferenceCategory
+        android:title="@string/prefCat_authSettings"
+        android:key="prefCat_loginSettings"
+        app:isPreferenceVisible="false">
         <EditTextPreference
             android:dialogTitle="@string/pref_loginId"
             android:inputType="text"
