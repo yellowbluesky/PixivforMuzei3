@@ -26,7 +26,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
@@ -196,8 +195,7 @@ public class SettingsActivity extends AppCompatActivity
 		boolean found = true;
 		try
 		{
-			PackageManager packageManager = getApplicationContext().getPackageManager();
-			packageManager.getPackageInfo("net.nurik.roman.muzei", 0);
+			getApplicationContext().getPackageManager().getPackageInfo("net.nurik.roman.muzei", 0);
 		} catch (PackageManager.NameNotFoundException ex)
 		{
 			found = false;
@@ -214,8 +212,7 @@ public class SettingsActivity extends AppCompatActivity
 			setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
 
 			// Immediately clear cache
-			Preference buttonClearCache = findPreference(getString(R.string.button_clearCache));
-			buttonClearCache.setOnPreferenceClickListener(preference ->
+			findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 			{
 				WorkManager manager = WorkManager.getInstance();
 				Constraints constraints = new Constraints.Builder()
@@ -231,16 +228,15 @@ public class SettingsActivity extends AppCompatActivity
 			});
 
 			// Show authentication status as summary string below login button
-			Preference loginId = findPreference("pref_loginId");
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
-				loginId.setSummary(getString(R.string.prefSummary_authFail));
+				findPreference("pref_loginId").setSummary(getString(R.string.prefSummary_authFail));
 				//loginId.setSummary(Long.toString(System.currentTimeMillis()));
 			} else
 			{
 				String summaryString = getString(R.string.prefSummary_authSuccess) + " " + sharedPrefs.getString("pref_loginId", "");
-				loginId.setSummary(summaryString);
+				findPreference("pref_loginId").setSummary(summaryString);
 //                Uri profileImageUri = Uri.parse(sharedPrefs.getString("profileImageUri", ""));
 //                loginId.setIcon();
 			}
@@ -253,7 +249,7 @@ public class SettingsActivity extends AppCompatActivity
 			}
 
 			// if existing update mode is feed, bookmark, or tag, reveal login category
-			if(updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search"))
+			if (updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search"))
 			{
 				findPreference("prefCat_loginSettings").setVisible(true);
 			}
@@ -273,8 +269,7 @@ public class SettingsActivity extends AppCompatActivity
 					{
 						tagSearchPref.setVisible(false);
 					}
-				}
-				else
+				} else
 				{
 					findPreference("prefCat_loginSettings").setVisible(false);
 				}
