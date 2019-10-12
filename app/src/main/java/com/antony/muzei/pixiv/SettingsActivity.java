@@ -85,6 +85,8 @@ public class SettingsActivity extends AppCompatActivity
 		newFilter = oldFilter;
 
 		oldTag = sharedPrefs.getString("pref_tagSearch", "");
+		newTag = oldTag;
+
 		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
 		{
 			@Override

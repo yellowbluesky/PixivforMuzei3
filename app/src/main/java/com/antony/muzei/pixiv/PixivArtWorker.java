@@ -448,22 +448,26 @@ public class PixivArtWorker extends Worker
 				.addPathSegment("ranking.php")
 				.addQueryParameter("format", "json");
 		HttpUrl rankingUrl = null;
+		String attribution = null;
 		switch (mode)
 		{
 			case "daily_rank":
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "daily")
 						.build();
+				attribution = "Daily Ranking #";
 				break;
 			case "weekly_rank":
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "weekly")
 						.build();
+				attribution = "Weekly Ranking #";
 				break;
 			case "monthly_rank":
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "monthly")
 						.build();
+				attribution = "Monthly Ranking #";
 				break;
 		}
 		Response rankingResponse = sendGetRequestRanking(rankingUrl);
@@ -475,6 +479,7 @@ public class PixivArtWorker extends Worker
 		String title = pictureMetadata.getString("title");
 		String byline = pictureMetadata.getString("user_name");
 		String token = pictureMetadata.getString("illust_id");
+		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
 		Uri localUri = downloadFile(remoteFileExtension, token);
 		remoteFileExtension.close();
@@ -483,6 +488,7 @@ public class PixivArtWorker extends Worker
 		return new Artwork.Builder()
 				.title(title)
 				.byline(byline)
+				.attribution(attribution)
 				.persistentUri(localUri)
 				.token(token)
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
