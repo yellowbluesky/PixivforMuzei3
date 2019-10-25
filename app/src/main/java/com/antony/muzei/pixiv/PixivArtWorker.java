@@ -83,6 +83,8 @@ public class PixivArtWorker extends Worker
 			@NonNull WorkerParameters params)
 	{
 		super(context, params);
+
+		/* SNI Bypass begin */
 		HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
 				s -> Log.v("aaa", "message====" + s));
 
@@ -120,6 +122,7 @@ public class PixivArtWorker extends Worker
 		builder.addInterceptor(httpLoggingInterceptor);
 		builder.dns(new RubyHttpDns());//define the direct ip address
 		httpClient = builder.build();
+		/* SNI Bypass end */
 	}
 
 	static void enqueueLoad(boolean clear)
@@ -147,10 +150,9 @@ public class PixivArtWorker extends Worker
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
 		// If we possess an access token, AND it has not expired, instantly return it
-		// Must be a divide by 1000, cannot be subtract 3600 * 1000
+		// Must be a divide by 1000, cannot be subtract 3600 * 1000 for some reason
 		String accessToken = sharedPrefs.getString("accessToken", "");
 		long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
-		//long accessTokenIssueTime = 1;
 		if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
 		{
 			Log.i(LOG_TAG, "Existing access token found, using it");
@@ -158,7 +160,7 @@ public class PixivArtWorker extends Worker
 			return accessToken;
 		}
 
-		Log.d(LOG_TAG, "Access token expired or non-existent, proceeding to acquire a new access token");
+		Log.i(LOG_TAG, "Access token expired or non-existent, proceeding to acquire a new access token");
 
 		try
 		{
@@ -216,7 +218,7 @@ public class PixivArtWorker extends Worker
 				.appendQueryParameter("password", loginPassword)
 				.build();
 
-		return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
+		return sendPostRequest(authQuery);
 	}
 
     /*
@@ -236,7 +238,7 @@ public class PixivArtWorker extends Worker
 				.appendQueryParameter("refresh_token", refreshToken)
 				.build();
 
-		return sendPostRequest(PixivArtProviderDefines.OAUTH_URL, authQuery);
+		return sendPostRequest(authQuery);
 	}
 
 //    private Uri storeProfileImage(JSONObject response) throws JSONException, java.io.IOException
@@ -318,18 +320,18 @@ public class PixivArtWorker extends Worker
 	// Sends an authentication request, and returns a Response
 	// The Response is decoded by the caller; it contains authentication tokens or an error
 	// this method is called by only one method, so all values are hardcoded
-	private Response sendPostRequest(String url, Uri authQuery) throws IOException
+	private Response sendPostRequest(Uri authQuery) throws IOException
 	{
 		String contentType = "application/x-www-form-urlencoded";
 		RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
 
 		String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
-		String password = rfc3339Date + HASH_SECRET;
-		String hashedPassword = "";
+		String concatSecret = rfc3339Date + HASH_SECRET;
+		String hashedSecret = "";
 		try
 		{
 			MessageDigest digest = MessageDigest.getInstance("MD5");
-			digest.update(password.getBytes());
+			digest.update(concatSecret.getBytes());
 			byte[] messageDigest = digest.digest();
 			StringBuilder hexString = new StringBuilder();
 			// this loop is horrifically inefficient on CPU and memory
@@ -344,7 +346,7 @@ public class PixivArtWorker extends Worker
 				}
 				hexString.append(h);
 			}
-			hashedPassword = hexString.toString();
+			hashedSecret = hexString.toString();
 		} catch (java.security.NoSuchAlgorithmException ex)
 		{
 			ex.printStackTrace();
@@ -358,9 +360,9 @@ public class PixivArtWorker extends Worker
 				//.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
 				//.addHeader("Content-type", body.contentType().toString())
 				.addHeader("x-client-time", rfc3339Date)
-				.addHeader("x-client-hash", hashedPassword)
+				.addHeader("x-client-hash", hashedSecret)
 				.post(body)
-				.url(url)
+				.url(PixivArtProviderDefines.OAUTH_URL)
 				.build();
 		return httpClient.newCall(request).execute();
 	}
@@ -562,6 +564,7 @@ Regarding rankings
 		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Entering");
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
+		// Builds the API URL to call depending on chosen update mode
 		HttpUrl feedBookmarkTagUrl = null;
 		HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
 				.scheme("https")
@@ -629,6 +632,7 @@ Regarding rankings
 					.getJSONObject("image_urls")
 					.getString("original");
 		}
+
 		Response imageDataResponse = sendGetRequestRanking(HttpUrl.parse(imageUrl));
 		Uri localUri = downloadFile(imageDataResponse, token);
 		imageDataResponse.close();

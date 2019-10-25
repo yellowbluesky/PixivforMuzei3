@@ -73,7 +73,7 @@
             android:title="@string/pref_loginId" />
         <EditTextPreference
             android:dialogTitle="@string/pref_loginPassword"
-            android:inputType="textWebPassword"
+            android:inputType="textPassword"
             android:key="pref_loginPassword"
             android:persistent="true"
             android:title="@string/pref_loginPassword" />
@@ -104,5 +104,9 @@
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/yellowbluesky/PixivforMuzei3/wiki/Explanation-of-NSFW-filtering-levels" />
         </Preference>
+        <SwitchPreference
+            android:key="pref_hideLauncherIcon"
+            android:persistent="true"
+            android:title="@string/prefTitle_hideLauncherIcon" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
