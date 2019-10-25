@@ -585,25 +585,33 @@ Regarding rankings
 			case "tag_search":
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v1/search/illust")
-						.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
+						.addQueryParameter("word", sharedPrefs.getString("pref_artistId", ""))
 						.addQueryParameter("search_target", "partial_match_for_tags")
 						.addQueryParameter("sort", "date_desc")
 						.addQueryParameter("filter", "for_ios")
 						.build();
 				break;
+			case "artist":
+				feedBookmarkTagUrl = urlBuilder
+						.addPathSegments("v1/user/illusts")
+						.addQueryParameter("user_id", sharedPrefs.getString("pref_artistId", ""))
+						.addQueryParameter("filter", "for_ios")
+						.build();
 		}
 
 		Response rankingResponse = sendGetRequestAuth(feedBookmarkTagUrl, accessToken);
 
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
+		Log.v(LOG_TAG, overallJson.toString());
 		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"));
 
 		String title = pictureMetadata.getString("title");
 		String byline = pictureMetadata.getJSONObject("user").getString("name");
 		String token = pictureMetadata.getString("id");
 
-		// Picture pulled is a single
+		// Different logic if the image pulled is a single image or an album
+		// If album, we use the first picture
 		String imageUrl;
 		if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
 		{
@@ -612,7 +620,6 @@ Regarding rankings
 					.getJSONObject("meta_single_page")
 					.getString("original_image_url");
 		}
-		// Otherwise we have pulled an album, picking the first picture in album
 		else
 		{
 			Log.d(LOG_TAG, "Picture is part of an album");
@@ -709,7 +716,7 @@ Regarding rankings
 		String accessToken = "";
 
 		// These modes require an access token, so we check for and acquire one
-		if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search"))
+		if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist"))
 		{
 			accessToken = getAccessToken();
 			if (accessToken.isEmpty())
@@ -739,7 +746,7 @@ Regarding rankings
 
 		try
 		{
-			if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search"))
+			if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist"))
 			{
 				artwork = getArtworkFeedBookmarkTag(mode, accessToken);
 			} else

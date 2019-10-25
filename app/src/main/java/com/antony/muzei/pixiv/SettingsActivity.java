@@ -249,9 +249,13 @@ public class SettingsActivity extends AppCompatActivity
 			{
 				findPreference("pref_tagSearch").setVisible(true);
 			}
+			else if(updateMode.equals("artist"))
+			{
+				findPreference("pref_artistId").setVisible(true);
+			}
 
 			// if existing update mode is feed, bookmark, or tag, reveal login category
-			if (updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search"))
+			if (updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search") || updateMode.equals("artist"))
 			{
 				findPreference("prefCat_loginSettings").setVisible(true);
 			}
@@ -259,17 +263,20 @@ public class SettingsActivity extends AppCompatActivity
 			// Hide or show elements depending on update mode chosen
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
-				EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
 				if (newValue.toString().equals("follow") || newValue.toString().equals("bookmark")
-						|| newValue.toString().equals("tag_search"))
+						|| newValue.toString().equals("tag_search") || newValue.toString().equals("artist"))
 				{
+					EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
+					EditTextPreference artistIdPref = findPreference("pref_artistId");
+					tagSearchPref.setVisible(false);
+					artistIdPref.setVisible(false);
 					findPreference("prefCat_loginSettings").setVisible(true);
 					if (newValue.toString().equals("tag_search"))
 					{
 						tagSearchPref.setVisible(true);
-					} else
+					} else if(newValue.toString().equals("artist"))
 					{
-						tagSearchPref.setVisible(false);
+						artistIdPref.setVisible(true);
 					}
 				} else
 				{

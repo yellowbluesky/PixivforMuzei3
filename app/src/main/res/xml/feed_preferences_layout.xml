@@ -34,6 +34,13 @@
             android:persistent="true"
             android:title="@string/prefTitle_tagSearch"
             app:isPreferenceVisible="false" />
+        <EditTextPreference
+            android:dialogTitle="@string/prefTitle_artistId"
+            android:inputType="number"
+            android:key="pref_artistId"
+            android:persistent="true"
+            android:title="@string/prefTitle_artistId"
+            app:isPreferenceVisible="false" />
         <DropDownPreference
             android:defaultValue="@string/pref_nsfwFilterLevel_default"
             android:entries="@array/pref_nsfwmode_entries"
