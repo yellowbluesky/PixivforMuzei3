@@ -48,6 +48,7 @@ public class SettingsActivity extends AppCompatActivity
 	private String oldUpdateMode, newUpdateMode;
 	private String oldFilter, newFilter;
 	private String oldTag, newTag;
+	private String oldArtist, newArtist;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -88,6 +89,9 @@ public class SettingsActivity extends AppCompatActivity
 		oldTag = sharedPrefs.getString("pref_tagSearch", "");
 		newTag = oldTag;
 
+		oldArtist = sharedPrefs.getString("pref_artistId", "");
+		newArtist = oldArtist;
+
 		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
 		{
 			@Override
@@ -98,13 +102,16 @@ public class SettingsActivity extends AppCompatActivity
 					newCreds = sharedPrefs.getString("pref_loginPassword", "");
 				} else if (key.equals("pref_updateMode"))
 				{
-					newUpdateMode = sharedPrefs.getString("oldUpdateMode", "");
+					newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
 				} else if (key.equals("pref_nsfwFilterLevel"))
 				{
 					newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
 				} else if (key.equals("pref_tagSearch"))
 				{
 					newTag = sharedPrefs.getString("pref_tagSearch", "");
+				} else if (key.equals("pref_artistId"))
+				{
+					newArtist = sharedPrefs.getString("pref_artistId", "");
 				}
 			}
 		};
@@ -186,9 +193,12 @@ public class SettingsActivity extends AppCompatActivity
 			} else if (!oldFilter.equals(newFilter))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
+			} else if (!oldArtist.equals(newArtist))
+			{
+				Toast.makeText(getApplicationContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
 			} else
 			{
-				Toast.makeText(getApplicationContext(), "New search tag, clearing image cache", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
 			}
 		}
 	}
