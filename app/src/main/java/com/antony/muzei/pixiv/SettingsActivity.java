@@ -17,6 +17,7 @@
 
 package com.antony.muzei.pixiv;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -284,6 +285,19 @@ public class SettingsActivity extends AppCompatActivity
 				}
 				return true;
 			});
+
+			// Hide app icon if switch is activated
+			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))
+			{
+				PackageManager p = getContext().getPackageManager();
+				ComponentName componentName = new ComponentName("com.antony.muzei.pixiv", "com.antony.muzei.pixiv.SettingsActivity"); // activity which is first time open in manifiest file which is declare as <category android:name="android.intent.category.LAUNCHER" />
+				p.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+			} else
+			{
+				PackageManager p = getContext().getPackageManager();
+				ComponentName componentName = new ComponentName("com.antony.muzei.pixiv", "com.antony.muzei.pixiv.SettingsActivity");
+				p.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+			}
 		}
 	}
 }

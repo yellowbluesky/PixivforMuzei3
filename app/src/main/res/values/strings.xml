@@ -32,6 +32,7 @@
     <string name="prefTitle_openNsfwWiki">Explanation of NSFW levels</string>
     <string name="prefTitle_mainDeveloper">Main developer</string>
     <string name="prefTitle_keyContributor">Key contributor</string>
+    <string name="prefTitle_hideLauncherIcon">Hide app icon from launcher</string>
 
     <string name="toast_authFailedSwitch">Pixiv for Muzei 3: Login failed, switching to daily ranking</string>
     <string name="toast_authFailedDown">Pixiv for Muzei 3: Login failed, temporarily downloading daily ranking</string>
