@@ -457,19 +457,19 @@ public class PixivArtWorker extends Worker
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "daily")
 						.build();
-				attribution = "Daily Ranking #";
+				attribution =getApplicationContext().getString(R.string.attr_daily);
 				break;
 			case "weekly_rank":
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "weekly")
 						.build();
-				attribution = "Weekly Ranking #";
+				attribution = getApplicationContext().getString(R.string.attr_weekly);
 				break;
 			case "monthly_rank":
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "monthly")
 						.build();
-				attribution = "Monthly Ranking #";
+				attribution = getApplicationContext().getString(R.string.attr_monthly);
 				break;
 		}
 		Response rankingResponse = sendGetRequestRanking(rankingUrl);

@@ -43,5 +43,8 @@
     <string name="toast_clearingCache">Clearing image cache</string>
     <string name="toast_newArtist">New Artist, clearing image cache</string>
     <string name="toast_newTag">New search tag, clearing image cache</string>
+    <string name="attr_daily">Daily Ranking #</string>
+    <string name="attr_weekly">Weekly Ranking #</string>
+    <string name="attr_monthly">Monthly Ranking #</string>
 
 </resources>
