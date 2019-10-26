@@ -240,8 +240,14 @@ public class SettingsActivity extends AppCompatActivity
 				return true;
 			});
 
-			// Show authentication status as summary string below login button
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+			// Print summaries beneath preferences
+			findPreference("pref_artistId").setSummary(sharedPrefs.getString("pref_artistId",""));
+			findPreference("pref_tagSearch").setSummary(sharedPrefs.getString("pref_tagSearch",""));
+
+			// Show authentication status as summary string below login button
+
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
 				findPreference("pref_loginId").setSummary(getString(R.string.prefSummary_authFail));
