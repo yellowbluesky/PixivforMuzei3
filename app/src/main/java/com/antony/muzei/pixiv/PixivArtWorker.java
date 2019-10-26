@@ -457,7 +457,7 @@ public class PixivArtWorker extends Worker
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "daily")
 						.build();
-				attribution =getApplicationContext().getString(R.string.attr_daily);
+				attribution = getApplicationContext().getString(R.string.attr_daily);
 				break;
 			case "weekly_rank":
 				rankingUrl = rankingUrlBuilder
@@ -588,7 +588,7 @@ Regarding rankings
 			case "tag_search":
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v1/search/illust")
-						.addQueryParameter("word", sharedPrefs.getString("pref_artistId", ""))
+						.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
 						.addQueryParameter("search_target", "partial_match_for_tags")
 						.addQueryParameter("sort", "date_desc")
 						.addQueryParameter("filter", "for_ios")
