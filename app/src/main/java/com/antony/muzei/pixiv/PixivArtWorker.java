@@ -622,8 +622,7 @@ Regarding rankings
 			imageUrl = pictureMetadata
 					.getJSONObject("meta_single_page")
 					.getString("original_image_url");
-		}
-		else
+		} else
 		{
 			Log.d(LOG_TAG, "Picture is part of an album");
 			imageUrl = pictureMetadata

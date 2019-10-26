@@ -17,7 +17,6 @@
 
 package com.antony.muzei.pixiv;
 
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -243,8 +242,8 @@ public class SettingsActivity extends AppCompatActivity
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
 			// Print summaries beneath preferences
-			findPreference("pref_artistId").setSummary(sharedPrefs.getString("pref_artistId",""));
-			findPreference("pref_tagSearch").setSummary(sharedPrefs.getString("pref_tagSearch",""));
+			findPreference("pref_artistId").setSummary(sharedPrefs.getString("pref_artistId", ""));
+			findPreference("pref_tagSearch").setSummary(sharedPrefs.getString("pref_tagSearch", ""));
 
 			// Show authentication status as summary string below login button
 
@@ -265,8 +264,7 @@ public class SettingsActivity extends AppCompatActivity
 			if (updateMode.equals("tag_search"))
 			{
 				findPreference("pref_tagSearch").setVisible(true);
-			}
-			else if(updateMode.equals("artist"))
+			} else if (updateMode.equals("artist"))
 			{
 				findPreference("pref_artistId").setVisible(true);
 			}
@@ -291,7 +289,7 @@ public class SettingsActivity extends AppCompatActivity
 					if (newValue.toString().equals("tag_search"))
 					{
 						tagSearchPref.setVisible(true);
-					} else if(newValue.toString().equals("artist"))
+					} else if (newValue.toString().equals("artist"))
 					{
 						artistIdPref.setVisible(true);
 					}
