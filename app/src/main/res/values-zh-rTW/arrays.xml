@@ -5,7 +5,8 @@
         <item>月排行榜</item>
         <item>关注的新作品</item>
         <item>收藏夹</item>
-        <item>搜索(Login Required)</item>
+        <item>用户ID</item>
+        <item>搜索</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
@@ -13,6 +14,7 @@
         <item>monthly_rank</item>
         <item>follow</item>
         <item>bookmark</item>
+        <item>用户ID</item>
         <item>tag_search</item>
     </string-array>
     <string-array name="pref_nsfwmode_entries">

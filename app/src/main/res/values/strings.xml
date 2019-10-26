@@ -41,5 +41,7 @@
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
     <string name="toast_newFilterMode">New filtering mode, clearing image cache</string>
     <string name="toast_clearingCache">Clearing image cache</string>
+    <string name="toast_newArtist">New Artist, clearing image cache</string>
+    <string name="toast_newTag">New search tag, clearing image cache</string>
 
 </resources>
