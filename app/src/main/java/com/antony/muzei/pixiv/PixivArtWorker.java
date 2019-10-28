@@ -140,6 +140,11 @@ public class PixivArtWorker extends Worker
 				.addTag(WORKER_TAG)
 				.build();
 		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
+		// Must be a uniqueWork
+		// If not Muzei will queue MANY at once on initial load
+		// This is good for saturating a network link and for fast picture downloads
+		// However, race conditions develop if work required is authenticated
+		// uniqueue work ensures that only one Artwork is being processed at once
 	}
 
 	// Returns a string containing a valid access token
@@ -297,25 +302,25 @@ public class PixivArtWorker extends Worker
 		return httpClient.newCall(request).execute();
 	}
 
-	private Response sendHeadRequest(String url)
-	{
-		Request request = new Request.Builder().url(url).head().build();
-		return null;
-	}
+	// private Response sendHeadRequest(String url)
+	// {
+	// 	Request request = new Request.Builder().url(url).head().build();
+	// 	return null;
+	// }
 
 	// ranking
-	private long getRemoteFileSize(String url) throws IOException
-	{
-		// get only the head not the whole file
-		Request request = new Request.Builder()
-				.url(url)
-				.head()
-				.build();
-		Response response = httpClient.newCall(request).execute();
-		// OKHTTP put the length from the header here even though the body is empty
-		long size = response.body().contentLength();
-		return size;
-	}
+	// private long getRemoteFileSize(String url) throws IOException
+	// {
+	// 	// get only the head not the whole file
+	// 	Request request = new Request.Builder()
+	// 			.url(url)
+	// 			.head()
+	// 			.build();
+	// 	Response response = httpClient.newCall(request).execute();
+	// 	// OKHTTP put the length from the header here even though the body is empty
+	// 	long size = response.body().contentLength();
+	// 	return size;
+	// }
 
 	// Sends an authentication request, and returns a Response
 	// The Response is decoded by the caller; it contains authentication tokens or an error
@@ -336,7 +341,7 @@ public class PixivArtWorker extends Worker
 			StringBuilder hexString = new StringBuilder();
 			// this loop is horrifically inefficient on CPU and memory
 			// but is only executed once to acquire a new access token
-			// i.e. at most once per hour
+			// i.e. at most once per hour for normal use case
 			for (byte aMessageDigest : messageDigest)
 			{
 				String h = Integer.toHexString(0xFF & aMessageDigest);
@@ -353,12 +358,7 @@ public class PixivArtWorker extends Worker
 		}
 
 		Request request = new Request.Builder()
-				//.addHeader("host", "oauth.secure.pixiv.net")
 				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-				//.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
-				//.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
-				//.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
-				//.addHeader("Content-type", body.contentType().toString())
 				.addHeader("x-client-time", rfc3339Date)
 				.addHeader("x-client-hash", hashedSecret)
 				.post(body)
@@ -368,18 +368,18 @@ public class PixivArtWorker extends Worker
 	}
 
 	// feed or bookmark
-	private long getRemoteFileSize(String url, String accessToken) throws IOException
-	{
-		// get only the head not the whole file
-		Request request = new Request.Builder()
-				.url(url)
-				.head()
-				.build();
-		Response response = httpClient.newCall(request).execute();
-		// OKHTTP put the length from the header here even though the body is empty
-		long size = response.body().contentLength();
-		return size;
-	}
+	// private long getRemoteFileSize(String url, String accessToken) throws IOException
+	// {
+	// 	// get only the head not the whole file
+	// 	Request request = new Request.Builder()
+	// 			.url(url)
+	// 			.head()
+	// 			.build();
+	// 	Response response = httpClient.newCall(request).execute();
+	// 	// OKHTTP put the length from the header here even though the body is empty
+	// 	long size = response.body().contentLength();
+	// 	return size;
+	// }
 
 	// Downloads the selected image to cache folder on local storage
 	// Cache folder is periodically pruned of its oldest images by Android
@@ -478,9 +478,6 @@ public class PixivArtWorker extends Worker
 		rankingResponse.close();
 		JSONObject pictureMetadata = filterRanking(overallJson.getJSONArray("contents"));
 
-		String title = pictureMetadata.getString("title");
-		String byline = pictureMetadata.getString("user_name");
-		String token = pictureMetadata.getString("illust_id");
 		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
 		Uri localUri = downloadFile(remoteFileExtension, token);
@@ -488,11 +485,11 @@ public class PixivArtWorker extends Worker
 		Log.d(LOG_TAG, "getArtworkRanking(): Exited");
 
 		return new Artwork.Builder()
-				.title(title)
-				.byline(byline)
+				.title(pictureMetadata.getString("title"))
+				.byline(pictureMetadata.getString("user_name"))
 				.attribution(attribution)
 				.persistentUri(localUri)
-				.token(token)
+				.token(pictureMetadata.getString("illust_id"))
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
 				.build();
 	}
@@ -606,12 +603,7 @@ Regarding rankings
 
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
-		Log.v(LOG_TAG, overallJson.toString());
 		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"));
-
-		String title = pictureMetadata.getString("title");
-		String byline = pictureMetadata.getJSONObject("user").getString("name");
-		String token = pictureMetadata.getString("id");
 
 		// Different logic if the image pulled is a single image or an album
 		// If album, we use the first picture
@@ -637,10 +629,10 @@ Regarding rankings
 		imageDataResponse.close();
 		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Exited");
 		return new Artwork.Builder()
-				.title(title)
-				.byline(byline)
+				.title(pictureMetadata.getString("title"))
+				.byline(pictureMetadata.getJSONObject("user").getString("name"))
 				.persistentUri(localUri)
-				.token(token)
+				.token(pictureMetadata.getString("id"))
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
 				.build();
 	}
@@ -718,12 +710,14 @@ Regarding rankings
 		Artwork artwork = null;
 		String accessToken = "";
 
-		// These modes require an access token, so we check for and acquire one
+		// These modes require an access token, so we check for and acquire one first
 		if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist"))
 		{
 			accessToken = getAccessToken();
 			if (accessToken.isEmpty())
 			{
+				// If acccess token was empty, due to failed auth or a network error
+				// we have three pre defined behaviors that we can take 
 				Handler handler = new Handler(Looper.getMainLooper());
 				String authFailMode = sharedPrefs.getString("pref_authFailAction", "changeDaily");
 				switch (authFailMode)
@@ -786,6 +780,7 @@ Regarding rankings
 		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		Log.d(LOG_TAG, "Starting work");
 
+		// If we don't need to clear the cache, fetch just a single image on request
 		if (!clearArtwork)
 		{
 			Artwork artwork = getArtwork();
@@ -794,7 +789,11 @@ Regarding rankings
 				return Result.retry();
 			}
 			client.addArtwork(artwork);
-		} else
+		} 
+		// Cache is being cleared for whatever reason, so we initially populate the 
+		// database with 3 images.
+		// All are submitted at once to Muzei using an ArrayList
+		else
 		{
 			clearArtwork = false;
 			ArrayList<Artwork> artworkArrayList = new ArrayList<Artwork>();
@@ -810,7 +809,7 @@ Regarding rankings
 			}
 			client.setArtwork(artworkArrayList);
 		}
-
+		Log.d(LOG_TAG, "Work completed");
 		return Result.success();
 	}
 
