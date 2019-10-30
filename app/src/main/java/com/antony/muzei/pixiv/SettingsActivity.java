@@ -175,7 +175,7 @@ public class SettingsActivity extends AppCompatActivity
 		}
 
 		// If user has changed update, filter mode, or search tag
-		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag))
+		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag) || !oldArtist.equals(newArtist))
 		{
 			WorkManager manager = WorkManager.getInstance();
 			Constraints constraints = new Constraints.Builder()
