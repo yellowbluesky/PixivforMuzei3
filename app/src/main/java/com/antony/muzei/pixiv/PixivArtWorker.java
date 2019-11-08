@@ -481,7 +481,7 @@ public class PixivArtWorker extends Worker
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
 		JSONObject pictureMetadata = filterRanking(overallJson.getJSONArray("contents"));
-
+		String token = pictureMetadata.getString("illust_id");
 		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
 		Uri localUri = downloadFile(remoteFileExtension, token);
@@ -493,7 +493,7 @@ public class PixivArtWorker extends Worker
 				.byline(pictureMetadata.getString("user_name"))
 				.attribution(attribution)
 				.persistentUri(localUri)
-				.token(pictureMetadata.getString("illust_id"))
+				.token(token)
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
 				.build();
 	}
@@ -627,7 +627,7 @@ Regarding rankings
 					.getJSONObject("image_urls")
 					.getString("original");
 		}
-
+		String token = pictureMetadata.getString("id");
 		Response imageDataResponse = sendGetRequestRanking(HttpUrl.parse(imageUrl));
 		Uri localUri = downloadFile(imageDataResponse, token);
 		imageDataResponse.close();
@@ -636,7 +636,7 @@ Regarding rankings
 				.title(pictureMetadata.getString("title"))
 				.byline(pictureMetadata.getJSONObject("user").getString("name"))
 				.persistentUri(localUri)
-				.token(pictureMetadata.getString("id"))
+				.token(token)
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
 				.build();
 	}
