@@ -53,6 +53,7 @@ import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 
 import javax.net.ssl.HostnameVerifier;
@@ -76,7 +77,7 @@ public class PixivArtWorker extends Worker
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 	private static boolean clearArtwork = false;
-	private final OkHttpClient httpClient;
+	private OkHttpClient httpClient = new OkHttpClient();
 
 	public PixivArtWorker(
 			@NonNull Context context,
@@ -85,44 +86,47 @@ public class PixivArtWorker extends Worker
 		super(context, params);
 
 		/* SNI Bypass begin */
-		HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
-				s -> Log.v("aaa", "message====" + s));
-
-		httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-		OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-		builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
+		if(Locale.getDefault().getCountry().equals("zh"))
 		{
-			@Override
-			public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-			{
+			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
+					s -> Log.v("aaa", "message====" + s));
 
-			}
+			httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+			OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-			@Override
-			public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+			builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
 			{
+				@Override
+				public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
+				{
 
-			}
+				}
 
-			@Override
-			public X509Certificate[] getAcceptedIssuers()
+				@Override
+				public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+				{
+
+				}
+
+				@Override
+				public X509Certificate[] getAcceptedIssuers()
+				{
+					return new X509Certificate[0];
+				}
+			});//SNI bypass
+			builder.hostnameVerifier(new HostnameVerifier()
 			{
-				return new X509Certificate[0];
-			}
-		});//SNI bypass
-		builder.hostnameVerifier(new HostnameVerifier()
-		{
-			@Override
-			public boolean verify(String s, SSLSession sslSession)
-			{
-				return true;
-			}
-		});//disable hostnameVerifier
-		builder.addInterceptor(httpLoggingInterceptor);
-		builder.dns(new RubyHttpDns());//define the direct ip address
-		httpClient = builder.build();
-		/* SNI Bypass end */
+				@Override
+				public boolean verify(String s, SSLSession sslSession)
+				{
+					return true;
+				}
+			});//disable hostnameVerifier
+			builder.addInterceptor(httpLoggingInterceptor);
+			builder.dns(new RubyHttpDns());//define the direct ip address
+			httpClient = builder.build();
+			/* SNI Bypass end */
+		}
 	}
 
 	static void enqueueLoad(boolean clear)
