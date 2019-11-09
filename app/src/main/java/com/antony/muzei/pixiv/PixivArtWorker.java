@@ -153,6 +153,10 @@ public class PixivArtWorker extends Worker
 		// uniqueue work ensures that only one Artwork is being processed at once
 	}
 
+	/*
+        AUTH
+    */
+
 	// Returns a string containing a valid access token
 	// Otherwise returns an empty string if authentication failed or not possible
 	private String getAccessToken()
@@ -216,9 +220,7 @@ public class PixivArtWorker extends Worker
 		return sharedPrefs.getString("accessToken", "");
 	}
 
-	// Acquires an access token and refresh token from a username / password pair
-	// Returns a response containing an error or the tokens
-	// It is up to the caller to handle any errors
+	// Constructs the query that will provide an access token in return for a user/pass pair
 	private Response authUsingCredentials(String loginId, String loginPassword) throws IOException
 	{
 		RequestBody authData = new MultipartBody.Builder()
@@ -234,13 +236,7 @@ public class PixivArtWorker extends Worker
 		return sendPostRequest(authData);
 	}
 
-    /*
-        AUTH
-     */
-
-	// Acquire an access token from an existing refresh token
-	// Returns a response containing an error or the tokens
-	// It is up to the caller to handle any errors
+	// Constructs the query that will provide an access token in return for a refresh token
 	private Response authUsingRefreshToken(String refreshToken) throws IOException
 	{
 		RequestBody authData = new MultipartBody.Builder()
@@ -255,85 +251,7 @@ public class PixivArtWorker extends Worker
 		return sendPostRequest(authData);
 	}
 
-//    private Uri storeProfileImage(JSONObject response) throws JSONException, java.io.IOException
-//    {
-//        String profileImageUrl = response
-//                .getJSONObject("user")
-//                .getJSONObject("profile_image_urls")
-//                .getString("px_170x170");
-//
-//        return downloadFile(sendGetRequestAuth(profileImageUrl), "profile.png");
-//    }
-
-	// Upon successful authentication this function stores tokens returned from Pixiv into device memory
-	private void storeTokens(JSONObject tokens) throws JSONException
-	{
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		SharedPreferences.Editor editor = sharedPrefs.edit();
-		editor.putString("accessToken", tokens.getString("access_token"));
-		editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
-		editor.putString("refreshToken", tokens.getString("refresh_token"));
-		editor.putString("userId", tokens.getJSONObject("user").getString("id"));
-		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
-		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
-		editor.commit();
-	}
-
-    /*
-        NETWORK
-     */
-
-	// This function is used when authentication via an access token is required
-	private Response sendGetRequestAuth(HttpUrl url, String accessToken) throws IOException
-	{
-		Request request = new Request.Builder()
-				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-				.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
-				.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
-				.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
-				.addHeader("Authorization", "Bearer " + accessToken)
-				.get()
-				.url(url)
-				.build();
-		return httpClient.newCall(request).execute();
-	}
-
-	// This function is used when authentication is not required
-	private Response sendGetRequestRanking(HttpUrl url) throws IOException
-	{
-		Request request = new Request.Builder()
-				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
-				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
-				.get()
-				.url(url)
-				.build();
-
-		return httpClient.newCall(request).execute();
-	}
-
-	// private Response sendHeadRequest(String url)
-	// {
-	// 	Request request = new Request.Builder().url(url).head().build();
-	// 	return null;
-	// }
-
-	// ranking
-	// private long getRemoteFileSize(String url) throws IOException
-	// {
-	// 	// get only the head not the whole file
-	// 	Request request = new Request.Builder()
-	// 			.url(url)
-	// 			.head()
-	// 			.build();
-	// 	Response response = httpClient.newCall(request).execute();
-	// 	// OKHTTP put the length from the header here even though the body is empty
-	// 	long size = response.body().contentLength();
-	// 	return size;
-	// }
-
-	// Sends an authentication request, and returns a Response
-	// The Response is decoded by the caller; it contains authentication tokens or an error
-	// this method is called by only one method, so all values are hardcoded
+	// Returns an access token, provided credentials are correct
 	private Response sendPostRequest(RequestBody authQuery) throws IOException
 	{
 		// Pixiv API update requires this to prevent replay attacks
@@ -374,6 +292,79 @@ public class PixivArtWorker extends Worker
 				.build();
 		return httpClient.newCall(request).execute();
 	}
+
+	// Upon successful authentication stores tokens returned from Pixiv into device memory
+	private void storeTokens(JSONObject tokens) throws JSONException
+	{
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		SharedPreferences.Editor editor = sharedPrefs.edit();
+		editor.putString("accessToken", tokens.getString("access_token"));
+		editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
+		editor.putString("refreshToken", tokens.getString("refresh_token"));
+		editor.putString("userId", tokens.getJSONObject("user").getString("id"));
+		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
+		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
+		editor.commit();
+	}
+
+    /*
+        NETWORK
+     */
+
+	// This function is used for modes that require authentication
+	// Feed, bookmark, tag_search, or artist
+	// Returns a Response containing a JSON within its body
+	private Response sendGetRequestAuth(HttpUrl url, String accessToken) throws IOException
+	{
+		Request request = new Request.Builder()
+				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+				.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
+				.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
+				.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
+				.addHeader("Authorization", "Bearer " + accessToken)
+				.get()
+				.url(url)
+				.build();
+		return httpClient.newCall(request).execute();
+	}
+
+	// This function is used for modes that do not require authentication
+	// daily_rank, weekly_rank, monthly_rank
+	// Can either return either a:
+	//      Response containing a JSON within its body
+	//      An image to be downloaded
+	// Depending on callee function
+	private Response sendGetRequestRanking(HttpUrl url) throws IOException
+	{
+		Request request = new Request.Builder()
+				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
+				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
+				.get()
+				.url(url)
+				.build();
+
+		return httpClient.newCall(request).execute();
+	}
+
+	// private Response sendHeadRequest(String url)
+	// {
+	// 	Request request = new Request.Builder().url(url).head().build();
+	// 	return null;
+	// }
+
+	// ranking
+	// private long getRemoteFileSize(String url) throws IOException
+	// {
+	// 	// get only the head not the whole file
+	// 	Request request = new Request.Builder()
+	// 			.url(url)
+	// 			.head()
+	// 			.build();
+	// 	Response response = httpClient.newCall(request).execute();
+	// 	// OKHTTP put the length from the header here even though the body is empty
+	// 	long size = response.body().contentLength();
+	// 	return size;
+	// }
 
 	// feed or bookmark
 	// private long getRemoteFileSize(String url, String accessToken) throws IOException
@@ -449,6 +440,10 @@ public class PixivArtWorker extends Worker
         RANKING
     */
 
+	/*
+	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
+	for filtering, then downloads the image and returns it Muzei for insertion
+	 */
 	private Artwork getArtworkRanking(String mode) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "getArtworkRanking(): Entering");
@@ -558,11 +553,12 @@ Regarding rankings
 	}
 
     /*
-        RANKING
+        FEED / BOOKMARK / TAG / ARTIST
      */
 
 	/*
-		Method that submits the Artwork object for inclusion in the ContentProvider
+	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
+	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
 	private Artwork getArtworkFeedBookmarkTag(String mode, String accessToken) throws IOException, JSONException
 	{
@@ -810,7 +806,10 @@ Regarding rankings
 				Artwork artwork = getArtwork();
 				if (isArtworkNull(artwork))
 				{
-					client.setArtwork(artworkArrayList);
+					if (!artworkArrayList.isEmpty())
+					{
+						client.setArtwork(artworkArrayList);
+					}
 					return Result.retry();
 				}
 				artworkArrayList.add(artwork);
