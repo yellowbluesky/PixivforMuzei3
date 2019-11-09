@@ -85,9 +85,11 @@ public class PixivArtWorker extends Worker
 	{
 		super(context, params);
 
+		Log.d(LOG_TAG, "locale is : " + Locale.getDefault().getISO3Language());
 		/* SNI Bypass begin */
-		if(Locale.getDefault().getCountry().equals("zh"))
+		if (Locale.getDefault().getISO3Language().equals("zho"))
 		{
+			Log.d(LOG_TAG, "Bypass in effect");
 			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
 					s -> Log.v("aaa", "message====" + s));
 
