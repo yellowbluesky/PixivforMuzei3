@@ -61,7 +61,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -181,12 +181,12 @@ public class PixivArtWorker extends Worker
 				Log.i(LOG_TAG, "Using username and password to acquire an access token");
 				String loginId = sharedPrefs.getString("pref_loginId", "");
 				String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
-				response = authLogin(loginId, loginPassword);
+				response = authUsingCredentials(loginId, loginPassword);
 			} else
 			{
 				Log.i(LOG_TAG, "Using refresh token to acquire an access token");
 				String refreshToken = sharedPrefs.getString("refreshToken", "");
-				response = authRefreshToken(refreshToken);
+				response = authUsingRefreshToken(refreshToken);
 			}
 			JSONObject authResponseBody = new JSONObject(response.body().string());
 			response.close();
@@ -195,6 +195,7 @@ public class PixivArtWorker extends Worker
 			{
 				Log.i(LOG_TAG, "Error authenticating, check username or password");
 				// Clearing loginPassword is a hacky way to alerting to the user that their credentials do not work
+				Log.v(LOG_TAG, authResponseBody.toString());
 				sharedPrefs.edit().putString("pref_loginPassword", "").apply();
 				return "";
 			}
@@ -796,7 +797,7 @@ Regarding rankings
 				return Result.retry();
 			}
 			client.addArtwork(artwork);
-		} 
+		}
 		// Cache is being cleared for whatever reason, so we initially populate the 
 		// database with 3 images.
 		// All are submitted at once to Muzei using an ArrayList
