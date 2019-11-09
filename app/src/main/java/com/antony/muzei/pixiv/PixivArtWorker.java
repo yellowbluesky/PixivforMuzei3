@@ -216,18 +216,19 @@ public class PixivArtWorker extends Worker
 	// Acquires an access token and refresh token from a username / password pair
 	// Returns a response containing an error or the tokens
 	// It is up to the caller to handle any errors
-	private Response authLogin(String loginId, String loginPassword) throws IOException
+	private Response authUsingCredentials(String loginId, String loginPassword) throws IOException
 	{
-		Uri authQuery = new Uri.Builder()
-				.appendQueryParameter("get_secure_url", Integer.toString(1))
-				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
-				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
-				.appendQueryParameter("grant_type", "password")
-				.appendQueryParameter("username", loginId)
-				.appendQueryParameter("password", loginPassword)
+		RequestBody authData = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("get_secure_url", Integer.toString(1))
+				.addFormDataPart("client_id", PixivArtProviderDefines.CLIENT_ID)
+				.addFormDataPart("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
+				.addFormDataPart("grant_type", "password")
+				.addFormDataPart("username", loginId)
+				.addFormDataPart("password", loginPassword)
 				.build();
 
-		return sendPostRequest(authQuery);
+		return sendPostRequest(authData);
 	}
 
     /*
@@ -237,17 +238,18 @@ public class PixivArtWorker extends Worker
 	// Acquire an access token from an existing refresh token
 	// Returns a response containing an error or the tokens
 	// It is up to the caller to handle any errors
-	private Response authRefreshToken(String refreshToken) throws IOException
+	private Response authUsingRefreshToken(String refreshToken) throws IOException
 	{
-		Uri authQuery = new Uri.Builder()
-				.appendQueryParameter("get_secure_url", Integer.toString(1))
-				.appendQueryParameter("client_id", PixivArtProviderDefines.CLIENT_ID)
-				.appendQueryParameter("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
-				.appendQueryParameter("grant_type", "refresh_token")
-				.appendQueryParameter("refresh_token", refreshToken)
+		RequestBody authData = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("get_secure_url", Integer.toString(1))
+				.addFormDataPart("client_id", PixivArtProviderDefines.CLIENT_ID)
+				.addFormDataPart("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
+				.addFormDataPart("grant_type", "refresh_token")
+				.addFormDataPart("refresh_token", refreshToken)
 				.build();
 
-		return sendPostRequest(authQuery);
+		return sendPostRequest(authData);
 	}
 
 //    private Uri storeProfileImage(JSONObject response) throws JSONException, java.io.IOException
@@ -329,11 +331,9 @@ public class PixivArtWorker extends Worker
 	// Sends an authentication request, and returns a Response
 	// The Response is decoded by the caller; it contains authentication tokens or an error
 	// this method is called by only one method, so all values are hardcoded
-	private Response sendPostRequest(Uri authQuery) throws IOException
+	private Response sendPostRequest(RequestBody authQuery) throws IOException
 	{
-		String contentType = "application/x-www-form-urlencoded";
-		RequestBody body = RequestBody.create(MediaType.parse(contentType), authQuery.toString());
-
+		// Pixiv API update requires this to prevent replay attacks
 		String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
 		String concatSecret = rfc3339Date + HASH_SECRET;
 		String hashedSecret = "";
@@ -362,10 +362,11 @@ public class PixivArtWorker extends Worker
 		}
 
 		Request request = new Request.Builder()
+				.addHeader("Content-Type", "application/x-www-form-urlencoded")
 				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
 				.addHeader("x-client-time", rfc3339Date)
 				.addHeader("x-client-hash", hashedSecret)
-				.post(body)
+				.post(authQuery)
 				.url(PixivArtProviderDefines.OAUTH_URL)
 				.build();
 		return httpClient.newCall(request).execute();
