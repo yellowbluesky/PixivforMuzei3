@@ -346,40 +346,6 @@ public class PixivArtWorker extends Worker
 		return httpClient.newCall(request).execute();
 	}
 
-	// private Response sendHeadRequest(String url)
-	// {
-	// 	Request request = new Request.Builder().url(url).head().build();
-	// 	return null;
-	// }
-
-	// ranking
-	// private long getRemoteFileSize(String url) throws IOException
-	// {
-	// 	// get only the head not the whole file
-	// 	Request request = new Request.Builder()
-	// 			.url(url)
-	// 			.head()
-	// 			.build();
-	// 	Response response = httpClient.newCall(request).execute();
-	// 	// OKHTTP put the length from the header here even though the body is empty
-	// 	long size = response.body().contentLength();
-	// 	return size;
-	// }
-
-	// feed or bookmark
-	// private long getRemoteFileSize(String url, String accessToken) throws IOException
-	// {
-	// 	// get only the head not the whole file
-	// 	Request request = new Request.Builder()
-	// 			.url(url)
-	// 			.head()
-	// 			.build();
-	// 	Response response = httpClient.newCall(request).execute();
-	// 	// OKHTTP put the length from the header here even though the body is empty
-	// 	long size = response.body().contentLength();
-	// 	return size;
-	// }
-
 	// Downloads the selected image to cache folder on local storage
 	// Cache folder is periodically pruned of its oldest images by Android
 	private Uri downloadFile(Response response, String filename) throws IOException
