@@ -17,8 +17,10 @@
 
 package com.antony.muzei.pixiv;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -27,6 +29,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -137,6 +140,7 @@ public class PixivArtWorker extends Worker
 		{
 			clearArtwork = true;
 		}
+
 		WorkManager manager = WorkManager.getInstance();
 		Constraints constraints = new Constraints.Builder()
 				.setRequiredNetworkType(NetworkType.CONNECTED)
@@ -354,7 +358,29 @@ public class PixivArtWorker extends Worker
 		Context context = getApplicationContext();
 		// Muzei does not care about file extensions
 		// Only there to more easily allow local user to open them
-		File downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		File downloadedFile;
+		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
+		{
+			if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+					== PackageManager.PERMISSION_GRANTED)
+			{
+				File directory = new File("/storage/emulated/0/Pictures/PixivForMuzei3/");
+				if (!directory.exists())
+				{
+					directory.mkdirs();
+				}
+				downloadedFile = new File(directory, filename + ".png");
+			} else
+			{
+				downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+			}
+		} else
+		{
+			downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		}
+
+
 		FileOutputStream fileStream = new FileOutputStream(downloadedFile);
 		InputStream inputStream = response.body().byteStream();
 		final byte[] buffer = new byte[1024 * 1024 * 10];
