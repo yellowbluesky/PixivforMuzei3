@@ -70,7 +70,7 @@ public class SettingsActivity extends AppCompatActivity
 			try
 			{
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-			} catch (android.content.ActivityNotFoundException anfe)
+			} catch (android.content.ActivityNotFoundException ex)
 			{
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
 			}
@@ -169,7 +169,7 @@ public class SettingsActivity extends AppCompatActivity
 
 		// Automatic cache clearing at 1AM every night for as long as the setting is toggled active
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		if (sharedPrefs.getBoolean("pref_autoClearMode", true))
+		if (sharedPrefs.getBoolean("pref_autoClearMode", false))
 		{
 			// Calculates the hours to midnight
 			SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
@@ -191,7 +191,7 @@ public class SettingsActivity extends AppCompatActivity
 			WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
 		}
 
-		// If user has changed update, filter mode, or search tag
+		// If user has changed update, filter mode, or search tag, toast to indicate cache is getting cleared
 		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag) || !oldArtist.equals(newArtist))
 		{
 			WorkManager manager = WorkManager.getInstance();
@@ -263,7 +263,6 @@ public class SettingsActivity extends AppCompatActivity
 			findPreference("pref_tagSearch").setSummary(sharedPrefs.getString("pref_tagSearch", ""));
 
 			// Show authentication status as summary string below login button
-
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
 				findPreference("pref_loginId").setSummary(getString(R.string.prefSummary_authFail));
