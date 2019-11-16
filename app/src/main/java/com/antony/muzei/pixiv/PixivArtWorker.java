@@ -163,6 +163,9 @@ public class PixivArtWorker extends Worker
 
 	// Returns a string containing a valid access token
 	// Otherwise returns an empty string if authentication failed or not possible
+	// Order of checks:
+	//      SharedPreferences if we already have a valid one
+	//      If none present ot expired, use password pair or refresh token
 	private String getAccessToken()
 	{
 		Log.d(LOG_TAG, "getAccessToken(): Entered");
@@ -332,8 +335,8 @@ public class PixivArtWorker extends Worker
 		return httpClient.newCall(request).execute();
 	}
 
-	// This function is used for modes that do not require authentication
-	// daily_rank, weekly_rank, monthly_rank
+	// This function used by modes that do require authentication (ranking) to acquire the JSON
+	// Used by all modes to download the actual image
 	// Can either return either a:
 	//      Response containing a JSON within its body
 	//      An image to be downloaded
