@@ -17,6 +17,7 @@
 
 package com.antony.muzei.pixiv;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -25,6 +26,8 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
@@ -111,9 +114,23 @@ public class SettingsActivity extends AppCompatActivity
 				} else if (key.equals("pref_artistId"))
 				{
 					newArtist = sharedPrefs.getString("pref_artistId", "");
+				} else if (key.equals("pref_storeInExtStorage"))
+				{
+					if (ContextCompat.checkSelfPermission(SettingsActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+							!= PackageManager.PERMISSION_GRANTED)
+					{
+						ActivityCompat.requestPermissions(SettingsActivity.this,
+								new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+								1);
+					}
 				}
 			}
 		};
+
+
+		// If the user has opted to save pictures to public storage, we need to check if we
+		// have the permissions to do so
+
 	}
 
 	@Override
