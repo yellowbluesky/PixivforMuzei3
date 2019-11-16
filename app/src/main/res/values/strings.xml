@@ -46,5 +46,6 @@
     <string name="attr_daily">Daily Ranking #</string>
     <string name="attr_weekly">Weekly Ranking #</string>
     <string name="attr_monthly">Monthly Ranking #</string>
+    <string name="prefTitle_storeInExtStorage">Store pictures into external storage</string>
 
 </resources>
