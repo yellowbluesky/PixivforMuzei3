@@ -373,7 +373,14 @@ public class PixivArtWorker extends Worker
 				{
 					directory.mkdirs();
 				}
+				// This does not create a new file, just a new File object
 				downloadedFile = new File(directory, filename + ".png");
+				// Check if file with the same token already exists
+				if(downloadedFile.exists())
+				{
+					Log.d(LOG_TAG, "File already exists, using cache");
+					return Uri.fromFile(downloadedFile);
+				}
 			} else
 			{
 				downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
