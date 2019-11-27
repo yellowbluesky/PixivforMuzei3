@@ -376,7 +376,7 @@ public class PixivArtWorker extends Worker
 				// This does not create a new file, just a new File object
 				downloadedFile = new File(directory, filename + ".png");
 				// Check if file with the same token already exists
-				if(downloadedFile.exists())
+				if (downloadedFile.exists())
 				{
 					Log.d(LOG_TAG, "File already exists, using cache");
 					return Uri.fromFile(downloadedFile);
@@ -673,7 +673,7 @@ Regarding rankings
 		// If user does not want NSFW images to show
 		// If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
 		// TODO this can be made better
-		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
+
 		Log.d(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
 		if (nsfwFilteringLevel < 8)
 		{
