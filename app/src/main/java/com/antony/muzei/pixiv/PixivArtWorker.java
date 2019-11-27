@@ -481,7 +481,11 @@ public class PixivArtWorker extends Worker
 
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
-		JSONObject pictureMetadata = filterRanking(overallJson.getJSONArray("contents"));
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
+		JSONObject pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
+				showManga, nsfwFilteringLevel);
 		String token = pictureMetadata.getString("illust_id");
 		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
@@ -520,12 +524,9 @@ Regarding rankings
 	NSFW filtering is performed by checking the value of the "sexual" JSON string
 	Manga filtering is performed by checking the value of the "illust_type" JSON string
 */
-	private JSONObject filterRanking(JSONArray contents) throws JSONException
+	private JSONObject filterRanking(JSONArray contents, boolean showManga, int nsfwFilteringLevel) throws JSONException
 	{
 		Log.d(LOG_TAG, "filterRanking(): Entering");
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
 		JSONObject pictureMetadata;
 		Random random = new Random();
 
@@ -562,10 +563,9 @@ Regarding rankings
 	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
 	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
-	private Artwork getArtworkFeedBookmarkTag(String mode, String accessToken) throws IOException, JSONException
+	private Artwork getArtworkFeedBookmarkTag(String mode, String userId, String accessToken) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Entering");
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
 		// Builds the API URL to call depending on chosen update mode
 		HttpUrl feedBookmarkTagUrl = null;
@@ -577,21 +577,21 @@ Regarding rankings
 			case "follow":
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v2/illust/follow")
-						.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
+						.addQueryParameter("user_id", userId)
 						.addQueryParameter("restrict", "public")
 						.build();
 				break;
 			case "bookmark":
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v1/user/bookmarks/illust")
-						.addQueryParameter("user_id", sharedPrefs.getString("userId", ""))
+						.addQueryParameter("user_id", userId)
 						.addQueryParameter("restrict", "public")
 						.build();
 				break;
 			case "tag_search":
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v1/search/illust")
-						.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
+						.addQueryParameter("word", userId)
 						.addQueryParameter("search_target", "partial_match_for_tags")
 						.addQueryParameter("sort", "date_desc")
 						.addQueryParameter("filter", "for_ios")
@@ -600,7 +600,7 @@ Regarding rankings
 			case "artist":
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v1/user/illusts")
-						.addQueryParameter("user_id", sharedPrefs.getString("pref_artistId", ""))
+						.addQueryParameter("user_id", userId)
 						.addQueryParameter("filter", "for_ios")
 						.build();
 		}
@@ -609,7 +609,11 @@ Regarding rankings
 
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
-		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"));
+
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
+		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"), showManga, nsfwFilteringLevel);
 
 		// Different logic if the image pulled is a single image or an album
 		// If album, we use the first picture
@@ -647,11 +651,9 @@ Regarding rankings
 		Called by getArtworkFeedBookmarkTag to return details about an artwork that complies with
 		filtering restrictions set by the user
 	 */
-	private JSONObject filterFeedBookmarkTag(JSONArray illusts) throws JSONException
+	private JSONObject filterFeedBookmarkTag(JSONArray illusts, boolean showManga, int nsfwFilteringLevel) throws JSONException
 	{
 		Log.d(LOG_TAG, "filterFeedBookmarkTag(): Entering");
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 
 		Random random = new Random();
 
@@ -751,7 +753,8 @@ Regarding rankings
 		{
 			if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist"))
 			{
-				artwork = getArtworkFeedBookmarkTag(mode, accessToken);
+				String userId = sharedPrefs.getString("userId", "");
+				artwork = getArtworkFeedBookmarkTag(mode, userId, accessToken);
 			} else
 			{
 				artwork = getArtworkRanking(mode);
