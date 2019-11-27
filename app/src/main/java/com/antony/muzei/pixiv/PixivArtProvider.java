@@ -17,17 +17,53 @@
 
 package com.antony.muzei.pixiv;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
+import com.google.android.apps.muzei.api.UserCommand;
+import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
+
+import java.util.LinkedList;
+import java.util.List;
 
 
 public class PixivArtProvider extends MuzeiArtProvider
 {
 	// Pass true to clear cache and download new images
 	// Pass false to append new images to cache
+
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
 		PixivArtWorker.enqueueLoad(false);
+	}
+
+	@Override
+	@NonNull
+	protected List<UserCommand> getCommands(@NonNull Artwork artwork)
+	{
+		super.getCommands(artwork);
+		LinkedList<UserCommand> commands = new LinkedList<>();
+		commands.add(new UserCommand(1, "Artist's Page"));
+		commands.add(new UserCommand(2, "Bookmark This Image"));
+		return commands;
+	}
+
+	@Override
+	protected void onCommand(@NonNull Artwork artwork, int id)
+	{
+		Handler handler = new Handler(Looper.getMainLooper());
+		switch (id)
+		{
+			case 1:
+				handler.post(() -> Toast.makeText(getContext(), "Going to artist page", Toast.LENGTH_SHORT).show());
+			case 2:
+				handler.post(() -> Toast.makeText(getContext(), "loving it", Toast.LENGTH_SHORT).show());
+		}
 	}
 
 }
