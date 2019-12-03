@@ -17,10 +17,7 @@
 
 package com.antony.muzei.pixiv;
 
-import android.content.ContentResolver;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -29,12 +26,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
-import com.google.android.apps.muzei.api.MuzeiContract;
 import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
-import com.google.android.apps.muzei.api.provider.ProviderClient;
-import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -75,14 +69,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		switch (id)
 		{
 			case 1:
-				ContentResolver conRes = getContext().getContentResolver();
-				Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
-				Cursor cursor = conRes.query(conResUri, null, null, null, null);
-				ProviderClient client = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class);
-				if(cursor.moveToNext())
-				{
-					addToBookmarks(Artwork.fromCursor(cursor));
-				}
+				addToBookmarks(artwork);
 				handler.post(() -> Toast.makeText(getContext(), "Adding to bookmarks", Toast.LENGTH_SHORT).show());
 		}
 	}
