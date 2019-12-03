@@ -17,18 +17,30 @@
 
 package com.antony.muzei.pixiv;
 
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
+import com.google.android.apps.muzei.api.provider.ProviderClient;
+import com.google.android.apps.muzei.api.provider.ProviderContract;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+
+import okhttp3.HttpUrl;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 
 public class PixivArtProvider extends MuzeiArtProvider
@@ -48,8 +60,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		super.getCommands(artwork);
 		LinkedList<UserCommand> commands = new LinkedList<>();
-		commands.add(new UserCommand(1, "Artist's Page"));
-		commands.add(new UserCommand(2, "Bookmark This Image"));
+		commands.add(new UserCommand(1, "Add to Bookmarks"));
 		return commands;
 	}
 
@@ -60,10 +71,48 @@ public class PixivArtProvider extends MuzeiArtProvider
 		switch (id)
 		{
 			case 1:
-				handler.post(() -> Toast.makeText(getContext(), "Going to artist page", Toast.LENGTH_SHORT).show());
-			case 2:
-				handler.post(() -> Toast.makeText(getContext(), "loving it", Toast.LENGTH_SHORT).show());
+				ProviderClient client = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class);
+				handler.post(() -> Toast.makeText(getContext(), "Adding to bookmarks", Toast.LENGTH_SHORT).show());
 		}
+	}
+
+	private void addToBookmarks(Artwork artwork)
+	{
+		Log.d("PIXIV_DEBUG", "addToBookmarks(): Entered");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		String accessToken = sharedPrefs.getString("accessToken", "");
+		if (accessToken.isEmpty())
+		{
+			Log.d("PIXIV_DEBUG", "No access token found");
+			new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(getContext(), "Login first", Toast.LENGTH_SHORT).show());
+			return;
+		}
+		HttpUrl rankingUrl = new HttpUrl.Builder()
+				.scheme("https")
+				.host("app-api.pixiv.net")
+				.addPathSegments("v2/illust/bookmark/add")
+				.build();
+		RequestBody authData = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("illust_id", artwork.getToken())
+				.addFormDataPart("restrict", "public")
+				.build();
+		Request request = new Request.Builder()
+				.addHeader("Content-Type", "application/x-www-form-urlencoded")
+				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+				.addHeader("Authorization", "Bearer " + accessToken)
+				.post(authData)
+				.url(rankingUrl)
+				.build();
+		try
+		{
+			OkHttpClient httpClient = new OkHttpClient();
+			httpClient.newCall(request).execute();
+		} catch (IOException ex)
+		{
+			ex.printStackTrace();
+		}
+		Log.d("PIXIV_DEBUG", "Added to bookmarks");
 	}
 
 }
