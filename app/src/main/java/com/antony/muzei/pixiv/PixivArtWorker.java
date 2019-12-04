@@ -186,19 +186,28 @@ public class PixivArtWorker extends Worker
 
 		try
 		{
+			MultipartBody.Builder authData = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("get_secure_url", "1")
+				.addFormDataPart("client_id", PixivArtProviderDefines.CLIENT_ID)
+				.addFormDataPart("client_secret", PixivArtProviderDefines.CLIENT_SECRET);				
+
 			Response response;
 			if (sharedPrefs.getString("refreshToken", "").isEmpty())
 			{
 				Log.i(LOG_TAG, "Using username and password to acquire an access token");
-				String loginId = sharedPrefs.getString("pref_loginId", "");
-				String loginPassword = sharedPrefs.getString("pref_loginPassword", "");
-				response = authUsingCredentials(loginId, loginPassword);
+				authData.addFormDataPart
+					.addFormDataPart("grant_type", "password")
+					.addFormDataPart("username", sharedPrefs.getString("pref_loginId", ""))
+					.addFormDataPart("password", sharedPrefs.getString("pref_loginPassword", ""));
 			} else
 			{
 				Log.i(LOG_TAG, "Using refresh token to acquire an access token");
-				String refreshToken = sharedPrefs.getString("refreshToken", "");
-				response = authUsingRefreshToken(refreshToken);
+				authData.addFormDataPart
+					.addFormDataPart("grant_type", "refresh_token")
+					.addFormDataPart("refresh_token", sharedPrefs.getString("refreshToken", ""))
 			}
+			response = sendPostRequest(authData.build());
 			JSONObject authResponseBody = new JSONObject(response.body().string());
 			response.close();
 
@@ -225,37 +234,6 @@ public class PixivArtWorker extends Worker
 		Log.d(LOG_TAG, "Acquired access token");
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
 		return sharedPrefs.getString("accessToken", "");
-	}
-
-	// Constructs the query that will provide an access token in return for a user/pass pair
-	private Response authUsingCredentials(String loginId, String loginPassword) throws IOException
-	{
-		RequestBody authData = new MultipartBody.Builder()
-				.setType(MultipartBody.FORM)
-				.addFormDataPart("get_secure_url", Integer.toString(1))
-				.addFormDataPart("client_id", PixivArtProviderDefines.CLIENT_ID)
-				.addFormDataPart("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
-				.addFormDataPart("grant_type", "password")
-				.addFormDataPart("username", loginId)
-				.addFormDataPart("password", loginPassword)
-				.build();
-
-		return sendPostRequest(authData);
-	}
-
-	// Constructs the query that will provide an access token in return for a refresh token
-	private Response authUsingRefreshToken(String refreshToken) throws IOException
-	{
-		RequestBody authData = new MultipartBody.Builder()
-				.setType(MultipartBody.FORM)
-				.addFormDataPart("get_secure_url", Integer.toString(1))
-				.addFormDataPart("client_id", PixivArtProviderDefines.CLIENT_ID)
-				.addFormDataPart("client_secret", PixivArtProviderDefines.CLIENT_SECRET)
-				.addFormDataPart("grant_type", "refresh_token")
-				.addFormDataPart("refresh_token", refreshToken)
-				.build();
-
-		return sendPostRequest(authData);
 	}
 
 	// Returns an access token, provided credentials are correct
