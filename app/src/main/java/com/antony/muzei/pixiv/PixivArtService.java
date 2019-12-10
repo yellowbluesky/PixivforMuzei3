@@ -36,48 +36,48 @@ class PixivArtService
 	{
 		Log.d(LOG_TAG, "locale is : " + Locale.getDefault().getISO3Language());
 		/* SNI Bypass begin */
-		if (Locale.getDefault().getISO3Language().equals("zho"))
+		//if (Locale.getDefault().getISO3Language().equals("zho"))
+		//{
+		Log.d(LOG_TAG, "Bypass in effect");
+		HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
+				s -> Log.v("aaa", "message====" + s));
+
+		httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+		OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+		builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
 		{
-			Log.d(LOG_TAG, "Bypass in effect");
-			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
-					s -> Log.v("aaa", "message====" + s));
-
-			httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-			OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-			builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
+			@Override
+			public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
 			{
-				@Override
-				public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-				{
 
-				}
+			}
 
-				@Override
-				public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-				{
-
-				}
-
-				@Override
-				public X509Certificate[] getAcceptedIssuers()
-				{
-					return new X509Certificate[0];
-				}
-			});//SNI bypass
-			builder.hostnameVerifier(new HostnameVerifier()
+			@Override
+			public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
 			{
-				@Override
-				public boolean verify(String s, SSLSession sslSession)
-				{
-					return true;
-				}
-			});//disable hostnameVerifier
-			builder.addInterceptor(httpLoggingInterceptor);
-			builder.dns(new RubyHttpDns());//define the direct ip address
-			httpClient = builder.build();
-			/* SNI Bypass end */
-		}
+
+			}
+
+			@Override
+			public X509Certificate[] getAcceptedIssuers()
+			{
+				return new X509Certificate[0];
+			}
+		});//SNI bypass
+		builder.hostnameVerifier(new HostnameVerifier()
+		{
+			@Override
+			public boolean verify(String s, SSLSession sslSession)
+			{
+				return true;
+			}
+		});//disable hostnameVerifier
+		builder.addInterceptor(httpLoggingInterceptor);
+		builder.dns(new RubyHttpDns());//define the direct ip address
+		httpClient = builder.build();
+		/* SNI Bypass end */
+		//}
 	}
 
 	static String getAccesToken(SharedPreferences sharedPrefs)
@@ -141,11 +141,6 @@ class PixivArtService
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
 		return sharedPrefs.getString("accessToken", "");
 
-	}
-
-	static Response sendGetRequest(HttpUrl url)
-	{
-		return null;
 	}
 
 	// This function is used for modes that require authentication
@@ -223,5 +218,34 @@ class PixivArtService
 				.url(PixivArtProviderDefines.OAUTH_URL)
 				.build();
 		return httpClient.newCall(request).execute();
+	}
+
+	static void sendPostRequest(String accessToken, String token)
+	{
+		HttpUrl rankingUrl = new HttpUrl.Builder()
+				.scheme("https")
+				.host("app-api.pixiv.net")
+				.addPathSegments("v2/illust/bookmark/add")
+				.build();
+		RequestBody authData = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("illust_id", token)
+				.addFormDataPart("restrict", "public")
+				.build();
+		Request request = new Request.Builder()
+				.addHeader("Content-Type", "application/x-www-form-urlencoded")
+				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+				.addHeader("Authorization", "Bearer " + accessToken)
+				.post(authData)
+				.url(rankingUrl)
+				.build();
+		try
+
+		{
+			httpClient.newCall(request).execute();
+		} catch (IOException ex)
+		{
+			ex.printStackTrace();
+		}
 	}
 }

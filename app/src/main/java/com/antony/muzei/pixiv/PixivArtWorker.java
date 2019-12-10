@@ -55,7 +55,6 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 public class PixivArtWorker extends Worker
@@ -65,7 +64,6 @@ public class PixivArtWorker extends Worker
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 	private static boolean clearArtwork = false;
-	private OkHttpClient httpClient = new OkHttpClient();
 
 	public PixivArtWorker(
 			@NonNull Context context,
