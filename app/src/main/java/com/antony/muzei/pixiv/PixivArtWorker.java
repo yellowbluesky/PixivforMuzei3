@@ -118,7 +118,7 @@ public class PixivArtWorker extends Worker
 		// Only there to more easily allow local user to open them
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		// All this to determine where to save the incoming pictures
-		// and if the exists
+		// and if the folder exists
 		File downloadedFile;
 		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
 		{
@@ -234,13 +234,15 @@ public class PixivArtWorker extends Worker
 				attribution = getApplicationContext().getString(R.string.attr_monthly);
 				break;
 		}
-		Response rankingResponse = PixivArtService.sendGetRequestRanking(rankingUrl);
 
+		Response rankingResponse = PixivArtService.sendGetRequestRanking(rankingUrl);
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
+
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
+
 		JSONObject pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
 				showManga, nsfwFilteringLevel);
 		String token = pictureMetadata.getString("illust_id");
@@ -248,6 +250,7 @@ public class PixivArtWorker extends Worker
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
 		Uri localUri = downloadFile(remoteFileExtension, token);
 		remoteFileExtension.close();
+
 		Log.d(LOG_TAG, "getArtworkRanking(): Exited");
 
 		return new Artwork.Builder()

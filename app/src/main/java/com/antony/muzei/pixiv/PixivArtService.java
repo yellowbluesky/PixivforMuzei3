@@ -36,48 +36,48 @@ class PixivArtService
 	{
 		Log.d(LOG_TAG, "locale is : " + Locale.getDefault().getISO3Language());
 		/* SNI Bypass begin */
-		//if (Locale.getDefault().getISO3Language().equals("zho"))
-		//{
-		Log.d(LOG_TAG, "Bypass in effect");
-		HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
-				s -> Log.v("aaa", "message====" + s));
-
-		httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-		OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-		builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
+		if (Locale.getDefault().getISO3Language().equals("zho"))
 		{
-			@Override
-			public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-			{
+			Log.d(LOG_TAG, "Bypass in effect");
+			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
+					s -> Log.v("aaa", "message====" + s));
 
-			}
+			httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+			OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-			@Override
-			public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+			builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
 			{
+				@Override
+				public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
+				{
 
-			}
+				}
 
-			@Override
-			public X509Certificate[] getAcceptedIssuers()
+				@Override
+				public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+				{
+
+				}
+
+				@Override
+				public X509Certificate[] getAcceptedIssuers()
+				{
+					return new X509Certificate[0];
+				}
+			});//SNI bypass
+			builder.hostnameVerifier(new HostnameVerifier()
 			{
-				return new X509Certificate[0];
-			}
-		});//SNI bypass
-		builder.hostnameVerifier(new HostnameVerifier()
-		{
-			@Override
-			public boolean verify(String s, SSLSession sslSession)
-			{
-				return true;
-			}
-		});//disable hostnameVerifier
-		builder.addInterceptor(httpLoggingInterceptor);
-		builder.dns(new RubyHttpDns());//define the direct ip address
-		httpClient = builder.build();
-		/* SNI Bypass end */
-		//}
+				@Override
+				public boolean verify(String s, SSLSession sslSession)
+				{
+					return true;
+				}
+			});//disable hostnameVerifier
+			builder.addInterceptor(httpLoggingInterceptor);
+			builder.dns(new RubyHttpDns());//define the direct ip address
+			httpClient = builder.build();
+			/* SNI Bypass end */
+		}
 	}
 
 	static String getAccesToken(SharedPreferences sharedPrefs)

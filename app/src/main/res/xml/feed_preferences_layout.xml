@@ -109,6 +109,7 @@
         <SwitchPreference
             android:key="pref_storeInExtStorage"
             android:persistent="true"
-            android:title="@string/prefTitle_storeInExtStorage" />
+            android:title="@string/prefTitle_storeInExtStorage"
+            android:summary="Pictures saved here will not automatically cleared" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
