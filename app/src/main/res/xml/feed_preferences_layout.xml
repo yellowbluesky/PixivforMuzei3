@@ -62,8 +62,8 @@
             android:title="@string/button_clearCache" />
     </PreferenceCategory>
     <PreferenceCategory
-        android:title="@string/prefCat_authSettings"
         android:key="prefCat_loginSettings"
+        android:title="@string/prefCat_authSettings"
         app:isPreferenceVisible="false">
         <EditTextPreference
             android:dialogTitle="@string/pref_loginId"
@@ -87,14 +87,16 @@
             android:title="@string/pref_authFailActionDropDown" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/prefCat_about">
-        <Preference android:title="yellowbluesky"
-            android:summary="@string/prefTitle_mainDeveloper" >
+        <Preference
+            android:summary="@string/prefTitle_mainDeveloper"
+            android:title="yellowbluesky">
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/yellowbluesky/PixivforMuzei3" />
         </Preference>
-        <Preference android:title="Perol_Notsfsssf"
-            android:summary="@string/prefTitle_keyContributor" >
+        <Preference
+            android:summary="@string/prefTitle_keyContributor"
+            android:title="Perol_Notsfsssf">
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/Notsfsssf/Pix-EzViewer" />
