@@ -22,18 +22,4 @@ class PixivArtProviderDefines
 			PIXIV_HOST + "/member_illust.php?mode=medium&illust_id=";
 	static final String OAUTH_URL =
 			"https://oauth.secure.pixiv.net/auth/token";
-	private static final String PIXIV_API_HOST = "https://app-api.pixiv.net";
-	static final String BOOKMARK_URL =
-			PIXIV_API_HOST + "/v1/user/bookmarks/illust";
-	static final String FOLLOW_URL =
-			PIXIV_API_HOST + "/v2/illust/follow";
-	static final String PIVIV_SEARCH_ILLUST_URL = PIXIV_API_HOST + "/v1/search/illust";
-	private static final String PIXIV_UNAUTH_RANKING_URL = PIXIV_HOST + "/ranking.php";
-	static final String DAILY_RANKING_URL =
-			PIXIV_UNAUTH_RANKING_URL + "?mode=daily&format=json";
-	static final String WEEKLY_RANKING_URL =
-			PIXIV_UNAUTH_RANKING_URL + "?mode=weekly&format=json";
-	static final String MONTHLY_RANKING_URL =
-			PIXIV_UNAUTH_RANKING_URL + "?mode=monthly&format=json";
-	private static final String PIXIV_RANKING_URL = PIXIV_API_HOST + "/v1/illust/ranking";
 }
