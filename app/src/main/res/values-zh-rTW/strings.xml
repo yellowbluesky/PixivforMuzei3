@@ -43,5 +43,6 @@
     <string name="attr_daily">日排行榜 #</string>
     <string name="attr_monthly">周排行榜 #</string>
     <string name="attr_weekly">月排行榜 #</string>
+    <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
 
 </resources>
