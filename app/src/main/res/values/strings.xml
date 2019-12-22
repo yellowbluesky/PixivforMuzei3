@@ -46,5 +46,5 @@
     <string name="attr_weekly">Weekly Ranking #</string>
     <string name="attr_monthly">Monthly Ranking #</string>
     <string name="prefTitle_storeInExtStorage">Save pictures into external storage</string>
-
+    <string name="prefSummary_storeInExtStorage">Pictures saved here will not automatically cleared</string>
 </resources>

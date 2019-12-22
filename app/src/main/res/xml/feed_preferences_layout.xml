@@ -60,6 +60,11 @@
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
+        <SwitchPreference
+            android:key="pref_storeInExtStorage"
+            android:persistent="true"
+            android:summary="@string/prefSummary_storeInExtStorage"
+            android:title="@string/prefTitle_storeInExtStorage" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="prefCat_loginSettings"
@@ -106,10 +111,5 @@
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/yellowbluesky/PixivforMuzei3/wiki/Explanation-of-NSFW-filtering-levels" />
         </Preference>
-        <SwitchPreference
-            android:key="pref_storeInExtStorage"
-            android:persistent="true"
-            android:title="@string/prefTitle_storeInExtStorage"
-            android:summary="Pictures saved here will not automatically cleared" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
