@@ -50,7 +50,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		super.getCommands(artwork);
 		LinkedList<UserCommand> commands = new LinkedList<>();
-		commands.add(new UserCommand(1, "Add to Bookmarks"));
+		commands.add(new UserCommand(1, getContext().getString(R.string.command_addToBookmark)));
 		return commands;
 	}
 
