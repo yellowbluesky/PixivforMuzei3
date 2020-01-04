@@ -337,7 +337,6 @@ Regarding rankings
 			case "follow":
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v2/illust/follow")
-						.addQueryParameter("user_id", userId)
 						.addQueryParameter("restrict", "public")
 						.build();
 				break;
