@@ -7,6 +7,7 @@
         <item>收藏夹</item>
         <item>用户ID</item>
         <item>搜索</item>
+        <item>推薦作品</item>
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
@@ -16,6 +17,7 @@
         <item>bookmark</item>
         <item>artist</item>
         <item>tag_search</item>
+        <item>recommended</item>
     </string-array>
     <string-array name="pref_nsfwmode_entries">
         <item>安全</item>
