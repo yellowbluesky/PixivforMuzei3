@@ -286,7 +286,8 @@ public class SettingsActivity extends AppCompatActivity
 			}
 
 			// if existing update mode is feed, bookmark, or tag, reveal login category
-			if (updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search") || updateMode.equals("artist"))
+			if (updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search")
+					|| updateMode.equals("artist") || updateMode.equals("recommended"))
 			{
 				findPreference("prefCat_loginSettings").setVisible(true);
 			}
@@ -295,7 +296,8 @@ public class SettingsActivity extends AppCompatActivity
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
 				if (newValue.toString().equals("follow") || newValue.toString().equals("bookmark")
-						|| newValue.toString().equals("tag_search") || newValue.toString().equals("artist"))
+						|| newValue.toString().equals("tag_search") || newValue.toString().equals("artist")
+						|| newValue.toString().equals("recommended"))
 				{
 					EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
 					EditTextPreference artistIdPref = findPreference("pref_artistId");

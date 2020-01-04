@@ -363,6 +363,18 @@ Regarding rankings
 						.addQueryParameter("user_id", userId)
 						.addQueryParameter("filter", "for_ios")
 						.build();
+				break;
+			case "recommended":
+				feedBookmarkTagUrl = urlBuilder
+						.addPathSegments("v1/illust/recommended")
+						.addQueryParameter("content_type", "illust")
+						.addQueryParameter("include_ranking_label", "true")
+//				.addQueryParameter("min_bookmark_id_for_recent_illust", "")
+//				.addQueryParameter("offset", "")
+						.addQueryParameter("include_ranking_illusts", "true")
+//				.addQueryParameter("bookmark_illust_ids", "")
+						.addQueryParameter("filter", "for_ios")
+						.build();
 		}
 
 		Response rankingResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl, accessToken);
@@ -479,7 +491,7 @@ Regarding rankings
 		String accessToken = "";
 
 		// These modes require an access token, so we check for and acquire one first
-		if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist"))
+		if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist") || mode.equals("recommended"))
 		{
 			accessToken = PixivArtService.getAccesToken(sharedPrefs);
 			if (accessToken.isEmpty())
@@ -511,7 +523,7 @@ Regarding rankings
 
 		try
 		{
-			if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist"))
+			if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist") || mode.equals("recommended"))
 			{
 				String userId = sharedPrefs.getString("userId", "");
 				artwork = getArtworkFeedBookmarkTag(mode, userId, accessToken);
