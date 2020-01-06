@@ -6,10 +6,14 @@
 <p>Features</p>
 <ul>
     <li>
-        <p>Can pull pictures from rankings, feed, or bookmarks</p>
+        <p>Can pull artworks from a variety of sources</p>
         <ul>
-            <li>Up to 50 pictures from the latest rankings</li>
-            <li>Up to 30 pictures from the latest feed or bookmarks</li>
+            <li>Daily, Weekly, or Monthly Rankings</li>
+            <li>Artworks from followed artists</li>
+            <li>User's bookmarked artworks</li>
+            <li>Artworks from user's recommended feed</li>
+            <li>A specified artist ID</li>
+            <li>A specified tag (date descending sort order)</li>
         </ul>
     </li>
     <li>
@@ -28,7 +32,7 @@
         <p>Option to automatically clear cache on a daily basis</p>
     </li>
     <li>
-        <p>Pictures are downloaded and saved to user accessible storage</p>
+        <p>Option to save artwork to user storage</p>
     </li>
     <li>
         <p>Works in China, SNI bypass</p>
