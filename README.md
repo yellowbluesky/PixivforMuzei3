@@ -8,20 +8,24 @@
 
 Pixiv plugin for the new Muzei 3 API
 
-Inspired by [Pixiv for Muzei](https://github.com/dahlia/muzei-pixiv), the aim of this app is to extend functionality and usability.
+Inspired by [Pixiv for Muzei](https://github.com/dahlia/muzei-pixiv), the aim of this app is to extend functionality and improve usability.
 
 All SNI bypass capability was contributed by [Notsfsssf](https://github.com/Notsfsssf), author of [Pix-EzViewer](https://github.com/Notsfsssf/Pix-ezviewer) 
 
 Features
-  - Can pull pictures from rankings, feed, or bookmarks
-    - Up to 50 pictures from the latest rankings
-    - Up to 30 pictures from the latest feed or bookmarks
+  - Can pull artworks from a variety of sources:
+    - Daily, Weekly, or Monthly Rankings
+    - Artworks from followed artists
+    - User's bookmarked artworks
+    - Artworks from user's recommended feed
+    - A specified artist ID
+    - A specified tag (date descending sort order)
   - Four levels of granular filtering for NSFW pictures
   - Can exclude manga from being set as wallpaper
   - Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv
   - Correctly handles the display of albums, displaying only the first image
   - Option to automatically clear cache on a daily basis
-  - Pictures are downloaded and saved to user accessible storage
+  - Option to save artwork to user storage
   - Works in China, SNI bypass
   
   - No tracking or collection of user details
