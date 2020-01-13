@@ -8,14 +8,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.MessageDigest;
-import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.X509TrustManager;
 
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
@@ -23,7 +17,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 import static com.antony.muzei.pixiv.PixivArtProviderDefines.HASH_SECRET;
 
@@ -31,12 +24,6 @@ class PixivArtService
 {
 	private static final String LOG_TAG = "PIXIV_DEBUG";
 	private static OkHttpClient httpClient = new OkHttpClient();
-
-	static
-	{
-		OkHttpClient.Builder builder = new OkHttpClient.Builder();
-		httpClient = builder.build();
-	}
 
 	static String getAccesToken(SharedPreferences sharedPrefs)
 	{
