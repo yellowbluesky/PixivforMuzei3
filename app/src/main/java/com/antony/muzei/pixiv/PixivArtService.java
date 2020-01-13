@@ -34,50 +34,8 @@ class PixivArtService
 
 	static
 	{
-		Log.d(LOG_TAG, "locale is : " + Locale.getDefault().getISO3Language());
-		/* SNI Bypass begin */
-		if (Locale.getDefault().getISO3Language().equals("zho"))
-		{
-			Log.d(LOG_TAG, "Bypass in effect");
-			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
-					s -> Log.v("aaa", "message====" + s));
-
-			httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-			OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-			builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
-			{
-				@Override
-				public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-				{
-
-				}
-
-				@Override
-				public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-				{
-
-				}
-
-				@Override
-				public X509Certificate[] getAcceptedIssuers()
-				{
-					return new X509Certificate[0];
-				}
-			});//SNI bypass
-			builder.hostnameVerifier(new HostnameVerifier()
-			{
-				@Override
-				public boolean verify(String s, SSLSession sslSession)
-				{
-					return true;
-				}
-			});//disable hostnameVerifier
-			builder.addInterceptor(httpLoggingInterceptor);
-			builder.dns(new RubyHttpDns());//define the direct ip address
-			httpClient = builder.build();
-			/* SNI Bypass end */
-		}
+		OkHttpClient.Builder builder = new OkHttpClient.Builder();
+		httpClient = builder.build();
 	}
 
 	static String getAccesToken(SharedPreferences sharedPrefs)
