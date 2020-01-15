@@ -49,6 +49,13 @@
             android:persistent="true"
             android:summary="%s"
             android:title="@string/prefTitle_nswFilterLevel" />
+        <MultiSelectListPreference
+            android:key="pref_nsfwFilterSelect"
+            android:title="@string/prefTitle_nswFilterLevel"
+            android:entries="@array/pref_nsfwmode_entries"
+            android:entryValues="@array/pref_nsfwmode_entryvalues"
+            android:persistent="true"
+            />
         <SwitchPreference
             android:key="pref_showManga"
             android:persistent="true"
