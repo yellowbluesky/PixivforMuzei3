@@ -29,6 +29,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.EditTextPreference;
+import androidx.preference.MultiSelectListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
@@ -41,6 +42,8 @@ import androidx.work.WorkManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
@@ -317,6 +320,20 @@ public class SettingsActivity extends AppCompatActivity
 				}
 				return true;
 			});
+
+			// will need to set correctly formatted summary
+			MultiSelectListPreference multiPref = findPreference("pref_nsfwFilterSelect");
+			Set<String> selectedNsfwLevels= multiPref.getValues();
+			if (selectedNsfwLevels.isEmpty())
+			{
+				Set<String> defaultNsfwSelect = new HashSet<>();
+				defaultNsfwSelect.add("2");
+				SharedPreferences.Editor editor = sharedPrefs.edit();
+				editor.putStringSet("pref_nsfwFilterSelect", defaultNsfwSelect);
+				editor.commit();
+			}
+
+
 
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))
