@@ -23,6 +23,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,6 +42,7 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -321,18 +323,35 @@ public class SettingsActivity extends AppCompatActivity
 				return true;
 			});
 
-			// will need to set correctly formatted summary
 			MultiSelectListPreference multiPref = findPreference("pref_nsfwFilterSelect");
-			Set<String> selectedNsfwLevels= multiPref.getValues();
+			Set<String> selectedNsfwLevels = multiPref.getValues();
+			// If no filter option is selected, default it to SFW the lowest
 			if (selectedNsfwLevels.isEmpty())
 			{
 				Set<String> defaultNsfwSelect = new HashSet<>();
 				defaultNsfwSelect.add("2");
+				multiPref.setValues(defaultNsfwSelect);
 				SharedPreferences.Editor editor = sharedPrefs.edit();
 				editor.putStringSet("pref_nsfwFilterSelect", defaultNsfwSelect);
 				editor.commit();
 			}
 
+			String[] entryValuesChosen = selectedNsfwLevels.toArray(new String[0]);
+			Log.d("PIXIV", Arrays.toString(entryValuesChosen));
+			String[] entriesAvailable = getResources().getStringArray(R.array.pref_nsfwmode_entries);
+			Log.d("PIXIV", Arrays.toString(entriesAvailable));
+
+			StringBuilder stringBuilder = new StringBuilder();
+			for (String s : entryValuesChosen)
+			{
+				stringBuilder.append(entriesAvailable[(Integer.parseInt(s) - 2) / 2]);
+				stringBuilder.append(", ");
+			}
+			String summary = stringBuilder.toString();
+
+			multiPref.setSummary(summary);
+
+			// Sets summary
 
 
 			// Hide app icon if switch is activated
