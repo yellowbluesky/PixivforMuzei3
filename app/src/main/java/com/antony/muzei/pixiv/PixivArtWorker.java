@@ -425,13 +425,13 @@ Regarding rankings
 	private JSONObject filterFeedBookmarkTag(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet) throws JSONException
 	{
 		Log.d(LOG_TAG, "filterFeedBookmarkTag(): Entering");
-		boolean found = false;
 		Random random = new Random();
 
 		do
 		{
 			// Random seems to be very inefficient, potentially visiting the same image multiple times
 			JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+			boolean found = true;
 
 			// If user does not want manga to display
 			if (!showManga)
@@ -445,23 +445,20 @@ Regarding rankings
 			}
 
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
-			for(int i = 0; i < selectedFilterLevelArray.length; i++)
+			for(String s : selectedFilterLevelArray)
 			{
 				if (selectedFilterLevel[i] == "8")
 				{
-					if (pictureMetadata.getInt("x_restrict") == 1)
+					if (pictureMetadata.getInt("x_restrict") != 1)
 					{
-						continue;
+						found = false;
+						break;
 					}
 				}
-				else if (pictureMetadata.getInt("sanity_level") == Integer.parseInt(selectedFilterLevel[i]))
+				else if (pictureMetadata.getInt("sanity_level") != Integer.parseInt(s))
 				{
-					continue;
-				}
-
-				if (i == selectedFilterLevel.length - 1)
-				{
-					found = true;
+					found = false;
+					break;
 				}
 			}
 		} while (!found);
