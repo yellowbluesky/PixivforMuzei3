@@ -104,38 +104,37 @@ public class SettingsActivity extends AppCompatActivity
 			@Override
 			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 			{
-				if (key.equals("pref_loginPassword"))
+				switch (key)
 				{
-					newCreds = sharedPrefs.getString("pref_loginPassword", "");
-				} else if (key.equals("pref_updateMode"))
-				{
-					newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
-				} else if (key.equals("pref_nsfwFilterLevel"))
-				{
-					newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
-				} else if (key.equals("pref_tagSearch"))
-				{
-					newTag = sharedPrefs.getString("pref_tagSearch", "");
-				} else if (key.equals("pref_artistId"))
-				{
-					newArtist = sharedPrefs.getString("pref_artistId", "");
-				} else if (key.equals("pref_storeInExtStorage"))
-				{
-					if (ContextCompat.checkSelfPermission(SettingsActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+					case "pref_loginPassword":
+						newCreds = sharedPrefs.getString("pref_loginPassword", "");
+						break;
+					case "pref_updateMode":
+						newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
+						break;
+					case "pref_nsfwFilterLevel":
+						newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
+						break;
+					case "pref_tagSearch":
+						newTag = sharedPrefs.getString("pref_tagSearch", "");
+						break;
+					case "pref_artistId":
+						newArtist = sharedPrefs.getString("pref_artistId", "");
+					case "pref_storeInExtStorage":
+						// If the user has opted to save pictures to public storage, we need to check if we
+						// have the permissions to do so
+						if (ContextCompat.checkSelfPermission(SettingsActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 							!= PackageManager.PERMISSION_GRANTED)
-					{
-						ActivityCompat.requestPermissions(SettingsActivity.this,
-								new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-								1);
-					}
+						{
+							ActivityCompat.requestPermissions(SettingsActivity.this,
+									new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+									1);
+						}
+						break;
 				}
+
 			}
 		};
-
-
-		// If the user has opted to save pictures to public storage, we need to check if we
-		// have the permissions to do so
-
 	}
 
 	@Override
@@ -263,10 +262,6 @@ public class SettingsActivity extends AppCompatActivity
 
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-			// Print summaries beneath preferences
-			findPreference("pref_artistId").setSummary(sharedPrefs.getString("pref_artistId", ""));
-			findPreference("pref_tagSearch").setSummary(sharedPrefs.getString("pref_tagSearch", ""));
-
 			// Show authentication status as summary string below login button
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
@@ -280,29 +275,35 @@ public class SettingsActivity extends AppCompatActivity
 //                loginId.setIcon();
 			}
 
+			// Reveal the Preference and write the summary if update mode matches
 			String updateMode = sharedPrefs.getString("pref_updateMode", "daily_rank");
-			// If existing update mode is tag search, reveal tag search EditTextPreference
 			if (updateMode.equals("tag_search"))
 			{
-				findPreference("pref_tagSearch").setVisible(true);
+				Preference tagSearch = findPreference("pref_tagSearch");
+				tagSearch.setVisible(true);
+				tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
 			} else if (updateMode.equals("artist"))
 			{
-				findPreference("pref_artistId").setVisible(true);
+				Preference artistId = findPreference("pref_artistId");
+				artistId.setVisible(true);
+				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
 			}
 
 			// if existing update mode is feed, bookmark, or tag, reveal login category
-			if (updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search")
-					|| updateMode.equals("artist") || updateMode.equals("recommended"))
+			// this is run at activity start
+			// TODO somehow move this into onCreate()
+			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+			    .contains(updateMode))
 			{
 				findPreference("prefCat_loginSettings").setVisible(true);
 			}
 
 			// Hide or show elements depending on update mode chosen
+			// this is run on preference update
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
-				if (newValue.toString().equals("follow") || newValue.toString().equals("bookmark")
-						|| newValue.toString().equals("tag_search") || newValue.toString().equals("artist")
-						|| newValue.toString().equals("recommended"))
+				if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+			    	.contains(newValue))
 				{
 					EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
 					EditTextPreference artistIdPref = findPreference("pref_artistId");
@@ -324,32 +325,36 @@ public class SettingsActivity extends AppCompatActivity
 			});
 
 			MultiSelectListPreference multiPref = findPreference("pref_nsfwFilterSelect");
-			Set<String> selectedNsfwLevels = multiPref.getValues();
-			// If no filter option is selected, default it to SFW the lowest
-			if (selectedNsfwLevels.isEmpty())
+			multiPref.setOnPreferenceChangeListener((preference, newValue) ->
 			{
-				Set<String> defaultNsfwSelect = new HashSet<>();
-				defaultNsfwSelect.add("2");
-				multiPref.setValues(defaultNsfwSelect);
-				SharedPreferences.Editor editor = sharedPrefs.edit();
-				editor.putStringSet("pref_nsfwFilterSelect", defaultNsfwSelect);
-				editor.commit();
-			}
+				// Sets an empty choice to SFW by default
+				Set<String> selectedNsfwLevels = multiPref.getValues();
+				if (selectedNsfwLevels.isEmpty())
+				{
+					Set<String> defaultNsfwSelect = new HashSet<>();
+					defaultNsfwSelect.add("2");
+					multiPref.setValues(defaultNsfwSelect);
+					SharedPreferences.Editor editor = sharedPrefs.edit();
+					editor.putStringSet("pref_nsfwFilterSelect", defaultNsfwSelect);
+					editor.commit();
+				}
 
-			String[] entryValuesChosen = selectedNsfwLevels.toArray(new String[0]);
-			Log.d("PIXIV", Arrays.toString(entryValuesChosen));
-			String[] entriesAvailable = getResources().getStringArray(R.array.pref_nsfwmode_entries);
-			Log.d("PIXIV", Arrays.toString(entriesAvailable));
+				// Sets summary based on what was chosen
+				String[] entryValuesChosen = selectedNsfwLevels.toArray(new String[0]);
+				Log.d("PIXIV", Arrays.toString(entryValuesChosen));
+				String[] entriesAvailable = getResources().getStringArray(R.array.pref_nsfwmode_entries);
+				Log.d("PIXIV", Arrays.toString(entriesAvailable));
 
-			StringBuilder stringBuilder = new StringBuilder();
-			for (String s : entryValuesChosen)
-			{
-				stringBuilder.append(entriesAvailable[(Integer.parseInt(s) - 2) / 2]);
-				stringBuilder.append(", ");
-			}
-			String summary = stringBuilder.toString();
+				StringBuilder stringBuilder = new StringBuilder();
+				for (String s : entryValuesChosen)
+				{
+					stringBuilder.append(entriesAvailable[(Integer.parseInt(s) - 2) / 2]);
+					stringBuilder.append(", ");
+				}
+				String summary = stringBuilder.toString();
 
-			multiPref.setSummary(summary);
+				multiPref.setSummary(summary);
+			});
 
 			// Sets summary
 
