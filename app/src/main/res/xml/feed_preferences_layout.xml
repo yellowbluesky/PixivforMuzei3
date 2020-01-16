@@ -43,8 +43,8 @@
             app:isPreferenceVisible="false" />
         <DropDownPreference
             android:defaultValue="@string/pref_nsfwFilterLevel_default"
-            android:entries="@array/pref_nsfwmode_entries"
-            android:entryValues="@array/pref_nsfwmode_entryvalues"
+            android:entries="@array/pref_authFilterLevel_entries"
+            android:entryValues="@array/pref_authFilterLevel_entryvalues"
             android:key="pref_nsfwFilterLevel"
             android:persistent="true"
             android:summary="%s"
@@ -52,10 +52,9 @@
         <MultiSelectListPreference
             android:key="pref_nsfwFilterSelect"
             android:title="@string/prefTitle_nswFilterLevel"
-            android:entries="@array/pref_nsfwmode_entries"
-            android:entryValues="@array/pref_nsfwmode_entryvalues"
-            android:persistent="true"
-            />
+            android:entries="@array/pref_authFilterLevel_entries"
+            android:entryValues="@array/pref_authFilterLevel_entryvalues"
+            android:persistent="true" />
         <SwitchPreference
             android:key="pref_showManga"
             android:persistent="true"

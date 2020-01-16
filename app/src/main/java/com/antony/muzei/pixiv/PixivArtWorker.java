@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Set;
 
 import okhttp3.HttpUrl;
 import okhttp3.Response;
@@ -383,7 +384,7 @@ Regarding rankings
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-		Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_nsfwFilterSelect", );
+		Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
 		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"), showManga, selectedFilterLevel);
 
 		// Different logic if the image pulled is a single image or an album
@@ -426,12 +427,14 @@ Regarding rankings
 	{
 		Log.d(LOG_TAG, "filterFeedBookmarkTag(): Entering");
 		Random random = new Random();
+		boolean found;
+		JSONObject pictureMetadata;
 
 		do
 		{
 			// Random seems to be very inefficient, potentially visiting the same image multiple times
-			JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-			boolean found = true;
+			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
+			found = true;
 
 			// If user does not want manga to display
 			if (!showManga)
@@ -447,7 +450,7 @@ Regarding rankings
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for(String s : selectedFilterLevelArray)
 			{
-				if (selectedFilterLevel[i] == "8")
+				if (s == "8")
 				{
 					if (pictureMetadata.getInt("x_restrict") != 1)
 					{

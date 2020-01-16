@@ -31,6 +31,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.EditTextPreference;
 import androidx.preference.MultiSelectListPreference;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
@@ -124,7 +125,7 @@ public class SettingsActivity extends AppCompatActivity
 						// If the user has opted to save pictures to public storage, we need to check if we
 						// have the permissions to do so
 						if (ContextCompat.checkSelfPermission(SettingsActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-							!= PackageManager.PERMISSION_GRANTED)
+								!= PackageManager.PERMISSION_GRANTED)
 						{
 							ActivityCompat.requestPermissions(SettingsActivity.this,
 									new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
@@ -243,8 +244,9 @@ public class SettingsActivity extends AppCompatActivity
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
 		{
 			setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-			// Immediately clear cache
+			// Immediately clear cache Preference
 			findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 			{
 				WorkManager manager = WorkManager.getInstance();
@@ -259,8 +261,6 @@ public class SettingsActivity extends AppCompatActivity
 				Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
 				return true;
 			});
-
-			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
 			// Show authentication status as summary string below login button
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
@@ -289,21 +289,13 @@ public class SettingsActivity extends AppCompatActivity
 				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
 			}
 
-			// if existing update mode is feed, bookmark, or tag, reveal login category
-			// this is run at activity start
-			// TODO somehow move this into onCreate()
-			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
-			    .contains(updateMode))
-			{
-				findPreference("prefCat_loginSettings").setVisible(true);
-			}
-
 			// Hide or show elements depending on update mode chosen
 			// this is run on preference update
+			// Update mode Preference
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
 				if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
-			    	.contains(newValue))
+						.contains(newValue))
 				{
 					EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
 					EditTextPreference artistIdPref = findPreference("pref_artistId");
@@ -325,7 +317,7 @@ public class SettingsActivity extends AppCompatActivity
 			});
 
 			MultiSelectListPreference multiPref = findPreference("pref_nsfwFilterSelect");
-			multiPref.setOnPreferenceChangeListener((preference, newValue) ->
+			multiPref.setOnPreferenceClickListener((preference) ->
 			{
 				// Sets an empty choice to SFW by default
 				Set<String> selectedNsfwLevels = multiPref.getValues();
@@ -342,7 +334,7 @@ public class SettingsActivity extends AppCompatActivity
 				// Sets summary based on what was chosen
 				String[] entryValuesChosen = selectedNsfwLevels.toArray(new String[0]);
 				Log.d("PIXIV", Arrays.toString(entryValuesChosen));
-				String[] entriesAvailable = getResources().getStringArray(R.array.pref_nsfwmode_entries);
+				String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
 				Log.d("PIXIV", Arrays.toString(entriesAvailable));
 
 				StringBuilder stringBuilder = new StringBuilder();
@@ -354,6 +346,7 @@ public class SettingsActivity extends AppCompatActivity
 				String summary = stringBuilder.toString();
 
 				multiPref.setSummary(summary);
+				return true;
 			});
 
 			// Sets summary
