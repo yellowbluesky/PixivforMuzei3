@@ -8,8 +8,8 @@
         <item>Recommended (Login Required)</item>
         <item>Specific Artist (Login Required)</item>
         <item>Tag search (Login Required)</item>
-
     </string-array>
+
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
         <item>weekly_rank</item>
@@ -19,25 +19,36 @@
         <item>recommended</item>
         <item>artist</item>
         <item>tag_search</item>
-
     </string-array>
-    <string-array name="pref_nsfwmode_entries">
+    
+    <string-array name="pref_authFilterLevel_entries">
         <item>SFW</item>
         <item>Slightly ecchi</item>
         <item>Fairly ecchi</item>
         <item>R18</item>
     </string-array>
-    <string-array name="pref_nsfwmode_entryvalues">
+    <string-array name="pref_authFilterLevel_entryvalues">
         <item>"2"</item>
         <item>"4"</item>
         <item>"6"</item>
         <item>"8"</item>
     </string-array>
+
+    <string-array name="pref_rankingFilterLevel_entries">
+        <item>SFW</item>
+        <item>NSFW</item>
+    </string-array>
+    <string-array name="pref_rankingFilterLevel_entryvalues">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+
     <string-array name="array_authFailActions_entries">
         <item>Change mode to Daily Ranking</item>
         <item>Do not change mode, download Daily Ranking</item>
         <item>Do not change mode, do not download picture</item>
     </string-array>
+
     <string-array name="array_authFailActions_entryvalues">
         <item>"changeDaily</item>
         <item>"doNotChange_downDaily</item>
