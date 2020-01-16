@@ -383,8 +383,8 @@ Regarding rankings
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-		int nsfwFilteringLevel = Integer.parseInt(sharedPrefs.getString("pref_nsfwFilterLevel", "2"));
-		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"), showManga, nsfwFilteringLevel);
+		Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_nsfwFilterSelect", );
+		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"), showManga, selectedFilterLevel);
 
 		// Different logic if the image pulled is a single image or an album
 		// If album, we use the first picture
@@ -422,55 +422,49 @@ Regarding rankings
 		Called by getArtworkFeedBookmarkTag to return details about an artwork that complies with
 		filtering restrictions set by the user
 	 */
-	private JSONObject filterFeedBookmarkTag(JSONArray illusts, boolean showManga, int nsfwFilteringLevel) throws JSONException
+	private JSONObject filterFeedBookmarkTag(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet) throws JSONException
 	{
 		Log.d(LOG_TAG, "filterFeedBookmarkTag(): Entering");
-
+		boolean found = false;
 		Random random = new Random();
 
-		// Random seems to be very inefficient, potentially visiting the same image multiple times
-		JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-
-		// If user does not want manga to display
-		if (!showManga)
+		do
 		{
-			Log.d(LOG_TAG, "Manga not desired");
-			while (!pictureMetadata.getString("type").equals("illust"))
-			{
-				Log.d(LOG_TAG, "Retrying for a non-manga");
-				pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-			}
-		}
-		// If user does not want NSFW images to show
-		// If the filtering level is 8, the user has selected to disable ALL filtering, i.e. allow R18
-		// TODO this can be made better
+			// Random seems to be very inefficient, potentially visiting the same image multiple times
+			JSONObject pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
-		Log.d(LOG_TAG, "NSFW filter level set to: " + nsfwFilteringLevel);
-		if (nsfwFilteringLevel < 8)
-		{
-			Log.d(LOG_TAG, "Performing some level of NSFW filtering");
-			// Allowing all sanity_level and filtering only x_restrict tagged pictures
-			if (nsfwFilteringLevel == 6)
+			// If user does not want manga to display
+			if (!showManga)
 			{
-				Log.d(LOG_TAG, "Allowing all but x_restrict, checking");
-				while (pictureMetadata.getInt("x_restrict") != 0)
+				Log.d(LOG_TAG, "Manga not desired");
+				while (!pictureMetadata.getString("type").equals("illust"))
 				{
-					Log.d(LOG_TAG, "Retrying for a non x_restrict");
-					pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-				}
-			} else
-			{
-				int nsfwLevel = pictureMetadata.getInt("sanity_level");
-				Log.d(LOG_TAG, "Sanity level of pulled picture is: " + nsfwLevel);
-				// If it's equal it's ok
-				while (nsfwLevel > nsfwFilteringLevel)
-				{
-					Log.d(LOG_TAG, "Pulled picture exceeds set filtering level, retrying");
-					pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-					nsfwLevel = pictureMetadata.getInt("sanity_level");
+					Log.d(LOG_TAG, "Retrying for a non-manga");
+					continue;
 				}
 			}
-		}
+
+			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
+			for(int i = 0; i < selectedFilterLevelArray.length; i++)
+			{
+				if (selectedFilterLevel[i] == "8")
+				{
+					if (pictureMetadata.getInt("x_restrict") == 1)
+					{
+						continue;
+					}
+				}
+				else if (pictureMetadata.getInt("sanity_level") == Integer.parseInt(selectedFilterLevel[i]))
+				{
+					continue;
+				}
+
+				if (i == selectedFilterLevel.length - 1)
+				{
+					found = true;
+				}
+			}
+		} while (!found);
 
 		return pictureMetadata;
 	}
