@@ -437,7 +437,7 @@ Regarding rankings
 			if (!showManga)
 			{
 				Log.d(LOG_TAG, "Manga not desired");
-				while (!pictureMetadata.getString("type").equals("illust"))
+				if (!pictureMetadata.getString("type").equals("illust"))
 				{
 					Log.d(LOG_TAG, "Retrying for a non-manga");
 					continue;
