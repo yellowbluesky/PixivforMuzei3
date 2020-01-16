@@ -29,7 +29,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.preference.EditTextPreference;
 import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -289,29 +288,33 @@ public class SettingsActivity extends AppCompatActivity
 				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
 			}
 
-			// Hide or show elements depending on update mode chosen
-			// this is run on preference update
 			// Update mode Preference
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
 				if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
 						.contains(newValue))
 				{
-					EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
-					EditTextPreference artistIdPref = findPreference("pref_artistId");
-					tagSearchPref.setVisible(false);
-					artistIdPref.setVisible(false);
 					findPreference("prefCat_loginSettings").setVisible(true);
-					if (newValue.toString().equals("tag_search"))
-					{
-						tagSearchPref.setVisible(true);
-					} else if (newValue.toString().equals("artist"))
-					{
-						artistIdPref.setVisible(true);
-					}
+
 				} else
 				{
 					findPreference("prefCat_loginSettings").setVisible(false);
+				}
+
+				if (newValue.equals("tag_search"))
+				{
+					findPreference("pref_tagSearch").setVisible(true);
+				} else
+				{
+					findPreference("pref_tagSearch").setVisible(false);
+				}
+
+				if (newValue.equals("pref_artistId"))
+				{
+					findPreference("pref_artistId").setVisible(true);
+				} else
+				{
+					findPreference("pref_artistId").setVisible(false);
 				}
 				return true;
 			});
