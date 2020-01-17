@@ -275,7 +275,7 @@ public class SettingsActivity extends AppCompatActivity
 //                loginId.setIcon();
 			}
 
-			// Reveal the Preference and write the summary if update mode matches
+			// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
 			String updateMode = sharedPrefs.getString("pref_updateMode", "daily_rank");
 			if (updateMode.equals("tag_search"))
 			{
@@ -356,13 +356,11 @@ public class SettingsActivity extends AppCompatActivity
 						}
 					}
 					String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
-					Log.d("PIXIV", Arrays.toString(entriesAvailable));
-
 					StringBuilder stringBuilder = new StringBuilder();
 					for (int i = 0; i < arrayList.size(); i++)
 					{
 						stringBuilder.append(entriesAvailable[(arrayList.get(i) - 2) / 2]);
-						if(i != arrayList.size() - 1)
+						if (i != arrayList.size() - 1)
 						{
 							stringBuilder.append(", ");
 						}
@@ -375,9 +373,20 @@ public class SettingsActivity extends AppCompatActivity
 				return commitToSharedPref;
 			});
 
-			// Sets summary
-
-
+			Set<String> chosenLevelsSet = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
+			String[] chosenLevels = chosenLevelsSet.toArray(new String[0]);
+			String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+			StringBuilder stringBuilder = new StringBuilder();
+			for (int i = 0; i < chosenLevels.length; i++)
+			{
+				stringBuilder.append(entriesAvailable[(Integer.parseInt(chosenLevels[i]) - 2) / 2]);
+				if (i != chosenLevels.length - 1)
+				{
+					stringBuilder.append(", ");
+				}
+			}
+			String summary = stringBuilder.toString();
+			multiPref.setSummary(summary);
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))
 //			{
