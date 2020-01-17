@@ -434,7 +434,7 @@ Regarding rankings
 		{
 			// Random seems to be very inefficient, potentially visiting the same image multiple times
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-			found = true;
+			found = false;
 
 			// If user does not want manga to display
 			if (!showManga)
@@ -448,20 +448,24 @@ Regarding rankings
 			}
 
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
-			for(String s : selectedFilterLevelArray)
+			for (String s : selectedFilterLevelArray)
 			{
-				if (s == "8")
+				if (s.equals("8"))
 				{
-					if (pictureMetadata.getInt("x_restrict") != 1)
+					if (pictureMetadata.getInt("x_restrict") == 1)
 					{
-						found = false;
+						Log.d(LOG_TAG, "x_restrict found");
+						found = true;
 						break;
 					}
-				}
-				else if (pictureMetadata.getInt("sanity_level") != Integer.parseInt(s))
+				} else if (pictureMetadata.getInt("sanity_level") == Integer.parseInt(s))
 				{
-					found = false;
+					Log.d(LOG_TAG, "sanity_level found is " + pictureMetadata.getInt("sanity_level"));
+					found = true;
 					break;
+				} else
+				{
+					Log.d(LOG_TAG, "matching filtering not found");
 				}
 			}
 		} while (!found);
