@@ -54,7 +54,8 @@
             android:title="@string/prefTitle_nswFilterLevel"
             android:entries="@array/pref_authFilterLevel_entries"
             android:entryValues="@array/pref_authFilterLevel_entryvalues"
-            android:persistent="true" />
+            android:persistent="true"
+            android:defaultValue="@array/pref_authFilterDefault_entryvalues"/>
         <SwitchPreference
             android:key="pref_showManga"
             android:persistent="true"

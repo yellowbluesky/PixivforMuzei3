@@ -42,6 +42,7 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -320,36 +321,58 @@ public class SettingsActivity extends AppCompatActivity
 			});
 
 			MultiSelectListPreference multiPref = findPreference("pref_nsfwFilterSelect");
-			multiPref.setOnPreferenceClickListener((preference) ->
+			multiPref.setOnPreferenceChangeListener((preference, newValue) ->
 			{
-				// Sets an empty choice to SFW by default
-				Set<String> selectedNsfwLevels = multiPref.getValues();
-				if (selectedNsfwLevels.isEmpty())
+				Log.d("manual", "pref changed");
+
+				boolean commitToSharedPref = true;
+
+				// for some reason 2 is an empty selection
+				if (newValue.toString().length() == 2)
 				{
-					Set<String> defaultNsfwSelect = new HashSet<>();
-					defaultNsfwSelect.add("2");
-					multiPref.setValues(defaultNsfwSelect);
+					Log.v("MANUAL", "pref change empty set");
+					Set<String> defaultSet = new HashSet<>();
+					defaultSet.add("2");
+					multiPref.setValues(defaultSet);
+
 					SharedPreferences.Editor editor = sharedPrefs.edit();
-					editor.putStringSet("pref_nsfwFilterSelect", defaultNsfwSelect);
+					editor.putStringSet("pref_nsfwFilterSelect", defaultSet);
 					editor.commit();
+					commitToSharedPref = false;
 				}
 
-				// Sets summary based on what was chosen
-				String[] entryValuesChosen = selectedNsfwLevels.toArray(new String[0]);
-				Log.d("PIXIV", Arrays.toString(entryValuesChosen));
-				String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
-				Log.d("PIXIV", Arrays.toString(entriesAvailable));
-
-				StringBuilder stringBuilder = new StringBuilder();
-				for (String s : entryValuesChosen)
+				if (!commitToSharedPref)
 				{
-					stringBuilder.append(entriesAvailable[(Integer.parseInt(s) - 2) / 2]);
-					stringBuilder.append(", ");
-				}
-				String summary = stringBuilder.toString();
+					multiPref.setSummary("SFW");
+				} else
+				{
+					String str = newValue.toString();
+					ArrayList<Integer> arrayList = new ArrayList<>();
+					for (int i = 0; i < str.length(); i++)
+					{
+						if (Character.isDigit(str.charAt(i)))
+						{
+							arrayList.add(Character.getNumericValue(str.charAt(i)));
+						}
+					}
+					String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+					Log.d("PIXIV", Arrays.toString(entriesAvailable));
 
-				multiPref.setSummary(summary);
-				return true;
+					StringBuilder stringBuilder = new StringBuilder();
+					for (int i = 0; i < arrayList.size(); i++)
+					{
+						stringBuilder.append(entriesAvailable[(arrayList.get(i) - 2) / 2]);
+						if(i != arrayList.size() - 1)
+						{
+							stringBuilder.append(", ");
+						}
+					}
+					String summary = stringBuilder.toString();
+
+					multiPref.setSummary(summary);
+				}
+
+				return commitToSharedPref;
 			});
 
 			// Sets summary

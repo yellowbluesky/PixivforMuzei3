@@ -34,6 +34,10 @@
         <item>"8"</item>
     </string-array>
 
+    <string-array name="pref_authFilterDefault_entryvalues">
+        <item>"2"</item>
+    </string-array>
+
     <string-array name="pref_rankingFilterLevel_entries">
         <item>SFW</item>
         <item>NSFW</item>
