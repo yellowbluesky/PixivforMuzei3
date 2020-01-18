@@ -17,7 +17,7 @@
     <string name="prefTitle_autoClearMode">每天凌晨 1 点自动清除缓存</string>
 
     <string name="prefTitle_rankingFilterSelect">安全级别</string>
-    <string name="pref_nsfwFilterLevel_default">2</string>
+    <string name="prefTitle_authFilterSelect">订阅 NSFW 过滤级别</string>
     <string name="button_clearCache">立即清除图像缓存</string>
 
     <string name="prefCat_authSettings">Pixiv 登录</string>
@@ -44,6 +44,7 @@
     <string name="toast_clearingCache">清除图像缓存</string>
     <string name="toast_newArtist">艺术家更新，清除图像缓存</string>
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
+    <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
     <string name="attr_daily">日排行榜 #</string>
     <string name="attr_weekly">周排行榜 #</string>
     <string name="attr_monthly">月排行榜 #</string>
