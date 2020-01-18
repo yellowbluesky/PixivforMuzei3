@@ -10,7 +10,7 @@
         <item>标签搜索（需登录）</item>
     </string-array>
     
-    <string-array name="pref_nsfwmode_entries">
+    <string-array name="pref_authFilterLevel_entries">
         <item>SFW</item>
         <item>轻度色情</item>
         <item>较多色情</item>
