@@ -52,6 +52,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
@@ -240,11 +241,26 @@ public class PixivArtWorker extends Worker
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
 
+		JSONObject pictureMetadata;
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 
-		JSONObject pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
-				showManga, sharedPrefs.getStringSet("pref_rankingFilterSelect", null));
+		// If user choose PixivForMuzei3 as source without first opening the app
+		// There will not be a SharedPref. Returned filter set will be null. This null case needs to be handles
+		// Auth feed modes do not need a similar check, as the user always must first open the app to sign in
+		Set<String> rankingFilterSelect = sharedPrefs.getStringSet("pref_rankingFilterSelect", null);
+		if (rankingFilterSelect == null)
+		{
+			Set<String> defaultRankingSelect = new HashSet<>();
+			defaultRankingSelect.add("0");
+			pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
+					showManga, defaultRankingSelect);
+		} else
+		{
+			pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
+					showManga, rankingFilterSelect);
+		}
+
 		String token = pictureMetadata.getString("illust_id");
 		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
@@ -303,6 +319,7 @@ Regarding rankings
 					continue;
 				}
 			}
+
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{
