@@ -54,7 +54,6 @@ public class SettingsActivity extends AppCompatActivity
 	private SharedPreferences.OnSharedPreferenceChangeListener prefChangeListener;
 	private String newCreds, oldCreds;
 	private String oldUpdateMode, newUpdateMode;
-	private String oldFilter, newFilter;
 	private String oldTag, newTag;
 	private String oldArtist, newArtist;
 	private Set<String> oldFilterSelect, newFilterSelect;
@@ -92,9 +91,6 @@ public class SettingsActivity extends AppCompatActivity
 		oldUpdateMode = sharedPrefs.getString("pref_updateMode", "");
 		newUpdateMode = oldUpdateMode;
 
-		oldFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
-		newFilter = oldFilter;
-
 		oldTag = sharedPrefs.getString("pref_tagSearch", "");
 		newTag = oldTag;
 
@@ -116,9 +112,6 @@ public class SettingsActivity extends AppCompatActivity
 						break;
 					case "pref_updateMode":
 						newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
-						break;
-					case "pref_nsfwFilterLevel":
-						newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
 						break;
 					case "pref_tagSearch":
 						newTag = sharedPrefs.getString("pref_tagSearch", "");
@@ -204,8 +197,8 @@ public class SettingsActivity extends AppCompatActivity
 		}
 
 		// If user has changed update, filter mode, or search tag, toast to indicate cache is getting cleared
-		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag)
-				|| !oldArtist.equals(newArtist) || !oldFilterSelect.equals(newFilterSelect))
+		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
+				|| !oldArtist.equals(newArtist))
 		{
 			WorkManager manager = WorkManager.getInstance();
 			Constraints constraints = new Constraints.Builder()
@@ -219,9 +212,6 @@ public class SettingsActivity extends AppCompatActivity
 			if (!oldUpdateMode.equals(newUpdateMode))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-			} else if (!oldFilter.equals(newFilter))
-			{
-				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
 			} else if (!oldArtist.equals(newArtist))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
