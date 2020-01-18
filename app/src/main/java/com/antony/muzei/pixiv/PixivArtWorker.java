@@ -388,7 +388,7 @@ Regarding rankings
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-		Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
+		Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
 		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"), showManga, selectedFilterLevel);
 
 		// Different logic if the image pulled is a single image or an album
