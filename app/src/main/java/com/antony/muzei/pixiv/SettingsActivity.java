@@ -340,11 +340,13 @@ public class SettingsActivity extends AppCompatActivity
 				{
 					findPreference("pref_artistId").setVisible(false);
 				}
+
 				return true;
 			});
 
-			MultiSelectListPreference multiPref = findPreference("pref_nsfwFilterSelect");
-			multiPref.setOnPreferenceChangeListener((preference, newValue) ->
+			// Updates authFilterSelectPref summary as user updates it
+			MultiSelectListPreference authFilterSelectPref = findPreference("pref_authFilterSelect");
+			authFilterSelectPref.setOnPreferenceChangeListener((preference, newValue) ->
 			{
 				Log.d("manual", "pref changed");
 
@@ -354,12 +356,12 @@ public class SettingsActivity extends AppCompatActivity
 					Log.v("MANUAL", "pref change empty set");
 					Set<String> defaultSet = new HashSet<>();
 					defaultSet.add("2");
-					multiPref.setValues(defaultSet);
+					authFilterSelectPref.setValues(defaultSet);
 
 					SharedPreferences.Editor editor = sharedPrefs.edit();
-					editor.putStringSet("pref_nsfwFilterSelect", defaultSet);
+					editor.putStringSet("pref_authFilterSelect", defaultSet);
 					editor.commit();
-					multiPref.setSummary("SFW");
+					authFilterSelectPref.setSummary("SFW");
 					return false;
 				}
 
@@ -372,38 +374,99 @@ public class SettingsActivity extends AppCompatActivity
 						arrayList.add(Character.getNumericValue(str.charAt(i)));
 					}
 				}
-				String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
-				StringBuilder stringBuilder = new StringBuilder();
+				String[] authEntriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+				StringBuilder stringBuilderAuth = new StringBuilder();
 				for (int i = 0; i < arrayList.size(); i++)
 				{
-					stringBuilder.append(entriesAvailable[(arrayList.get(i) - 2) / 2]);
+					stringBuilderAuth.append(authEntriesAvailable[(arrayList.get(i) - 2) / 2]);
 					if (i != arrayList.size() - 1)
 					{
-						stringBuilder.append(", ");
+						stringBuilderAuth.append(", ");
 					}
 				}
-				String summary = stringBuilder.toString();
+				String summaryAuth = stringBuilderAuth.toString();
 
-				multiPref.setSummary(summary);
-
+				authFilterSelectPref.setSummary(summaryAuth);
 
 				return true;
 			});
 
-			Set<String> chosenLevelsSet = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
+			// Generates the authFilterSelectPref summary during activity startup
+			Set<String> chosenLevelsSet = sharedPrefs.getStringSet("pref_authFilterSelect", null);
 			String[] chosenLevels = chosenLevelsSet.toArray(new String[0]);
-			String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
-			StringBuilder stringBuilder = new StringBuilder();
+			String[] entriesAvailableAuth = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+			StringBuilder stringBuilderAuth = new StringBuilder();
 			for (int i = 0; i < chosenLevels.length; i++)
 			{
-				stringBuilder.append(entriesAvailable[(Integer.parseInt(chosenLevels[i]) - 2) / 2]);
+				stringBuilderAuth.append(entriesAvailableAuth[(Integer.parseInt(chosenLevels[i]) - 2) / 2]);
 				if (i != chosenLevels.length - 1)
 				{
-					stringBuilder.append(", ");
+					stringBuilderAuth.append(", ");
 				}
 			}
-			String summary = stringBuilder.toString();
-			multiPref.setSummary(summary);
+			String summaryAuth = stringBuilderAuth.toString();
+			authFilterSelectPref.setSummary(summaryAuth);
+
+			// updates ranking nsfw select summary on preference change
+			MultiSelectListPreference rankingFilterSelectPref = findPreference("pref_rankingFilterSelect");
+			rankingFilterSelectPref.setOnPreferenceChangeListener((preference, newValue) ->
+			{
+				// for some reason 2 is an empty selection
+				if (newValue.toString().length() == 2)
+				{
+					Log.v("MANUAL", "pref change empty set");
+					Set<String> defaultSet = new HashSet<>();
+					defaultSet.add("0");
+					rankingFilterSelectPref.setValues(defaultSet);
+
+					SharedPreferences.Editor editor = sharedPrefs.edit();
+					editor.putStringSet("pref_rankingFilterSelect", defaultSet);
+					editor.commit();
+					rankingFilterSelectPref.setSummary("SFW");
+					return false;
+				}
+
+				String str = newValue.toString();
+				ArrayList<Integer> arrayList = new ArrayList<>();
+				for (int i = 0; i < str.length(); i++)
+				{
+					if (Character.isDigit(str.charAt(i)))
+					{
+						arrayList.add(Character.getNumericValue(str.charAt(i)));
+					}
+				}
+				String[] rankingEntriesAvailable = getResources().getStringArray(R.array.pref_rankingFilterLevel_entries);
+				StringBuilder stringBuilderRanking = new StringBuilder();
+				for (int i = 0; i < arrayList.size(); i++)
+				{
+					stringBuilderRanking.append(rankingEntriesAvailable[arrayList.get(i)]);
+					if (i != arrayList.size() - 1)
+					{
+						stringBuilderRanking.append(", ");
+					}
+				}
+				String summaryRanking = stringBuilderRanking.toString();
+
+				rankingFilterSelectPref.setSummary(summaryRanking);
+
+				return true;
+			});
+
+			// Generates the authFilterSelectPref summary during activity startup
+			Set<String> chosenLevelsSetRanking = sharedPrefs.getStringSet("pref_rankingFilterSelect", null);
+			String[] chosenLevelsRanking = chosenLevelsSetRanking.toArray(new String[0]);
+			String[] entriesAvailableRanking = getResources().getStringArray(R.array.pref_rankingFilterLevel_entries);
+			StringBuilder stringBuilderRanking = new StringBuilder();
+			for (int i = 0; i < chosenLevelsRanking.length; i++)
+			{
+				stringBuilderRanking.append(entriesAvailableRanking[Integer.parseInt(chosenLevelsRanking[i])]);
+				if (i != chosenLevelsRanking.length - 1)
+				{
+					stringBuilderRanking.append(", ");
+				}
+			}
+			String summaryRanking = stringBuilderRanking.toString();
+			rankingFilterSelectPref.setSummary(summaryRanking);
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))
 //			{

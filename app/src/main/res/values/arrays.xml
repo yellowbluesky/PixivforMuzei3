@@ -20,7 +20,7 @@
         <item>artist</item>
         <item>tag_search</item>
     </string-array>
-    
+
     <string-array name="pref_authFilterLevel_entries">
         <item>SFW</item>
         <item>Slightly ecchi</item>
@@ -46,6 +46,10 @@
         <item>0</item>
         <item>1</item>
     </string-array>
+    <string-array name="pref_rankingFilterDefault_entryvalues">
+        <item>0</item>
+    </string-array>
+
 
     <string-array name="array_authFailActions_entries">
         <item>Change mode to Daily Ranking</item>

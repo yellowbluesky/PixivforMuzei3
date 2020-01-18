@@ -41,21 +41,22 @@
             android:persistent="true"
             android:title="@string/prefTitle_artistId"
             app:isPreferenceVisible="false" />
-        <DropDownPreference
-            android:defaultValue="@string/pref_nsfwFilterLevel_default"
-            android:entries="@array/pref_authFilterLevel_entries"
-            android:entryValues="@array/pref_authFilterLevel_entryvalues"
-            android:key="pref_nsfwFilterLevel"
-            android:persistent="true"
-            android:summary="%s"
-            android:title="@string/prefTitle_nswFilterLevel" />
         <MultiSelectListPreference
-            android:key="pref_nsfwFilterSelect"
-            android:title="@string/prefTitle_nswFilterLevel"
+            android:defaultValue="@array/pref_rankingFilterDefault_entryvalues"
+            android:entries="@array/pref_rankingFilterLevel_entries"
+            android:entryValues="@array/pref_rankingFilterLevel_entryvalues"
+            android:key="pref_rankingFilterSelect"
+            android:persistent="true"
+            android:title="@string/prefTitle_rankingFilterSelect"
+            app:isPreferenceVisible="false" />
+        <MultiSelectListPreference
+            android:defaultValue="@array/pref_authFilterDefault_entryvalues"
             android:entries="@array/pref_authFilterLevel_entries"
             android:entryValues="@array/pref_authFilterLevel_entryvalues"
+            android:key="pref_authFilterSelect"
             android:persistent="true"
-            android:defaultValue="@array/pref_authFilterDefault_entryvalues"/>
+            android:title="@string/prefTitle_authFilterSelect"
+            app:isPreferenceVisible="false" />
         <SwitchPreference
             android:key="pref_showManga"
             android:persistent="true"
@@ -90,7 +91,6 @@
             android:persistent="true"
             android:title="@string/pref_loginPassword" />
         <DropDownPreference
-            android:defaultValue="@string/pref_nsfwFilterLevel_default"
             android:entries="@array/array_authFailActions_entries"
             android:entryValues="@array/array_authFailActions_entryvalues"
             android:key="pref_authFailAction"

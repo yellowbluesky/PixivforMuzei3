@@ -11,7 +11,7 @@
 
     <string name="prefTitle_autoClearMode">每天凌晨1点自动清除缓存</string>
 
-    <string name="prefTitle_nswFilterLevel">安全级别</string>
+    <string name="prefTitle_rankingFilterSelect">安全级别</string>
     <string name="pref_nsfwFilterLevel_default">2</string>
     <string name="button_clearCache">立即清除图像缓存</string>
 
