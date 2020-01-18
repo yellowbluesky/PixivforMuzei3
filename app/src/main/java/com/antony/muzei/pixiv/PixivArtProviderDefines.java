@@ -8,10 +8,10 @@ class PixivArtProviderDefines
 
 	// app strings
 	static final String APP_OS = "ios";
-	static final String APP_OS_VERSION = "10.3.1";
-	static final String APP_VERSION = "6.9.0";
+	static final String APP_OS_VERSION = "12.2";
+	static final String APP_VERSION = "7.6.2";
 	static final String APP_USER_AGENT =
-			"PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)";
+			"PixivIOSApp/7.6.2 (iOS 12.2; iPhone9,1)";
 	static final String CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
 	static final String CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
 	static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";

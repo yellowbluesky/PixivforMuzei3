@@ -46,5 +46,7 @@
     <string name="attr_weekly">周排行榜 #</string>
     <string name="attr_monthly">月排行榜 #</string>
     <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
+    <string name="prefSummary_storeInExtStorage">保存在此处的照片不会自动清除</string>
+    <string name="command_addToBookmark">添加到收藏夹</string>
 
 </resources>

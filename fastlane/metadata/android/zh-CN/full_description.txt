@@ -1,0 +1,38 @@
+<p>用于新的 Muzei 3 API 的 Pixiv 插件</p>
+<p>受 <a href="https://github.com/dahlia/muzei-pixiv">Pixiv for Muzei</a> 启发，此应用旨在扩展功能和可用性。</p>
+<p>全部绕过 SNI 审查功能由 <a href="https://github.com/Notsfsssf">Notsfsssf</a> ，<a
+        href="https://github.com/Notsfsssf/Pix-ezviewer">Pix-EzViewer</a> 的作者贡献。</p>
+<p>功能</p>
+<ul>
+    <li>
+        <p>从排行榜，订阅或书签拉取图片</p>
+        <ul>
+            <li>从最新排行榜拉取最多 50 张图片</li>
+            <li>从最新订阅或书签拉取最多 30 张图片</li>
+        </ul>
+    </li>
+    <li>
+        <p>四级粒度 NSFW 图片过滤器</p>
+    </li>
+    <li>
+        <p>不将漫画设置为壁纸</p>
+    </li>
+    <li>
+        <p>支持 OAuth2 验证；您的收件箱不会被来自 Pixiv 的新登录邮件塞满</p>
+    </li>
+    <li>
+        <p>正确处理相册显示，仅显示第一张图片</p>
+    </li>
+    <li>
+        <p>每日自动清理缓存选项</p>
+    </li>
+    <li>
+        <p>下载并保存图片到用户可访问存储</p>
+    </li>
+    <li>
+        <p>在中国可用，绕过 SNI 审查</p>
+    </li>
+    <li>
+        <p>不追踪或收集用户信息</p>
+    </li>
+</ul>

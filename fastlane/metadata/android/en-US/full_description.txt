@@ -1,0 +1,43 @@
+<p>Pixiv plugin for the new Muzei 3 API</p>
+<p>Inspired by <a href="https://github.com/dahlia/muzei-pixiv">Pixiv for Muzei</a>, the aim of this app is to extend
+    functionality and usability.</p>
+<p>All SNI bypass capability was contributed by <a href="https://github.com/Notsfsssf">Notsfsssf</a>, author of <a
+        href="https://github.com/Notsfsssf/Pix-ezviewer">Pix-EzViewer</a></p>
+<p>Features</p>
+<ul>
+    <li>
+        <p>Can pull artworks from a variety of sources</p>
+        <ul>
+            <li>Daily, Weekly, or Monthly Rankings</li>
+            <li>Artworks from followed artists</li>
+            <li>User's bookmarked artworks</li>
+            <li>Artworks from user's recommended feed</li>
+            <li>A specified artist ID</li>
+            <li>A specified tag (date descending sort order)</li>
+        </ul>
+    </li>
+    <li>
+        <p>Four levels of granular filtering for NSFW pictures</p>
+    </li>
+    <li>
+        <p>Can exclude manga from being set as wallpaper</p>
+    </li>
+    <li>
+        <p>Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv</p>
+    </li>
+    <li>
+        <p>Correctly handles the display of albums, displaying only the first image</p>
+    </li>
+    <li>
+        <p>Option to automatically clear cache on a daily basis</p>
+    </li>
+    <li>
+        <p>Option to save artwork to user storage</p>
+    </li>
+    <li>
+        <p>Works in China, SNI bypass</p>
+    </li>
+    <li>
+        <p>No tracking or collection of user details</p>
+    </li>
+</ul>

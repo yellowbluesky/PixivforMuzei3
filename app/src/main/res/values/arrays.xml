@@ -5,8 +5,10 @@
         <item>Monthly ranking</item>
         <item>Follow feed (Login required)</item>
         <item>Bookmark images (Login Required)</item>
+        <item>Recommended (Login Required)</item>
         <item>Specific Artist (Login Required)</item>
         <item>Tag search (Login Required)</item>
+
     </string-array>
     <string-array name="pref_updateMode_entryValues">
         <item>daily_rank</item>
@@ -14,8 +16,10 @@
         <item>monthly_rank</item>
         <item>follow</item>
         <item>bookmark</item>
+        <item>recommended</item>
         <item>artist</item>
         <item>tag_search</item>
+
     </string-array>
     <string-array name="pref_nsfwmode_entries">
         <item>SFW</item>

@@ -1,4 +1,6 @@
 <resources>
+    <string name="command_addToBookmark">Add to bookmarks</string>
+
     <string name="app_name">Pixiv for Muzei 3</string>
     <string name="action_bar_title">Pixiv for Muzei 3 Settings</string>
 
@@ -46,5 +48,5 @@
     <string name="attr_weekly">Weekly Ranking #</string>
     <string name="attr_monthly">Monthly Ranking #</string>
     <string name="prefTitle_storeInExtStorage">Save pictures into external storage</string>
-
+    <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
 </resources>
