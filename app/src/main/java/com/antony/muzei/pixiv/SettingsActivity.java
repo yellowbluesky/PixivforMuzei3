@@ -23,12 +23,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.preference.EditTextPreference;
+import androidx.preference.MultiSelectListPreference;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
@@ -40,7 +42,11 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class SettingsActivity extends AppCompatActivity
@@ -48,9 +54,9 @@ public class SettingsActivity extends AppCompatActivity
 	private SharedPreferences.OnSharedPreferenceChangeListener prefChangeListener;
 	private String newCreds, oldCreds;
 	private String oldUpdateMode, newUpdateMode;
-	private String oldFilter, newFilter;
 	private String oldTag, newTag;
 	private String oldArtist, newArtist;
+	private Set<String> oldFilterSelect, newFilterSelect;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -85,52 +91,51 @@ public class SettingsActivity extends AppCompatActivity
 		oldUpdateMode = sharedPrefs.getString("pref_updateMode", "");
 		newUpdateMode = oldUpdateMode;
 
-		oldFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
-		newFilter = oldFilter;
-
 		oldTag = sharedPrefs.getString("pref_tagSearch", "");
 		newTag = oldTag;
 
 		oldArtist = sharedPrefs.getString("pref_artistId", "");
 		newArtist = oldArtist;
 
+		oldFilterSelect = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
+		newFilterSelect = oldFilterSelect;
+
 		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
 		{
 			@Override
 			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 			{
-				if (key.equals("pref_loginPassword"))
+				switch (key)
 				{
-					newCreds = sharedPrefs.getString("pref_loginPassword", "");
-				} else if (key.equals("pref_updateMode"))
-				{
-					newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
-				} else if (key.equals("pref_nsfwFilterLevel"))
-				{
-					newFilter = sharedPrefs.getString("pref_nsfwFilterLevel", "");
-				} else if (key.equals("pref_tagSearch"))
-				{
-					newTag = sharedPrefs.getString("pref_tagSearch", "");
-				} else if (key.equals("pref_artistId"))
-				{
-					newArtist = sharedPrefs.getString("pref_artistId", "");
-				} else if (key.equals("pref_storeInExtStorage"))
-				{
-					if (ContextCompat.checkSelfPermission(SettingsActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-							!= PackageManager.PERMISSION_GRANTED)
-					{
-						ActivityCompat.requestPermissions(SettingsActivity.this,
-								new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-								1);
-					}
+					case "pref_loginPassword":
+						newCreds = sharedPrefs.getString("pref_loginPassword", "");
+						break;
+					case "pref_updateMode":
+						newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
+						break;
+					case "pref_tagSearch":
+						newTag = sharedPrefs.getString("pref_tagSearch", "");
+						break;
+					case "pref_artistId":
+						newArtist = sharedPrefs.getString("pref_artistId", "");
+					case "pref_storeInExtStorage":
+						// If the user has opted to save pictures to public storage, we need to check if we
+						// have the permissions to do so
+						if (ContextCompat.checkSelfPermission(SettingsActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+								!= PackageManager.PERMISSION_GRANTED)
+						{
+							ActivityCompat.requestPermissions(SettingsActivity.this,
+									new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+									1);
+						}
+						break;
+					case "pref_nsfwFilterSelect":
+						newFilterSelect = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
+						break;
 				}
+
 			}
 		};
-
-
-		// If the user has opted to save pictures to public storage, we need to check if we
-		// have the permissions to do so
-
 	}
 
 	@Override
@@ -192,7 +197,8 @@ public class SettingsActivity extends AppCompatActivity
 		}
 
 		// If user has changed update, filter mode, or search tag, toast to indicate cache is getting cleared
-		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag) || !oldArtist.equals(newArtist))
+		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
+				|| !oldArtist.equals(newArtist))
 		{
 			WorkManager manager = WorkManager.getInstance();
 			Constraints constraints = new Constraints.Builder()
@@ -206,15 +212,15 @@ public class SettingsActivity extends AppCompatActivity
 			if (!oldUpdateMode.equals(newUpdateMode))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-			} else if (!oldFilter.equals(newFilter))
-			{
-				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterMode), Toast.LENGTH_SHORT).show();
 			} else if (!oldArtist.equals(newArtist))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
-			} else
+			} else if (!oldTag.equals(newTag))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
+			} else
+			{
+				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
 			}
 		}
 	}
@@ -239,8 +245,9 @@ public class SettingsActivity extends AppCompatActivity
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
 		{
 			setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-			// Immediately clear cache
+			// Immediately clear cache Preference
 			findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 			{
 				WorkManager manager = WorkManager.getInstance();
@@ -256,12 +263,6 @@ public class SettingsActivity extends AppCompatActivity
 				return true;
 			});
 
-			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-			// Print summaries beneath preferences
-			findPreference("pref_artistId").setSummary(sharedPrefs.getString("pref_artistId", ""));
-			findPreference("pref_tagSearch").setSummary(sharedPrefs.getString("pref_tagSearch", ""));
-
 			// Show authentication status as summary string below login button
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
@@ -275,49 +276,187 @@ public class SettingsActivity extends AppCompatActivity
 //                loginId.setIcon();
 			}
 
+			// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
 			String updateMode = sharedPrefs.getString("pref_updateMode", "daily_rank");
-			// If existing update mode is tag search, reveal tag search EditTextPreference
-			if (updateMode.equals("tag_search"))
+			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+					.contains(updateMode))
 			{
-				findPreference("pref_tagSearch").setVisible(true);
-			} else if (updateMode.equals("artist"))
+				findPreference("pref_authFilterSelect").setVisible(true);
+				if (updateMode.equals("tag_search"))
+				{
+					Preference tagSearch = findPreference("pref_tagSearch");
+					tagSearch.setVisible(true);
+					tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
+				} else if (updateMode.equals("artist"))
+				{
+					Preference artistId = findPreference("pref_artistId");
+					artistId.setVisible(true);
+					artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
+				}
+			} else
 			{
-				findPreference("pref_artistId").setVisible(true);
+				findPreference("pref_rankingFilterSelect").setVisible(true);
 			}
 
-			// if existing update mode is feed, bookmark, or tag, reveal login category
-			if (updateMode.equals("follow") || updateMode.equals("bookmark") || updateMode.equals("tag_search")
-					|| updateMode.equals("artist") || updateMode.equals("recommended"))
-			{
-				findPreference("prefCat_loginSettings").setVisible(true);
-			}
 
-			// Hide or show elements depending on update mode chosen
+			// Update mode Preference
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
-				if (newValue.toString().equals("follow") || newValue.toString().equals("bookmark")
-						|| newValue.toString().equals("tag_search") || newValue.toString().equals("artist")
-						|| newValue.toString().equals("recommended"))
+				if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+						.contains(newValue))
 				{
-					EditTextPreference tagSearchPref = findPreference("pref_tagSearch");
-					EditTextPreference artistIdPref = findPreference("pref_artistId");
-					tagSearchPref.setVisible(false);
-					artistIdPref.setVisible(false);
 					findPreference("prefCat_loginSettings").setVisible(true);
-					if (newValue.toString().equals("tag_search"))
-					{
-						tagSearchPref.setVisible(true);
-					} else if (newValue.toString().equals("artist"))
-					{
-						artistIdPref.setVisible(true);
-					}
+					findPreference("pref_authFilterSelect").setVisible(true);
+					findPreference("pref_rankingFilterSelect").setVisible(false);
 				} else
 				{
+					findPreference("pref_rankingFilterSelect").setVisible(true);
 					findPreference("prefCat_loginSettings").setVisible(false);
+					findPreference("pref_authFilterSelect").setVisible(false);
 				}
+
+				if (newValue.equals("tag_search"))
+				{
+					findPreference("pref_tagSearch").setVisible(true);
+				} else
+				{
+					findPreference("pref_tagSearch").setVisible(false);
+				}
+
+				if (newValue.equals("artist"))
+				{
+					findPreference("pref_artistId").setVisible(true);
+				} else
+				{
+					findPreference("pref_artistId").setVisible(false);
+				}
+
 				return true;
 			});
 
+			// Updates authFilterSelectPref summary as user updates it
+			MultiSelectListPreference authFilterSelectPref = findPreference("pref_authFilterSelect");
+			authFilterSelectPref.setOnPreferenceChangeListener((preference, newValue) ->
+			{
+				Log.d("manual", "pref changed");
+
+				// for some reason 2 is an empty selection
+				if (newValue.toString().length() == 2)
+				{
+					Log.v("MANUAL", "pref change empty set");
+					Set<String> defaultSet = new HashSet<>();
+					defaultSet.add("2");
+					authFilterSelectPref.setValues(defaultSet);
+
+					SharedPreferences.Editor editor = sharedPrefs.edit();
+					editor.putStringSet("pref_authFilterSelect", defaultSet);
+					editor.commit();
+					authFilterSelectPref.setSummary("SFW");
+					return false;
+				}
+
+				String str = newValue.toString();
+				ArrayList<Integer> arrayList = new ArrayList<>();
+				for (int i = 0; i < str.length(); i++)
+				{
+					if (Character.isDigit(str.charAt(i)))
+					{
+						arrayList.add(Character.getNumericValue(str.charAt(i)));
+					}
+				}
+				String[] authEntriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+				StringBuilder stringBuilderAuth = new StringBuilder();
+				for (int i = 0; i < arrayList.size(); i++)
+				{
+					stringBuilderAuth.append(authEntriesAvailable[(arrayList.get(i) - 2) / 2]);
+					if (i != arrayList.size() - 1)
+					{
+						stringBuilderAuth.append(", ");
+					}
+				}
+				String summaryAuth = stringBuilderAuth.toString();
+
+				authFilterSelectPref.setSummary(summaryAuth);
+
+				return true;
+			});
+
+			// Generates the authFilterSelectPref summary during activity startup
+			Set<String> chosenLevelsSet = sharedPrefs.getStringSet("pref_authFilterSelect", null);
+			String[] chosenLevels = chosenLevelsSet.toArray(new String[0]);
+			String[] entriesAvailableAuth = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+			StringBuilder stringBuilderAuth = new StringBuilder();
+			for (int i = 0; i < chosenLevels.length; i++)
+			{
+				stringBuilderAuth.append(entriesAvailableAuth[(Integer.parseInt(chosenLevels[i]) - 2) / 2]);
+				if (i != chosenLevels.length - 1)
+				{
+					stringBuilderAuth.append(", ");
+				}
+			}
+			String summaryAuth = stringBuilderAuth.toString();
+			authFilterSelectPref.setSummary(summaryAuth);
+
+			// updates ranking nsfw select summary on preference change
+			MultiSelectListPreference rankingFilterSelectPref = findPreference("pref_rankingFilterSelect");
+			rankingFilterSelectPref.setOnPreferenceChangeListener((preference, newValue) ->
+			{
+				// for some reason 2 is an empty selection
+				if (newValue.toString().length() == 2)
+				{
+					Log.v("MANUAL", "pref change empty set");
+					Set<String> defaultSet = new HashSet<>();
+					defaultSet.add("0");
+					rankingFilterSelectPref.setValues(defaultSet);
+
+					SharedPreferences.Editor editor = sharedPrefs.edit();
+					editor.putStringSet("pref_rankingFilterSelect", defaultSet);
+					editor.commit();
+					rankingFilterSelectPref.setSummary("SFW");
+					return false;
+				}
+
+				String str = newValue.toString();
+				ArrayList<Integer> arrayList = new ArrayList<>();
+				for (int i = 0; i < str.length(); i++)
+				{
+					if (Character.isDigit(str.charAt(i)))
+					{
+						arrayList.add(Character.getNumericValue(str.charAt(i)));
+					}
+				}
+				String[] rankingEntriesAvailable = getResources().getStringArray(R.array.pref_rankingFilterLevel_entries);
+				StringBuilder stringBuilderRanking = new StringBuilder();
+				for (int i = 0; i < arrayList.size(); i++)
+				{
+					stringBuilderRanking.append(rankingEntriesAvailable[arrayList.get(i)]);
+					if (i != arrayList.size() - 1)
+					{
+						stringBuilderRanking.append(", ");
+					}
+				}
+				String summaryRanking = stringBuilderRanking.toString();
+
+				rankingFilterSelectPref.setSummary(summaryRanking);
+
+				return true;
+			});
+
+			// Generates the authFilterSelectPref summary during activity startup
+			Set<String> chosenLevelsSetRanking = sharedPrefs.getStringSet("pref_rankingFilterSelect", null);
+			String[] chosenLevelsRanking = chosenLevelsSetRanking.toArray(new String[0]);
+			String[] entriesAvailableRanking = getResources().getStringArray(R.array.pref_rankingFilterLevel_entries);
+			StringBuilder stringBuilderRanking = new StringBuilder();
+			for (int i = 0; i < chosenLevelsRanking.length; i++)
+			{
+				stringBuilderRanking.append(entriesAvailableRanking[Integer.parseInt(chosenLevelsRanking[i])]);
+				if (i != chosenLevelsRanking.length - 1)
+				{
+					stringBuilderRanking.append(", ");
+				}
+			}
+			String summaryRanking = stringBuilderRanking.toString();
+			rankingFilterSelectPref.setSummary(summaryRanking);
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))
 //			{
