@@ -325,8 +325,6 @@ public class SettingsActivity extends AppCompatActivity
 			{
 				Log.d("manual", "pref changed");
 
-				boolean commitToSharedPref = true;
-
 				// for some reason 2 is an empty selection
 				if (newValue.toString().length() == 2)
 				{
@@ -338,39 +336,35 @@ public class SettingsActivity extends AppCompatActivity
 					SharedPreferences.Editor editor = sharedPrefs.edit();
 					editor.putStringSet("pref_nsfwFilterSelect", defaultSet);
 					editor.commit();
-					commitToSharedPref = false;
-				}
-
-				if (!commitToSharedPref)
-				{
 					multiPref.setSummary("SFW");
-				} else
-				{
-					String str = newValue.toString();
-					ArrayList<Integer> arrayList = new ArrayList<>();
-					for (int i = 0; i < str.length(); i++)
-					{
-						if (Character.isDigit(str.charAt(i)))
-						{
-							arrayList.add(Character.getNumericValue(str.charAt(i)));
-						}
-					}
-					String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
-					StringBuilder stringBuilder = new StringBuilder();
-					for (int i = 0; i < arrayList.size(); i++)
-					{
-						stringBuilder.append(entriesAvailable[(arrayList.get(i) - 2) / 2]);
-						if (i != arrayList.size() - 1)
-						{
-							stringBuilder.append(", ");
-						}
-					}
-					String summary = stringBuilder.toString();
-
-					multiPref.setSummary(summary);
+					return false;
 				}
 
-				return commitToSharedPref;
+				String str = newValue.toString();
+				ArrayList<Integer> arrayList = new ArrayList<>();
+				for (int i = 0; i < str.length(); i++)
+				{
+					if (Character.isDigit(str.charAt(i)))
+					{
+						arrayList.add(Character.getNumericValue(str.charAt(i)));
+					}
+				}
+				String[] entriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+				StringBuilder stringBuilder = new StringBuilder();
+				for (int i = 0; i < arrayList.size(); i++)
+				{
+					stringBuilder.append(entriesAvailable[(arrayList.get(i) - 2) / 2]);
+					if (i != arrayList.size() - 1)
+					{
+						stringBuilder.append(", ");
+					}
+				}
+				String summary = stringBuilder.toString();
+
+				multiPref.setSummary(summary);
+
+
+				return true;
 			});
 
 			Set<String> chosenLevelsSet = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
