@@ -57,6 +57,7 @@ public class SettingsActivity extends AppCompatActivity
 	private String oldFilter, newFilter;
 	private String oldTag, newTag;
 	private String oldArtist, newArtist;
+	private Set<String> oldFilterSelect, newFilterSelect;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -100,6 +101,9 @@ public class SettingsActivity extends AppCompatActivity
 		oldArtist = sharedPrefs.getString("pref_artistId", "");
 		newArtist = oldArtist;
 
+		oldFilterSelect = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
+		newFilterSelect = oldFilterSelect;
+
 		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
 		{
 			@Override
@@ -131,6 +135,9 @@ public class SettingsActivity extends AppCompatActivity
 									new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
 									1);
 						}
+						break;
+					case "pref_nsfwFilterSelect":
+						newFilterSelect = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
 						break;
 				}
 
@@ -197,7 +204,8 @@ public class SettingsActivity extends AppCompatActivity
 		}
 
 		// If user has changed update, filter mode, or search tag, toast to indicate cache is getting cleared
-		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag) || !oldArtist.equals(newArtist))
+		if (!oldUpdateMode.equals(newUpdateMode) || !oldFilter.equals(newFilter) || !oldTag.equals(newTag)
+				|| !oldArtist.equals(newArtist) || !oldFilterSelect.equals(newFilterSelect))
 		{
 			WorkManager manager = WorkManager.getInstance();
 			Constraints constraints = new Constraints.Builder()
@@ -217,9 +225,12 @@ public class SettingsActivity extends AppCompatActivity
 			} else if (!oldArtist.equals(newArtist))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
-			} else
+			} else if (!oldTag.equals(newTag))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
+			} else
+			{
+				Toast.makeText(getApplicationContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
 			}
 		}
 	}
