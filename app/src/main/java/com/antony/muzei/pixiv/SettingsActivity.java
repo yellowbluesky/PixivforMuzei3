@@ -288,17 +288,26 @@ public class SettingsActivity extends AppCompatActivity
 
 			// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
 			String updateMode = sharedPrefs.getString("pref_updateMode", "daily_rank");
-			if (updateMode.equals("tag_search"))
+			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+					.contains(updateMode))
 			{
-				Preference tagSearch = findPreference("pref_tagSearch");
-				tagSearch.setVisible(true);
-				tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
-			} else if (updateMode.equals("artist"))
+				findPreference("pref_authFilterSelect").setVisible(true);
+				if (updateMode.equals("tag_search"))
+				{
+					Preference tagSearch = findPreference("pref_tagSearch");
+					tagSearch.setVisible(true);
+					tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
+				} else if (updateMode.equals("artist"))
+				{
+					Preference artistId = findPreference("pref_artistId");
+					artistId.setVisible(true);
+					artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
+				}
+			} else
 			{
-				Preference artistId = findPreference("pref_artistId");
-				artistId.setVisible(true);
-				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
+				findPreference("pref_rankingFilterSelect").setVisible(true);
 			}
+
 
 			// Update mode Preference
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
@@ -307,10 +316,13 @@ public class SettingsActivity extends AppCompatActivity
 						.contains(newValue))
 				{
 					findPreference("prefCat_loginSettings").setVisible(true);
-
+					findPreference("pref_authFilterSelect").setVisible(true);
+					findPreference("pref_rankingFilterSelect").setVisible(false);
 				} else
 				{
+					findPreference("pref_rankingFilterSelect").setVisible(true);
 					findPreference("prefCat_loginSettings").setVisible(false);
+					findPreference("pref_authFilterSelect").setVisible(false);
 				}
 
 				if (newValue.equals("tag_search"))
