@@ -323,7 +323,7 @@ public class SettingsActivity extends AppCompatActivity
 					findPreference("pref_tagSearch").setVisible(false);
 				}
 
-				if (newValue.equals("pref_artistId"))
+				if (newValue.equals("artist"))
 				{
 					findPreference("pref_artistId").setVisible(true);
 				} else
