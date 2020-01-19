@@ -248,18 +248,12 @@ public class PixivArtWorker extends Worker
 		// If user choose PixivForMuzei3 as source without first opening the app
 		// There will not be a SharedPref. Returned filter set will be null. This null case needs to be handles
 		// Auth feed modes do not need a similar check, as the user always must first open the app to sign in
-		Set<String> rankingFilterSelect = sharedPrefs.getStringSet("pref_rankingFilterSelect", null);
-		if (rankingFilterSelect == null)
-		{
-			Set<String> defaultRankingSelect = new HashSet<>();
-			defaultRankingSelect.add("0");
-			pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
-					showManga, defaultRankingSelect);
-		} else
-		{
-			pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
-					showManga, rankingFilterSelect);
-		}
+		Set<String> defaultRankingSelect = new HashSet<>();
+		defaultRankingSelect.add("0");
+		Set<String> rankingFilterSelect = sharedPrefs.getStringSet("pref_rankingFilterSelect", defaultRankingSelect);
+		int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
+		pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
+				showManga, rankingFilterSelect, aspectRatioSettings);
 
 		String token = pictureMetadata.getString("illust_id");
 		attribution += pictureMetadata.get("rank");
