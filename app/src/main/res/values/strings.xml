@@ -11,13 +11,16 @@
     <string name="prefTitle_tagSearch">Image tag</string>
     <string name="prefTitle_artistId">Artist ID</string>
 
+    <string name="prefTitle_rankingFilterSelect">Ranking NSFW filter level</string>
+    <string name="prefTitle_authFilterSelect">Feed NSFW filter level</string>
+
     <string name="prefTitle_showManga">Show manga</string>
-    <string name="pref_restrictMode">Show NSFW images</string>
+
+    <string name="prefTitle_aspectRatio">Artwork aspect ratio</string>
+    <string name="pref_aspectRatioDefault_entryValues">0</string>
 
     <string name="prefTitle_autoClearMode">Automatically clear cache at 1AM daily</string>
 
-    <string name="prefTitle_rankingFilterSelect">Ranking NSFW filter level</string>
-    <string name="prefTitle_authFilterSelect">Feed NSFW filter level</string>
     <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>

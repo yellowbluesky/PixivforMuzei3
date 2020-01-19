@@ -50,6 +50,19 @@
         <item>0</item>
     </string-array>
 
+    <string-array name="pref_aspectRatio_entries">
+        <item>Portrait and Landscape</item>
+        <item>Portrait</item>
+        <item>Landscape</item>
+    </string-array>
+
+    <string-array name="pref_aspectRatio_entryValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+
 
     <string-array name="array_authFailActions_entries">
         <item>Change mode to Daily Ranking</item>
