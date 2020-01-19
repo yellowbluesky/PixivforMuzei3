@@ -294,7 +294,7 @@ Regarding rankings
 	NSFW filtering is performed by checking the value of the "sexual" JSON string
 	Manga filtering is performed by checking the value of the "illust_type" JSON string
 */
-	private JSONObject filterRanking(JSONArray contents, boolean showManga, Set<String> selectedFilterLevelSet) throws JSONException
+	private JSONObject filterRanking(JSONArray contents, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatioSetting) throws JSONException
 	{
 		Log.d(LOG_TAG, "filterRanking(): Entering");
 		JSONObject pictureMetadata;
@@ -309,9 +309,13 @@ Regarding rankings
 				Log.d(LOG_TAG, "Manga not desired");
 				if (pictureMetadata.getInt("illust_type") != 0)
 				{
-					Log.d(LOG_TAG, "Retrying for a non-manga");
 					continue;
 				}
+			}
+
+			if (!filterAspectRatio(pictureMetadata, aspectRatioSetting))
+			{
+				continue;
 			}
 
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
@@ -329,6 +333,25 @@ Regarding rankings
 		} while (!found);
 
 		return pictureMetadata;
+	}
+
+	private boolean filterAspectRatio(JSONObject pictureMetadata, int aspectRatioSetting) throws JSONException
+	{
+		int width = pictureMetadata.getInt("width");
+		int height = pictureMetadata.getInt("height");
+		switch (aspectRatioSetting)
+		{
+			case 0:
+				Log.d(LOG_TAG, "Any aspect desired");
+				return true;
+			case 1:
+				Log.d(LOG_TAG, "Portrait desired");
+				return height > width;
+			case 2:
+				Log.d(LOG_TAG, "Landscape desired");
+				return width > height;
+		}
+		return true;
 	}
 
     /*
@@ -398,9 +421,11 @@ Regarding rankings
 		rankingResponse.close();
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 		Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
-		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"), showManga, selectedFilterLevel);
+		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"),
+				showManga, selectedFilterLevel, aspectRatioSettings);
 
 		// Different logic if the image pulled is a single image or an album
 		// If album, we use the first picture
@@ -438,7 +463,7 @@ Regarding rankings
 		Called by getArtworkFeedBookmarkTag to return details about an artwork that complies with
 		filtering restrictions set by the user
 	 */
-	private JSONObject filterFeedBookmarkTag(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet) throws JSONException
+	private JSONObject filterFeedBookmarkTag(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatio) throws JSONException
 	{
 		Log.d(LOG_TAG, "filterFeedBookmarkTag(): Entering");
 		Random random = new Random();
@@ -457,9 +482,13 @@ Regarding rankings
 				Log.d(LOG_TAG, "Manga not desired");
 				if (!pictureMetadata.getString("type").equals("illust"))
 				{
-					Log.d(LOG_TAG, "Retrying for a non-manga");
 					continue;
 				}
+			}
+
+			if (!filterAspectRatio(pictureMetadata, aspectRatio))
+			{
+				continue;
 			}
 
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
