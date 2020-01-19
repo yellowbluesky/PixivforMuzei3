@@ -68,6 +68,14 @@
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
+        <DropDownPreference
+            android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
+            android:entries="@array/pref_aspectRatio_entries"
+            android:entryValues="@array/pref_aspectRatio_entryValues"
+            android:key="pref_aspectRatioSelect"
+            android:persistent="true"
+            android:summary="%s"
+            android:title="@string/prefTitle_aspectRatio" />
         <SwitchPreference
             android:key="pref_storeInExtStorage"
             android:persistent="true"
