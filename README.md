@@ -19,6 +19,7 @@ Features
     - A specified artist ID
     - A specified tag (date descending sort order)
   - Four levels of granular filtering for NSFW pictures
+  - Can filter artwork on aspect ratio
   - Can exclude manga from being set as wallpaper
   - Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv
   - Correctly handles the display of albums, displaying only the first image
