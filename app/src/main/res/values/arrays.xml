@@ -62,8 +62,6 @@
         <item>2</item>
     </string-array>
 
-
-
     <string-array name="array_authFailActions_entries">
         <item>Change mode to Daily Ranking</item>
         <item>Do not change mode, download Daily Ranking</item>

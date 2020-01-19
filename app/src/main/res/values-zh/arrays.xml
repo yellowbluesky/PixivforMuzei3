@@ -20,6 +20,13 @@
         <item>SFW</item>
         <item>NSFW</item>
     </string-array>
+
+    <string-array name="pref_aspectRatio_entries">
+        <item>Portrait and Landscape</item>
+        <item>Portrait</item>
+        <item>Landscape</item>
+    </string-array>
+
     <string-array name="array_authFailActions_entries">
         <item>更改为日排行榜</item>
         <item>不更改模式，下载日排行榜</item>

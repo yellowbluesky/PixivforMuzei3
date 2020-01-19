@@ -49,4 +49,5 @@
     <string name="attr_monthly">月排行榜 #</string>
     <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
+    <string name="pref_aspectRatioDefault_entryValues">0</string>
 </resources>
