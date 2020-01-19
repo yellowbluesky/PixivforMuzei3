@@ -20,6 +20,9 @@
         <p>Four levels of granular filtering for NSFW pictures</p>
     </li>
     <li>
+        <p>Can filter artwork on aspect ratio</p>
+    </li>
+    <li>
         <p>Can exclude manga from being set as wallpaper</p>
     </li>
     <li>
