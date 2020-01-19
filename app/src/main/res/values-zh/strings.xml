@@ -11,12 +11,16 @@
     <string name="prefTitle_tagSearch">图片标签</string>
     <string name="prefTitle_artistId">艺术家 ID</string>
  
+    <string name="prefTitle_rankingFilterSelect">排行榜 NSFW 过滤级别</string>
+    <string name="prefTitle_authFilterSelect">订阅 NSFW 过滤级别</string>
+    
     <string name="prefTitle_showManga">显示漫画</string>
+
+    <string name="prefTitle_aspectRatio">作品长宽比</string>
+    <string name="pref_aspectRatioDefault_entryValues">0</string>
 
     <string name="prefTitle_autoClearMode">每天凌晨 1 点自动清除缓存</string>
 
-    <string name="prefTitle_rankingFilterSelect">排行榜 NSFW 过滤级别</string>
-    <string name="prefTitle_authFilterSelect">订阅 NSFW 过滤级别</string>
     <string name="button_clearCache">立即清除图像缓存</string>
 
     <string name="prefCat_authSettings">Pixiv 登录</string>
@@ -49,5 +53,4 @@
     <string name="attr_monthly">月排行榜 #</string>
     <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
-    <string name="pref_aspectRatioDefault_entryValues">0</string>
 </resources>
