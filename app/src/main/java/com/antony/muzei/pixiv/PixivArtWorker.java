@@ -220,6 +220,7 @@ public class PixivArtWorker extends Worker
 			case "daily_rank":
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "daily")
+						.addQueryParameter("offset", Integer.toString(30))
 						.build();
 				attribution = getApplicationContext().getString(R.string.attr_daily);
 				break;
@@ -380,6 +381,7 @@ Regarding rankings
 				feedBookmarkTagUrl = urlBuilder
 						.addPathSegments("v2/illust/follow")
 						.addQueryParameter("restrict", "public")
+						//.addQueryParameter("offset", "10") // adding offset works
 						.build();
 				break;
 			case "bookmark":
