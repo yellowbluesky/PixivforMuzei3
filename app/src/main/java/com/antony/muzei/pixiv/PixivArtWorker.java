@@ -313,7 +313,7 @@ Regarding rankings
 				}
 			}
 
-			if (!filterAspectRatio(pictureMetadata, aspectRatioSetting))
+			if (!isDesiredAspectRatio(pictureMetadata, aspectRatioSetting))
 			{
 				continue;
 			}
@@ -326,7 +326,10 @@ Regarding rankings
 					found = true;
 				} else
 				{
-					Log.d(LOG_TAG, "matching filtering not found");
+					if (!found)
+					{
+						Log.d(LOG_TAG, "matching filtering not found");
+					}
 				}
 			}
 
@@ -335,7 +338,7 @@ Regarding rankings
 		return pictureMetadata;
 	}
 
-	private boolean filterAspectRatio(JSONObject pictureMetadata, int aspectRatioSetting) throws JSONException
+	private boolean isDesiredAspectRatio(JSONObject pictureMetadata, int aspectRatioSetting) throws JSONException
 	{
 		int width = pictureMetadata.getInt("width");
 		int height = pictureMetadata.getInt("height");
@@ -486,7 +489,7 @@ Regarding rankings
 				}
 			}
 
-			if (!filterAspectRatio(pictureMetadata, aspectRatio))
+			if (!isDesiredAspectRatio(pictureMetadata, aspectRatio))
 			{
 				continue;
 			}
