@@ -325,6 +325,12 @@ Regarding rankings
 				continue;
 			}
 
+			if (isDuplicate(pictureMetadata.getInt("illust_id")))
+			{
+				Log.d(LOG_TAG, "Duplicate artwork present");
+				continue;
+			}
+
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{
@@ -542,6 +548,12 @@ Regarding rankings
 			if (!isDesiredAspectRatio(pictureMetadata, aspectRatio))
 			{
 				Log.d(LOG_TAG, "Rejecting aspect ratio");
+				continue;
+			}
+
+			if (isDuplicate(pictureMetadata.getInt("id")))
+			{
+				Log.d(LOG_TAG, "Duplicate artwork present");
 				continue;
 			}
 
