@@ -523,6 +523,7 @@ Regarding rankings
 				return null;
 			}
 			retryCount++;
+			Log.v(LOG_TAG, "Retry count: " + retryCount);
 			// Random seems to be very inefficient, potentially visiting the same image multiple times
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 			found = false;
