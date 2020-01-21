@@ -52,6 +52,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -100,6 +101,7 @@ public class PixivArtWorker extends Worker
 	// Upon successful authentication stores tokens returned from Pixiv into device memory
 	static void storeTokens(SharedPreferences sharedPrefs, JSONObject tokens) throws JSONException
 	{
+		Log.i(LOG_TAG, "Storing tokens");
 		SharedPreferences.Editor editor = sharedPrefs.edit();
 		editor.putString("accessToken", tokens.getString("access_token"));
 		editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
@@ -108,13 +110,14 @@ public class PixivArtWorker extends Worker
 		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
 		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
 		editor.commit();
+		Log.i(LOG_TAG, "Stored tokens");
 	}
 
 	// Downloads the selected image to cache folder on local storage
 	// Cache folder is periodically pruned of its oldest images by Android
 	private Uri downloadFile(Response response, String filename) throws IOException
 	{
-		Log.d(LOG_TAG, "Downloading file");
+		Log.i(LOG_TAG, "Downloading file");
 		Context context = getApplicationContext();
 		// Muzei does not care about file extensions
 		// Only there to more easily allow local user to open them
@@ -137,7 +140,7 @@ public class PixivArtWorker extends Worker
 				// Check if file with the same token already exists
 				if (downloadedFile.exists())
 				{
-					Log.d(LOG_TAG, "File already exists, using cache");
+					Log.i(LOG_TAG, "File already exists, using cache");
 					return Uri.fromFile(downloadedFile);
 				}
 			} else
@@ -161,6 +164,7 @@ public class PixivArtWorker extends Worker
 		fileStream.close();
 		inputStream.close();
 
+		Log.i(LOG_TAG, "Downloaded file");
 		return Uri.fromFile(downloadedFile);
 	}
 
@@ -173,6 +177,7 @@ public class PixivArtWorker extends Worker
 	*/
 	private Response getRemoteFileExtension(String url) throws IOException
 	{
+		Log.i(LOG_TAG, "Getting remote file extensions");
 		Response response;
 
 		// All urls have predictable formats, so we can simply do substring replacement
@@ -188,12 +193,14 @@ public class PixivArtWorker extends Worker
 			response = PixivArtService.sendGetRequestRanking(HttpUrl.parse(uri));
 			if (response.code() == 200)
 			{
+				Log.i(LOG_TAG, "Gotten remote file extensions");
 				return response;
 			} else
 			{
 				response.close();
 			}
 		}
+		Log.e(LOG_TAG, "Failed to get remote file extensions");
 		return null;
 	}
 
@@ -207,7 +214,8 @@ public class PixivArtWorker extends Worker
 	 */
 	private Artwork getArtworkRanking(String mode) throws IOException, JSONException
 	{
-		Log.d(LOG_TAG, "getArtworkRanking(): Entering");
+		Log.i(LOG_TAG, "getArtworkRanking(): Entering");
+		Log.d(LOG_TAG, "Mode: " + mode);
 		HttpUrl.Builder rankingUrlBuilder = new HttpUrl.Builder()
 				.scheme("https")
 				.host("www.pixiv.net")
@@ -246,9 +254,6 @@ public class PixivArtWorker extends Worker
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
 
-		// If user choose PixivForMuzei3 as source without first opening the app
-		// There will not be a SharedPref. Returned filter set will be null. This null case needs to be handles
-		// Auth feed modes do not need a similar check, as the user always must first open the app to sign in
 		Set<String> defaultRankingSelect = new HashSet<>();
 		defaultRankingSelect.add("0");
 		Set<String> rankingFilterSelect = sharedPrefs.getStringSet("pref_rankingFilterSelect", defaultRankingSelect);
@@ -262,7 +267,7 @@ public class PixivArtWorker extends Worker
 		Uri localUri = downloadFile(remoteFileExtension, token);
 		remoteFileExtension.close();
 
-		Log.d(LOG_TAG, "getArtworkRanking(): Exited");
+		Log.i(LOG_TAG, "getArtworkRanking(): Exited");
 
 		return new Artwork.Builder()
 				.title(pictureMetadata.getString("title"))
@@ -297,7 +302,7 @@ Regarding rankings
 */
 	private JSONObject filterRanking(JSONArray contents, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatioSetting) throws JSONException
 	{
-		Log.d(LOG_TAG, "filterRanking(): Entering");
+		Log.i(LOG_TAG, "filterRanking(): Entering");
 		JSONObject pictureMetadata;
 		Random random = new Random();
 		boolean found = false;
@@ -316,6 +321,7 @@ Regarding rankings
 
 			if (!isDesiredAspectRatio(pictureMetadata, aspectRatioSetting))
 			{
+				Log.d(LOG_TAG, "Rejecting aspect ratio");
 				continue;
 			}
 
@@ -325,6 +331,7 @@ Regarding rankings
 				if (Integer.parseInt(s) == pictureMetadata.getJSONObject("illust_content_type").getInt("sexual"))
 				{
 					found = true;
+					break;
 				} else
 				{
 					if (!found)
@@ -336,6 +343,7 @@ Regarding rankings
 
 		} while (!found);
 
+		Log.i(LOG_TAG, "filterRanking(): Exited");
 		return pictureMetadata;
 	}
 
@@ -366,14 +374,19 @@ Regarding rankings
 	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
 	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
-	private Artwork getArtworkFeedBookmarkTag(String mode, String userId, String accessToken) throws IOException, JSONException
+	private Artwork getArtworkAuth(String mode, String userId, String accessToken) throws IOException, JSONException
 	{
-		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Entering");
+		Log.i(LOG_TAG, "getArtworkAuth(): Entering");
+		Log.d(LOG_TAG, "Mode: " + mode);
 
 		// Builds the API URL to call depending on chosen update mode
 		String offset = "0";
 		boolean success = false;
 		JSONObject pictureMetadata;
+
+		// Reiterates until a valid artwork is found
+		// Will loop again if too many retries when filtering
+		// Predict this to almost never need to loop again
 		do
 		{
 			HttpUrl feedBookmarkTagUrl = null;
@@ -435,13 +448,18 @@ Regarding rankings
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 			int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
 			boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+			// null default case allowed
+			// App *MUST* be first opened in order to change the update mode and log in
+			// Opening the app populates the shared preference with a default entry
+			// As opposed to ranking, where there can be an empty shared preference
 			Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
 
-			pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"),
+			pictureMetadata = filterFeedAuth(overallJson.getJSONArray("illusts"),
 					showManga, selectedFilterLevel, aspectRatioSettings);
 			if (pictureMetadata == null)
 			{
 				// 30 added because thats how many artworks are in a single auth update mode JSON
+				Log.d(LOG_TAG, "Too many retries, acquiring new offset JSON");
 				offset += Integer.toString(30);
 				continue;
 			}
@@ -466,11 +484,12 @@ Regarding rankings
 					.getJSONObject("image_urls")
 					.getString("original");
 		}
+
 		String token = pictureMetadata.getString("id");
 		Response imageDataResponse = PixivArtService.sendGetRequestRanking(HttpUrl.parse(imageUrl));
 		Uri localUri = downloadFile(imageDataResponse, token);
 		imageDataResponse.close();
-		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Exited");
+		Log.i(LOG_TAG, "getArtworkAuth(): Exited");
 		return new Artwork.Builder()
 				.title(pictureMetadata.getString("title"))
 				.byline(pictureMetadata.getJSONObject("user").getString("name"))
@@ -481,22 +500,24 @@ Regarding rankings
 	}
 
 	/*
-		Called by getArtworkFeedBookmarkTag to return details about an artwork that complies with
+		Called by getArtworkAuth to return details about an artwork that complies with
 		filtering restrictions set by the user
 	 */
-	private JSONObject filterFeedBookmarkTag(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatio) throws JSONException
+	private JSONObject filterFeedAuth(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatio) throws JSONException
 	{
-		Log.d(LOG_TAG, "filterFeedBookmarkTag(): Entering");
+		Log.i(LOG_TAG, "filterFeedAuth(): Entering");
 		Random random = new Random();
 		boolean found;
 		JSONObject pictureMetadata;
 		int retryCount = 0;
+		int retryLimit = 30;
 
+		// Reiterates until artwork matching all criteria found or too many reties
 		do
 		{
 			// If the loop reiterates too many times
 			// Request a new illusts JSON, with different artwork
-			if (retryCount > 30)
+			if (retryCount > retryLimit)
 			{
 				Log.i(LOG_TAG, "Too many retries, requesting offset JSON");
 				return null;
@@ -516,11 +537,14 @@ Regarding rankings
 				}
 			}
 
+			// Filter artwork based on chosen aspect ratio
 			if (!isDesiredAspectRatio(pictureMetadata, aspectRatio))
 			{
+				Log.d(LOG_TAG, "Rejecting aspect ratio");
 				continue;
 			}
 
+			// See if there is a match between chosen artwork's sanity level and those desired
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{
@@ -539,7 +563,10 @@ Regarding rankings
 					break;
 				} else
 				{
-					Log.d(LOG_TAG, "matching filtering not found");
+					if (!found)
+					{
+						Log.d(LOG_TAG, "matching filtering not found");
+					}
 				}
 			}
 		} while (!found);
@@ -550,7 +577,7 @@ Regarding rankings
 	/*
 		First method to be called
 		Sets program flow into ranking or feed/bookmark paths
-		Also acquires an access token to be passed into getArtworkFeedBookmarkTag()
+		Also acquires an access token to be passed into getArtworkAuth()
 			Why is this function the one acquiring the access token?
 	 */
 	private Artwork getArtwork()
@@ -562,7 +589,7 @@ Regarding rankings
 		String accessToken = "";
 
 		// These modes require an access token, so we check for and acquire one first
-		if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist") || mode.equals("recommended"))
+		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
 		{
 			accessToken = PixivArtService.getAccesToken(sharedPrefs);
 			if (accessToken.isEmpty())
@@ -594,10 +621,10 @@ Regarding rankings
 
 		try
 		{
-			if (mode.equals("follow") || mode.equals("bookmark") || mode.equals("tag_search") || mode.equals("artist") || mode.equals("recommended"))
+			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
 			{
 				String userId = sharedPrefs.getString("userId", "");
-				artwork = getArtworkFeedBookmarkTag(mode, userId, accessToken);
+				artwork = getArtworkAuth(mode, userId, accessToken);
 			} else
 			{
 				artwork = getArtworkRanking(mode);
@@ -648,12 +675,13 @@ Regarding rankings
 		else
 		{
 			clearArtwork = false;
-			ArrayList<Artwork> artworkArrayList = new ArrayList<Artwork>();
+			ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 			for (int i = 0; i < 3; i++)
 			{
 				Artwork artwork = getArtwork();
 				if (isArtworkNull(artwork))
 				{
+					// Add what we can
 					if (!artworkArrayList.isEmpty())
 					{
 						client.setArtwork(artworkArrayList);
