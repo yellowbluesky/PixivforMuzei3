@@ -371,66 +371,82 @@ Regarding rankings
 		Log.d(LOG_TAG, "getArtworkFeedBookmarkTag(): Entering");
 
 		// Builds the API URL to call depending on chosen update mode
-		HttpUrl feedBookmarkTagUrl = null;
-		HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
-				.scheme("https")
-				.host("app-api.pixiv.net");
-		switch (mode)
+		String offset = "0";
+		boolean success = false;
+		JSONObject pictureMetadata;
+		do
 		{
-			case "follow":
-				feedBookmarkTagUrl = urlBuilder
-						.addPathSegments("v2/illust/follow")
-						.addQueryParameter("restrict", "public")
-						//.addQueryParameter("offset", "10") // adding offset works
-						.build();
-				break;
-			case "bookmark":
-				feedBookmarkTagUrl = urlBuilder
-						.addPathSegments("v1/user/bookmarks/illust")
-						.addQueryParameter("user_id", userId)
-						.addQueryParameter("restrict", "public")
-						.build();
-				break;
-			case "tag_search":
-				feedBookmarkTagUrl = urlBuilder
-						.addPathSegments("v1/search/illust")
-						.addQueryParameter("word", userId)
-						.addQueryParameter("search_target", "partial_match_for_tags")
-						.addQueryParameter("sort", "date_desc")
-						.addQueryParameter("filter", "for_ios")
-						.build();
-				break;
-			case "artist":
-				feedBookmarkTagUrl = urlBuilder
-						.addPathSegments("v1/user/illusts")
-						.addQueryParameter("user_id", userId)
-						.addQueryParameter("filter", "for_ios")
-						.build();
-				break;
-			case "recommended":
-				feedBookmarkTagUrl = urlBuilder
-						.addPathSegments("v1/illust/recommended")
-						.addQueryParameter("content_type", "illust")
-						.addQueryParameter("include_ranking_label", "true")
+			HttpUrl feedBookmarkTagUrl = null;
+			HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
+					.scheme("https")
+					.host("app-api.pixiv.net");
+			switch (mode)
+			{
+				case "follow":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v2/illust/follow")
+							.addQueryParameter("restrict", "public")
+							.addQueryParameter("offset", offset) // adding offset works
+							.build();
+					break;
+				case "bookmark":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/user/bookmarks/illust")
+							.addQueryParameter("user_id", userId)
+							.addQueryParameter("restrict", "public")
+							.addQueryParameter("offset", offset)
+							.build();
+					break;
+				case "tag_search":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/search/illust")
+							.addQueryParameter("word", userId)
+							.addQueryParameter("search_target", "partial_match_for_tags")
+							.addQueryParameter("sort", "date_desc")
+							.addQueryParameter("filter", "for_ios")
+							.addQueryParameter("offset", offset)
+							.build();
+					break;
+				case "artist":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/user/illusts")
+							.addQueryParameter("user_id", userId)
+							.addQueryParameter("filter", "for_ios")
+							.addQueryParameter("offset", offset)
+							.build();
+					break;
+				case "recommended":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/illust/recommended")
+							.addQueryParameter("content_type", "illust")
+							.addQueryParameter("include_ranking_label", "true")
 //				.addQueryParameter("min_bookmark_id_for_recent_illust", "")
 //				.addQueryParameter("offset", "")
-						.addQueryParameter("include_ranking_illusts", "true")
+							.addQueryParameter("include_ranking_illusts", "true")
 //				.addQueryParameter("bookmark_illust_ids", "")
-						.addQueryParameter("filter", "for_ios")
-						.build();
-		}
+							.addQueryParameter("filter", "for_ios")
+							.addQueryParameter("offset", offset)
+							.build();
+			}
+			Response rankingResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl, accessToken);
+			JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
+			rankingResponse.close();
 
-		Response rankingResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl, accessToken);
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+			int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
+			boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
+			Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
 
-		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
-		rankingResponse.close();
-
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
-		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
-		Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
-		JSONObject pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"),
-				showManga, selectedFilterLevel, aspectRatioSettings);
+			pictureMetadata = filterFeedBookmarkTag(overallJson.getJSONArray("illusts"),
+					showManga, selectedFilterLevel, aspectRatioSettings);
+			if (pictureMetadata == null)
+			{
+				// 30 added because thats how many artworks are in a single auth update mode JSON
+				offset += Integer.toString(30);
+				continue;
+			}
+			success = true;
+		} while (!success);
 
 		// Different logic if the image pulled is a single image or an album
 		// If album, we use the first picture
@@ -474,9 +490,18 @@ Regarding rankings
 		Random random = new Random();
 		boolean found;
 		JSONObject pictureMetadata;
+		int retryCount = 0;
 
 		do
 		{
+			// If the loop reiterates too many times
+			// Request a new illusts JSON, with different artwork
+			if (retryCount > 30)
+			{
+				Log.i(LOG_TAG, "Too many retries, requesting offset JSON");
+				return null;
+			}
+			retryCount++;
 			// Random seems to be very inefficient, potentially visiting the same image multiple times
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 			found = false;
