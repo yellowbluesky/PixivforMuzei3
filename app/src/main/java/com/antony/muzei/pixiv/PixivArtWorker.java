@@ -353,25 +353,6 @@ Regarding rankings
 		return pictureMetadata;
 	}
 
-	private boolean isDesiredAspectRatio(JSONObject pictureMetadata, int aspectRatioSetting) throws JSONException
-	{
-		int width = pictureMetadata.getInt("width");
-		int height = pictureMetadata.getInt("height");
-		switch (aspectRatioSetting)
-		{
-			case 0:
-				Log.d(LOG_TAG, "Any aspect desired");
-				return true;
-			case 1:
-				Log.d(LOG_TAG, "Portrait desired");
-				return height > width;
-			case 2:
-				Log.d(LOG_TAG, "Landscape desired");
-				return width > height;
-		}
-		return true;
-	}
-
     /*
         FEED / BOOKMARK / TAG / ARTIST
      */
@@ -585,6 +566,32 @@ Regarding rankings
 		} while (!found);
 
 		return pictureMetadata;
+	}
+
+	private boolean isDesiredAspectRatio(JSONObject pictureMetadata, int aspectRatioSetting) throws JSONException
+	{
+		int width = pictureMetadata.getInt("width");
+		int height = pictureMetadata.getInt("height");
+		switch (aspectRatioSetting)
+		{
+			case 0:
+				Log.d(LOG_TAG, "Any aspect desired");
+				return true;
+			case 1:
+				Log.d(LOG_TAG, "Portrait desired");
+				return height > width;
+			case 2:
+				Log.d(LOG_TAG, "Landscape desired");
+				return width > height;
+		}
+		return true;
+	}
+
+	// Be provided a token/ID from either of the filter functions
+	// Somehow iterate through the database or the folder
+	private boolean isDuplicate(int token)
+	{
+		return false;
 	}
 
 	/*
