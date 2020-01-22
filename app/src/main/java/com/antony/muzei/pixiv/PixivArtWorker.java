@@ -138,19 +138,15 @@ public class PixivArtWorker extends Worker
 				// This does not create a new file, just a new File object
 				downloadedFile = new File(directory, filename + ".png");
 				// Check if file with the same token already exists
+				// Is not redundant with isDuplicate
 				if (downloadedFile.exists())
 				{
-					Log.i(LOG_TAG, "File already exists, using cache");
+					Log.d(LOG_TAG, "File already exists, using cache");
 					return Uri.fromFile(downloadedFile);
 				}
-			} else
-			{
-				downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 			}
-		} else
-		{
-			downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-		}
+		} 
+		downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 
 
 		FileOutputStream fileStream = new FileOutputStream(downloadedFile);
@@ -312,9 +308,9 @@ Regarding rankings
 			pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
 			if (!showManga)
 			{
-				Log.d(LOG_TAG, "Manga not desired");
 				if (pictureMetadata.getInt("illust_type") != 0)
 				{
+					Log.d(LOG_TAG, "Manga not desired");
 					continue;
 				}
 			}
@@ -589,11 +585,10 @@ Regarding rankings
 
 	// Be provided a token/ID from either of the filter functions
 	// Somehow iterate through the database or the folder
-	private boolean isDuplicate(int token)
+	private boolean isDuplicate(String token)
 	{
-		ContentResolver conRes = getContext().getContentResolver();
 		Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
-		Cursor cursor = conRes.query(conResUri, new String[]{"_id"}, null, null, null);
+		Cursor cursor = getContext().getContentResolver().query(conResUri, new String[]{"_id"}, null, null, null);
 		try
 		{
 			while (cursor.moveToNext())
