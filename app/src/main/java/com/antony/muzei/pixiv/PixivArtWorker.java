@@ -21,6 +21,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -145,7 +146,7 @@ public class PixivArtWorker extends Worker
 					return Uri.fromFile(downloadedFile);
 				}
 			}
-		} 
+		}
 		downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 
 
@@ -363,7 +364,7 @@ Regarding rankings
 		Log.d(LOG_TAG, "Mode: " + mode);
 
 		// Builds the API URL to call depending on chosen update mode
-		String offset = "0";
+		int offset = 0;
 		boolean success = false;
 		JSONObject pictureMetadata;
 
@@ -382,7 +383,7 @@ Regarding rankings
 					feedBookmarkTagUrl = urlBuilder
 							.addPathSegments("v2/illust/follow")
 							.addQueryParameter("restrict", "public")
-							.addQueryParameter("offset", offset) // adding offset works
+							.addQueryParameter("offset", Integer.toString(offset)) // adding offset works
 							.build();
 					break;
 				case "bookmark":
@@ -390,7 +391,7 @@ Regarding rankings
 							.addPathSegments("v1/user/bookmarks/illust")
 							.addQueryParameter("user_id", userId)
 							.addQueryParameter("restrict", "public")
-							.addQueryParameter("offset", offset)
+							.addQueryParameter("offset", Integer.toString(offset))
 							.build();
 					break;
 				case "tag_search":
@@ -400,7 +401,7 @@ Regarding rankings
 							.addQueryParameter("search_target", "partial_match_for_tags")
 							.addQueryParameter("sort", "date_desc")
 							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", offset)
+							.addQueryParameter("offset", Integer.toString(offset))
 							.build();
 					break;
 				case "artist":
@@ -408,7 +409,7 @@ Regarding rankings
 							.addPathSegments("v1/user/illusts")
 							.addQueryParameter("user_id", userId)
 							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", offset)
+							.addQueryParameter("offset", Integer.toString(offset))
 							.build();
 					break;
 				case "recommended":
@@ -421,7 +422,7 @@ Regarding rankings
 							.addQueryParameter("include_ranking_illusts", "true")
 //				.addQueryParameter("bookmark_illust_ids", "")
 							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", offset)
+							.addQueryParameter("offset", Integer.toString(offset))
 							.build();
 			}
 			Response rankingResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl, accessToken);
@@ -436,6 +437,7 @@ Regarding rankings
 			// Opening the app populates the shared preference with a default entry
 			// As opposed to ranking, where there can be an empty shared preference
 			Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
+			Log.v(LOG_TAG, overallJson.toString());
 
 			pictureMetadata = filterFeedAuth(overallJson.getJSONArray("illusts"),
 					showManga, selectedFilterLevel, aspectRatioSettings);
@@ -443,7 +445,7 @@ Regarding rankings
 			{
 				// 30 added because thats how many artworks are in a single auth update mode JSON
 				Log.d(LOG_TAG, "Too many retries, acquiring new offset JSON");
-				offset += Integer.toString(30);
+				offset += 30;
 				continue;
 			}
 			success = true;
@@ -587,14 +589,15 @@ Regarding rankings
 	// Somehow iterate through the database or the folder
 	private boolean isDuplicate(String token)
 	{
-		Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
-		Cursor cursor = getContext().getContentResolver().query(conResUri, new String[]{"_id"}, null, null, null);
+		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
+		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, new String[]{"token"}, null, null, null);
 		try
 		{
 			while (cursor.moveToNext())
 			{
-				if (cursor.getString(0) == token)
+				if (cursor.getString(0).equals(token))
 				{
+					Log.v(LOG_TAG, cursor.getString(0));
 					Log.d(LOG_TAG, "Duplicate found");
 					return true;
 				}
