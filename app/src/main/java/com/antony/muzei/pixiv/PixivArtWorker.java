@@ -225,7 +225,6 @@ public class PixivArtWorker extends Worker
 			case "daily_rank":
 				rankingUrl = rankingUrlBuilder
 						.addQueryParameter("mode", "daily")
-						.addQueryParameter("offset", Integer.toString(30))
 						.build();
 				attribution = getApplicationContext().getString(R.string.attr_daily);
 				break;
