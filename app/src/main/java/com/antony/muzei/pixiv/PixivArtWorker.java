@@ -325,7 +325,7 @@ Regarding rankings
 				continue;
 			}
 
-			if (isDuplicate(pictureMetadata.getInt("illust_id")))
+			if (isDuplicate(Integer.toString(pictureMetadata.getInt("illust_id"))))
 			{
 				Log.d(LOG_TAG, "Duplicate artwork present");
 				continue;
@@ -532,7 +532,7 @@ Regarding rankings
 				continue;
 			}
 
-			if (isDuplicate(pictureMetadata.getInt("id")))
+			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
 			{
 				Log.d(LOG_TAG, "Duplicate artwork present");
 				continue;
@@ -591,6 +591,24 @@ Regarding rankings
 	// Somehow iterate through the database or the folder
 	private boolean isDuplicate(int token)
 	{
+		ContentResolver conRes = getContext().getContentResolver();
+		Uri conResUri = ProviderContract.getProviderClient(getContext(), PixivArtProvider.class).getContentUri();
+		Cursor cursor = conRes.query(conResUri, new String[]{"_id"}, null, null, null);
+		try
+		{
+			while (cursor.moveToNext())
+			{
+				if (cursor.getString(0) == token)
+				{
+					Log.d(LOG_TAG, "Duplicate found");
+					return true;
+				}
+			}
+		} finally
+		{
+			cursor.close();
+		}
+		Log.d(LOG_TAG, "Unique token");
 		return false;
 	}
 
