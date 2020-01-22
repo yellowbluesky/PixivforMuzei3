@@ -302,6 +302,7 @@ Regarding rankings
 		JSONObject pictureMetadata;
 		Random random = new Random();
 		boolean found = false;
+		int retryCount = 0;
 
 		do
 		{
@@ -315,10 +316,13 @@ Regarding rankings
 				}
 			}
 
-			if (!isDesiredAspectRatio(pictureMetadata, aspectRatioSetting))
+			if (retryCount < 50)
 			{
-				Log.d(LOG_TAG, "Rejecting aspect ratio");
-				continue;
+				if (!isDesiredAspectRatio(pictureMetadata, aspectRatioSetting))
+				{
+					Log.d(LOG_TAG, "Rejecting aspect ratio");
+					continue;
+				}
 			}
 
 			if (isDuplicate(Integer.toString(pictureMetadata.getInt("illust_id"))))
@@ -327,22 +331,25 @@ Regarding rankings
 				continue;
 			}
 
-			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
-			for (String s : selectedFilterLevelArray)
+			if (retryCount < 100)
 			{
-				if (Integer.parseInt(s) == pictureMetadata.getJSONObject("illust_content_type").getInt("sexual"))
+				String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
+				for (String s : selectedFilterLevelArray)
 				{
-					found = true;
-					break;
-				} else
-				{
-					if (!found)
+					if (Integer.parseInt(s) == pictureMetadata.getJSONObject("illust_content_type").getInt("sexual"))
 					{
-						Log.d(LOG_TAG, "matching filtering not found");
+						found = true;
+						break;
+					} else
+					{
+						if (!found)
+						{
+							Log.d(LOG_TAG, "matching filtering not found");
+						}
 					}
 				}
 			}
-
+			retryCount++;
 		} while (!found);
 
 		Log.i(LOG_TAG, "filterRanking(): Exited");
@@ -436,7 +443,6 @@ Regarding rankings
 			// Opening the app populates the shared preference with a default entry
 			// As opposed to ranking, where there can be an empty shared preference
 			Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
-			Log.v(LOG_TAG, overallJson.toString());
 
 			pictureMetadata = filterFeedAuth(overallJson.getJSONArray("illusts"),
 					showManga, selectedFilterLevel, aspectRatioSettings);
