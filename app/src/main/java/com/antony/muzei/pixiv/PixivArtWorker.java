@@ -537,7 +537,7 @@ Regarding rankings
 			}
 
 			// Filter artwork based on chosen aspect ratio
-			if (!isDesiredAspectRatio(pictureMetadata, aspectRatio))
+			if (!(isDesiredAspectRatio(pictureMetadata, aspectRatio)))
 			{
 				Log.v(LOG_TAG, "Rejecting aspect ratio");
 				continue;
@@ -580,9 +580,9 @@ Regarding rankings
 			case 0:
 				return true;
 			case 1:
-				return height > width;
+				return height >= width;
 			case 2:
-				return width > height;
+				return height <= width;
 		}
 		return true;
 	}
