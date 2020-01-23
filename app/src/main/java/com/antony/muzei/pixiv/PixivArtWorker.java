@@ -497,10 +497,10 @@ Regarding rankings
 	{
 		Log.i(LOG_TAG, "filterFeedAuth(): Entering");
 		Random random = new Random();
-		boolean found;
+		boolean found = false;
 		JSONObject pictureMetadata;
 		int retryCount = 0;
-		int retryLimit = 30;
+		final int retryLimit = 29;
 
 		// Reiterates until artwork matching all criteria found or too many reties
 		do
@@ -513,17 +513,22 @@ Regarding rankings
 				return null;
 			}
 			retryCount++;
-			Log.v(LOG_TAG, "Retry count: " + retryCount);
-			// Random seems to be very inefficient, potentially visiting the same image multiple times
+			// Random produces more pleasing streams of art
+			// Duplication is filtered with isDuplicate()
+			// Only time waste is a number of CPU cycles
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-			found = false;
 
+			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
+			{
+				Log.d(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
+				continue;
+			}
 			// If user does not want manga to display
 			if (!showManga)
 			{
-				Log.d(LOG_TAG, "Manga not desired");
 				if (!pictureMetadata.getString("type").equals("illust"))
 				{
+					Log.v(LOG_TAG, "Manga not desired");
 					continue;
 				}
 			}
@@ -531,13 +536,7 @@ Regarding rankings
 			// Filter artwork based on chosen aspect ratio
 			if (!isDesiredAspectRatio(pictureMetadata, aspectRatio))
 			{
-				Log.d(LOG_TAG, "Rejecting aspect ratio");
-				continue;
-			}
-
-			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
-			{
-				Log.d(LOG_TAG, "Duplicate artwork present");
+				Log.v(LOG_TAG, "Rejecting aspect ratio");
 				continue;
 			}
 
@@ -545,7 +544,12 @@ Regarding rankings
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{
-				if (s.equals("8"))
+				if (s.equals(Integer.toString(pictureMetadata.getInt("sanity_level"))))
+				{
+					Log.d(LOG_TAG, "sanity_level found is " + pictureMetadata.getInt("sanity_level"));
+					found = true;
+					break;
+				} else if (s.equals("8"))
 				{
 					if (pictureMetadata.getInt("x_restrict") == 1)
 					{
@@ -553,18 +557,11 @@ Regarding rankings
 						found = true;
 						break;
 					}
-				} else if (Integer.parseInt(s) == pictureMetadata.getInt("sanity_level"))
-				{
-					Log.d(LOG_TAG, "sanity_level found is " + pictureMetadata.getInt("sanity_level"));
-					found = true;
-					break;
-				} else
-				{
-					if (!found)
-					{
-						Log.d(LOG_TAG, "matching filtering not found");
-					}
 				}
+			}
+			if (!found)
+			{
+				Log.v(LOG_TAG, "filter level not found");
 			}
 		} while (!found);
 
@@ -578,13 +575,10 @@ Regarding rankings
 		switch (aspectRatioSetting)
 		{
 			case 0:
-				Log.d(LOG_TAG, "Any aspect desired");
 				return true;
 			case 1:
-				Log.d(LOG_TAG, "Portrait desired");
 				return height > width;
 			case 2:
-				Log.d(LOG_TAG, "Landscape desired");
 				return width > height;
 		}
 		return true;
@@ -602,8 +596,6 @@ Regarding rankings
 			{
 				if (cursor.getString(0).equals(token))
 				{
-					Log.v(LOG_TAG, cursor.getString(0));
-					Log.d(LOG_TAG, "Duplicate found");
 					return true;
 				}
 			}
@@ -611,7 +603,6 @@ Regarding rankings
 		{
 			cursor.close();
 		}
-		Log.d(LOG_TAG, "Unique token");
 		return false;
 	}
 
