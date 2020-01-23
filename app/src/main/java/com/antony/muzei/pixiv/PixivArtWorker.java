@@ -311,7 +311,7 @@ Regarding rankings
 			retryCount++;
 			if (isDuplicate(Integer.toString(pictureMetadata.getInt("illust_id"))))
 			{
-				Log.d(LOG_TAG, "Duplicate artwork present");
+				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("illust_id"));
 				continue;
 			}
 
@@ -319,7 +319,7 @@ Regarding rankings
 			{
 				if (pictureMetadata.getInt("illust_type") != 0)
 				{
-					Log.d(LOG_TAG, "Manga not desired");
+					Log.v(LOG_TAG, "Manga not desired");
 					continue;
 				}
 			}
@@ -328,7 +328,7 @@ Regarding rankings
 			{
 				if (!isDesiredAspectRatio(pictureMetadata, aspectRatioSetting))
 				{
-					Log.d(LOG_TAG, "Rejecting aspect ratio");
+					Log.v(LOG_TAG, "Rejecting aspect ratio");
 					continue;
 				}
 			}
@@ -522,7 +522,7 @@ Regarding rankings
 			// Check if duplicate before any other check to not waste time
 			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
 			{
-				Log.d(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
+				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
 				continue;
 			}
 
