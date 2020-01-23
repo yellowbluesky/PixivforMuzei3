@@ -307,6 +307,14 @@ Regarding rankings
 		do
 		{
 			pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+
+			retryCount++;
+			if (isDuplicate(Integer.toString(pictureMetadata.getInt("illust_id"))))
+			{
+				Log.d(LOG_TAG, "Duplicate artwork present");
+				continue;
+			}
+
 			if (!showManga)
 			{
 				if (pictureMetadata.getInt("illust_type") != 0)
@@ -325,12 +333,6 @@ Regarding rankings
 				}
 			}
 
-			if (isDuplicate(Integer.toString(pictureMetadata.getInt("illust_id"))))
-			{
-				Log.d(LOG_TAG, "Duplicate artwork present");
-				continue;
-			}
-
 			if (retryCount < 100)
 			{
 				String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
@@ -340,16 +342,14 @@ Regarding rankings
 					{
 						found = true;
 						break;
-					} else
-					{
-						if (!found)
-						{
-							Log.d(LOG_TAG, "matching filtering not found");
-						}
 					}
 				}
+				if (!found)
+				{
+					Log.d(LOG_TAG, "matching filtering not found");
+				}
 			}
-			retryCount++;
+
 		} while (!found);
 
 		Log.i(LOG_TAG, "filterRanking(): Exited");
