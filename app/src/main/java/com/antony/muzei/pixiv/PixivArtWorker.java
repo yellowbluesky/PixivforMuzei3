@@ -500,7 +500,8 @@ Regarding rankings
 		boolean found = false;
 		JSONObject pictureMetadata;
 		int retryCount = 0;
-		final int retryLimit = 29;
+		// 30 is the size of an auth feed JSON
+		final int retryLimit = 30;
 
 		// Reiterates until artwork matching all criteria found or too many reties
 		do
@@ -518,11 +519,13 @@ Regarding rankings
 			// Only time waste is a number of CPU cycles
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
+			// Check if duplicate before any other check to not waste time
 			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
 			{
 				Log.d(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
 				continue;
 			}
+
 			// If user does not want manga to display
 			if (!showManga)
 			{
@@ -561,7 +564,7 @@ Regarding rankings
 			}
 			if (!found)
 			{
-				Log.v(LOG_TAG, "filter level not found");
+				Log.v(LOG_TAG, "filter level not found, was : " + pictureMetadata.getInt("sanity_level"));
 			}
 		} while (!found);
 
