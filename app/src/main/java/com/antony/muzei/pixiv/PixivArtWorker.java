@@ -19,6 +19,7 @@ package com.antony.muzei.pixiv;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -144,10 +145,30 @@ public class PixivArtWorker extends Worker
 					ContentResolver contentResolver = context.getContentResolver();
 					ContentValues contentValues = new ContentValues();
 					contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
-					contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Images/PixivForMuzei3");
+					contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/PixivForMuzei3");
 					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
 					fos = contentResolver.openOutputStream(imageUri);
-					image = new File(imageUri.getPath());
+
+					String[] what = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media._ID};
+					String where = MediaStore.Images.Media.DISPLAY_NAME + "=" + filename;
+					Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);
+
+					while (cursor.moveToNext())
+					{
+						if(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)).equals(filename + ".jpg"))
+						{
+							Log.v("cursor", "WOOP WOOP match");
+							int imageId = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID));
+							Uri uri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Integer.toString(imageId));
+							image = new File(uri.getPath());
+						}
+						else
+						{
+							Log.v("cursor", "no match");
+							Log.v("cursor", cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)));
+							Log.v("cursor", cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)));
+						}
+					}
 				}
 				// If app OS is N or lower
 				// this section tested to work
@@ -686,7 +707,7 @@ Regarding rankings
 			if (accessToken.isEmpty())
 			{
 				// If acccess token was empty, due to failed auth or a network error
-				// we have three pre defined behaviors that we can take 
+				// we have three pre defined behaviors that we can take
 				Handler handler = new Handler(Looper.getMainLooper());
 				String authFailMode = sharedPrefs.getString("pref_authFailAction", "changeDaily");
 				switch (authFailMode)
@@ -760,7 +781,7 @@ Regarding rankings
 			}
 			client.addArtwork(artwork);
 		}
-		// Cache is being cleared for whatever reason, so we initially populate the 
+		// Cache is being cleared for whatever reason, so we initially populate the
 		// database with 3 images.
 		// All are submitted at once to Muzei using an ArrayList
 		else
