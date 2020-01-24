@@ -145,9 +145,17 @@ public class PixivArtWorker extends Worker
 					ContentValues contentValues = new ContentValues();
 					contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
 					contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Images/PixivForMuzei3");
-					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-					fos = contentResolver.openOutputStream(imageUri);
-					image = new File(imageUri.getPath());
+					Uri contentResolverUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+					fos = contentResolver.openOutputStream(contentResolverUri);
+
+					Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new String[]{MediaStore.Images.Media.DISPLAY_NAME}, null, null, null);
+					while (cursor.moveToNext())
+					{
+						if (cursor.getString(0).equals(filename))
+						{
+							return true;
+						}
+					}
 				}
 				// If app OS is N or lower
 				// this section tested to work
