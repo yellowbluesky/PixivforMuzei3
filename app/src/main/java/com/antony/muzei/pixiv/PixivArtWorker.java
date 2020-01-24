@@ -131,7 +131,8 @@ public class PixivArtWorker extends Worker
 			if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
 					== PackageManager.PERMISSION_GRANTED)
 			{
-				File directory = new File("/storage/emulated/0/Pictures/PixivForMuzei3/");
+				String directoryString = Environment.DIRECTORY_PICTURES + File.separator + "PixivForMuzei3";
+				File directory = new File(directoryString);
 				if (!directory.exists())
 				{
 					directory.mkdirs();
