@@ -145,30 +145,7 @@ public class PixivArtWorker extends Worker
 					ContentResolver contentResolver = context.getContentResolver();
 					ContentValues contentValues = new ContentValues();
 					contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
-					contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/PixivForMuzei3");
-					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-					fos = contentResolver.openOutputStream(imageUri);
 
-					String[] what = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media._ID};
-					String where = MediaStore.Images.Media.DISPLAY_NAME + "=" + filename;
-					Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);
-
-					while (cursor.moveToNext())
-					{
-						if(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)).equals(filename + ".jpg"))
-						{
-							Log.v("cursor", "WOOP WOOP match");
-							int imageId = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID));
-							Uri uri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Integer.toString(imageId));
-							image = new File(uri.getPath());
-						}
-						else
-						{
-							Log.v("cursor", "no match");
-							Log.v("cursor", cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)));
-							Log.v("cursor", cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)));
-						}
-					}
 				}
 				// If app OS is N or lower
 				// this section tested to work
