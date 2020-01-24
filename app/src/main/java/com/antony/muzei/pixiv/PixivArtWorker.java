@@ -130,6 +130,7 @@ public class PixivArtWorker extends Worker
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		OutputStream fos = null;
 		File image = null;
+		boolean found = false;
 
 		// if option to store into external storage is checked
 		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
@@ -150,7 +151,7 @@ public class PixivArtWorker extends Worker
 
 					String[] what = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media._ID};
 					String where = MediaStore.Images.Media.DISPLAY_NAME + "=" + filename;
-					Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);
+					Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, what, where, null, null);
 
 					while (cursor.moveToNext())
 					{
@@ -160,12 +161,12 @@ public class PixivArtWorker extends Worker
 							int imageId = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID));
 							Uri uri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Integer.toString(imageId));
 							image = new File(uri.getPath());
-						} else
-						{
-							Log.v("cursor", "no match");
-							Log.v("cursor", cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)));
-							Log.v("cursor", cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)));
+							found = true;
 						}
+					}
+					if (!found)
+					{
+						Log.v("cursor", "no match");
 					}
 				}
 				// If app OS is N or lower
