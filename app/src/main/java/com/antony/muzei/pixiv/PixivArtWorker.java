@@ -181,7 +181,10 @@ public class PixivArtWorker extends Worker
 			}
 			fosInternal.write(buffer, 0, read);
 		}
-		fosExternal.close();
+		if(storeIntoExternal)
+		{
+			fosExternal.close();
+		}
 		fosInternal.close();
 		response.close();
 		inputStream.close();
