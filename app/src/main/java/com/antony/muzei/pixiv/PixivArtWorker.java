@@ -128,12 +128,11 @@ public class PixivArtWorker extends Worker
 		// Muzei does not care about file extensions
 		// Only there to more easily allow local user to open them
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		OutputStream fos = null;
-		File image = null;
-		boolean found = false;
+		OutputStream fosExternal = null;
+		boolean storeIntoExternal = sharedPrefs.getBoolean("pref_storeInExtStorage", false);
 
 		// if option to store into external storage is checked
-		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
+		if (storeIntoExternal)
 		{
 			// if permission granted
 			if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -144,30 +143,11 @@ public class PixivArtWorker extends Worker
 				{
 					ContentResolver contentResolver = context.getContentResolver();
 					ContentValues contentValues = new ContentValues();
-					contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
-					contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/PixivForMuzei3");
+					contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
+					contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
 					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-					fos = contentResolver.openOutputStream(imageUri);
+					fosExternal = contentResolver.openOutputStream(imageUri);
 
-					String[] what = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media._ID};
-					String where = MediaStore.Images.Media.DISPLAY_NAME + "=" + filename;
-					Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, what, where, null, null);
-
-					while (cursor.moveToNext())
-					{
-						if (cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)).equals(filename + ".jpg"))
-						{
-							Log.v("cursor", "WOOP WOOP match");
-							int imageId = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID));
-							Uri uri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Integer.toString(imageId));
-							image = new File(uri.getPath());
-							found = true;
-						}
-					}
-					if (!found)
-					{
-						Log.v("cursor", "no match");
-					}
 				}
 				// If app OS is N or lower
 				// this section tested to work
@@ -179,50 +159,33 @@ public class PixivArtWorker extends Worker
 					{
 						directory.mkdirs();
 					}
-					image = new File(directoryString, filename + ".png");
-					fos = new FileOutputStream(image);
+					fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
 				}
-//				String directoryString = Environment.DIRECTORY_PICTURES + File.separator + "PixivForMuzei3";
-//				File directory = new File(directoryString);
-//				if (!directory.exists())
-//				{
-//					directory.mkdirs();
-//				}
-//				// This does not create a new file, just a new File object
-//				downloadedFile = new File(directory, filename + ".png");
-//				// Check if file with the same token already exists
-//				// Is not redundant with isDuplicate
-//				if (downloadedFile.exists())
-//				{
-//					Log.d(LOG_TAG, "File already exists, using cache");
-//					return Uri.fromFile(downloadedFile);
-//				}
 			}
 		}
 		// External storage option not checked, store into default internal location
 		// this section tested to work
-		else
-		{
-			image = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-			fos = new FileOutputStream(image);
-		}
+
+		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
 
 		InputStream inputStream = response.body().byteStream();
 
 		byte[] buffer = new byte[1024 * 1024 * 10];
-		while (true)
+		int read;
+		while ((read = inputStream.read(buffer)) != -1)
 		{
-			int read = inputStream.read(buffer);
-			if (read == -1)
+			if (storeIntoExternal)
 			{
-				break;
+				fosExternal.write(buffer, 0, read);
 			}
-			fos.write(buffer, 0, read);
+			fosInternal.write(buffer, 0, read);
 		}
-		fos.flush();
+		fosExternal.close();
+		fosInternal.close();
 		response.close();
 		inputStream.close();
-		return Uri.fromFile(image);
+		return Uri.fromFile(imageInternal);
 		//downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 
 
