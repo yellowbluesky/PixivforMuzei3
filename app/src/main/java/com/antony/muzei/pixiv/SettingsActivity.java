@@ -114,22 +114,8 @@ public class SettingsActivity extends AppCompatActivity
 						break;
 					case "pref_artistId":
 						newArtist = sharedPrefs.getString("pref_artistId", "");
-					case "pref_storeInExtStorage":
-						// If the user has opted to save pictures to public storage, we need to check if we
-						// have the permissions to do so
-						if (ContextCompat.checkSelfPermission(SettingsActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-								!= PackageManager.PERMISSION_GRANTED)
-						{
-							ActivityCompat.requestPermissions(SettingsActivity.this,
-									new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-									1);
-						}
-						break;
-					case "pref_nsfwFilterSelect":
-						newFilterSelect = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
 						break;
 				}
-
 			}
 		};
 	}
@@ -453,6 +439,26 @@ public class SettingsActivity extends AppCompatActivity
 			}
 			String summaryRanking = stringBuilderRanking.toString();
 			rankingFilterSelectPref.setSummary(summaryRanking);
+
+			Preference externalStoragePref = findPreference("pref_storeInExtStorage");
+			externalStoragePref.setOnPreferenceClickListener(preference ->
+			{
+				if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+						!= PackageManager.PERMISSION_GRANTED)
+				{
+					ActivityCompat.requestPermissions(getActivity(),
+							new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+							1);
+				}
+				return true;
+			});
+
+			externalStoragePref.setOnPreferenceChangeListener(((preference, newValue) ->
+			{
+				return ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+						== PackageManager.PERMISSION_GRANTED;
+			}));
+
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))
 //			{
