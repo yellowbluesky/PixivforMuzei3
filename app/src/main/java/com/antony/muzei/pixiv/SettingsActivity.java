@@ -56,7 +56,6 @@ public class SettingsActivity extends AppCompatActivity
 	private String oldUpdateMode, newUpdateMode;
 	private String oldTag, newTag;
 	private String oldArtist, newArtist;
-	private Set<String> oldFilterSelect, newFilterSelect;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -96,9 +95,6 @@ public class SettingsActivity extends AppCompatActivity
 
 		oldArtist = sharedPrefs.getString("pref_artistId", "");
 		newArtist = oldArtist;
-
-		oldFilterSelect = sharedPrefs.getStringSet("pref_nsfwFilterSelect", null);
-		newFilterSelect = oldFilterSelect;
 
 		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
 		{
