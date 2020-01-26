@@ -130,6 +130,7 @@ public class PixivArtWorker extends Worker
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		OutputStream fosExternal = null;
 		boolean storeIntoExternal = sharedPrefs.getBoolean("pref_storeInExtStorage", false);
+		boolean allowed = false;
 
 		// if option to store into external storage is checked
 		if (storeIntoExternal)
@@ -147,7 +148,7 @@ public class PixivArtWorker extends Worker
 					contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
 					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
 					fosExternal = contentResolver.openOutputStream(imageUri);
-
+					allowed = true;
 				}
 				// If app OS is N or lower
 				// this section tested to work
@@ -160,6 +161,7 @@ public class PixivArtWorker extends Worker
 						directory.mkdirs();
 					}
 					fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
+					allowed = true;
 				}
 			}
 		}
@@ -175,13 +177,13 @@ public class PixivArtWorker extends Worker
 		int read;
 		while ((read = inputStream.read(buffer)) != -1)
 		{
-			if (storeIntoExternal)
+			if (storeIntoExternal && allowed)
 			{
 				fosExternal.write(buffer, 0, read);
 			}
 			fosInternal.write(buffer, 0, read);
 		}
-		if(storeIntoExternal)
+		if (storeIntoExternal)
 		{
 			fosExternal.close();
 		}
