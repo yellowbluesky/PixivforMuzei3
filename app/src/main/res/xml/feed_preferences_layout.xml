@@ -57,17 +57,6 @@
             android:persistent="true"
             android:title="@string/prefTitle_authFilterSelect"
             app:isPreferenceVisible="false" />
-        <SwitchPreference
-            android:key="pref_showManga"
-            android:persistent="true"
-            android:title="@string/prefTitle_showManga" />
-        <SwitchPreference
-            android:key="pref_autoClearMode"
-            android:persistent="true"
-            android:title="@string/prefTitle_autoClearMode" />
-        <Preference
-            android:key="@string/button_clearCache"
-            android:title="@string/button_clearCache" />
         <DropDownPreference
             android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
             android:entries="@array/pref_aspectRatio_entries"
@@ -76,6 +65,19 @@
             android:persistent="true"
             android:summary="%s"
             android:title="@string/prefTitle_aspectRatio" />
+        <SwitchPreference
+            android:key="pref_showManga"
+            android:persistent="true"
+            android:title="@string/prefTitle_showManga"
+            app:allowDividerBelow="true"/>
+        <SwitchPreference
+            app:allowDividerAbove="true"
+            android:key="pref_autoClearMode"
+            android:persistent="true"
+            android:title="@string/prefTitle_autoClearMode" />
+        <Preference
+            android:key="@string/button_clearCache"
+            android:title="@string/button_clearCache" />
         <SwitchPreference
             android:key="pref_storeInExtStorage"
             android:persistent="true"
