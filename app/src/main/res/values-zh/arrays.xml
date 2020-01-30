@@ -4,8 +4,8 @@
         <item>周排行榜</item>
         <item>月排行榜</item>
         <item>关注订阅（需登录）</item>
-        <item>推荐（需登录）</item>
         <item>收藏夹（需登录）</item>
+        <item>推荐（需登录）</item>
         <item>艺术家（需登录）</item>
         <item>标签搜索（需登录）</item>
     </string-array>
