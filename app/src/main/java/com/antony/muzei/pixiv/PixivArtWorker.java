@@ -129,11 +129,10 @@ public class PixivArtWorker extends Worker
 		// Only there to more easily allow local user to open them
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		OutputStream fosExternal = null;
-		boolean storeIntoExternal = sharedPrefs.getBoolean("pref_storeInExtStorage", false);
 		boolean allowed = false;
 
 		// if option to store into external storage is checked
-		if (storeIntoExternal)
+		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
 		{
 			// if permission granted
 			if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -177,13 +176,13 @@ public class PixivArtWorker extends Worker
 		int read;
 		while ((read = inputStream.read(buffer)) != -1)
 		{
-			if (storeIntoExternal && allowed)
+			if (allowed)
 			{
 				fosExternal.write(buffer, 0, read);
 			}
 			fosInternal.write(buffer, 0, read);
 		}
-		if (storeIntoExternal)
+		if (allowed)
 		{
 			fosExternal.close();
 		}
