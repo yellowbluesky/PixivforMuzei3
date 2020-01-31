@@ -132,7 +132,7 @@ public class PixivArtWorker extends Worker
 		boolean allowed = false;
 
 		// if option to store into external storage is checked
-		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
+		search: if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
 		{
 			// if permission granted
 			if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -143,6 +143,17 @@ public class PixivArtWorker extends Worker
 				{
 					ContentResolver contentResolver = context.getContentResolver();
 					ContentValues contentValues = new ContentValues();
+
+					// Check if existing copy of file exists
+					String[] projection = MediaStore.Images.Media._ID;
+					String[] selection = {MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
+					String[] selectionArgs = {filename, "Pictures/PixivForMuzei3"};
+					Cursor cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
+					if (cursor.getCount() > 0)
+					{
+						break search;
+					}
+
 					contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
 					contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
 					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
