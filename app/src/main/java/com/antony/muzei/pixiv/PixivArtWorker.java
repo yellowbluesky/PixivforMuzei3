@@ -149,7 +149,7 @@ public class PixivArtWorker extends Worker
 					String[] selection = {MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
 					String[] selectionArgs = {filename, "Pictures/PixivForMuzei3"};
 					Cursor cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
-					if (cursor.getCount() = 0)
+					if (cursor.getCount() == 0)
 					{
 						contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
 						contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
