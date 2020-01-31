@@ -95,6 +95,7 @@ public class PixivArtWorker extends Worker
 		OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
 				.setConstraints(constraints)
 				.addTag(WORKER_TAG)
+				.setbackOffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.MINUTES)
 				.build();
 		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
 		// Must be a uniqueWork
