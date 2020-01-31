@@ -634,22 +634,21 @@ Regarding rankings
 	// Somehow iterate through the database or the folder
 	private boolean isDuplicate(String token)
 	{
+		boolean duplicateFound = false;
+
+		String[] projection = "_id";
+		String[] selection = "token = ?";
+		String[] selectionArgs = token;
 		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
-		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, new String[]{"token"}, null, null, null);
-		try
+		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, projection, selection, selectionArgs, null);
+
+		if (cursor.getCount() > 0)
 		{
-			while (cursor.moveToNext())
-			{
-				if (cursor.getString(0).equals(token))
-				{
-					return true;
-				}
-			}
-		} finally
-		{
-			cursor.close();
+			duplicateFound = true;
 		}
-		return false;
+		cursor.close();
+		
+		return duplicateFound;	
 	}
 
 	/*
