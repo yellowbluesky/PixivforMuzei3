@@ -148,9 +148,10 @@ public class PixivArtWorker extends Worker
 					ContentValues contentValues = new ContentValues();
 
 					// Check if existing copy of file exists
-					String[] projection = MediaStore.Images.Media._ID;
-					String[] selection = {MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
-					String[] selectionArgs = {filename, "Pictures/PixivForMuzei3"};
+					String[] projection = {MediaStore.Images.Media._ID};
+					String selection = "title = ?";
+					//String selection ={MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
+					String[] selectionArgs = {filename};
 					Cursor cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
 					if (cursor.getCount() == 0)
 					{
@@ -575,11 +576,11 @@ Regarding rankings
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
 			// Check if duplicate before any other check to not waste time
-			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
-			{
-				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
-				continue;
-			}
+//			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
+//			{
+//				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
+//				continue;
+//			}
 
 			// If user does not want manga to display
 			if (!showManga)
@@ -648,9 +649,9 @@ Regarding rankings
 	{
 		boolean duplicateFound = false;
 
-		String[] projection = "_id";
-		String[] selection = "token = ?";
-		String[] selectionArgs = token;
+		String[] projection = {"_id"};
+		String selection = "token = ?";
+		String[] selectionArgs = {token};
 		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
 		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, projection, selection, selectionArgs, null);
 
@@ -659,8 +660,8 @@ Regarding rankings
 			duplicateFound = true;
 		}
 		cursor.close();
-		
-		return duplicateFound;	
+
+		return duplicateFound;
 	}
 
 	/*
