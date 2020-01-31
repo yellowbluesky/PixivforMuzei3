@@ -36,6 +36,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
+import androidx.work.BackoffPolicy;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
@@ -62,6 +63,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
 import okhttp3.Response;
@@ -95,7 +97,7 @@ public class PixivArtWorker extends Worker
 		OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
 				.setConstraints(constraints)
 				.addTag(WORKER_TAG)
-				.setbackOffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.MINUTES)
+				.setBackoffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.MINUTES)
 				.build();
 		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
 		// Must be a uniqueWork
