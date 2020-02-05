@@ -50,7 +50,10 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		super.getCommands(artwork);
 		LinkedList<UserCommand> commands = new LinkedList<>();
-		commands.add(new UserCommand(1, getContext().getString(R.string.command_addToBookmark)));
+		UserCommand addToBookmark = new UserCommand(1, getContext().getString(R.string.command_addToBookmark));
+		UserCommand openIntentImage = new UserCommand(2, "View artwork details");
+		commands.add(addToBookmark);
+		commands.add(openIntentImage);
 		return commands;
 	}
 
@@ -63,6 +66,11 @@ public class PixivArtProvider extends MuzeiArtProvider
 			case 1:
 				addToBookmarks(artwork);
 				handler.post(() -> Toast.makeText(getContext(), "Adding to bookmarks", Toast.LENGTH_SHORT).show());
+				break;
+			case 2:
+				startActivity(new Intent(Intent.ACTION_VIEW, 
+				    Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + Artwork.getToken())));
+				break;
 		}
 	}
 
