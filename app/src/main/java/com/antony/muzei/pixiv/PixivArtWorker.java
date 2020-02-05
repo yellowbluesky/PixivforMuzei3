@@ -36,6 +36,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
+import androidx.work.BackoffPolicy;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
@@ -62,6 +63,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
 import okhttp3.Response;
@@ -95,6 +97,7 @@ public class PixivArtWorker extends Worker
 		OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
 				.setConstraints(constraints)
 				.addTag(WORKER_TAG)
+				.setBackoffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.MINUTES)
 				.build();
 		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
 		// Must be a uniqueWork
@@ -143,11 +146,21 @@ public class PixivArtWorker extends Worker
 				{
 					ContentResolver contentResolver = context.getContentResolver();
 					ContentValues contentValues = new ContentValues();
-					contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
-					contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
-					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-					fosExternal = contentResolver.openOutputStream(imageUri);
-					allowed = true;
+
+					// Check if existing copy of file exists
+					String[] projection = {MediaStore.Images.Media._ID};
+					String selection = "title = ?";
+					//String selection ={MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
+					String[] selectionArgs = {filename};
+					Cursor cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
+					if (cursor.getCount() == 0)
+					{
+						contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
+						contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
+						Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+						fosExternal = contentResolver.openOutputStream(imageUri);
+						allowed = true;
+					}
 				}
 				// If app OS is N or lower
 				// this section tested to work
@@ -563,11 +576,11 @@ Regarding rankings
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
 			// Check if duplicate before any other check to not waste time
-			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
-			{
-				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
-				continue;
-			}
+//			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
+//			{
+//				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
+//				continue;
+//			}
 
 			// If user does not want manga to display
 			if (!showManga)
@@ -634,22 +647,21 @@ Regarding rankings
 	// Somehow iterate through the database or the folder
 	private boolean isDuplicate(String token)
 	{
+		boolean duplicateFound = false;
+
+		String[] projection = {"_id"};
+		String selection = "token = ?";
+		String[] selectionArgs = {token};
 		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
-		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, new String[]{"token"}, null, null, null);
-		try
+		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, projection, selection, selectionArgs, null);
+
+		if (cursor.getCount() > 0)
 		{
-			while (cursor.moveToNext())
-			{
-				if (cursor.getString(0).equals(token))
-				{
-					return true;
-				}
-			}
-		} finally
-		{
-			cursor.close();
+			duplicateFound = true;
 		}
-		return false;
+		cursor.close();
+
+		return duplicateFound;
 	}
 
 	/*

@@ -6,8 +6,8 @@ android {
         applicationId "com.antony.muzei.pixiv"
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 264
-        versionName "2.6.4"
+        versionCode 265
+        versionName "2.6.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
