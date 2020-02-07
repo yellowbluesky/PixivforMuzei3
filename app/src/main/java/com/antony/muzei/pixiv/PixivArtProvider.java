@@ -17,6 +17,8 @@
 
 package com.antony.muzei.pixiv;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -29,8 +31,11 @@ import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 
 public class PixivArtProvider extends MuzeiArtProvider
@@ -68,9 +73,12 @@ public class PixivArtProvider extends MuzeiArtProvider
 				handler.post(() -> Toast.makeText(getContext(), "Adding to bookmarks", Toast.LENGTH_SHORT).show());
 				break;
 			case 2:
-				startActivity(new Intent(Intent.ACTION_VIEW, 
-				    Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + Artwork.getToken())));
+				String token = artwork.getToken();
+				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
+				intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+				getContext().startActivity(intent);
 				break;
+
 		}
 	}
 
