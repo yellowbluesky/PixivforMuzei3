@@ -3,7 +3,8 @@
     package="com.antony.muzei.pixiv">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
@@ -13,8 +14,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/action_bar_title"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/action_bar_title">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -23,16 +24,30 @@
 
         <provider
             android:name=".PixivArtProvider"
-            android:authorities="com.antony.muzei.pixiv.PixivArtProvider"
+            android:authorities="com.antony.muzei.pixiv.provider"
             android:exported="true"
             android:label="Pixiv source for Muzei 3.0"
             android:permission="com.google.android.apps.muzei.api.ACCESS_PROVIDER">
             <intent-filter>
                 <action android:name="com.google.android.apps.muzei.api.MuzeiArtProvider" />
             </intent-filter>
-            <meta-data android:name="settingsActivity"
+
+            <meta-data
+                android:name="settingsActivity"
                 android:value="com.antony.muzei.pixiv.SettingsActivity" />
-            <meta-data android:name="color" android:value="#0096db" />
+            <meta-data
+                android:name="color"
+                android:value="#0096db" />
+        </provider>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.antony.muzei.pixiv.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
         </provider>
     </application>
 </manifest>

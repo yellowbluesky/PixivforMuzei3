@@ -19,19 +19,21 @@ package com.antony.muzei.pixiv;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -56,9 +58,11 @@ public class PixivArtProvider extends MuzeiArtProvider
 		super.getCommands(artwork);
 		LinkedList<UserCommand> commands = new LinkedList<>();
 		UserCommand addToBookmark = new UserCommand(1, getContext().getString(R.string.command_addToBookmark));
-		UserCommand openIntentImage = new UserCommand(2, "View artwork details");
+		UserCommand openIntentImage = new UserCommand(2, getContext().getString(R.string.command_viewArtworkDetails));
+		UserCommand shareImage = new UserCommand(3, getContext().getString(R.string.command_shareImage));
 		commands.add(addToBookmark);
 		commands.add(openIntentImage);
+		commands.add(shareImage);
 		return commands;
 	}
 
@@ -78,7 +82,9 @@ public class PixivArtProvider extends MuzeiArtProvider
 				intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
 				getContext().startActivity(intent);
 				break;
-
+			case 3:
+				shareImage(artwork);
+				break;
 		}
 	}
 
@@ -89,11 +95,23 @@ public class PixivArtProvider extends MuzeiArtProvider
 		if (accessToken.isEmpty())
 		{
 			Log.d("PIXIV_DEBUG", "No access token found");
-			new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(getContext(), "Login first", Toast.LENGTH_SHORT).show());
+			new Handler(Looper.getMainLooper()).post(() ->
+					Toast.makeText(getContext(), getContext().getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
 			return;
 		}
 		PixivArtService.sendPostRequest(accessToken, artwork.getToken());
 		Log.d("PIXIV_DEBUG", "Added to bookmarks");
 	}
 
+	private void shareImage(Artwork artwork)
+	{
+		File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
+		Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
+		Intent sharingIntent = new Intent();
+		sharingIntent.setAction(Intent.ACTION_SEND);
+		sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
+		sharingIntent.setType("image/jpg");
+		sharingIntent.addFlags(FLAG_ACTIVITY_NEW_TASK);
+		getContext().startActivity(sharingIntent);
+	}
 }
