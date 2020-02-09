@@ -53,4 +53,7 @@
     <string name="attr_monthly">月排行榜 #</string>
     <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
+    <string name="command_viewArtworkDetails">查看图像细节</string>
+    <string name="command_shareImage">分享图像</string>
+    <string name="toast_loginFirst">pixiv for Muzei 3: 先登录</string>
 </resources>
