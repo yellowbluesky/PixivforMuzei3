@@ -45,6 +45,10 @@ public class PixivArtProvider extends MuzeiArtProvider
 	// Pass true to clear cache and download new images
 	// Pass false to append new images to cache
 
+	private final int COMMAND_ADD_TO_BOOKMARKS = 1;
+	private final int COMMAND_VIEW_IMAGE_DETAILS = 2;
+	private final int COMMAND_SHARE_IMAGE = 3;
+
 	@Override
 	protected void onLoadRequested(boolean initial)
 	{
