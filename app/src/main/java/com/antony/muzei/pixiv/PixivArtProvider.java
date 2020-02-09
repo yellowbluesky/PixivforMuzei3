@@ -19,6 +19,7 @@ package com.antony.muzei.pixiv;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -61,12 +62,16 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		super.getCommands(artwork);
 		LinkedList<UserCommand> commands = new LinkedList<>();
-		UserCommand addToBookmark = new UserCommand(1, getContext().getString(R.string.command_addToBookmark));
-		UserCommand openIntentImage = new UserCommand(2, getContext().getString(R.string.command_viewArtworkDetails));
-		UserCommand shareImage = new UserCommand(3, getContext().getString(R.string.command_shareImage));
+		UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS, getContext().getString(R.string.command_addToBookmark));
 		commands.add(addToBookmark);
-		commands.add(openIntentImage);
-		commands.add(shareImage);
+		if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
+		{
+			UserCommand openIntentImage = new UserCommand(COMMAND_VIEW_IMAGE_DETAILS, getContext().getString(R.string.command_viewArtworkDetails));
+			UserCommand shareImage = new UserCommand(COMMAND_SHARE_IMAGE, getContext().getString(R.string.command_shareImage));
+			commands.add(shareImage);
+			commands.add(openIntentImage);
+		}
+
 		return commands;
 	}
 
@@ -76,17 +81,23 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Handler handler = new Handler(Looper.getMainLooper());
 		switch (id)
 		{
-			case 1:
+			case COMMAND_ADD_TO_BOOKMARKS:
 				addToBookmarks(artwork);
-				handler.post(() -> Toast.makeText(getContext(), "Adding to bookmarks", Toast.LENGTH_SHORT).show());
+				handler.post(() -> Toast.makeText(getContext(), getContext().getString(R.string.toast_addingToBookmarks), Toast.LENGTH_SHORT).show());
 				break;
-			case 2:
+			case COMMAND_VIEW_IMAGE_DETAILS:
 				String token = artwork.getToken();
 				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
 				intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
 				getContext().startActivity(intent);
 				break;
-			case 3:
+			case COMMAND_SHARE_IMAGE:
+				// Sharing feature doesn't work very well on Android 10
+				// Android 10 restricts background activity startup, and the chooser is started as a
+				// PixivForMuzei3 activity while muzei is the active activity.
+				// To get it to work, the user must open the PixivForMuzei3 Settings activity,
+				// navigate back out, then go and share
+				// Works well on Android versions lower than 10
 				shareImage(artwork);
 				break;
 		}
@@ -115,10 +126,9 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Intent sharingIntent = new Intent();
 		sharingIntent.setAction(Intent.ACTION_SEND);
 		sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
-		sharingIntent.putExtra(Intent.EXTRA_TITLE, artwork.getTitle());
 		sharingIntent.setType("image/jpg");
 
-		Intent chooserIntent = Intent.createChooser(sharingIntent, "Share to:");
+		Intent chooserIntent = Intent.createChooser(sharingIntent, null);
 		chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		getContext().startActivity(chooserIntent);
 	}

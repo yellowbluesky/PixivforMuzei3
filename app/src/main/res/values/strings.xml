@@ -50,6 +50,7 @@
     <string name="toast_newArtist">New Artist, clearing image cache</string>
     <string name="toast_newTag">New search tag, clearing image cache</string>
     <string name="toast_newFilterSelect">New filter selection, clearing image cache</string>
+    <string name="toast_addingToBookmarks">Pixiv for Muzei 3: Adding to bookmark</string>
     <string name="toast_loginFirst">Pixiv for Muzei 3: Login first</string>
     <string name="attr_daily">Daily Ranking #</string>
     <string name="attr_weekly">Weekly Ranking #</string>
