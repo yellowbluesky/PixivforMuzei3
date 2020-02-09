@@ -105,13 +105,17 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 	private void shareImage(Artwork artwork)
 	{
+		Log.d("PIXIV_DEBUG", "Opening sharing ");
 		File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
 		Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
 		Intent sharingIntent = new Intent();
 		sharingIntent.setAction(Intent.ACTION_SEND);
 		sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
+		sharingIntent.putExtra(Intent.EXTRA_TITLE, artwork.getTitle());
 		sharingIntent.setType("image/jpg");
-		sharingIntent.addFlags(FLAG_ACTIVITY_NEW_TASK);
-		getContext().startActivity(sharingIntent);
+
+		Intent chooserIntent = Intent.createChooser(sharingIntent, "Share to:");
+		chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		getContext().startActivity(chooserIntent);
 	}
 }
