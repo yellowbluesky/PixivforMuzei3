@@ -31,10 +31,11 @@ Features
   
   [![Scc Count Badge](https://sloc.xyz/github/yellowbluesky/PixivforMuzei3/)](https://github.com/yellowbluesky/PixivforMuzei3/)
 
-<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="400"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="400"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="400">
+<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="250"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="250"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="250">
 
 # Contributors
 
 - [Notsfsssf](https://github.com/Notsfsssf): SNI Bypass
+  - His Android Pixiv client [Pix-EzViewer](https://github.com/Notsfsssf/Pix-EzViewer) is excellent, try it out
 - [SettingDust](https://github.com/SettingDust): Localisation
 - [Linsui](https://github.com/linsui): F-Droid RFP and localisation
