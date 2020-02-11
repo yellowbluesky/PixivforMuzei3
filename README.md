@@ -18,13 +18,13 @@ Features
     - Artworks from user's recommended feed
     - A specified artist ID
     - A specified tag (date descending sort order)
-  - Four levels of granular filtering for NSFW pictures
-  - Can filter artwork on aspect ratio
-  - Can exclude manga from being set as wallpaper
+  - Can filter against multiple criteria:
+    - Four levels of granular NSFW filtering
+    - Aspect ratio
+    - Manga
   - Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv
-  - Correctly handles the display of albums, displaying only the first image
   - Option to automatically clear cache on a daily basis
-  - Option to save artwork to user storage
+  - Option to save artwork to external user storage
   - Works in China, SNI bypass
   
   - No tracking or collection of user details
