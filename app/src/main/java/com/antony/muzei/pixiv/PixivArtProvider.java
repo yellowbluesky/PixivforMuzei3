@@ -62,16 +62,15 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		super.getCommands(artwork);
 		LinkedList<UserCommand> commands = new LinkedList<>();
-		UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS, getContext().getString(R.string.command_addToBookmark));
-		commands.add(addToBookmark);
 		if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
 		{
+			UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS, getContext().getString(R.string.command_addToBookmark));
+			commands.add(addToBookmark);
 			UserCommand openIntentImage = new UserCommand(COMMAND_VIEW_IMAGE_DETAILS, getContext().getString(R.string.command_viewArtworkDetails));
 			UserCommand shareImage = new UserCommand(COMMAND_SHARE_IMAGE, getContext().getString(R.string.command_shareImage));
 			commands.add(shareImage);
 			commands.add(openIntentImage);
 		}
-
 		return commands;
 	}
 
