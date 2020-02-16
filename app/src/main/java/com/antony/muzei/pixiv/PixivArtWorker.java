@@ -785,18 +785,4 @@ Regarding rankings
 		Log.d(LOG_TAG, "Work completed");
 		return Result.success();
 	}
-
-	enum appStatus
-	{
-		IDLE,
-		NETWORK_POST,
-		GET_RANKING_JSON,
-		FILTER_RANKING,
-		GET_FILE_EXTENSION,
-		GET_FEED_JSON,
-		FILTER_FEED,
-		NETWORK_GET,
-		ADDING_ARTWORK,
-		DOWNLOADING,
-	}
 }
