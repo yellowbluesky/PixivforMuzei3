@@ -55,6 +55,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -302,6 +303,8 @@ public class PixivArtWorker extends Worker
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
 
+		writeToFile(overallJson, "rankingLog.txt");
+
 		JSONObject pictureMetadata;
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showManga = sharedPrefs.getBoolean("pref_showManga", false);
@@ -329,6 +332,20 @@ public class PixivArtWorker extends Worker
 				.token(token)
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
 				.build();
+	}
+
+	private void writeToFile(JSONObject jsonObject, String filename) throws IOException
+	{
+		File root = new File(getApplicationContext().getExternalCacheDir(), "Logs");
+		if (!root.exists())
+		{
+			root.mkdirs();
+		}
+		File logFile = new File(root, filename);
+		FileWriter writer = new FileWriter(logFile);
+		writer.append(jsonObject.toString());
+		writer.flush();
+		writer.close();
 	}
 
 	/*
@@ -490,6 +507,8 @@ Regarding rankings
 			Response rankingResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl, accessToken);
 			JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 			rankingResponse.close();
+
+			writeToFile(overallJson, "authLog.txt");
 
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 			int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
