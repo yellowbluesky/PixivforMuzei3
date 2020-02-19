@@ -420,7 +420,7 @@ Regarding rankings
 	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
 	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
-	private Artwork getArtworkAuth(String mode, String userId, String accessToken) throws IOException, JSONException
+	private Artwork getArtworkAuth(String mode, String userId, String accessToken, String tag_search) throws IOException, JSONException
 	{
 		Log.i(LOG_TAG, "getArtworkAuth(): Entering");
 		Log.d(LOG_TAG, "Mode: " + mode);
@@ -459,7 +459,7 @@ Regarding rankings
 				case "tag_search":
 					feedBookmarkTagUrl = urlBuilder
 							.addPathSegments("v1/search/illust")
-							.addQueryParameter("word", userId)
+							.addQueryParameter("word", tag_search)
 							.addQueryParameter("search_target", "partial_match_for_tags")
 							.addQueryParameter("sort", "date_desc")
 							.addQueryParameter("filter", "for_ios")
@@ -714,7 +714,7 @@ Regarding rankings
 			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
 			{
 				String userId = sharedPrefs.getString("userId", "");
-				artwork = getArtworkAuth(mode, userId, accessToken);
+				artwork = getArtworkAuth(mode, userId, accessToken, sharedPrefs.getString("pref_tagSearch", ""));
 			} else
 			{
 				artwork = getArtworkRanking(mode);
