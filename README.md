@@ -18,23 +18,24 @@ Features
     - Artworks from user's recommended feed
     - A specified artist ID
     - A specified tag (date descending sort order)
-  - Four levels of granular filtering for NSFW pictures
-  - Can filter artwork on aspect ratio
-  - Can exclude manga from being set as wallpaper
+  - Can filter against multiple criteria:
+    - Four levels of granular NSFW filtering
+    - Aspect ratio
+    - Manga
   - Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv
-  - Correctly handles the display of albums, displaying only the first image
   - Option to automatically clear cache on a daily basis
-  - Option to save artwork to user storage
+  - Option to save artwork to external user storage
   - Works in China, SNI bypass
   
   - No tracking or collection of user details
   
   [![Scc Count Badge](https://sloc.xyz/github/yellowbluesky/PixivforMuzei3/)](https://github.com/yellowbluesky/PixivforMuzei3/)
 
-<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="400"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="400"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="400">
+<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="250"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="250"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="250">
 
 # Contributors
 
 - [Notsfsssf](https://github.com/Notsfsssf): SNI Bypass
+  - His Android Pixiv client [Pix-EzViewer](https://github.com/Notsfsssf/Pix-EzViewer) is excellent, try it out
 - [SettingDust](https://github.com/SettingDust): Localisation
 - [Linsui](https://github.com/linsui): F-Droid RFP and localisation
