@@ -108,7 +108,7 @@ public class PixivArtWorker extends Worker
 	}
 
 	// Upon successful authentication stores tokens returned from Pixiv into device memory
-	private static void storeTokens(SharedPreferences sharedPrefs, JSONObject tokens) throws JSONException
+	static void storeTokens(SharedPreferences sharedPrefs, JSONObject tokens) throws JSONException
 	{
 		Log.i(LOG_TAG, "Storing tokens");
 		SharedPreferences.Editor editor = sharedPrefs.edit();
