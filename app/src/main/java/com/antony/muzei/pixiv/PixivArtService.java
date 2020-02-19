@@ -154,13 +154,14 @@ class PixivArtService
 				.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
 				.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
 				.addHeader("Authorization", "Bearer " + accessToken)
+				.addHeader("Accept-Language", "en-us")
 				.get()
 				.url(url)
 				.build();
 		return httpClient.newCall(request).execute();
 	}
 
-	// This function used by modes that do require authentication (ranking) to acquire the JSON
+	// This function used by modes that do not require authentication (ranking) to acquire the JSON
 	// Used by all modes to download the actual image
 	// Can either return either a:
 	//      Response containing a JSON within its body
@@ -171,6 +172,7 @@ class PixivArtService
 		Request request = new Request.Builder()
 				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
 				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
+				.addHeader("Accept-Language", "en-us")
 				.get()
 				.url(url)
 				.build();
