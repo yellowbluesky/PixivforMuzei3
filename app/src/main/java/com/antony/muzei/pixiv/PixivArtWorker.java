@@ -54,6 +54,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -180,29 +181,48 @@ public class PixivArtWorker extends Worker
 		}
 		// External storage option not checked, store into default internal location
 		// this section tested to work
-
+		File tempFile = new File(context.getCacheDir(), "temp");
 		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
+		FileOutputStream fosTemp = new FileOutputStream(tempFile);
 
 		InputStream inputStream = response.body().byteStream();
 
-		byte[] buffer = new byte[1024 * 1024 * 10];
-		int read;
-		while ((read = inputStream.read(buffer)) != -1)
+		byte[] bufferTemp = new byte[1024 * 1024 * 10];
+		int readTemp;
+		while ((readTemp = inputStream.read(bufferTemp)) != -1)
 		{
+			fosTemp.write(bufferTemp, 0, readTemp);
+		}
+		inputStream.close();
+		fosTemp.close();
+
+		// check if corrupted
+		if (isImageCorrupt(tempFile))
+		{
+			return null;
+		}
+
+		FileInputStream fis = new FileInputStream(tempFile);
+		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
+		byte[] buffer = new byte[1024 * 1024 * 10];
+		int lengthInternal;
+		while ((lengthInternal = fis.read(buffer)) > 0)
+		{
+			fosInternal.write(buffer, 0, lengthInternal);
 			if (allowed)
 			{
-				fosExternal.write(buffer, 0, read);
+				fosExternal.write(buffer, 0, lengthInternal);
 			}
-			fosInternal.write(buffer, 0, read);
 		}
+		fosInternal.close();
+
 		if (allowed)
 		{
 			fosExternal.close();
 		}
-		fosInternal.close();
+		fis.close();
 		response.close();
-		inputStream.close();
+
 		return Uri.fromFile(imageInternal);
 		//downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 
