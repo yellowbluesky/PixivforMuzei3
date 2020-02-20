@@ -124,6 +124,11 @@ public class PixivArtWorker extends Worker
 		Log.i(LOG_TAG, "Stored tokens");
 	}
 
+	private boolean isImageCorrupt(File image)
+	{
+		return false;
+	}
+
 	// Downloads the selected image to cache folder on local storage
 	// Cache folder is periodically pruned of its oldest images by Android
 	private Uri downloadFile(Response response, String filename) throws IOException
@@ -199,6 +204,7 @@ public class PixivArtWorker extends Worker
 		// check if corrupted
 		if (isImageCorrupt(tempFile))
 		{
+			// delete temp
 			return null;
 		}
 
@@ -340,6 +346,10 @@ public class PixivArtWorker extends Worker
 		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
 		Uri localUri = downloadFile(remoteFileExtension, token);
+		if (localUri == null)
+		{
+			return null;
+		}
 		remoteFileExtension.close();
 
 		Log.i(LOG_TAG, "getArtworkRanking(): Exited");
@@ -573,6 +583,12 @@ Regarding rankings
 		String token = pictureMetadata.getString("id");
 		Response imageDataResponse = PixivArtService.sendGetRequestRanking(HttpUrl.parse(imageUrl));
 		Uri localUri = downloadFile(imageDataResponse, token);
+
+		if (localUri == null)
+		{
+			return null;
+		}
+
 		imageDataResponse.close();
 		Log.i(LOG_TAG, "getArtworkAuth(): Exited");
 		return new Artwork.Builder()
