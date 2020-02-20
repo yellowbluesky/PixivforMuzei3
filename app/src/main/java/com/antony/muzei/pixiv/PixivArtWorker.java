@@ -49,6 +49,7 @@ import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -124,8 +125,21 @@ public class PixivArtWorker extends Worker
 		Log.i(LOG_TAG, "Stored tokens");
 	}
 
-	private boolean isImageCorrupt(File image)
+	private boolean isImageCorrupt(File image) throws IOException
 	{
+		byte byteArray[] = FileUtils.readFileToByteArray(image);
+		int length = byteArray.length;
+		// if jpeg
+		if (byteArray[0] == -119 && byteArray[1] == 80 && byteArray[2] == 78)
+		{
+			// file is a png
+		}
+		else if (byteArray[0] == 255 && byteArray[1] == -40 && byteArray[2] == 255)
+		{
+			// image is a jpeg
+		}
+
+		// else if png
 		return false;
 	}
 
