@@ -125,22 +125,46 @@ public class PixivArtWorker extends Worker
 		Log.i(LOG_TAG, "Stored tokens");
 	}
 
-	private boolean isImageCorrupt(File image) throws IOException
+	/*
+		-1  corrupt
+		0   invalid return
+		1   png
+		2   jpg
+	 */
+	private int isImageCorrupt(File image) throws IOException
 	{
 		byte byteArray[] = FileUtils.readFileToByteArray(image);
 		int length = byteArray.length;
+		int result = 0;
 		// if jpeg
-		if (byteArray[0] == -119 && byteArray[1] == 80 && byteArray[2] == 78)
+		if (byteArray[0] == -119 && byteArray[1] == 80 && byteArray[2] == 78 && byteArray[3] == 71)
 		{
-			// file is a png
-		}
-		else if (byteArray[0] == 255 && byteArray[1] == -40 && byteArray[2] == 255)
+			if (byteArray[length - 8] == 73 && byteArray[length - 7] == 69 && byteArray[length - 6] == 78 && byteArray[length - 5] == 68)
+			{
+				Log.d(LOG_TAG, "image is intact PNG");
+				result = 1;
+				// intact png
+			} else
+			{
+				Log.d(LOG_TAG, "image is corrupt PNG");
+				result = -1;
+				// corrupt png
+			}
+		} else if (byteArray[0] == -1 && byteArray[1] == -40)
 		{
-			// image is a jpeg
+			if (byteArray[length - 2] == -1 && byteArray[length - 1] == -39)
+			{
+				Log.d(LOG_TAG, "image is intact JPG");
+				result = 2;
+				// intact jpg
+			} else
+			{
+				Log.d(LOG_TAG, "image is corrupt JPG");
+				result = -1;
+				// corrupt jpg
+			}
 		}
-
-		// else if png
-		return false;
+		return result;
 	}
 
 	// Downloads the selected image to cache folder on local storage
