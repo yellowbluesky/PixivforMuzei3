@@ -176,6 +176,36 @@ public class PixivArtWorker extends Worker
 		// Muzei does not care about file extensions
 		// Only there to more easily allow local user to open them
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+		// External storage option not checked, store into default internal location
+		// this section tested to work
+		File tempFile = new File(context.getCacheDir(), "temp");
+		FileOutputStream fosTemp = new FileOutputStream(tempFile);
+
+		InputStream inputStream = response.body().byteStream();
+
+		byte[] bufferTemp = new byte[1024 * 1024 * 10];
+		int readTemp;
+		while ((readTemp = inputStream.read(bufferTemp)) != -1)
+		{
+			fosTemp.write(bufferTemp, 0, readTemp);
+		}
+		inputStream.close();
+		fosTemp.close();
+
+		int fileStatus = isImageCorrupt(tempFile);
+		File imageInternal = null;
+		if (fileStatus == -1)
+		{
+			return null;
+		} else if (fileStatus == 2)
+		{
+			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".jpg");
+		} else if (fileStatus == 1)
+		{
+			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		}
+
 		OutputStream fosExternal = null;
 		boolean allowed = false;
 
@@ -202,6 +232,14 @@ public class PixivArtWorker extends Worker
 					{
 						contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
 						contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
+						if (fileStatus == 1)
+						{
+							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
+						} else if (fileStatus == 2)
+						{
+							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+						}
+
 						Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
 						fosExternal = contentResolver.openOutputStream(imageUri);
 						allowed = true;
@@ -217,34 +255,20 @@ public class PixivArtWorker extends Worker
 					{
 						directory.mkdirs();
 					}
-					fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
+
+					if (fileStatus == 1)
+					{
+						fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
+					} else if (fileStatus == 2)
+					{
+						fosExternal = new FileOutputStream(new File(directoryString, filename + ".jpg"));
+					}
+
 					allowed = true;
 				}
 			}
 		}
-		// External storage option not checked, store into default internal location
-		// this section tested to work
-		File tempFile = new File(context.getCacheDir(), "temp");
-		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-		FileOutputStream fosTemp = new FileOutputStream(tempFile);
 
-		InputStream inputStream = response.body().byteStream();
-
-		byte[] bufferTemp = new byte[1024 * 1024 * 10];
-		int readTemp;
-		while ((readTemp = inputStream.read(bufferTemp)) != -1)
-		{
-			fosTemp.write(bufferTemp, 0, readTemp);
-		}
-		inputStream.close();
-		fosTemp.close();
-
-		// check if corrupted
-		if (isImageCorrupt(tempFile))
-		{
-			// delete temp
-			return null;
-		}
 
 		FileInputStream fis = new FileInputStream(tempFile);
 		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
