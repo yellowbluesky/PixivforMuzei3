@@ -322,16 +322,14 @@ public class PixivArtWorker extends Worker
 		Log.i(LOG_TAG, "Getting remote file extensions");
 		Response response;
 
-		// All urls have predictable formats, so we can simply do substring replacement
-		String uri0 = url
-				.replace("c/240x480/", "")
-				.replace("img-master", "img-original")
+		String uri0 = "https://i.pximg.net/img-original" + url.substring(url.indexOf("/img/"));
+		String uri1 = uri0
 				.replace("_master1200", "");
-		String uri1 = uri0.substring(0, uri0.length() - 4);
+		String uri2 = uri1.substring(0, uri1.length() - 4);
 
 		for (String suffix : IMAGE_SUFFIXS)
 		{
-			String uri = uri1 + suffix;
+			String uri = uri2 + suffix;
 			response = PixivArtService.sendGetRequestRanking(HttpUrl.parse(uri));
 			if (response.code() == 200)
 			{
