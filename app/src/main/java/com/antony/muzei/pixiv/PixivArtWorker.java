@@ -49,11 +49,13 @@ import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -123,6 +125,48 @@ public class PixivArtWorker extends Worker
 		Log.i(LOG_TAG, "Stored tokens");
 	}
 
+	/*
+		-1  corrupt
+		0   invalid return
+		1   png
+		2   jpg
+	 */
+	private int isImageCorrupt(File image) throws IOException
+	{
+		byte byteArray[] = FileUtils.readFileToByteArray(image);
+		int length = byteArray.length;
+		int result = 0;
+		// if jpeg
+		if (byteArray[0] == -119 && byteArray[1] == 80 && byteArray[2] == 78 && byteArray[3] == 71)
+		{
+			if (byteArray[length - 8] == 73 && byteArray[length - 7] == 69 && byteArray[length - 6] == 78 && byteArray[length - 5] == 68)
+			{
+				Log.d(LOG_TAG, "image is intact PNG");
+				result = 1;
+				// intact png
+			} else
+			{
+				Log.d(LOG_TAG, "image is corrupt PNG");
+				result = -1;
+				// corrupt png
+			}
+		} else if (byteArray[0] == -1 && byteArray[1] == -40)
+		{
+			if (byteArray[length - 2] == -1 && byteArray[length - 1] == -39)
+			{
+				Log.d(LOG_TAG, "image is intact JPG");
+				result = 2;
+				// intact jpg
+			} else
+			{
+				Log.d(LOG_TAG, "image is corrupt JPG");
+				result = -1;
+				// corrupt jpg
+			}
+		}
+		return result;
+	}
+
 	// Downloads the selected image to cache folder on local storage
 	// Cache folder is periodically pruned of its oldest images by Android
 	private Uri downloadFile(Response response, String filename) throws IOException
@@ -132,6 +176,36 @@ public class PixivArtWorker extends Worker
 		// Muzei does not care about file extensions
 		// Only there to more easily allow local user to open them
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+		// External storage option not checked, store into default internal location
+		// this section tested to work
+		File tempFile = new File(context.getCacheDir(), "temp");
+		FileOutputStream fosTemp = new FileOutputStream(tempFile);
+
+		InputStream inputStream = response.body().byteStream();
+
+		byte[] bufferTemp = new byte[1024 * 1024 * 10];
+		int readTemp;
+		while ((readTemp = inputStream.read(bufferTemp)) != -1)
+		{
+			fosTemp.write(bufferTemp, 0, readTemp);
+		}
+		inputStream.close();
+		fosTemp.close();
+
+		int fileStatus = isImageCorrupt(tempFile);
+		File imageInternal = null;
+		if (fileStatus == -1)
+		{
+			return null;
+		} else if (fileStatus == 2)
+		{
+			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".jpg");
+		} else if (fileStatus == 1)
+		{
+			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		}
+
 		OutputStream fosExternal = null;
 		boolean allowed = false;
 
@@ -158,6 +232,14 @@ public class PixivArtWorker extends Worker
 					{
 						contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
 						contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
+						if (fileStatus == 1)
+						{
+							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
+						} else if (fileStatus == 2)
+						{
+							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+						}
+
 						Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
 						fosExternal = contentResolver.openOutputStream(imageUri);
 						allowed = true;
@@ -173,36 +255,42 @@ public class PixivArtWorker extends Worker
 					{
 						directory.mkdirs();
 					}
-					fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
+
+					if (fileStatus == 1)
+					{
+						fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
+					} else if (fileStatus == 2)
+					{
+						fosExternal = new FileOutputStream(new File(directoryString, filename + ".jpg"));
+					}
+
 					allowed = true;
 				}
 			}
 		}
-		// External storage option not checked, store into default internal location
-		// this section tested to work
 
-		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+
+		FileInputStream fis = new FileInputStream(tempFile);
 		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
-
-		InputStream inputStream = response.body().byteStream();
-
 		byte[] buffer = new byte[1024 * 1024 * 10];
-		int read;
-		while ((read = inputStream.read(buffer)) != -1)
+		int lengthInternal;
+		while ((lengthInternal = fis.read(buffer)) > 0)
 		{
+			fosInternal.write(buffer, 0, lengthInternal);
 			if (allowed)
 			{
-				fosExternal.write(buffer, 0, read);
+				fosExternal.write(buffer, 0, lengthInternal);
 			}
-			fosInternal.write(buffer, 0, read);
 		}
+		fosInternal.close();
+
 		if (allowed)
 		{
 			fosExternal.close();
 		}
-		fosInternal.close();
+		fis.close();
 		response.close();
-		inputStream.close();
+
 		return Uri.fromFile(imageInternal);
 		//downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 
@@ -320,6 +408,10 @@ public class PixivArtWorker extends Worker
 		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
 		Uri localUri = downloadFile(remoteFileExtension, token);
+		if (localUri == null)
+		{
+			return null;
+		}
 		remoteFileExtension.close();
 
 		Log.i(LOG_TAG, "getArtworkRanking(): Exited");
@@ -553,6 +645,12 @@ Regarding rankings
 		String token = pictureMetadata.getString("id");
 		Response imageDataResponse = PixivArtService.sendGetRequestRanking(HttpUrl.parse(imageUrl));
 		Uri localUri = downloadFile(imageDataResponse, token);
+
+		if (localUri == null)
+		{
+			return null;
+		}
+
 		imageDataResponse.close();
 		Log.i(LOG_TAG, "getArtworkAuth(): Exited");
 		return new Artwork.Builder()
