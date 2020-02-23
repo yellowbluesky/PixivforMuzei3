@@ -179,24 +179,26 @@ public class PixivArtWorker extends Worker
 
 		// External storage option not checked, store into default internal location
 		// this section tested to work
-		File tempFile = new File(context.getCacheDir(), "temp");
-		FileOutputStream fosTemp = new FileOutputStream(tempFile);
+		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
 
-		InputStream inputStream = response.body().byteStream();
+		InputStream inputStreamNetwork = response.body().byteStream();
 
 		byte[] bufferTemp = new byte[1024 * 1024 * 10];
 		int readTemp;
-		while ((readTemp = inputStream.read(bufferTemp)) != -1)
+		while ((readTemp = inputStreamNetwork.read(bufferTemp)) != -1)
 		{
-			fosTemp.write(bufferTemp, 0, readTemp);
+			fosInternal.write(bufferTemp, 0, readTemp);
 		}
-		inputStream.close();
-		fosTemp.close();
+		inputStreamNetwork.close();
+		fosInternal.close();
+		response.close();
 
-		int fileStatus = isImageCorrupt(tempFile);
+		int fileStatus = isImageCorrupt(imageInternal);
 
 		if (fileStatus == -1)
 		{
+			imageInternal.delete();
 			return null;
 		}
 //		} else if (fileStatus == 2)
@@ -206,7 +208,6 @@ public class PixivArtWorker extends Worker
 //		{
 //			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename);
 //		}
-		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 
 		OutputStream fosExternal = null;
 		boolean allowed = false;
@@ -271,27 +272,18 @@ public class PixivArtWorker extends Worker
 			}
 		}
 
-
-		FileInputStream fis = new FileInputStream(tempFile);
-		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
-		byte[] buffer = new byte[1024 * 1024 * 10];
-		int lengthInternal;
-		while ((lengthInternal = fis.read(buffer)) > 0)
+		if (allowed)
 		{
-			fosInternal.write(buffer, 0, lengthInternal);
-			if (allowed)
+			FileInputStream fis = new FileInputStream(imageInternal);
+			byte[] buffer = new byte[1024 * 1024 * 10];
+			int lengthInternal;
+			while ((lengthInternal = fis.read(buffer)) > 0)
 			{
 				fosExternal.write(buffer, 0, lengthInternal);
 			}
-		}
-		fosInternal.close();
-
-		if (allowed)
-		{
 			fosExternal.close();
+			fis.close();
 		}
-		fis.close();
-		response.close();
 
 		return Uri.fromFile(imageInternal);
 		//downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
