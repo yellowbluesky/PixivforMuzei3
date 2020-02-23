@@ -62,6 +62,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		super.getCommands(artwork);
 		LinkedList<UserCommand> commands = new LinkedList<>();
+		// Android 10 limits the ability for activities to run in the background
 		if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
 		{
 			UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS, getContext().getString(R.string.command_addToBookmark));
@@ -91,17 +92,13 @@ public class PixivArtProvider extends MuzeiArtProvider
 				getContext().startActivity(intent);
 				break;
 			case COMMAND_SHARE_IMAGE:
-				// Sharing feature doesn't work very well on Android 10
-				// Android 10 restricts background activity startup, and the chooser is started as a
-				// PixivForMuzei3 activity while muzei is the active activity.
-				// To get it to work, the user must open the PixivForMuzei3 Settings activity,
-				// navigate back out, then go and share
-				// Works well on Android versions lower than 10
 				shareImage(artwork);
 				break;
 		}
 	}
 
+	// Provided you are logged in, adds the currently displayed images to your Pixiv bookmarks
+	// Only works on Android 9 and lower, as Android 10 limits the ability to start activities in the background
 	private void addToBookmarks(Artwork artwork)
 	{
 		Log.d("PIXIV_DEBUG", "addToBookmarks(): Entered");
@@ -117,6 +114,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Log.d("PIXIV_DEBUG", "Added to bookmarks");
 	}
 
+	// Creates an intent and shares the image
+	// Only works on Android 9 and lower, as Android 10 limits the ability to start activities in the background
 	private void shareImage(Artwork artwork)
 	{
 		Log.d("PIXIV_DEBUG", "Opening sharing ");

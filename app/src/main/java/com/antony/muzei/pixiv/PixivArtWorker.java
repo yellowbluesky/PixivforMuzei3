@@ -133,7 +133,7 @@ public class PixivArtWorker extends Worker
 	 */
 	private int isImageCorrupt(File image) throws IOException
 	{
-		byte byteArray[] = FileUtils.readFileToByteArray(image);
+		byte[] byteArray = FileUtils.readFileToByteArray(image);
 		int length = byteArray.length;
 		int result = 0;
 		// if jpeg
@@ -167,18 +167,20 @@ public class PixivArtWorker extends Worker
 		return result;
 	}
 
-	// Downloads the selected image to cache folder on local storage
-	// Cache folder is periodically pruned of its oldest images by Android
+	/*
+		First downloads the file to ExternalFilesDir, always with a png file extension
+		Checks if the file is incomplete; if incomplete deletes and returns a null for later retrying
+		Otherwise returns a Uri to the File to the caller
+		If option is checked, also makes a copy into external storage
+		This copy is not used for backing any database
+		This copy also has correct file extensions
+	 */
 	private Uri downloadFile(Response response, String filename) throws IOException
 	{
 		Log.i(LOG_TAG, "Downloading file");
 		Context context = getApplicationContext();
-		// Muzei does not care about file extensions
-		// Only there to more easily allow local user to open them
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-		// External storage option not checked, store into default internal location
-		// this section tested to work
 		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
 
@@ -210,9 +212,11 @@ public class PixivArtWorker extends Worker
 //		}
 
 		OutputStream fosExternal = null;
-		boolean allowed = false;
+		boolean allowedToStoreIntoExternal = false;
 
-		// if option to store into external storage is checked
+		// Android 10 introduced scoped storage
+		// Different code path depending on Android APi level
+		//if (storeIntoExternal)
 		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
 		{
 			// if permission granted
@@ -245,11 +249,10 @@ public class PixivArtWorker extends Worker
 
 						Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
 						fosExternal = contentResolver.openOutputStream(imageUri);
-						allowed = true;
+						allowedToStoreIntoExternal = true;
 					}
 				}
 				// If app OS is N or lower
-				// this section tested to work
 				else
 				{
 					String directoryString = "/storage/emulated/0/Pictures/PixivForMuzei3/";
@@ -267,12 +270,13 @@ public class PixivArtWorker extends Worker
 						fosExternal = new FileOutputStream(new File(directoryString, filename + ".jpg"));
 					}
 
-					allowed = true;
+					allowedToStoreIntoExternal = true;
 				}
 			}
 		}
 
-		if (allowed)
+		// Finally copies the image into external storage if allowed to
+		if (allowedToStoreIntoExternal)
 		{
 			FileInputStream fis = new FileInputStream(imageInternal);
 			byte[] buffer = new byte[1024 * 1024 * 10];
@@ -286,27 +290,14 @@ public class PixivArtWorker extends Worker
 		}
 
 		return Uri.fromFile(imageInternal);
-		//downloadedFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-
-
-//		FileOutputStream fileStream = new FileOutputStream(downloadedFile);
-//		InputStream inputStream = response.body().byteStream();
-//		final byte[] buffer = new byte[1024 * 1024 * 10];
-//		int read;
-//		while ((read = inputStream.read(buffer)) != -1)
-//		{
-//			fileStream.write(buffer, 0, read);
-//		}
-//		fileStream.close();
-//		inputStream.close();
-//
-//		Log.i(LOG_TAG, "Downloaded file");
-//		return Uri.fromFile(downloadedFile);
 	}
 
 	/*
-	Ranking images are only provided with an illustration id
-	We require the correct file extension in order to successfully pull the picture
+	Ranking images are only provided with a URL to a low resolution thumbnail
+	We want the high resolution image, so we need to do some work first
+
+	Secondly, the thumbnail is always a .jpg
+	For the high resolution image we require a correct file extension
 	This method cycles though all possible file extensions until a good response is received
 		i.e. a response that is not a 400 error
 	Returns a Response whose body contains the picture selected to be downloaded
@@ -315,6 +306,15 @@ public class PixivArtWorker extends Worker
 	{
 		Log.i(LOG_TAG, "Getting remote file extensions");
 		Response response;
+
+		/*
+			Thumbnail URL:
+				https://tc-pximg01.techorus-cdn.com/c/240x480/img-master/img/2020/02/19/00/00/39/79583564_p0_master1200.jpg
+			High resolution URL (direct access will 403):
+				https://i.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0.png
+			Accessible high resolution URL:
+				https://i-cf.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0.png
+		 */
 
 		String uri0 = "https://i.pximg.net/img-original" + url.substring(url.indexOf("/img/"));
 		String uri1 = uri0
@@ -383,7 +383,7 @@ public class PixivArtWorker extends Worker
 		JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 		rankingResponse.close();
 
-		writeToFile(overallJson, "rankingLog.txt");
+		//writeToFile(overallJson, "rankingLog.txt");
 
 		JSONObject pictureMetadata;
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -433,26 +433,12 @@ public class PixivArtWorker extends Worker
 	}
 
 	/*
-Filters through the JSON containing the metadata of the pictures of the selected mode
-Picks one image based on the user's setting to show manga and level of NSFW filtering
+		Filters through the JSON containing the metadata of the pictures of the selected mode
+		Picks one image based on the user's setting to show manga and level of NSFW filtering
 
-Regarding feed and bookmarks
-	For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
-		sanity_level
-			2 -> Completely SFW
-			4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
-			6 -> Very ecchi e.g. more explicit and suggestive themes
-		 x_restrict
-			1 -> R18 e.g. nudity and penetration
-
-		In this code x_restrict is treated as a level 8 sanity_level
-
-	For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
-
-Regarding rankings
-	NSFW filtering is performed by checking the value of the "sexual" JSON string
-	Manga filtering is performed by checking the value of the "illust_type" JSON string
-*/
+			NSFW filtering is performed by checking the value of the "sexual" JSON string
+			Manga filtering is performed by checking the value of the "illust_type" JSON string
+	*/
 	private JSONObject filterRanking(JSONArray contents, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatioSetting) throws JSONException
 	{
 		Log.i(LOG_TAG, "filterRanking(): Entering");
@@ -592,7 +578,7 @@ Regarding rankings
 			JSONObject overallJson = new JSONObject((rankingResponse.body().string()));
 			rankingResponse.close();
 
-			writeToFile(overallJson, "authLog.txt");
+			//writeToFile(overallJson, "authLog.txt");
 
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 			int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
@@ -657,6 +643,19 @@ Regarding rankings
 	/*
 		Called by getArtworkAuth to return details about an artwork that complies with
 		filtering restrictions set by the user
+
+		For NSFW filtering the two relevant JSON strings are "sanity_level" and "x_restrict"
+			sanity_level
+				2 -> Completely SFW
+				4 -> Moderately ecchi e.g. beach bikinis, slight upskirts
+				6 -> Very ecchi e.g. more explicit and suggestive themes
+			 x_restrict
+				1 -> R18 e.g. nudity and penetration
+
+			In this code x_restrict is treated as a level 8 sanity_level
+
+		For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
+
 	 */
 	private JSONObject filterFeedAuth(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatio) throws JSONException
 	{
@@ -729,7 +728,7 @@ Regarding rankings
 			}
 			if (!found)
 			{
-				Log.v(LOG_TAG, "filter level not found, was : " + pictureMetadata.getInt("sanity_level"));
+				Log.v(LOG_TAG, "filter level not found, was: " + pictureMetadata.getInt("sanity_level"));
 			}
 		} while (!found);
 
