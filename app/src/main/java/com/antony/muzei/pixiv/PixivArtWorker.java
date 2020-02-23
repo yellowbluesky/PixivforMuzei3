@@ -685,11 +685,11 @@ Regarding rankings
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
 			// Check if duplicate before any other check to not waste time
-//			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
-//			{
-//				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
-//				continue;
-//			}
+			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
+			{
+				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
+				continue;
+			}
 
 			// If user does not want manga to display
 			if (!showManga)
