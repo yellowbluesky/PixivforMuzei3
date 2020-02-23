@@ -194,17 +194,19 @@ public class PixivArtWorker extends Worker
 		fosTemp.close();
 
 		int fileStatus = isImageCorrupt(tempFile);
-		File imageInternal = null;
+
 		if (fileStatus == -1)
 		{
 			return null;
-		} else if (fileStatus == 2)
-		{
-			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".jpg");
-		} else if (fileStatus == 1)
-		{
-			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 		}
+//		} else if (fileStatus == 2)
+//		{
+//			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename);
+//		} else if (fileStatus == 1)
+//		{
+//			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename);
+//		}
+		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 
 		OutputStream fosExternal = null;
 		boolean allowed = false;
