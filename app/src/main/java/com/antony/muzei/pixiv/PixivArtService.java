@@ -36,7 +36,7 @@ class PixivArtService
 	{
 		Log.d(LOG_TAG, "locale is : " + Locale.getDefault().getISO3Language());
 		/* SNI Bypass begin */
-		if (Locale.getDefault().getISO3Language().equals("zho"))
+		//if (Locale.getDefault().getISO3Language().equals("zho"))
 		{
 			Log.d(LOG_TAG, "Bypass in effect");
 			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
