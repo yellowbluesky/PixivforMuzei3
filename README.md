@@ -6,6 +6,8 @@
       
 [googlePlay]: https://play.google.com/store/apps/details?id=com.antony.muzei.pixiv&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1
 
+F-Droid release coming, once the packagers get to my app in their backlog
+
 Pixiv plugin for the new Muzei 3 API
 
 Inspired by [Pixiv for Muzei](https://github.com/dahlia/muzei-pixiv), the aim of this app is to extend functionality and improve usability.
