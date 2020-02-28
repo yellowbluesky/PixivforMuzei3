@@ -182,15 +182,8 @@ public class SettingsActivity extends AppCompatActivity
 		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
 				|| !oldArtist.equals(newArtist))
 		{
-			WorkManager manager = WorkManager.getInstance();
-			Constraints constraints = new Constraints.Builder()
-					.setRequiredNetworkType(NetworkType.CONNECTED)
-					.build();
-			OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
-					.addTag("PIXIV_CACHE")
-					.setConstraints(constraints)
-					.build();
-			manager.enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
+			WorkManager.getInstance().cancelUniqueWork("ANTONY");
+			PixivArtWorker.enqueueLoad(true);
 			if (!oldUpdateMode.equals(newUpdateMode))
 			{
 				Toast.makeText(getApplicationContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
@@ -232,15 +225,8 @@ public class SettingsActivity extends AppCompatActivity
 			// Immediately clear cache Preference
 			findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 			{
-				WorkManager manager = WorkManager.getInstance();
-				Constraints constraints = new Constraints.Builder()
-						.setRequiredNetworkType(NetworkType.CONNECTED)
-						.build();
-				OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ClearCacheWorker.class)
-						.addTag("PIXIV_CACHE")
-						.setConstraints(constraints)
-						.build();
-				manager.enqueueUniqueWork("PIXIV_CACHE", ExistingWorkPolicy.KEEP, request);
+				WorkManager.getInstance().cancelUniqueWork("ANTONY");
+				PixivArtWorker.enqueueLoad(true);
 				Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
 				return true;
 			});
