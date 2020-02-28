@@ -101,24 +101,24 @@ public class PixivArtProvider extends MuzeiArtProvider
 	// Only works on Android 9 and lower, as Android 10 limits the ability to start activities in the background
 	private void addToBookmarks(Artwork artwork)
 	{
-		Log.d("PIXIV_DEBUG", "addToBookmarks(): Entered");
+		Log.d("ANTONY_WORKER", "addToBookmarks(): Entered");
 		String accessToken = PixivArtService.getAccesToken(PreferenceManager.getDefaultSharedPreferences(getContext()));
 		if (accessToken.isEmpty())
 		{
-			Log.d("PIXIV_DEBUG", "No access token found");
+			Log.d("ANTONY_WORKER", "No access token found");
 			new Handler(Looper.getMainLooper()).post(() ->
 					Toast.makeText(getContext(), getContext().getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
 			return;
 		}
 		PixivArtService.sendPostRequest(accessToken, artwork.getToken());
-		Log.d("PIXIV_DEBUG", "Added to bookmarks");
+		Log.d("ANTONY_WORKER", "Added to bookmarks");
 	}
 
 	// Creates an intent and shares the image
 	// Only works on Android 9 and lower, as Android 10 limits the ability to start activities in the background
 	private void shareImage(Artwork artwork)
 	{
-		Log.d("PIXIV_DEBUG", "Opening sharing ");
+		Log.d("ANTONY_WORKER", "Opening sharing ");
 		File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
 		Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
 		Intent sharingIntent = new Intent();

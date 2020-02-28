@@ -73,8 +73,8 @@ import okhttp3.Response;
 
 public class PixivArtWorker extends Worker
 {
-	private static final String LOG_TAG = "PIXIV_DEBUG";
-	private static final String WORKER_TAG = "PIXIV";
+	private static final String LOG_TAG = "ANTONY_WORKER";
+	private static final String WORKER_TAG = "ANTONY";
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 	private static boolean clearArtwork = false;

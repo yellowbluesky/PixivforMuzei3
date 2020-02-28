@@ -29,7 +29,7 @@ import static com.antony.muzei.pixiv.PixivArtProviderDefines.HASH_SECRET;
 
 class PixivArtService
 {
-	private static final String LOG_TAG = "PIXIV_DEBUG";
+	private static final String LOG_TAG = "ANTONY_SERVICE";
 	private static OkHttpClient httpClient = new OkHttpClient();
 
 	static
@@ -40,7 +40,7 @@ class PixivArtService
 		{
 			Log.d(LOG_TAG, "Bypass in effect");
 			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
-					s -> Log.v("aaa", "message====" + s));
+					s -> Log.v("ANTONY_SERVICE", "message====" + s));
 
 			httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 			OkHttpClient.Builder builder = new OkHttpClient.Builder();
