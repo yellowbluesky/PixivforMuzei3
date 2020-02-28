@@ -201,10 +201,10 @@ class PixivArtService
 			// i.e. at most once per hour for normal use case
 			for (byte aMessageDigest : messageDigest)
 			{
-				String h = Integer.toHexString(0xFF & aMessageDigest);
+				StringBuilder h = new StringBuilder(Integer.toHexString(0xFF & aMessageDigest));
 				while (h.length() < 2)
 				{
-					h = "0" + h;
+					h.insert(0, "0");
 				}
 				hexString.append(h);
 			}
