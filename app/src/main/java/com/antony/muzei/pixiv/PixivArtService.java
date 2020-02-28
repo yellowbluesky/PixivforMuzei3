@@ -1,5 +1,6 @@
 package com.antony.muzei.pixiv;
 
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -47,12 +48,14 @@ class PixivArtService
 
 			builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
 			{
+				@SuppressLint("TrustAllX509TrustManager")
 				@Override
 				public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
 				{
 
 				}
 
+				@SuppressLint("TrustAllX509TrustManager")
 				@Override
 				public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
 				{

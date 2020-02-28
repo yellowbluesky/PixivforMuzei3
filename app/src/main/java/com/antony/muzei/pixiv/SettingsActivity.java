@@ -35,9 +35,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -96,26 +94,22 @@ public class SettingsActivity extends AppCompatActivity
 		oldArtist = sharedPrefs.getString("pref_artistId", "");
 		newArtist = oldArtist;
 
-		prefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
+		prefChangeListener = (sharedPreferences, key) ->
 		{
-			@Override
-			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
+			switch (key)
 			{
-				switch (key)
-				{
-					case "pref_loginPassword":
-						newCreds = sharedPrefs.getString("pref_loginPassword", "");
-						break;
-					case "pref_updateMode":
-						newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
-						break;
-					case "pref_tagSearch":
-						newTag = sharedPrefs.getString("pref_tagSearch", "");
-						break;
-					case "pref_artistId":
-						newArtist = sharedPrefs.getString("pref_artistId", "");
-						break;
-				}
+				case "pref_loginPassword":
+					newCreds = sharedPrefs.getString("pref_loginPassword", "");
+					break;
+				case "pref_updateMode":
+					newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
+					break;
+				case "pref_tagSearch":
+					newTag = sharedPrefs.getString("pref_tagSearch", "");
+					break;
+				case "pref_artistId":
+					newArtist = sharedPrefs.getString("pref_artistId", "");
+					break;
 			}
 		};
 	}
@@ -175,7 +169,7 @@ public class SettingsActivity extends AppCompatActivity
 					.enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request);
 		} else
 		{
-			WorkManager.getInstance((getApplicationContext())).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
+			WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
 		}
 
 		// If user has changed update, filter mode, or search tag, toast to indicate cache is getting cleared
@@ -440,10 +434,8 @@ public class SettingsActivity extends AppCompatActivity
 			});
 
 			externalStoragePref.setOnPreferenceChangeListener(((preference, newValue) ->
-			{
-				return ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-						== PackageManager.PERMISSION_GRANTED;
-			}));
+					ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+							== PackageManager.PERMISSION_GRANTED));
 
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))

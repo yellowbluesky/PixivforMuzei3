@@ -251,6 +251,7 @@ public class PixivArtWorker extends Worker
 						fosExternal = contentResolver.openOutputStream(imageUri);
 						allowedToStoreIntoExternal = true;
 					}
+					cursor.close();
 				}
 				// If app OS is N or lower
 				else
