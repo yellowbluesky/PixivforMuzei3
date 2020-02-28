@@ -100,9 +100,9 @@ public class PixivArtWorker extends Worker
 		OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PixivArtWorker.class)
 				.setConstraints(constraints)
 				.addTag(WORKER_TAG)
-				.setBackoffCriteria(BackoffPolicy.LINEAR, 15, TimeUnit.SECONDS)
+				.setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
 				.build();
-		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.APPEND, request);
+		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request);
 		// Must be a uniqueWork
 		// If not Muzei will queue MANY at once on initial load
 		// This is good for saturating a network link and for fast picture downloads
