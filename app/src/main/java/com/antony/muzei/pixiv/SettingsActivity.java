@@ -65,10 +65,9 @@ public class SettingsActivity extends AppCompatActivity
 				.add(R.id.FeedPreferencesFragment, new SettingsFragment())
 				.commit();
 
+		// If Muzei is not installed, this will redirect the user to Muzei's Play Store listing
 		if (!isMuzeiInstalled())
 		{
-			// You must have Muzei installed for this app to work
-			// Click here to install Muzei
 			final String appPackageName = "net.nurik.roman.muzei"; // getPackageName() from Context or Activity object
 			try
 			{
@@ -81,7 +80,8 @@ public class SettingsActivity extends AppCompatActivity
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-		// Stores user toggleable variables into a temporary store for later comparison in onDestroy()
+		// Stores user toggleable variables into a temporary store for later comparison in onStop()
+		// If the value of the preference on Activity creation is different to Activity stop, then take certain action
 		oldCreds = sharedPrefs.getString("pref_loginPassword", "");
 		newCreds = oldCreds;
 
@@ -172,7 +172,8 @@ public class SettingsActivity extends AppCompatActivity
 			WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
 		}
 
-		// If user has changed update, filter mode, or search tag, toast to indicate cache is getting cleared
+		// If user has changed update, filter mode, or search tag:
+		//  Immediately stop any pending work, clear the Provider of any Artwork, and then toast
 		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
 				|| !oldArtist.equals(newArtist))
 		{
@@ -216,7 +217,7 @@ public class SettingsActivity extends AppCompatActivity
 			setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-			// Immediately clear cache Preference
+			// Immediately clear image cache Preference
 			findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 			{
 				WorkManager.getInstance().cancelUniqueWork("ANTONY");
@@ -261,9 +262,11 @@ public class SettingsActivity extends AppCompatActivity
 			}
 
 
-			// Update mode Preference
+			// Reveals UI elements as needed depending on Update Mode selection
 			findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 			{
+				// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
+				// and hide the ranking NSFW filtering
 				if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
 						.contains(newValue))
 				{
@@ -296,16 +299,17 @@ public class SettingsActivity extends AppCompatActivity
 				return true;
 			});
 
+			// All this is needed for the arbitrary selection NSFW filtering
+			// Resets to default SFW filtering is all options are unchecked
+			// Prints a summary string based on selection
 			// Updates authFilterSelectPref summary as user updates it
 			MultiSelectListPreference authFilterSelectPref = findPreference("pref_authFilterSelect");
 			authFilterSelectPref.setOnPreferenceChangeListener((preference, newValue) ->
 			{
-				Log.d("manual", "pref changed");
-
-				// for some reason 2 is an empty selection
+				// Resets to SFW on empty selection
+				// for some reason a length of 2 is an empty selection
 				if (newValue.toString().length() == 2)
 				{
-					Log.v("MANUAL", "pref change empty set");
 					Set<String> defaultSet = new HashSet<>();
 					defaultSet.add("2");
 					authFilterSelectPref.setValues(defaultSet);
@@ -317,6 +321,8 @@ public class SettingsActivity extends AppCompatActivity
 					return false;
 				}
 
+				// Prints a comma delimited string of user selections. There is no trailing comma
+				// TODO there's gotta be a better wau of doing this
 				String str = newValue.toString();
 				ArrayList<Integer> arrayList = new ArrayList<>();
 				for (int i = 0; i < str.length(); i++)
@@ -326,11 +332,11 @@ public class SettingsActivity extends AppCompatActivity
 						arrayList.add(Character.getNumericValue(str.charAt(i)));
 					}
 				}
-				String[] authEntriesAvailable = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
+				String[] authFilterEntriesPossible = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
 				StringBuilder stringBuilderAuth = new StringBuilder();
 				for (int i = 0; i < arrayList.size(); i++)
 				{
-					stringBuilderAuth.append(authEntriesAvailable[(arrayList.get(i) - 2) / 2]);
+					stringBuilderAuth.append(authFilterEntriesPossible[(arrayList.get(i) - 2) / 2]);
 					if (i != arrayList.size() - 1)
 					{
 						stringBuilderAuth.append(", ");
@@ -344,6 +350,7 @@ public class SettingsActivity extends AppCompatActivity
 			});
 
 			// Generates the authFilterSelectPref summary during activity startup
+			// TODO combine this with the above summary setting code section
 			Set<String> chosenLevelsSet = sharedPrefs.getStringSet("pref_authFilterSelect", null);
 			String[] chosenLevels = chosenLevelsSet.toArray(new String[0]);
 			String[] entriesAvailableAuth = getResources().getStringArray(R.array.pref_authFilterLevel_entries);
@@ -404,7 +411,7 @@ public class SettingsActivity extends AppCompatActivity
 				return true;
 			});
 
-			// Generates the authFilterSelectPref summary during activity startup
+			// Generates the ranking NSFW filter summary during activity startup
 			Set<String> chosenLevelsSetRanking = sharedPrefs.getStringSet("pref_rankingFilterSelect", null);
 			String[] chosenLevelsRanking = chosenLevelsSetRanking.toArray(new String[0]);
 			String[] entriesAvailableRanking = getResources().getStringArray(R.array.pref_rankingFilterLevel_entries);
@@ -419,6 +426,7 @@ public class SettingsActivity extends AppCompatActivity
 			}
 			String summaryRanking = stringBuilderRanking.toString();
 			rankingFilterSelectPref.setSummary(summaryRanking);
+
 
 			Preference externalStoragePref = findPreference("pref_storeInExtStorage");
 			externalStoragePref.setOnPreferenceClickListener(preference ->

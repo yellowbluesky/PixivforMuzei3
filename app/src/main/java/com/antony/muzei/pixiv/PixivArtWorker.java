@@ -107,7 +107,7 @@ public class PixivArtWorker extends Worker
 		// If not Muzei will queue MANY at once on initial load
 		// This is good for saturating a network link and for fast picture downloads
 		// However, race conditions develop if work required is authenticated
-		// uniqueue work ensures that only one Artwork is being processed at once
+		// unique work ensures that only one Artwork is being processed at once
 	}
 
 	// Upon successful authentication stores tokens returned from Pixiv into device memory
@@ -143,12 +143,10 @@ public class PixivArtWorker extends Worker
 			{
 				Log.d(LOG_TAG, "image is intact PNG");
 				result = 1;
-				// intact png
 			} else
 			{
 				Log.d(LOG_TAG, "image is corrupt PNG");
 				result = -1;
-				// corrupt png
 			}
 		} else if (byteArray[0] == -1 && byteArray[1] == -40)
 		{
@@ -156,12 +154,10 @@ public class PixivArtWorker extends Worker
 			{
 				Log.d(LOG_TAG, "image is intact JPG");
 				result = 2;
-				// intact jpg
 			} else
 			{
 				Log.d(LOG_TAG, "image is corrupt JPG");
 				result = -1;
-				// corrupt jpg
 			}
 		}
 		return result;
