@@ -126,13 +126,10 @@ public class PixivArtWorker extends Worker
 	}
 
 	/*
-		-1  corrupt
-		0   invalid return
 		1   png
 		2   jpg
 	 */
-	// TODO rename this function
-	private int isImageCorrupt(File image) throws IOException, CorruptFileException
+	private int getLocalFileExtension(File image) throws IOException, CorruptFileException
 	{
 		byte[] byteArray = FileUtils.readFileToByteArray(image);
 		int length = byteArray.length;
@@ -147,7 +144,6 @@ public class PixivArtWorker extends Worker
 			} else
 			{
 				Log.d(LOG_TAG, "image is corrupt PNG");
-				result = -1;
 				throw new CorruptFileException("Corrupt PNG");
 			}
 		} else if (byteArray[0] == -1 && byteArray[1] == -40)
@@ -159,7 +155,6 @@ public class PixivArtWorker extends Worker
 			} else
 			{
 				Log.d(LOG_TAG, "image is corrupt JPG");
-				result = -1;
 				throw new CorruptFileException("Corrupt JPG");
 			}
 		}
@@ -195,7 +190,7 @@ public class PixivArtWorker extends Worker
 		fosInternal.close();
 		response.close();
 
-		int fileExtension = isImageCorrupt(imageInternal);
+		int fileExtension = getLocalFileExtension(imageInternal);
 
 //		} else if (fileStatus == 2)
 //		{
