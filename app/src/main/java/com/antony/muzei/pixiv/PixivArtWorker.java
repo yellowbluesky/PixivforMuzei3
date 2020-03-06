@@ -719,6 +719,11 @@ public class PixivArtWorker extends Worker
 		return pictureMetadata;
 	}
 
+	/*
+		0   Any aspect ratio
+		1   Landscape
+		2   Portrait
+	 */
 	private boolean isDesiredAspectRatio(JSONObject pictureMetadata, int aspectRatioSetting) throws JSONException
 	{
 		int width = pictureMetadata.getInt("width");
@@ -845,6 +850,8 @@ public class PixivArtWorker extends Worker
 		{
 			client.addArtwork((artworkArrayList));
 		}
+		Log.d(LOG_TAG, "Work completed");
+
 		return Result.success();
 	}
 }
