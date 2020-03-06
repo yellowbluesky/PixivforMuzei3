@@ -820,10 +820,10 @@ public class PixivArtWorker extends Worker
 		Log.d(LOG_TAG, "Starting work");
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
-		int terminator = clearArtwork ? 3 : 1;
+		int numberOfArtworkToDownload = clearArtwork ? 3 : 1;
 		try
 		{
-			for (int i = 0; i < terminator; i++)
+			for (int i = 0; i < numberOfArtworkToDownload; i++)
 			{
 				Artwork artwork = getArtwork();
 				artworkArrayList.add(artwork);
@@ -831,6 +831,10 @@ public class PixivArtWorker extends Worker
 		} catch (IOException | JSONException | CorruptFileException ex)
 		{
 			ex.printStackTrace();
+			if (!artworkArrayList.isEmpty())
+			{
+				client.addArtwork(artworkArrayList);
+			}
 			return Result.retry();
 		}
 
