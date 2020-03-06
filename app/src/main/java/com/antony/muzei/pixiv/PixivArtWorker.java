@@ -825,6 +825,7 @@ public class PixivArtWorker extends Worker
 		Log.d(LOG_TAG, "Starting work");
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
+		// Add three new artwork if clearing cache, otherwise just the one
 		int numberOfArtworkToDownload = clearArtwork ? 3 : 1;
 		try
 		{
@@ -845,10 +846,11 @@ public class PixivArtWorker extends Worker
 
 		if (clearArtwork)
 		{
+			clearArtwork = false;
 			client.setArtwork(artworkArrayList);
 		} else
 		{
-			client.addArtwork((artworkArrayList));
+			client.addArtwork(artworkArrayList);
 		}
 		Log.d(LOG_TAG, "Work completed");
 
