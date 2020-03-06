@@ -1,3 +1,5 @@
+package com.antony.muzei.pixiv;
+
 public class CorruptFileException extends Exception
 {
 	public CorruptFileException(String message)

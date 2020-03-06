@@ -131,7 +131,8 @@ public class PixivArtWorker extends Worker
 		1   png
 		2   jpg
 	 */
-	private int isImageCorrupt(File image) throws IOException
+	// TODO rename this function
+	private int isImageCorrupt(File image) throws IOException, CorruptFileException
 	{
 		byte[] byteArray = FileUtils.readFileToByteArray(image);
 		int length = byteArray.length;
@@ -147,6 +148,7 @@ public class PixivArtWorker extends Worker
 			{
 				Log.d(LOG_TAG, "image is corrupt PNG");
 				result = -1;
+				throw new CorruptFileException("Corrupt PNG");
 			}
 		} else if (byteArray[0] == -1 && byteArray[1] == -40)
 		{
@@ -158,6 +160,7 @@ public class PixivArtWorker extends Worker
 			{
 				Log.d(LOG_TAG, "image is corrupt JPG");
 				result = -1;
+				throw new CorruptFileException("Corrupt JPG");
 			}
 		}
 		return result;
@@ -171,7 +174,7 @@ public class PixivArtWorker extends Worker
 		This copy is not used for backing any database
 		This copy also has correct file extensions
 	 */
-	private Uri downloadFile(Response response, String filename) throws IOException
+	private Uri downloadFile(Response response, String filename) throws IOException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "Downloading file");
 		Context context = getApplicationContext();
@@ -192,13 +195,8 @@ public class PixivArtWorker extends Worker
 		fosInternal.close();
 		response.close();
 
-		int fileStatus = isImageCorrupt(imageInternal);
+		int fileExtension = isImageCorrupt(imageInternal);
 
-		if (fileStatus == -1)
-		{
-			imageInternal.delete();
-			return null;
-		}
 //		} else if (fileStatus == 2)
 //		{
 //			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename);
@@ -235,10 +233,10 @@ public class PixivArtWorker extends Worker
 					{
 						contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
 						contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
-						if (fileStatus == 1)
+						if (fileExtension == 1)
 						{
 							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
-						} else if (fileStatus == 2)
+						} else if (fileExtension == 2)
 						{
 							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
 						}
@@ -259,10 +257,10 @@ public class PixivArtWorker extends Worker
 						directory.mkdirs();
 					}
 
-					if (fileStatus == 1)
+					if (fileExtension == 1)
 					{
 						fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
-					} else if (fileStatus == 2)
+					} else if (fileExtension == 2)
 					{
 						fosExternal = new FileOutputStream(new File(directoryString, filename + ".jpg"));
 					}
@@ -343,7 +341,7 @@ public class PixivArtWorker extends Worker
 	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
 	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
-	private Artwork getArtworkRanking(String mode) throws IOException, JSONException
+	private Artwork getArtworkRanking(String mode) throws IOException, JSONException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "getArtworkRanking(): Entering");
 		Log.d(LOG_TAG, "Mode: " + mode);
@@ -396,11 +394,10 @@ public class PixivArtWorker extends Worker
 		String token = pictureMetadata.getString("illust_id");
 		attribution += pictureMetadata.get("rank");
 		Response remoteFileExtension = getRemoteFileExtension(pictureMetadata.getString("url"));
+
 		Uri localUri = downloadFile(remoteFileExtension, token);
-		if (localUri == null)
-		{
-			return null;
-		}
+
+
 		remoteFileExtension.close();
 
 		Log.i(LOG_TAG, "getArtworkRanking(): Exited");
@@ -504,7 +501,7 @@ public class PixivArtWorker extends Worker
 	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
 	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
-	private Artwork getArtworkAuth(String mode, String userId, String accessToken, String tag_search) throws IOException, JSONException
+	private Artwork getArtworkAuth(String mode, String userId, String accessToken, String tag_search) throws IOException, JSONException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "getArtworkAuth(): Entering");
 		Log.d(LOG_TAG, "Mode: " + mode);
@@ -620,11 +617,6 @@ public class PixivArtWorker extends Worker
 		String token = pictureMetadata.getString("id");
 		Response imageDataResponse = PixivArtService.sendGetRequestRanking(HttpUrl.parse(imageUrl));
 		Uri localUri = downloadFile(imageDataResponse, token);
-
-		if (localUri == null)
-		{
-			return null;
-		}
 
 		imageDataResponse.close();
 		Log.i(LOG_TAG, "getArtworkAuth(): Exited");
@@ -775,7 +767,7 @@ public class PixivArtWorker extends Worker
 		Also acquires an access token to be passed into getArtworkAuth()
 			Why is this function the one acquiring the access token?
 	 */
-	private Artwork getArtwork()
+	private Artwork getArtwork() throws IOException, JSONException, CorruptFileException
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		String mode = sharedPrefs.getString("pref_updateMode", "daily_rank");
@@ -814,37 +806,15 @@ public class PixivArtWorker extends Worker
 			}
 		}
 
-		try
+		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
 		{
-			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
-			{
-				String userId = sharedPrefs.getString("userId", "");
-				artwork = getArtworkAuth(mode, userId, accessToken, sharedPrefs.getString("pref_tagSearch", ""));
-			} else
-			{
-				artwork = getArtworkRanking(mode);
-			}
-		} catch (IOException | JSONException ex)
+			String userId = sharedPrefs.getString("userId", "");
+			artwork = getArtworkAuth(mode, userId, accessToken, sharedPrefs.getString("pref_tagSearch", ""));
+		} else
 		{
-			ex.printStackTrace();
+			artwork = getArtworkRanking(mode);
 		}
 		return artwork;
-	}
-
-	/*
-		On any error/exception in the program (JSONException, network error, cannot access storage)
-		this method will return true/artwork is null.
-		Without this function, null Artwork's would have been added to the ContentProvider, resulting
-		in app freezing until storage was cleared.
-	 */
-	private boolean isArtworkNull(Artwork artwork)
-	{
-		if (artwork == null)
-		{
-			Log.e(LOG_TAG, "Null artwork returned, retrying at later time");
-			return true;
-		}
-		return false;
 	}
 
 	@NonNull
@@ -854,40 +824,28 @@ public class PixivArtWorker extends Worker
 		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		Log.d(LOG_TAG, "Starting work");
 
-		// If we don't need to clear the cache, fetch just a single image on request
-		if (!clearArtwork)
+		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
+		int terminator = clearArtwork ? 1 : 3;
+		try
 		{
-			Artwork artwork = getArtwork();
-			if (isArtworkNull(artwork))
-			{
-				return Result.retry();
-			}
-			client.addArtwork(artwork);
-		}
-		// Cache is being cleared for whatever reason, so we initially populate the
-		// database with 3 images.
-		// All are submitted at once to Muzei using an ArrayList
-		else
-		{
-			clearArtwork = false;
-			ArrayList<Artwork> artworkArrayList = new ArrayList<>();
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < terminator; i++)
 			{
 				Artwork artwork = getArtwork();
-				if (isArtworkNull(artwork))
-				{
-					// Add what we can
-					if (!artworkArrayList.isEmpty())
-					{
-						client.setArtwork(artworkArrayList);
-					}
-					return Result.retry();
-				}
 				artworkArrayList.add(artwork);
 			}
-			client.setArtwork(artworkArrayList);
+		} catch (IOException | JSONException | CorruptFileException ex)
+		{
+			ex.printStackTrace();
+			return Result.retry();
 		}
-		Log.d(LOG_TAG, "Work completed");
+
+		if (clearArtwork)
+		{
+			client.setArtwork(artworkArrayList);
+		} else
+		{
+			client.addArtwork((artworkArrayList));
+		}
 		return Result.success();
 	}
 }
