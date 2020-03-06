@@ -57,21 +57,25 @@
             android:persistent="true"
             android:title="@string/prefTitle_authFilterSelect"
             app:isPreferenceVisible="false" />
-        <DropDownPreference
-            android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
-            android:entries="@array/pref_aspectRatio_entries"
-            android:entryValues="@array/pref_aspectRatio_entryValues"
-            android:key="pref_aspectRatioSelect"
-            android:persistent="true"
-            android:summary="%s"
-            android:title="@string/prefTitle_aspectRatio" />
+        <PreferenceCategory
+            android:key="expPref_advFiltering"
+            android:title="Advanced filtering"
+            app:initialExpandedChildrenCount="0">
+            <DropDownPreference
+                android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
+                android:entries="@array/pref_aspectRatio_entries"
+                android:entryValues="@array/pref_aspectRatio_entryValues"
+                android:key="pref_aspectRatioSelect"
+                android:persistent="true"
+                android:summary="%s"
+                android:title="@string/prefTitle_aspectRatio" />
+            <SwitchPreference
+                android:key="pref_showManga"
+                android:persistent="true"
+                android:title="@string/prefTitle_showManga" />
+        </PreferenceCategory>
+
         <SwitchPreference
-            android:key="pref_showManga"
-            android:persistent="true"
-            android:title="@string/prefTitle_showManga"
-            app:allowDividerBelow="true"/>
-        <SwitchPreference
-            app:allowDividerAbove="true"
             android:key="pref_autoClearMode"
             android:persistent="true"
             android:title="@string/prefTitle_autoClearMode" />
