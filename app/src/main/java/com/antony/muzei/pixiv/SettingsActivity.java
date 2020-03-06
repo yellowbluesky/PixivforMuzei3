@@ -245,6 +245,7 @@ public class SettingsActivity extends AppCompatActivity
 					.contains(updateMode))
 			{
 				findPreference("pref_authFilterSelect").setVisible(true);
+				findPreference("prefCat_loginSettings").setVisible(true);
 				if (updateMode.equals("tag_search"))
 				{
 					Preference tagSearch = findPreference("pref_tagSearch");
