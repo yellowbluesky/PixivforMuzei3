@@ -820,7 +820,7 @@ public class PixivArtWorker extends Worker
 		Log.d(LOG_TAG, "Starting work");
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
-		int terminator = clearArtwork ? 1 : 3;
+		int terminator = clearArtwork ? 3 : 1;
 		try
 		{
 			for (int i = 0; i < terminator; i++)
