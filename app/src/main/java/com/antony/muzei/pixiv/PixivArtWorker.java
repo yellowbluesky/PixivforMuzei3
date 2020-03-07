@@ -449,7 +449,7 @@ public class PixivArtWorker extends Worker
 				continue;
 			}
 
-			if (pictureMetadata.getInt("view_count") < minimumViews)
+			if (!isEnoughViews(pictureMetadata.getInt("total_view"), minimumViews))
 			{
 				Log.v(LOG_TAG, "Not enough views");
 				continue;
@@ -702,7 +702,7 @@ public class PixivArtWorker extends Worker
 			}
 
 			// TODO make this a function
-			if (pictureMetadata.getInt("total_view") < minimumViews)
+			if (!isEnoughViews(pictureMetadata.getInt("total_view"), minimumViews))
 			{
 				Log.v(LOG_TAG, "Not enough views");
 				continue;
@@ -734,6 +734,11 @@ public class PixivArtWorker extends Worker
 		} while (!found);
 
 		return pictureMetadata;
+	}
+
+	boolean isEnoughViews(int artworkViewCount, int minimumDesiredViews)
+	{
+		return artworkViewCount > (minimumDesiredViews * 500);
 	}
 
 	/*
