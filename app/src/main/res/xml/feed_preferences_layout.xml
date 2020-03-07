@@ -73,6 +73,12 @@
                 android:key="pref_showManga"
                 android:persistent="true"
                 android:title="@string/prefTitle_showManga" />
+            <SeekBarPreference
+                android:defaultValue="0"
+                android:key="prefSlider_minViews"
+                android:max="100"
+                android:persistent="true"
+                android:title="Minimum artwork views" />
         </PreferenceCategory>
 
         <SwitchPreference

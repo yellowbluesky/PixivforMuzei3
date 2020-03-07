@@ -691,6 +691,12 @@ public class PixivArtWorker extends Worker
 				continue;
 			}
 
+			if (!isEnoughViews())
+			{
+				Log.v(LOG_TAG, "Not enough views");
+				continue;
+			}
+
 			// See if there is a match between chosen artwork's sanity level and those desired
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
