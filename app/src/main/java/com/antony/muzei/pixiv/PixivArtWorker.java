@@ -383,8 +383,9 @@ public class PixivArtWorker extends Worker
 		defaultRankingSelect.add("0");
 		Set<String> rankingFilterSelect = sharedPrefs.getStringSet("pref_rankingFilterSelect", defaultRankingSelect);
 		int aspectRatioSettings = Integer.parseInt(sharedPrefs.getString("pref_aspectRatioSelect", "0"));
+		int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
 		pictureMetadata = filterRanking(overallJson.getJSONArray("contents"),
-				showManga, rankingFilterSelect, aspectRatioSettings);
+				showManga, rankingFilterSelect, aspectRatioSettings, minimumViews);
 
 		String token = pictureMetadata.getString("illust_id");
 		attribution += pictureMetadata.get("rank");
@@ -428,7 +429,8 @@ public class PixivArtWorker extends Worker
 			NSFW filtering is performed by checking the value of the "sexual" JSON string
 			Manga filtering is performed by checking the value of the "illust_type" JSON string
 	*/
-	private JSONObject filterRanking(JSONArray contents, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatioSetting) throws JSONException
+	private JSONObject filterRanking(JSONArray contents, boolean showManga, Set<String> selectedFilterLevelSet,
+	                                 int aspectRatioSetting, int minimumViews) throws JSONException
 	{
 		Log.i(LOG_TAG, "filterRanking(): Entering");
 		JSONObject pictureMetadata;
@@ -444,6 +446,12 @@ public class PixivArtWorker extends Worker
 			if (isDuplicate(Integer.toString(pictureMetadata.getInt("illust_id"))))
 			{
 				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("illust_id"));
+				continue;
+			}
+
+			if (pictureMetadata.getInt("view_count") < minimumViews)
+			{
+				Log.v(LOG_TAG, "Not enough views");
 				continue;
 			}
 
@@ -577,9 +585,10 @@ public class PixivArtWorker extends Worker
 			// Opening the app populates the shared preference with a default entry
 			// As opposed to ranking, where there can be an empty shared preference
 			Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
+			int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
 
 			pictureMetadata = filterFeedAuth(overallJson.getJSONArray("illusts"),
-					showManga, selectedFilterLevel, aspectRatioSettings);
+					showManga, selectedFilterLevel, aspectRatioSettings, minimumViews);
 			if (pictureMetadata == null)
 			{
 				// 30 added because thats how many artworks are in a single auth update mode JSON
@@ -641,7 +650,8 @@ public class PixivArtWorker extends Worker
 		For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
 
 	 */
-	private JSONObject filterFeedAuth(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet, int aspectRatio) throws JSONException
+	private JSONObject filterFeedAuth(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet,
+	                                  int aspectRatio, int minimumViews) throws JSONException
 	{
 		Log.i(LOG_TAG, "filterFeedAuth(): Entering");
 		Random random = new Random();
@@ -691,7 +701,8 @@ public class PixivArtWorker extends Worker
 				continue;
 			}
 
-			if (!isEnoughViews())
+			// TODO make this a function
+			if (pictureMetadata.getInt("total_view") < minimumViews)
 			{
 				Log.v(LOG_TAG, "Not enough views");
 				continue;
