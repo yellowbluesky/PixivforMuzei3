@@ -461,6 +461,16 @@ public class SettingsActivity extends AppCompatActivity
 				return true;
 			})));
 
+			SeekBarPreference numToDownloadSlider = findPreference("prefSlider_numToDownload");
+			numToDownloadSlider.setUpdatesContinuously(true);
+			numToDownloadSlider.setSummary(Integer.toString(
+					sharedPrefs.getInt("prefSlider_numToDownload", 2)));
+			numToDownloadSlider.setOnPreferenceChangeListener((((preference, newValue) ->
+			{
+				numToDownloadSlider.setSummary(Integer.toString((Integer) newValue));
+				return true;
+			})));
+
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))
 //			{

@@ -18,6 +18,7 @@
 
     <string name="prefTitle_showManga">Show manga</string>
     <string name="prefTitle_minimumViews">Artwork minimum views</string>
+    <string name="prefTitle_numToDownload">Number of artwork to download at a time</string>
 
     <string name="prefTitle_aspectRatio">Artwork aspect ratio</string>
     <string name="pref_aspectRatioDefault_entryValues">0</string>
