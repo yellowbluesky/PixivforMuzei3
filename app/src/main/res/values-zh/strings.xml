@@ -58,4 +58,5 @@
     <string name="toast_loginFirst">pixiv for Muzei 3: 先登录</string>
     <string name="prefTitle_minimumViews">艺术品最低视野</string>
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
+    <string name="prefTitle_numToDownload">一次下载的图稿数量</string>
 </resources>
