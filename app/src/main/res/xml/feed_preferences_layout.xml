@@ -78,7 +78,7 @@
                 android:key="prefSlider_minViews"
                 android:max="100"
                 android:persistent="true"
-                android:title="Minimum artwork views" />
+                android:title="@string/prefTitle_minimumViews" />
         </PreferenceCategory>
 
         <SwitchPreference
