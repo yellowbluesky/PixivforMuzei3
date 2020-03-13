@@ -449,7 +449,7 @@ public class PixivArtWorker extends Worker
 				continue;
 			}
 
-			if (!isEnoughViews(pictureMetadata.getInt("total_view"), minimumViews))
+			if (!isEnoughViews(pictureMetadata.getInt("view_count"), minimumViews))
 			{
 				Log.v(LOG_TAG, "Not enough views");
 				continue;
@@ -848,7 +848,8 @@ public class PixivArtWorker extends Worker
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		// Add three new artwork if clearing cache, otherwise just the one
-		int numberOfArtworkToDownload = clearArtwork ? 3 : 1;
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		int numberOfArtworkToDownload = sharedPrefs.getInt("prefSlider_numToDownload", 2);
 		try
 		{
 			for (int i = 0; i < numberOfArtworkToDownload; i++)
@@ -875,6 +876,7 @@ public class PixivArtWorker extends Worker
 			client.addArtwork(artworkArrayList);
 		}
 		Log.d(LOG_TAG, "Work completed");
+		Log.d(LOG_TAG, "Submitted " + numberOfArtworkToDownload);
 
 		return Result.success();
 	}
