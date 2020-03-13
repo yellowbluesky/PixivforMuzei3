@@ -489,7 +489,6 @@ public class PixivArtWorker extends Worker
 					Log.d(LOG_TAG, "matching filtering not found");
 				}
 			}
-
 		} while (!found);
 
 		Log.i(LOG_TAG, "filterRanking(): Exited");
@@ -736,6 +735,7 @@ public class PixivArtWorker extends Worker
 		return pictureMetadata;
 	}
 
+	// Scalar must match with scalar in SettingsActivity
 	boolean isEnoughViews(int artworkViewCount, int minimumDesiredViews)
 	{
 		return artworkViewCount > (minimumDesiredViews * 500);

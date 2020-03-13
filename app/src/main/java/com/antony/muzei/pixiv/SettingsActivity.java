@@ -448,10 +448,13 @@ public class SettingsActivity extends AppCompatActivity
 							== PackageManager.PERMISSION_GRANTED));
 
 
+			// Artwork minimum views slider
+			// Updates the summary in real time as the user drags the thumb
+			// Increments of 500, hence the scalar
 			SeekBarPreference minimumViewSliderPref = findPreference("prefSlider_minViews");
 			minimumViewSliderPref.setUpdatesContinuously(true);
-			int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
-			minimumViewSliderPref.setSummary(Integer.toString(minimumViews * 500));
+			minimumViewSliderPref.setSummary(Integer.toString(
+					sharedPrefs.getInt("prefSlider_minViews", 0) * 500));
 			minimumViewSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
 			{
 				minimumViewSliderPref.setSummary(Integer.toString((Integer) newValue * 500));
