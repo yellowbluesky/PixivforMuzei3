@@ -33,6 +33,7 @@ import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.preference.SeekBarPreference;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
@@ -445,6 +446,20 @@ public class SettingsActivity extends AppCompatActivity
 			externalStoragePref.setOnPreferenceChangeListener(((preference, newValue) ->
 					ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
 							== PackageManager.PERMISSION_GRANTED));
+
+
+			// Artwork minimum views slider
+			// Updates the summary in real time as the user drags the thumb
+			// Increments of 500, hence the scalar
+			SeekBarPreference minimumViewSliderPref = findPreference("prefSlider_minViews");
+			minimumViewSliderPref.setUpdatesContinuously(true);
+			minimumViewSliderPref.setSummary(Integer.toString(
+					sharedPrefs.getInt("prefSlider_minViews", 0) * 500));
+			minimumViewSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
+			{
+				minimumViewSliderPref.setSummary(Integer.toString((Integer) newValue * 500));
+				return true;
+			})));
 
 			// Hide app icon if switch is activated
 //			if (!sharedPrefs.getBoolean("pref_hideLauncherIcon", false))

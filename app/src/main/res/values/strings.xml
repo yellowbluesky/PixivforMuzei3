@@ -17,6 +17,7 @@
     <string name="prefTitle_authFilterSelect">Feed NSFW filter level</string>
 
     <string name="prefTitle_showManga">Show manga</string>
+    <string name="prefTitle_minimumViews">Artwork minimum views</string>
 
     <string name="prefTitle_aspectRatio">Artwork aspect ratio</string>
     <string name="pref_aspectRatioDefault_entryValues">0</string>
