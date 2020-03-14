@@ -839,6 +839,16 @@ public class PixivArtWorker extends Worker
 		return artwork;
 	}
 
+	private boolean isArtworkNull(Artwork artwork)
+	{
+		if (artwork == null)
+		{
+			Log.e(LOG_TAG, "Null artwork returned, retrying at later time");
+			return true;
+		}
+		return false;
+	}
+
 	@NonNull
 	@Override
 	public Result doWork()
@@ -848,13 +858,17 @@ public class PixivArtWorker extends Worker
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		// Add three new artwork if clearing cache, otherwise just the one
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		int numberOfArtworkToDownload = sharedPrefs.getInt("prefSlider_numToDownload", 2);
+		int numberOfArtworkToDownload = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+				.getInt("prefSlider_numToDownload", 2);
 		try
 		{
 			for (int i = 0; i < numberOfArtworkToDownload; i++)
 			{
 				Artwork artwork = getArtwork();
+				if (isArtworkNull(artwork))
+				{
+					throw new CorruptFileException("");
+				}
 				artworkArrayList.add(artwork);
 			}
 		} catch (IOException | JSONException | CorruptFileException ex)
