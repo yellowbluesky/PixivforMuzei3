@@ -85,7 +85,7 @@
                 android:max="10"
                 android:persistent="true"
                 android:title="@string/prefTitle_numToDownload"
-                app:min="2" />
+                app:min="1" />
         </PreferenceCategory>
 
         <SwitchPreference
