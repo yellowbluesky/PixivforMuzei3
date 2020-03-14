@@ -443,7 +443,7 @@ public class PixivArtWorker extends Worker
 			pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
 
 			retryCount++;
-			if (isDuplicate(Integer.toString(pictureMetadata.getInt("illust_id"))))
+			if (isDuplicateArtwork(Integer.toString(pictureMetadata.getInt("illust_id"))))
 			{
 				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("illust_id"));
 				continue;
@@ -677,7 +677,7 @@ public class PixivArtWorker extends Worker
 			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
 
 			// Check if duplicate before any other check to not waste time
-			if (isDuplicate(Integer.toString(pictureMetadata.getInt("id"))))
+			if (isDuplicateArtwork(Integer.toString(pictureMetadata.getInt("id"))))
 			{
 				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
 				continue;
@@ -738,7 +738,7 @@ public class PixivArtWorker extends Worker
 	// Scalar must match with scalar in SettingsActivity
 	boolean isEnoughViews(int artworkViewCount, int minimumDesiredViews)
 	{
-		return artworkViewCount > (minimumDesiredViews * 500);
+		return artworkViewCount >= (minimumDesiredViews * 500);
 	}
 
 	/*
@@ -764,7 +764,7 @@ public class PixivArtWorker extends Worker
 
 	// Be provided a token/ID from either of the filter functions
 	// Somehow iterate through the database or the folder
-	private boolean isDuplicate(String token)
+	private boolean isDuplicateArtwork(String token)
 	{
 		boolean duplicateFound = false;
 
