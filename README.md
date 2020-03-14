@@ -23,6 +23,7 @@ Features
   - Can filter against multiple criteria:
     - Four levels of granular NSFW filtering
     - Aspect ratio
+    - View count
     - Manga
   - Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv
   - Option to automatically clear cache on a daily basis
