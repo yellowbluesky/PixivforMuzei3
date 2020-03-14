@@ -57,49 +57,9 @@
             android:persistent="true"
             android:title="@string/prefTitle_authFilterSelect"
             app:isPreferenceVisible="false" />
-        <PreferenceCategory
-            android:key="expPref_advFiltering"
-            android:title="Advanced filtering"
-            app:initialExpandedChildrenCount="0">
-            <DropDownPreference
-                android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
-                android:entries="@array/pref_aspectRatio_entries"
-                android:entryValues="@array/pref_aspectRatio_entryValues"
-                android:key="pref_aspectRatioSelect"
-                android:persistent="true"
-                android:summary="%s"
-                android:title="@string/prefTitle_aspectRatio" />
-            <SwitchPreference
-                android:key="pref_showManga"
-                android:persistent="true"
-                android:title="@string/prefTitle_showManga" />
-            <SeekBarPreference
-                android:defaultValue="0"
-                android:key="prefSlider_minViews"
-                android:max="100"
-                android:persistent="true"
-                android:title="@string/prefTitle_minimumViews" />
-            <SeekBarPreference
-                android:defaultValue="3"
-                android:key="prefSlider_numToDownload"
-                android:max="10"
-                android:persistent="true"
-                android:title="@string/prefTitle_numToDownload"
-                app:min="1" />
-        </PreferenceCategory>
-
-        <SwitchPreference
-            android:key="pref_autoClearMode"
-            android:persistent="true"
-            android:title="@string/prefTitle_autoClearMode" />
         <Preference
             android:key="@string/button_clearCache"
             android:title="@string/button_clearCache" />
-        <SwitchPreference
-            android:key="pref_storeInExtStorage"
-            android:persistent="true"
-            android:summary="@string/prefSummary_storeInExtStorage"
-            android:title="@string/prefTitle_storeInExtStorage" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="prefCat_loginSettings"
@@ -125,6 +85,52 @@
             android:summary="%s"
             android:title="@string/pref_authFailActionDropDown" />
     </PreferenceCategory>
+    <PreferenceCategory
+        android:key="expPref_advFiltering"
+        android:title="Advanced filtering"
+        app:initialExpandedChildrenCount="0">
+        <DropDownPreference
+            android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
+            android:entries="@array/pref_aspectRatio_entries"
+            android:entryValues="@array/pref_aspectRatio_entryValues"
+            android:key="pref_aspectRatioSelect"
+            android:persistent="true"
+            android:summary="%s"
+            android:title="@string/prefTitle_aspectRatio" />
+        <SwitchPreference
+            android:key="pref_showManga"
+            android:persistent="true"
+            android:title="@string/prefTitle_showManga" />
+        <SeekBarPreference
+            android:defaultValue="0"
+            android:key="prefSlider_minViews"
+            android:max="100"
+            android:persistent="true"
+            android:title="@string/prefTitle_minimumViews" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="prefCat_fileOptions"
+        android:title="File Options"
+        app:initialExpandedChildrenCount="0">
+        <SwitchPreference
+            android:key="pref_autoClearMode"
+            android:persistent="true"
+            android:title="@string/prefTitle_autoClearMode" />
+        <SwitchPreference
+            android:key="pref_storeInExtStorage"
+            android:persistent="true"
+            android:summary="@string/prefSummary_storeInExtStorage"
+            android:title="@string/prefTitle_storeInExtStorage" />
+        <SeekBarPreference
+            android:defaultValue="3"
+            android:key="prefSlider_numToDownload"
+            android:max="10"
+            android:persistent="true"
+            android:title="@string/prefTitle_numToDownload"
+            app:min="1" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/prefCat_about">
         <Preference
             android:summary="@string/prefTitle_mainDeveloper"
