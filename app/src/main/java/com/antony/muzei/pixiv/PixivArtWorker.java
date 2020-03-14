@@ -511,7 +511,7 @@ public class PixivArtWorker extends Worker
 		// Builds the API URL to call depending on chosen update mode
 		int offset = 0;
 		boolean success = false;
-		JSONObject pictureMetadata;
+		JSONObject pictureMetadata = null;
 
 		// Reiterates until a valid artwork is found
 		// Will loop again if too many retries when filtering
@@ -586,11 +586,12 @@ public class PixivArtWorker extends Worker
 			Set<String> selectedFilterLevel = sharedPrefs.getStringSet("pref_authFilterSelect", null);
 			int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
 
-			pictureMetadata = filterFeedAuth(overallJson.getJSONArray("illusts"),
-					showManga, selectedFilterLevel, aspectRatioSettings, minimumViews);
-			if (pictureMetadata == null)
+			try
 			{
-				// 30 added because thats how many artworks are in a single auth update mode JSON
+				pictureMetadata = filterFeedAuth(overallJson.getJSONArray("illusts"),
+						showManga, selectedFilterLevel, aspectRatioSettings, minimumViews);
+			} catch (FilterMatchNotFoundException e)
+			{
 				Log.d(LOG_TAG, "Too many retries, acquiring new offset JSON");
 				offset += 30;
 				continue;
@@ -650,7 +651,7 @@ public class PixivArtWorker extends Worker
 
 	 */
 	private JSONObject filterFeedAuth(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet,
-	                                  int aspectRatio, int minimumViews) throws JSONException
+	                                  int aspectRatio, int minimumViews) throws JSONException, FilterMatchNotFoundException
 	{
 		Log.i(LOG_TAG, "filterFeedAuth(): Entering");
 		Random random = new Random();
@@ -667,8 +668,7 @@ public class PixivArtWorker extends Worker
 			// Request a new illusts JSON, with different artwork
 			if (retryCount > retryLimit)
 			{
-				Log.i(LOG_TAG, "Too many retries, requesting offset JSON");
-				return null;
+				throw new FilterMatchNotFoundException("too many retries");
 			}
 			retryCount++;
 			// Random produces more pleasing streams of art
