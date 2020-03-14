@@ -59,5 +59,7 @@
     <string name="attr_monthly">Monthly Ranking #</string>
     <string name="prefTitle_storeInExtStorage">Save pictures into external storage</string>
     <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
+    <string name="prefCat_advFiltering">Advanced filtering</string>
+    <string name="prefCat_fileOptions">File Options</string>
 
 </resources>

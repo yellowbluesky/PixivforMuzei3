@@ -87,7 +87,7 @@
     </PreferenceCategory>
     <PreferenceCategory
         android:key="expPref_advFiltering"
-        android:title="Advanced filtering"
+        android:title="@string/prefCat_advFiltering"
         app:initialExpandedChildrenCount="0">
         <DropDownPreference
             android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
@@ -111,7 +111,7 @@
 
     <PreferenceCategory
         android:key="prefCat_fileOptions"
-        android:title="File Options"
+        android:title="@string/prefCat_fileOptions"
         app:initialExpandedChildrenCount="0">
         <SwitchPreference
             android:key="pref_autoClearMode"
