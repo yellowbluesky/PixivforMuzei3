@@ -847,70 +847,15 @@ public class PixivArtWorker extends Worker
 					.host("www.pixiv.net")
 					.addPathSegment("ranking.php")
 					.addQueryParameter("format", "json");
-			HttpUrl rankingUrl = null;
-			switch (mode)
-			{
-				case "daily_rank":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "daily")
-							.build();
-					break;
-				case "weekly_rank":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "weekly")
-							.build();
-					break;
-				case "monthly_rank":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "monthly")
-							.build();
-					break;
-				case "rookie":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "rookie")
-							.build();
-					break;
-				case "original":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "original")
-							.build();
-					break;
-				case "male":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "male")
-							.build();
-					break;
-				case "female":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "female")
-							.build();
-					break;
-				case "daily_r18":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "daily_r18")
-							.build();
-					break;
-				case "weekly_r18":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "weekly_r18")
-							.build();
-					break;
-				case "male_r18":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "male_r18")
-							.build();
-					break;
-				case "female_r18":
-					rankingUrl = rankingUrlBuilder
-							.addQueryParameter("mode", "female_r18")
-							.build();
-					break;
-			}
+			HttpUrl rankingUrl = rankingUrlBuilder
+					.addQueryParameter("mode", mode)
+					.build();
 
 			Response rankingResponse = PixivArtService.sendGetRequestRanking(rankingUrl);
+			Log.d(LOG_TAG, rankingResponse.toString());
 			overallJson = new JSONObject((rankingResponse.body().string()));
 			rankingResponse.close();
-			writeToFile(overallJson, "male");
+			writeToFile(overallJson, "male_r18");
 		}
 		Log.d(LOG_TAG, "Acquired JSON");
 		return overallJson;
