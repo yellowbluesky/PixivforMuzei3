@@ -100,7 +100,7 @@ class PixivArtService
 		}
 	}
 
-	static String getAccesToken(SharedPreferences sharedPrefs)
+	static String getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
 	{
 		String accessToken = sharedPrefs.getString("accessToken", "");
 		long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
@@ -139,11 +139,9 @@ class PixivArtService
 
 			if (authResponseBody.has("has_error"))
 			{
-				Log.i(LOG_TAG, "Error authenticating, check username or password");
 				// Clearing loginPassword is a hacky way to alerting to the user that their credentials do not work
-				Log.v(LOG_TAG, authResponseBody.toString());
 				sharedPrefs.edit().putString("pref_loginPassword", "").apply();
-				return "";
+				throw new AccessTokenAcquisitionException("Error authenticating, check username or password");
 			}
 
 			// Authentication succeeded, storing tokens returned from Pixiv
@@ -154,8 +152,7 @@ class PixivArtService
 		} catch (IOException | JSONException ex)
 		{
 			ex.printStackTrace();
-			Log.d(LOG_TAG, "getAccessToken(): Exited with error");
-			return "";
+			throw new AccessTokenAcquisitionException("getAccessToken(): Exited with error");
 		}
 		Log.d(LOG_TAG, "Acquired access token");
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
