@@ -862,11 +862,52 @@ public class PixivArtWorker extends Worker
 							.addQueryParameter("mode", "monthly")
 							.build();
 					break;
+				case "rookie":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "rookie")
+							.build();
+					break;
+				case "original":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "original")
+							.build();
+					break;
+				case "male":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "male")
+							.build();
+					break;
+				case "female":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "female")
+							.build();
+					break;
+				case "daily_r18":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "daily_r18")
+							.build();
+					break;
+				case "weekly_r18":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "weekly_r18")
+							.build();
+					break;
+				case "male_r18":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "male_r18")
+							.build();
+					break;
+				case "female_r18":
+					rankingUrl = rankingUrlBuilder
+							.addQueryParameter("mode", "female_r18")
+							.build();
+					break;
 			}
 
 			Response rankingResponse = PixivArtService.sendGetRequestRanking(rankingUrl);
 			overallJson = new JSONObject((rankingResponse.body().string()));
 			rankingResponse.close();
+			writeToFile(overallJson, "male");
 		}
 		Log.d(LOG_TAG, "Acquired JSON");
 		return overallJson;
