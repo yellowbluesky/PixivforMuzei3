@@ -17,13 +17,13 @@
         </ul>
     </li>
     <li>
-        <p>Four levels of granular filtering for NSFW pictures</p>
-    </li>
-    <li>
-        <p>Can filter artwork on aspect ratio</p>
-    </li>
-    <li>
-        <p>Can exclude manga from being set as wallpaper</p>
+        <p>Can filter against multiple criteria</p>
+        <ul>
+            <li>Four levels of granular NSFW filtering</li>
+            <li>Aspect ratio</li>
+            <li>View count</li>
+            <li>Manga</li>
+        </ul>
     </li>
     <li>
         <p>Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv</p>
