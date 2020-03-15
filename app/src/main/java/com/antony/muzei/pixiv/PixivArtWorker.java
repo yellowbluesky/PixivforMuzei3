@@ -340,17 +340,31 @@ public class PixivArtWorker extends Worker
 	{
 		Log.i(LOG_TAG, "getArtworkRanking(): Entering");
 		String mode = contentsJson.getString("mode");
-		String attribution;
+		String attribution = null;
 
-		if (mode.equals("daily"))
+		switch (mode)
 		{
-			attribution = getApplicationContext().getString(R.string.attr_daily);
-		} else if (mode.equals("weekly"))
-		{
-			attribution = getApplicationContext().getString(R.string.attr_weekly);
-		} else
-		{
-			attribution = getApplicationContext().getString(R.string.attr_monthly);
+			case "daily":
+				attribution = getApplicationContext().getString(R.string.attr_daily);
+				break;
+			case "weekly":
+				attribution = getApplicationContext().getString(R.string.attr_weekly);
+				break;
+			case "monthly":
+				attribution = getApplicationContext().getString(R.string.attr_monthly);
+				break;
+			case "rookie":
+				attribution = "Rookie #";
+				break;
+			case "original":
+				attribution = "Original #";
+				break;
+			case "male":
+				attribution = "Male #";
+				break;
+			case "female":
+				attribution = "Female #";
+				break;
 		}
 		String attributionDate = contentsJson.getString("date");
 		String attTrans = attributionDate.substring(0, 4) + "/" + attributionDate.substring(4, 6) + "/" + attributionDate.substring(6, 8) + " ";
@@ -700,7 +714,7 @@ public class PixivArtWorker extends Worker
 	private ArrayList<Artwork> getArtwork() throws IOException, JSONException, CorruptFileException
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		String mode = sharedPrefs.getString("pref_updateMode", "daily_rank");
+		String mode = sharedPrefs.getString("pref_updateMode", "daily");
 
 		// These modes require an access token, so we check for and acquire one first
 		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
@@ -716,13 +730,13 @@ public class PixivArtWorker extends Worker
 				{
 					case "changeDaily":
 						Log.d(LOG_TAG, "Auth failed, changing mode to daily");
-						sharedPrefs.edit().putString("pref_updateMode", "daily_rank").apply();
-						mode = "daily_rank";
+						sharedPrefs.edit().putString("pref_updateMode", "daily").apply();
+						mode = "daily";
 						handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedSwitch, Toast.LENGTH_SHORT).show());
 						break;
 					case "doNotChange_downDaily":
 						Log.d(LOG_TAG, "Auth failed, downloading a single daily");
-						mode = "daily_rank";
+						mode = "daily";
 						handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedDown, Toast.LENGTH_SHORT).show());
 						break;
 					case "doNotChange_doNotDown":
@@ -778,7 +792,7 @@ public class PixivArtWorker extends Worker
 	{
 		Log.d(LOG_TAG, "Acquiring JSON");
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		String mode = sharedPrefs.getString("pref_updateMode", "daily_rank");
+		String mode = sharedPrefs.getString("pref_updateMode", "daily");
 		String userId = sharedPrefs.getString("userId", "");
 		JSONObject overallJson;
 
