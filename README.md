@@ -15,9 +15,9 @@ Inspired by [Pixiv for Muzei](https://github.com/dahlia/muzei-pixiv), the aim of
 Features
   - Can pull artworks from a variety of sources:
     - Daily, Weekly, or Monthly Rankings
-    - Artworks from followed artists
-    - User's bookmarked artworks
-    - Artworks from user's recommended feed
+    - Followed artists
+    - Bookmarked artworks
+    - User's recommended feed
     - A specified artist ID
     - A specified tag (date descending sort order)
   - Can filter against multiple criteria:
