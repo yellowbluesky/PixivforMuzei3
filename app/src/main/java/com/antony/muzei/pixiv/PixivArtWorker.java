@@ -352,6 +352,8 @@ public class PixivArtWorker extends Worker
 		{
 			attribution = getApplicationContext().getString(R.string.attr_monthly);
 		}
+		String attributionDate = contentsJson.getString("date");
+		String attTrans = attributionDate.substring(0, 4) + "/" + attributionDate.substring(4, 6) + "/" + attributionDate.substring(6, 8) + " ";
 
 		//writeToFile(overallJson, "rankingLog.txt");
 
@@ -371,6 +373,7 @@ public class PixivArtWorker extends Worker
 
 		// Variables to submit to Muzei
 		String token = selectedArtworkMetadata.getString("illust_id");
+		attribution = attTrans + attribution;
 		attribution += selectedArtworkMetadata.get("rank");
 
 		// Actually downloading the selected artwork
