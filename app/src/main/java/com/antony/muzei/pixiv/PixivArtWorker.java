@@ -111,7 +111,8 @@ public class PixivArtWorker extends Worker
 	}
 
 	// Upon successful authentication stores tokens returned from Pixiv into device memory
-	static void storeTokens(SharedPreferences sharedPrefs, JSONObject tokens) throws JSONException
+	static void storeTokens(SharedPreferences sharedPrefs,
+	                        JSONObject tokens) throws JSONException
 	{
 		Log.i(LOG_TAG, "Storing tokens");
 		SharedPreferences.Editor editor = sharedPrefs.edit();
@@ -126,171 +127,14 @@ public class PixivArtWorker extends Worker
 	}
 
 	/*
-		1   png
-		2   jpg
-	 */
-	private int getLocalFileExtension(File image) throws IOException, CorruptFileException
-	{
-		byte[] byteArray = FileUtils.readFileToByteArray(image);
-		int length = byteArray.length;
-		int result = 0;
-		// if jpeg
-		if (byteArray[0] == -119 && byteArray[1] == 80 && byteArray[2] == 78 && byteArray[3] == 71)
-		{
-			if (byteArray[length - 8] == 73 && byteArray[length - 7] == 69 && byteArray[length - 6] == 78 && byteArray[length - 5] == 68)
-			{
-				Log.d(LOG_TAG, "image is intact PNG");
-				result = 1;
-			} else
-			{
-				Log.d(LOG_TAG, "image is corrupt PNG");
-				throw new CorruptFileException("Corrupt PNG");
-			}
-		} else if (byteArray[0] == -1 && byteArray[1] == -40)
-		{
-			if (byteArray[length - 2] == -1 && byteArray[length - 1] == -39)
-			{
-				Log.d(LOG_TAG, "image is intact JPG");
-				result = 2;
-			} else
-			{
-				Log.d(LOG_TAG, "image is corrupt JPG");
-				throw new CorruptFileException("Corrupt JPG");
-			}
-		}
-		return result;
-	}
+		Ranking images are only provided with a URL to a low resolution thumbnail
+		We want the high resolution image, so we need to do some work first
 
-	/*
-		First downloads the file to ExternalFilesDir, always with a png file extension
-		Checks if the file is incomplete; if incomplete deletes and returns a null for later retrying
-		Otherwise returns a Uri to the File to the caller
-		If option is checked, also makes a copy into external storage
-		This copy is not used for backing any database
-		This copy also has correct file extensions
-	 */
-	private Uri downloadFile(Response response, String filename) throws IOException, CorruptFileException
-	{
-		Log.i(LOG_TAG, "Downloading file");
-		Context context = getApplicationContext();
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
-		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
-
-		InputStream inputStreamNetwork = response.body().byteStream();
-
-		byte[] bufferTemp = new byte[1024 * 1024 * 10];
-		int readTemp;
-		while ((readTemp = inputStreamNetwork.read(bufferTemp)) != -1)
-		{
-			fosInternal.write(bufferTemp, 0, readTemp);
-		}
-		inputStreamNetwork.close();
-		fosInternal.close();
-		response.close();
-
-		int fileExtension = getLocalFileExtension(imageInternal);
-
-//		} else if (fileStatus == 2)
-//		{
-//			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename);
-//		} else if (fileStatus == 1)
-//		{
-//			imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename);
-//		}
-
-		OutputStream fosExternal = null;
-		boolean allowedToStoreIntoExternal = false;
-
-		// Android 10 introduced scoped storage
-		// Different code path depending on Android APi level
-		//if (storeIntoExternal)
-		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false))
-		{
-			// if permission granted
-			if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-					== PackageManager.PERMISSION_GRANTED)
-			{
-				// if app OS was Q or higher
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-				{
-					ContentResolver contentResolver = context.getContentResolver();
-					ContentValues contentValues = new ContentValues();
-
-					// Check if existing copy of file exists
-					String[] projection = {MediaStore.Images.Media._ID};
-					String selection = "title = ?";
-					//String selection ={MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
-					String[] selectionArgs = {filename};
-					Cursor cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
-					if (cursor.getCount() == 0)
-					{
-						contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
-						contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
-						if (fileExtension == 1)
-						{
-							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
-						} else if (fileExtension == 2)
-						{
-							contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-						}
-
-						Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-						fosExternal = contentResolver.openOutputStream(imageUri);
-						allowedToStoreIntoExternal = true;
-					}
-					cursor.close();
-				}
-				// If app OS is N or lower
-				else
-				{
-					String directoryString = "/storage/emulated/0/Pictures/PixivForMuzei3/";
-					File directory = new File(directoryString);
-					if (!directory.exists())
-					{
-						directory.mkdirs();
-					}
-
-					if (fileExtension == 1)
-					{
-						fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
-					} else if (fileExtension == 2)
-					{
-						fosExternal = new FileOutputStream(new File(directoryString, filename + ".jpg"));
-					}
-
-					allowedToStoreIntoExternal = true;
-				}
-			}
-		}
-
-		// Finally copies the image into external storage if allowed to
-		if (allowedToStoreIntoExternal)
-		{
-			FileInputStream fis = new FileInputStream(imageInternal);
-			byte[] buffer = new byte[1024 * 1024 * 10];
-			int lengthInternal;
-			while ((lengthInternal = fis.read(buffer)) > 0)
-			{
-				fosExternal.write(buffer, 0, lengthInternal);
-			}
-			fosExternal.close();
-			fis.close();
-		}
-
-		return Uri.fromFile(imageInternal);
-	}
-
-	/*
-	Ranking images are only provided with a URL to a low resolution thumbnail
-	We want the high resolution image, so we need to do some work first
-
-	Secondly, the thumbnail is always a .jpg
-	For the high resolution image we require a correct file extension
-	This method cycles though all possible file extensions until a good response is received
-		i.e. a response that is not a 400 error
-	Returns a Response whose body contains the picture selected to be downloaded
+		Secondly, the thumbnail is always a .jpg
+		For the high resolution image we require a correct file extension
+		This method cycles though all possible file extensions until a good response is received
+			i.e. a response that is not a 400 error
+		Returns a Response whose body contains the picture selected to be downloaded
 	*/
 	private Response getRemoteFileExtension(String url) throws IOException
 	{
@@ -329,12 +173,352 @@ public class PixivArtWorker extends Worker
 	}
 
 	/*
-        RANKING
+		PixivforMuzei3 often downloads an incomplete image, i.e. the lower section of images is not
+		downloaded, the file header is intact but file closer is not present.
+		This function converts the image to a byte representation, then checks the last few bytes
+		in the image for a valid file closer.
+		If image is incomplete, throws CorruptFileException
+		Returns:
+			1   png
+			2   jpg
+			CorruptFileException
     */
+	private int getLocalFileExtension(File image) throws IOException, CorruptFileException
+	{
+		byte[] byteArray = FileUtils.readFileToByteArray(image);
+		int length = byteArray.length;
+		int result = 0;
+		// if jpeg
+		if (byteArray[0] == -119 && byteArray[1] == 80 && byteArray[2] == 78 && byteArray[3] == 71)
+		{
+			if (byteArray[length - 8] == 73 && byteArray[length - 7] == 69 && byteArray[length - 6] == 78 && byteArray[length - 5] == 68)
+			{
+				Log.d(LOG_TAG, "image is intact PNG");
+				result = 1;
+			} else
+			{
+				Log.d(LOG_TAG, "image is corrupt PNG");
+				throw new CorruptFileException("Corrupt PNG");
+			}
+		} else if (byteArray[0] == -1 && byteArray[1] == -40)
+		{
+			if (byteArray[length - 2] == -1 && byteArray[length - 1] == -39)
+			{
+				Log.d(LOG_TAG, "image is intact JPG");
+				result = 2;
+			} else
+			{
+				Log.d(LOG_TAG, "image is corrupt JPG");
+				throw new CorruptFileException("Corrupt JPG");
+			}
+		}
+		return result;
+	}
 
 	/*
-	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
-	for filtering, then downloads the image and returns it Muzei for insertion
+		First downloads the file to ExternalFilesDir, always with a png file extension
+		Checks if the file is incomplete; if incomplete deletes it and passes a CorruptFileException
+		up the chain
+		Otherwise returns a Uri to the File to the caller
+		If option is checked, also makes a copy into external storage
+		The external storage copy is not used for backing any database
+		The external storage copy also has correct file extensions
+	 */
+	private Uri downloadFile(Response response,
+	                         String filename) throws IOException, CorruptFileException
+	{
+		Log.i(LOG_TAG, "Downloading file");
+		Context context = getApplicationContext();
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
+		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
+
+		InputStream inputStreamNetwork = response.body().byteStream();
+
+		byte[] bufferTemp = new byte[1024 * 1024 * 10];
+		int readTemp;
+		while ((readTemp = inputStreamNetwork.read(bufferTemp)) != -1)
+		{
+			fosInternal.write(bufferTemp, 0, readTemp);
+		}
+		inputStreamNetwork.close();
+		fosInternal.close();
+		response.close();
+
+		// TODO make this an enum
+		int fileExtension = getLocalFileExtension(imageInternal);
+
+		// If option in SettingsActivity is checked AND permission is granted
+		if (sharedPrefs.getBoolean("pref_storeInExtStorage", false) &&
+				ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+						== PackageManager.PERMISSION_GRANTED)
+		{
+			OutputStream fosExternal = null;
+			boolean allowedToStoreIntoExternal = false;
+
+			// Android 10 introduced scoped storage
+			// Different code path depending on Android APi level
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+			{
+				ContentResolver contentResolver = context.getContentResolver();
+				ContentValues contentValues = new ContentValues();
+
+				// Check if existing copy of file exists
+				String[] projection = {MediaStore.Images.Media._ID};
+				String selection = "title = ?";
+				//String selection ={MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
+				String[] selectionArgs = {filename};
+				Cursor cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
+				if (cursor.getCount() == 0)
+				{
+					contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
+					contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3");
+					if (fileExtension == 1)
+					{
+						contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
+					} else if (fileExtension == 2)
+					{
+						contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+					}
+
+					Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+					fosExternal = contentResolver.openOutputStream(imageUri);
+					allowedToStoreIntoExternal = true;
+				}
+				cursor.close();
+			}
+			// If app OS is N or lower
+			else
+			{
+				String directoryString = "/storage/emulated/0/Pictures/PixivForMuzei3/";
+				File directory = new File(directoryString);
+				if (!directory.exists())
+				{
+					directory.mkdirs();
+				}
+
+				if (fileExtension == 1)
+				{
+					fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
+				} else if (fileExtension == 2)
+				{
+					fosExternal = new FileOutputStream(new File(directoryString, filename + ".jpg"));
+				}
+
+				allowedToStoreIntoExternal = true;
+			}
+
+			// Finally copies the image into external storage if allowed to
+			if (allowedToStoreIntoExternal)
+			{
+				FileInputStream fis = new FileInputStream(imageInternal);
+				byte[] buffer = new byte[1024 * 1024 * 10];
+				int lengthInternal;
+				while ((lengthInternal = fis.read(buffer)) > 0)
+				{
+					fosExternal.write(buffer, 0, lengthInternal);
+				}
+				fosExternal.close();
+				fis.close();
+			}
+		}
+
+		return Uri.fromFile(imageInternal);
+	}
+
+	/*
+		One function for obtaining the correct JSON, including the offset or page
+		mode must be passed, not obtained from SharedPreferences, in the event that the user has failed
+		authentication, but only want a single temporary daily ranking artwork
+	 */
+	private JSONObject getArtworkJson(String mode,
+	                                  int offset) throws IOException, JSONException
+	{
+		Log.d(LOG_TAG, "Acquiring JSON");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		String userId = sharedPrefs.getString("userId", "");
+		JSONObject overallJson;
+
+		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
+		{
+			// Modes that require authentication, and more complex query URLs
+			HttpUrl feedBookmarkTagUrl = null;
+			HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
+					.scheme("https")
+					.host("app-api.pixiv.net");
+			switch (mode)
+			{
+				case "follow":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v2/illust/follow")
+							.addQueryParameter("restrict", "public")
+							.addQueryParameter("offset", Integer.toString(offset)) // adding offset works
+							.build();
+					break;
+				case "bookmark":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/user/bookmarks/illust")
+							.addQueryParameter("user_id", userId)
+							.addQueryParameter("restrict", "public")
+							.addQueryParameter("offset", Integer.toString(offset))
+							.build();
+					break;
+				case "tag_search":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/search/illust")
+							.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
+							.addQueryParameter("search_target", "partial_match_for_tags")
+							.addQueryParameter("sort", "date_desc")
+							.addQueryParameter("filter", "for_ios")
+							.addQueryParameter("offset", Integer.toString(offset))
+							.build();
+					break;
+				case "artist":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/user/illusts")
+							.addQueryParameter("user_id", userId)
+							.addQueryParameter("filter", "for_ios")
+							.addQueryParameter("offset", Integer.toString(offset))
+							.build();
+					break;
+				case "recommended":
+					feedBookmarkTagUrl = urlBuilder
+							.addPathSegments("v1/illust/recommended")
+							.addQueryParameter("content_type", "illust")
+							.addQueryParameter("include_ranking_label", "true")
+//				.addQueryParameter("min_bookmark_id_for_recent_illust", "")
+//				.addQueryParameter("offset", "")
+							.addQueryParameter("include_ranking_illusts", "true")
+//				.addQueryParameter("bookmark_illust_ids", "")
+							.addQueryParameter("filter", "for_ios")
+							.addQueryParameter("offset", Integer.toString(offset))
+							.build();
+					break;
+			}
+			Response authResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl,
+					sharedPrefs.getString("accessToken", ""));
+			overallJson = new JSONObject((authResponse.body().string()));
+			authResponse.close();
+		} else
+		{
+			// Ranking modes
+			HttpUrl rankingUrl = new HttpUrl.Builder()
+					.scheme("https")
+					.host("www.pixiv.net")
+					.addPathSegment("ranking.php")
+					.addQueryParameter("format", "json")
+					.addQueryParameter("mode", mode)
+					.build();
+
+			Response rankingResponse = PixivArtService.sendGetRequestRanking(rankingUrl);
+			Log.d(LOG_TAG, rankingResponse.toString());
+			overallJson = new JSONObject((rankingResponse.body().string()));
+			rankingResponse.close();
+		}
+		Log.d(LOG_TAG, "Acquired JSON");
+		return overallJson;
+	}
+
+	private boolean isArtworkNull(Artwork artwork)
+	{
+		if (artwork == null)
+		{
+			Log.e(LOG_TAG, "Null artwork returned, retrying at later time");
+			return true;
+		}
+		return false;
+	}
+
+	/*
+		Provided an artowrk ID (token), traverses the PixivArtProvider ContentProvider and sees
+		if there is already a duplicate artwork with the same ID (token)
+	 */
+	private boolean isDuplicateArtwork(String token)
+	{
+		boolean duplicateFound = false;
+
+		String[] projection = {"_id"};
+		String selection = "token = ?";
+		String[] selectionArgs = {token};
+		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
+		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, projection, selection, selectionArgs, null);
+
+		if (cursor.getCount() > 0)
+		{
+			duplicateFound = true;
+		}
+		cursor.close();
+
+		return duplicateFound;
+	}
+
+	/*
+		0   Any aspect ratio
+		1   Landscape
+		2   Portrait
+	 */
+	private boolean isDesiredAspectRatio(int width,
+	                                     int height,
+	                                     int aspectRatioSetting)
+	{
+		switch (aspectRatioSetting)
+		{
+			case 0:
+				return true;
+			case 1:
+				return height >= width;
+			case 2:
+				return height <= width;
+		}
+		return true;
+	}
+
+	// Scalar must match with scalar in SettingsActivity
+	boolean isEnoughViews(int artworkViewCount,
+	                      int minimumDesiredViews)
+	{
+		return artworkViewCount >= (minimumDesiredViews * 500);
+	}
+
+	private int[] generateShuffledArray(int length)
+	{
+		Random random = new Random();
+		int[] array = new int[length];
+		for (int i = 0; i < length; i++)
+		{
+			array[i] = i;
+		}
+
+		for (int i = length - 1; i > 0; i--)
+		{
+			int index = random.nextInt(length);
+			int a = array[index];
+			array[index] = array[i];
+			array[i] = a;
+		}
+
+		return array;
+	}
+
+	private void writeToFile(JSONObject jsonObject,
+	                         String filename) throws IOException
+	{
+		File root = new File(getApplicationContext().getExternalCacheDir(), "Logs");
+		if (!root.exists())
+		{
+			root.mkdirs();
+		}
+		File logFile = new File(root, filename);
+		FileWriter writer = new FileWriter(logFile);
+		writer.append(jsonObject.toString());
+		writer.flush();
+		writer.close();
+	}
+
+	/*
+		Receives a JSON of the ranking artworks.
+		Passes it off to filterArtworkRanking(), then builds the Artwork for submission to Muzei
 	 */
 	private Artwork getArtworkRanking(JSONObject contentsJson) throws IOException, JSONException, CorruptFileException
 	{
@@ -407,20 +591,6 @@ public class PixivArtWorker extends Worker
 				.build();
 	}
 
-	private void writeToFile(JSONObject jsonObject, String filename) throws IOException
-	{
-		File root = new File(getApplicationContext().getExternalCacheDir(), "Logs");
-		if (!root.exists())
-		{
-			root.mkdirs();
-		}
-		File logFile = new File(root, filename);
-		FileWriter writer = new FileWriter(logFile);
-		writer.append(jsonObject.toString());
-		writer.flush();
-		writer.close();
-	}
-
 	/*
 		Filters through the JSON containing the metadata of the pictures of the selected mode
 		Picks one image based on the user's setting to show manga and level of NSFW filtering
@@ -428,8 +598,11 @@ public class PixivArtWorker extends Worker
 			NSFW filtering is performed by checking the value of the "sexual" JSON string
 			Manga filtering is performed by checking the value of the "illust_type" JSON string
 	*/
-	private JSONObject filterRanking(JSONArray contents, boolean showManga, Set<String> selectedFilterLevelSet,
-	                                 int aspectRatioSetting, int minimumViews) throws JSONException
+	private JSONObject filterRanking(JSONArray contents,
+	                                 boolean showManga,
+	                                 Set<String> selectedFilterLevelSet,
+	                                 int aspectRatioSetting,
+	                                 int minimumViews) throws JSONException
 	{
 		Log.i(LOG_TAG, "filterRanking(): Entering");
 		JSONObject pictureMetadata;
@@ -465,7 +638,8 @@ public class PixivArtWorker extends Worker
 
 			if (retryCount < 50)
 			{
-				if (!isDesiredAspectRatio(pictureMetadata, aspectRatioSetting))
+				if (!isDesiredAspectRatio(pictureMetadata.getInt("width"),
+						pictureMetadata.getInt("height"), aspectRatioSetting))
 				{
 					Log.v(LOG_TAG, "Rejecting aspect ratio");
 					continue;
@@ -571,33 +745,21 @@ public class PixivArtWorker extends Worker
 		For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
 
 	 */
-	private JSONObject filterArtworkAuth(JSONArray illusts, boolean showManga, Set<String> selectedFilterLevelSet,
-	                                     int aspectRatio, int minimumViews) throws JSONException, FilterMatchNotFoundException
+	private JSONObject filterArtworkAuth(JSONArray illusts,
+	                                     boolean showManga,
+	                                     Set<String> selectedFilterLevelSet,
+	                                     int aspectRatioSetting,
+	                                     int minimumViews) throws JSONException, FilterMatchNotFoundException
 	{
 		Log.i(LOG_TAG, "filterFeedAuth(): Entering");
-		Random random = new Random();
 		boolean found = false;
-		JSONObject pictureMetadata;
-		int retryCount = 0;
-		// 30 is the size of an auth feed JSON
-		final int retryLimit = 30;
-		// TODO generate a set of numbers 1 to 30, then shuffle them
+		JSONObject pictureMetadata = null;
 
-		// Reiterates until artwork matching all criteria found or too many reties
-		do
+		int[] shuffledArray = generateShuffledArray(illusts.length());
+
+		for (int i = 0; i < illusts.length(); i++)
 		{
-			// If the loop reiterates too many times
-			// Request a new illusts JSON, with different artwork
-			if (retryCount > retryLimit)
-			{
-				throw new FilterMatchNotFoundException("too many retries");
-			}
-			retryCount++;
-			// Random produces more pleasing streams of art
-			// Duplication is filtered with isDuplicate()
-			// Only time waste is a number of CPU cycles
-			pictureMetadata = illusts.getJSONObject(random.nextInt(illusts.length()));
-
+			pictureMetadata = illusts.getJSONObject(shuffledArray[i]);
 			// Check if duplicate before any other check to not waste time
 			if (isDuplicateArtwork(Integer.toString(pictureMetadata.getInt("id"))))
 			{
@@ -616,13 +778,13 @@ public class PixivArtWorker extends Worker
 			}
 
 			// Filter artwork based on chosen aspect ratio
-			if (!(isDesiredAspectRatio(pictureMetadata, aspectRatio)))
+			if (!(isDesiredAspectRatio(pictureMetadata.getInt("width"),
+					pictureMetadata.getInt("height"), aspectRatioSetting)))
 			{
 				Log.v(LOG_TAG, "Rejecting aspect ratio");
 				continue;
 			}
 
-			// TODO make this a function
 			if (!isEnoughViews(pictureMetadata.getInt("total_view"), minimumViews))
 			{
 				Log.v(LOG_TAG, "Not enough views");
@@ -638,71 +800,21 @@ public class PixivArtWorker extends Worker
 					Log.d(LOG_TAG, "sanity_level found is " + pictureMetadata.getInt("sanity_level"));
 					found = true;
 					break;
-				} else if (s.equals("8"))
+				} else if (s.equals("8") && pictureMetadata.getInt("x_restrict") == 1)
 				{
-					if (pictureMetadata.getInt("x_restrict") == 1)
-					{
-						Log.d(LOG_TAG, "x_restrict found");
-						found = true;
-						break;
-					}
+					Log.d(LOG_TAG, "x_restrict found");
+					found = true;
+					break;
+
 				}
 			}
-			if (!found)
-			{
-				Log.v(LOG_TAG, "filter level not found, was: " + pictureMetadata.getInt("sanity_level"));
-			}
-		} while (!found);
+		}
+		if (!found)
+		{
+			throw new FilterMatchNotFoundException("too many retries");
+		}
 
 		return pictureMetadata;
-	}
-
-	// Scalar must match with scalar in SettingsActivity
-	boolean isEnoughViews(int artworkViewCount, int minimumDesiredViews)
-	{
-		return artworkViewCount >= (minimumDesiredViews * 500);
-	}
-
-	/*
-		0   Any aspect ratio
-		1   Landscape
-		2   Portrait
-	 */
-	private boolean isDesiredAspectRatio(JSONObject pictureMetadata, int aspectRatioSetting) throws JSONException
-	{
-		int width = pictureMetadata.getInt("width");
-		int height = pictureMetadata.getInt("height");
-		switch (aspectRatioSetting)
-		{
-			case 0:
-				return true;
-			case 1:
-				return height >= width;
-			case 2:
-				return height <= width;
-		}
-		return true;
-	}
-
-	// Be provided a token/ID from either of the filter functions
-	// Somehow iterate through the database or the folder
-	private boolean isDuplicateArtwork(String token)
-	{
-		boolean duplicateFound = false;
-
-		String[] projection = {"_id"};
-		String selection = "token = ?";
-		String[] selectionArgs = {token};
-		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
-		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, projection, selection, selectionArgs, null);
-
-		if (cursor.getCount() > 0)
-		{
-			duplicateFound = true;
-		}
-		cursor.close();
-
-		return duplicateFound;
 	}
 
 	/*
@@ -748,7 +860,7 @@ public class PixivArtWorker extends Worker
 		}
 
 		int offset = 0;
-		JSONObject jsonObject = getCachedJson(offset);
+		JSONObject jsonObject = getArtworkJson(mode, offset);
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		Artwork artwork;
@@ -769,7 +881,7 @@ public class PixivArtWorker extends Worker
 				{
 					e.printStackTrace();
 					offset += 30;
-					jsonObject = getCachedJson(offset);
+					jsonObject = getArtworkJson(mode, offset);
 				}
 			}
 		} else
@@ -788,103 +900,6 @@ public class PixivArtWorker extends Worker
 		Log.d(LOG_TAG, "Display mode: " + mode);
 
 		return artworkArrayList;
-	}
-
-	private JSONObject getCachedJson(int offset) throws IOException, JSONException
-	{
-		Log.d(LOG_TAG, "Acquiring JSON");
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		String mode = sharedPrefs.getString("pref_updateMode", "daily");
-		String userId = sharedPrefs.getString("userId", "");
-		JSONObject overallJson;
-
-		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
-		{
-			HttpUrl feedBookmarkTagUrl = null;
-			HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
-					.scheme("https")
-					.host("app-api.pixiv.net");
-			switch (mode)
-			{
-				case "follow":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v2/illust/follow")
-							.addQueryParameter("restrict", "public")
-							.addQueryParameter("offset", Integer.toString(offset)) // adding offset works
-							.build();
-					break;
-				case "bookmark":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/user/bookmarks/illust")
-							.addQueryParameter("user_id", userId)
-							.addQueryParameter("restrict", "public")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-				case "tag_search":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/search/illust")
-							.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
-							.addQueryParameter("search_target", "partial_match_for_tags")
-							.addQueryParameter("sort", "date_desc")
-							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-				case "artist":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/user/illusts")
-							.addQueryParameter("user_id", userId)
-							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-				case "recommended":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/illust/recommended")
-							.addQueryParameter("content_type", "illust")
-							.addQueryParameter("include_ranking_label", "true")
-//				.addQueryParameter("min_bookmark_id_for_recent_illust", "")
-//				.addQueryParameter("offset", "")
-							.addQueryParameter("include_ranking_illusts", "true")
-//				.addQueryParameter("bookmark_illust_ids", "")
-							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-			}
-			Response authResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl,
-					sharedPrefs.getString("accessToken", ""));
-			overallJson = new JSONObject((authResponse.body().string()));
-			authResponse.close();
-		} else
-		{
-			HttpUrl rankingUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("www.pixiv.net")
-					.addPathSegment("ranking.php")
-					.addQueryParameter("format", "json")
-					.addQueryParameter("mode", mode)
-					.build();
-
-			Response rankingResponse = PixivArtService.sendGetRequestRanking(rankingUrl);
-			Log.d(LOG_TAG, rankingResponse.toString());
-			overallJson = new JSONObject((rankingResponse.body().string()));
-			rankingResponse.close();
-			writeToFile(overallJson, "male_r18");
-		}
-		Log.d(LOG_TAG, "Acquired JSON");
-		return overallJson;
-	}
-
-	private boolean isArtworkNull(Artwork artwork)
-	{
-		if (artwork == null)
-		{
-			Log.e(LOG_TAG, "Null artwork returned, retrying at later time");
-			return true;
-		}
-		return false;
 	}
 
 	@NonNull

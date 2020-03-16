@@ -241,7 +241,7 @@ public class SettingsActivity extends AppCompatActivity
 			}
 
 			// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
-			String updateMode = sharedPrefs.getString("pref_updateMode", "daily_rank");
+			String updateMode = sharedPrefs.getString("pref_updateMode", "daily");
 			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
 					.contains(updateMode))
 			{
