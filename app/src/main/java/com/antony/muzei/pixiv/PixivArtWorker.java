@@ -849,6 +849,7 @@ public class PixivArtWorker extends Worker
 							.addQueryParameter("filter", "for_ios")
 							.addQueryParameter("offset", Integer.toString(offset))
 							.build();
+					break;
 			}
 			Response authResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl,
 					sharedPrefs.getString("accessToken", ""));
@@ -856,12 +857,11 @@ public class PixivArtWorker extends Worker
 			authResponse.close();
 		} else
 		{
-			HttpUrl.Builder rankingUrlBuilder = new HttpUrl.Builder()
+			HttpUrl rankingUrl = new HttpUrl.Builder()
 					.scheme("https")
 					.host("www.pixiv.net")
 					.addPathSegment("ranking.php")
-					.addQueryParameter("format", "json");
-			HttpUrl rankingUrl = rankingUrlBuilder
+					.addQueryParameter("format", "json")
 					.addQueryParameter("mode", mode)
 					.build();
 
@@ -893,7 +893,7 @@ public class PixivArtWorker extends Worker
 		Log.d(LOG_TAG, "Starting work");
 
 
-		ArrayList<Artwork> artworkArrayList = null;
+		ArrayList<Artwork> artworkArrayList;
 		try
 		{
 			artworkArrayList = getArtwork();
