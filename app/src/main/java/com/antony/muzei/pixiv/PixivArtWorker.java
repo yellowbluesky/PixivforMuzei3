@@ -354,16 +354,16 @@ public class PixivArtWorker extends Worker
 				attribution = getApplicationContext().getString(R.string.attr_monthly);
 				break;
 			case "rookie":
-				attribution = "Rookie #";
+				attribution = getApplicationContext().getString(R.string.attr_rookie);
 				break;
 			case "original":
-				attribution = "Original #";
+				attribution = getApplicationContext().getString(R.string.attr_original);
 				break;
 			case "male":
-				attribution = "Male #";
+				attribution = getApplicationContext().getString(R.string.attr_male);
 				break;
 			case "female":
-				attribution = "Female #";
+				attribution = getApplicationContext().getString(R.string.attr_female);
 				break;
 		}
 		String attributionDate = contentsJson.getString("date");

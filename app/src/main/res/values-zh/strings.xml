@@ -61,4 +61,8 @@
     <string name="prefTitle_numToDownload">一次下载的图稿数量</string>
     <string name="prefCat_advFiltering">高级过滤</string>
     <string name="prefCat_fileOptions">文件处理选项</string>
+    <string name="attr_rookie">新人 #</string>
+    <string name="attr_original">原创 #</string>
+    <string name="attr_male">受男性欢迎 #</string>
+    <string name="attr_female">受男性欢迎 #</string>
 </resources>

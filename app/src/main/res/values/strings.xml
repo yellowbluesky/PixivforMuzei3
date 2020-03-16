@@ -54,9 +54,14 @@
     <string name="toast_newFilterSelect">New filter selection, clearing image cache</string>
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: Adding to bookmark</string>
     <string name="toast_loginFirst">Pixiv for Muzei 3: Login first</string>
+
     <string name="attr_daily">Daily Ranking #</string>
     <string name="attr_weekly">Weekly Ranking #</string>
     <string name="attr_monthly">Monthly Ranking #</string>
+    <string name="attr_rookie">Rookie #</string>
+    <string name="attr_original">Original #</string>
+    <string name="attr_male">Popular with males #</string>
+    <string name="attr_female">Popular with females #</string>
     <string name="prefTitle_storeInExtStorage">Save pictures into external storage</string>
     <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
     <string name="prefCat_advFiltering">Advanced filtering</string>
