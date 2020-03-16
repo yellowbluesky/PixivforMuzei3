@@ -3,14 +3,10 @@
         <item>Daily ranking</item>
         <item>Weekly ranking</item>
         <item>Monthly ranking</item>
-        <item>Rookie</item>
-        <item>Original</item>
-        <item>Popular male</item>
-        <item>Popular female</item>
-        <item>Daily R18</item>
-        <item>Weekly R18</item>
-        <item>Popular male R18</item>
-        <item>Popular female R18</item>
+        <item>Rookie ranking</item>
+        <item>Original ranking</item>
+        <item>Popular with males ranking</item>
+        <item>Popular with females ranking</item>
         <item>Follow feed (Login required)</item>
         <item>Bookmark images (Login Required)</item>
         <item>Recommended (Login Required)</item>
@@ -26,10 +22,6 @@
         <item>original</item>
         <item>male</item>
         <item>female</item>
-        <item>daily_r18</item>
-        <item>weekly_r18</item>
-        <item>male_r18</item>
-        <item>female_r18</item>
         <item>follow</item>
         <item>bookmark</item>
         <item>recommended</item>
