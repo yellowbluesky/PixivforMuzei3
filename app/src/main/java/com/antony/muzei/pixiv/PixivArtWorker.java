@@ -768,6 +768,8 @@ public class PixivArtWorker extends Worker
 				} catch (FilterMatchNotFoundException e)
 				{
 					e.printStackTrace();
+					offset += 30;
+					jsonObject = getCachedJson(offset);
 				}
 			}
 		} else
