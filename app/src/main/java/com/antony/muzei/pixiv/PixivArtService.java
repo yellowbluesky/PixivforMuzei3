@@ -100,7 +100,7 @@ class PixivArtService
 		}
 	}
 
-	static void getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
+	static String getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
 	{
 		String accessToken = sharedPrefs.getString("accessToken", "");
 		long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
@@ -108,7 +108,7 @@ class PixivArtService
 		{
 			Log.i(LOG_TAG, "Existing access token found, using it");
 			Log.d(LOG_TAG, "getAccessToken(): Exited");
-			return;
+			return accessToken;
 		}
 		Log.i(LOG_TAG, "Access token expired or non-existent, proceeding to acquire a new access token");
 
@@ -148,6 +148,7 @@ class PixivArtService
 //            Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
 //            sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
 			PixivArtWorker.storeTokens(sharedPrefs, authResponseBody.getJSONObject("response"));
+			accessToken = authResponseBody.getJSONObject("response").getString("access_token");
 		} catch (IOException | JSONException ex)
 		{
 			ex.printStackTrace();
@@ -155,7 +156,7 @@ class PixivArtService
 		}
 		Log.d(LOG_TAG, "Acquired access token");
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
-		return;
+		return accessToken;
 	}
 
 	// This function is used for modes that require authentication

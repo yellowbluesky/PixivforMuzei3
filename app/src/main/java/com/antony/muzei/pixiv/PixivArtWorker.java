@@ -332,7 +332,8 @@ public class PixivArtWorker extends Worker
 		mode must be passed, not obtained from SharedPreferences, in the event that the user has failed
 		authentication, but only want a single temporary daily ranking artwork
 	 */
-	private JSONObject getArtworkJson(String mode,
+	private JSONObject getArtworkJson(String accessToken,
+	                                  String mode,
 	                                  int offset) throws IOException, JSONException
 	{
 		Log.d(LOG_TAG, "Acquiring JSON");
@@ -397,7 +398,7 @@ public class PixivArtWorker extends Worker
 					break;
 			}
 			Response authResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl,
-					sharedPrefs.getString("accessToken", ""));
+					accessToken);
 			overallJson = new JSONObject((authResponse.body().string()));
 			authResponse.close();
 		} else
@@ -827,13 +828,14 @@ public class PixivArtWorker extends Worker
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		String mode = sharedPrefs.getString("pref_updateMode", "daily");
+		String accessToken = "";
 
 		// These modes require an access token, so we check for and acquire one first
 		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
 		{
 			try
 			{
-				PixivArtService.getAccessToken(sharedPrefs);
+				accessToken = PixivArtService.getAccessToken(sharedPrefs);
 			} catch (AccessTokenAcquisitionException ex)
 			{
 				Handler handler = new Handler(Looper.getMainLooper());
@@ -860,7 +862,7 @@ public class PixivArtWorker extends Worker
 		}
 
 		int offset = 0;
-		JSONObject jsonObject = getArtworkJson(mode, offset);
+		JSONObject jsonObject = getArtworkJson(accessToken, mode, offset);
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		Artwork artwork;
@@ -881,7 +883,7 @@ public class PixivArtWorker extends Worker
 				{
 					e.printStackTrace();
 					offset += 30;
-					jsonObject = getArtworkJson(mode, offset);
+					jsonObject = getArtworkJson(accessToken, mode, offset);
 				}
 			}
 		} else
@@ -897,8 +899,6 @@ public class PixivArtWorker extends Worker
 			}
 		}
 
-		Log.d(LOG_TAG, "Display mode: " + mode);
-
 		return artworkArrayList;
 	}
 
@@ -906,10 +906,9 @@ public class PixivArtWorker extends Worker
 	@Override
 	public Result doWork()
 	{
-		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		Log.d(LOG_TAG, "Starting work");
 
-
+		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		ArrayList<Artwork> artworkArrayList;
 		try
 		{

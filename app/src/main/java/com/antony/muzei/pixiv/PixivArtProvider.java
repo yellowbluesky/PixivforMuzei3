@@ -104,9 +104,10 @@ public class PixivArtProvider extends MuzeiArtProvider
 	{
 		Log.d("ANTONY_WORKER", "addToBookmarks(): Entered");
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		String accessToken;
 		try
 		{
-			PixivArtService.getAccessToken(sharedPrefs);
+			accessToken = PixivArtService.getAccessToken(sharedPrefs);
 		} catch (AccessTokenAcquisitionException e)
 		{
 			Log.d("ANTONY_WORKER", "No access token found");
@@ -114,7 +115,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 					Toast.makeText(getContext(), getContext().getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
 			return;
 		}
-		String accessToken = sharedPrefs.getString("accessToken", "");
 		PixivArtService.sendPostRequest(accessToken, artwork.getToken());
 		Log.d("ANTONY_WORKER", "Added to bookmarks");
 	}
