@@ -18,6 +18,7 @@
 package com.antony.muzei.pixiv;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -102,8 +103,12 @@ public class PixivArtProvider extends MuzeiArtProvider
 	private void addToBookmarks(Artwork artwork)
 	{
 		Log.d("ANTONY_WORKER", "addToBookmarks(): Entered");
-		String accessToken = PixivArtService.getAccesToken(PreferenceManager.getDefaultSharedPreferences(getContext()));
-		if (accessToken.isEmpty())
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		String accessToken;
+		try
+		{
+			accessToken = PixivArtService.getAccessToken(sharedPrefs);
+		} catch (AccessTokenAcquisitionException e)
 		{
 			Log.d("ANTONY_WORKER", "No access token found");
 			new Handler(Looper.getMainLooper()).post(() ->

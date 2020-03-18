@@ -120,7 +120,6 @@ class PixivArtService
 					.addFormDataPart("client_id", PixivArtProviderDefines.CLIENT_ID)
 					.addFormDataPart("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
 
-			Response response;
 			if (sharedPrefs.getString("refreshToken", "").isEmpty())
 			{
 				Log.i(LOG_TAG, "Using username and password to acquire an access token");
@@ -133,7 +132,7 @@ class PixivArtService
 				authData.addFormDataPart("grant_type", "refresh_token")
 						.addFormDataPart("refresh_token", sharedPrefs.getString("refreshToken", ""));
 			}
-			response = sendPostRequest(authData.build());
+			Response response = sendPostRequest(authData.build());
 			JSONObject authResponseBody = new JSONObject(response.body().string());
 			response.close();
 
@@ -149,6 +148,7 @@ class PixivArtService
 //            Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
 //            sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
 			PixivArtWorker.storeTokens(sharedPrefs, authResponseBody.getJSONObject("response"));
+			accessToken = authResponseBody.getJSONObject("response").getString("access_token");
 		} catch (IOException | JSONException ex)
 		{
 			ex.printStackTrace();
@@ -156,8 +156,7 @@ class PixivArtService
 		}
 		Log.d(LOG_TAG, "Acquired access token");
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
-		return sharedPrefs.getString("accessToken", "");
-
+		return accessToken;
 	}
 
 	// This function is used for modes that require authentication

@@ -3,6 +3,10 @@
         <item>Daily ranking</item>
         <item>Weekly ranking</item>
         <item>Monthly ranking</item>
+        <item>Rookie ranking</item>
+        <item>Original ranking</item>
+        <item>Popular with males ranking</item>
+        <item>Popular with females ranking</item>
         <item>Follow feed (Login required)</item>
         <item>Bookmark images (Login Required)</item>
         <item>Recommended (Login Required)</item>
@@ -11,9 +15,13 @@
     </string-array>
 
     <string-array name="pref_updateMode_entryValues">
-        <item>daily_rank</item>
-        <item>weekly_rank</item>
-        <item>monthly_rank</item>
+        <item>daily</item>
+        <item>weekly</item>
+        <item>monthly</item>
+        <item>rookie</item>
+        <item>original</item>
+        <item>male</item>
+        <item>female</item>
         <item>follow</item>
         <item>bookmark</item>
         <item>recommended</item>
