@@ -1,16 +1,15 @@
 # Pixiv for Muzei 3
 
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
-      alt="Get it on Google Play"
-      height="80">][googlePlay]
-      
-[googlePlay]: https://play.google.com/store/apps/details?id=com.antony.muzei.pixiv&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1
-
-F-Droid release coming, once the packagers get to my app in their backlog
-
 Pixiv plugin for the new Muzei 3 API
 
 Inspired by [Pixiv for Muzei](https://github.com/dahlia/muzei-pixiv), the aim of this app is to extend functionality and improve usability.
+
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/com.antony.muzei.pixiv/)
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
+     alt="Get it on Google Play"
+     height="80">](https://play.google.com/store/apps/details?id=com.antony.muzei.pixiv)
 
 Features
   - Can pull artworks from a variety of sources:
