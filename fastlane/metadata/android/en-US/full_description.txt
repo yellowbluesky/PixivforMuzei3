@@ -1,46 +1,27 @@
-<p>Pixiv plugin for the new Muzei 3 API</p>
-<p>Inspired by <a href="https://github.com/dahlia/muzei-pixiv">Pixiv for Muzei</a>, the aim of this app is to extend
-    functionality and usability.</p>
-<p>All SNI bypass capability was contributed by <a href="https://github.com/Notsfsssf">Notsfsssf</a>, author of <a
-        href="https://github.com/Notsfsssf/Pix-ezviewer">Pix-EzViewer</a></p>
-<p>Features</p>
-<ul>
-    <li>
-        <p>Can pull artworks from a variety of sources</p>
-        <ul>
-            <li>Daily, Weekly, or Monthly Rankings</li>
-            <li>Artworks from followed artists</li>
-            <li>User's bookmarked artworks</li>
-            <li>Artworks from user's recommended feed</li>
-            <li>A specified artist ID</li>
-            <li>A specified tag (date descending sort order)</li>
-        </ul>
-    </li>
-    <li>
-        <p>Can filter against multiple criteria</p>
-        <ul>
-            <li>Four levels of granular NSFW filtering</li>
-            <li>Aspect ratio</li>
-            <li>View count</li>
-            <li>Manga</li>
-        </ul>
-    </li>
-    <li>
-        <p>Supports OAuth2 authentication; your inbox will not be filled with new login emails from Pixiv</p>
-    </li>
-    <li>
-        <p>Correctly handles the display of albums, displaying only the first image</p>
-    </li>
-    <li>
-        <p>Option to automatically clear cache on a daily basis</p>
-    </li>
-    <li>
-        <p>Option to save artwork to user storage</p>
-    </li>
-    <li>
-        <p>Works in China, SNI bypass</p>
-    </li>
-    <li>
-        <p>No tracking or collection of user details</p>
-    </li>
-</ul>
+Plugin for the new Muzei 3, to display Pixiv artworks as your wallpaper
+
+Features:
+
+* Can pull artworks from a variety of sources:
+	- Daily, Weekly, Monthly, Rookie, Original, Male, or Female Rankings
+	- User's followed artists
+	- User's bookmarked artworks
+	- Artwork's from user's recommended feed
+	- A specified artist ID
+	- A specified tag
+* Can filter against multiple criteria:
+	- Four levels of granular NSFW filtering
+	- Aspect ratio
+	- View count
+	- Manga or illustration
+
+* Suports Oauth2 authentication
+
+* Option to automatically clear images everyday
+* Option to save artwork to user storage
+
+* Works in China, SNI bypass
+
+Privacy respecting
+* No tracking or collection of user information
+* No advertisements
