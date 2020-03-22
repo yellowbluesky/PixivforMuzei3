@@ -477,7 +477,7 @@ public class PixivArtWorker extends Worker
 	}
 
 	// Scalar must match with scalar in SettingsActivity
-	boolean isEnoughViews(int artworkViewCount,
+	private boolean isEnoughViews(int artworkViewCount,
 	                      int minimumDesiredViews)
 	{
 		return artworkViewCount >= (minimumDesiredViews * 500);
