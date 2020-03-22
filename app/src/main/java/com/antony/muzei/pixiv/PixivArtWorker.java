@@ -78,6 +78,7 @@ public class PixivArtWorker extends Worker
 
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 	private static boolean clearArtwork = false;
+	private final String[] AUTH_MODES = {"follow", "bookmark", "tag_search", "artist", "recommended"};
 
 	public PixivArtWorker(
 			@NonNull Context context,
@@ -831,7 +832,7 @@ public class PixivArtWorker extends Worker
 		String accessToken = "";
 
 		// These modes require an access token, so we check for and acquire one first
-		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
+		if (Arrays.asList(AUTH_MODES).contains(mode))
 		{
 			try
 			{
@@ -867,7 +868,7 @@ public class PixivArtWorker extends Worker
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		Artwork artwork;
 
-		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
+		if (Arrays.asList(AUTH_MODES).contains(mode))
 		{
 			for (int i = 0; i < sharedPrefs.getInt("prefSlider_numToDownload", 2); i++)
 			{
