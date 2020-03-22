@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><resources>
     <string name="command_addToBookmark">添加到收藏夹</string>
+    <string name="command_viewArtworkDetails">查看图像细节</string>
+    <string name="command_shareImage">分享图像</string>
     
     <string name="app_name">Pixiv for Muzei 3</string>
     <string name="action_bar_title">Pixiv for Muzei 3 设置</string>
@@ -8,13 +10,15 @@
     <string name="pref_updateMode">更新模式</string>
     <string name="pref_updateMode_default">daily_rank</string>
 
-    <string name="prefTitle_tagSearch">图片标签</string>
+    <string name="prefTitle_tagSearch">图像标签</string>
     <string name="prefTitle_artistId">艺术家 ID</string>
  
     <string name="prefTitle_rankingFilterSelect">排行榜 NSFW 过滤级别</string>
     <string name="prefTitle_authFilterSelect">订阅 NSFW 过滤级别</string>
     
     <string name="prefTitle_showManga">显示漫画</string>
+    <string name="prefTitle_minimumViews">作品最低浏览量</string>
+    <string name="prefTitle_numToDownload">同时下载的作品数量</string>
 
     <string name="prefTitle_aspectRatio">作品长宽比</string>
     <string name="pref_aspectRatioDefault_entryValues">0</string>
@@ -48,21 +52,19 @@
     <string name="toast_newArtist">艺术家更新，清除图像缓存</string>
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
     <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
+    <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
+    <string name="toast_loginFirst">pixiv for Muzei 3: 请先登录</string>
+    
     <string name="attr_daily">日排行榜 #</string>
     <string name="attr_weekly">周排行榜 #</string>
     <string name="attr_monthly">月排行榜 #</string>
-    <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
-    <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
-    <string name="command_viewArtworkDetails">查看图像细节</string>
-    <string name="command_shareImage">分享图像</string>
-    <string name="toast_loginFirst">pixiv for Muzei 3: 先登录</string>
-    <string name="prefTitle_minimumViews">艺术品最低视野</string>
-    <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
-    <string name="prefTitle_numToDownload">一次下载的图稿数量</string>
-    <string name="prefCat_advFiltering">高级过滤</string>
-    <string name="prefCat_fileOptions">文件处理选项</string>
     <string name="attr_rookie">新人 #</string>
     <string name="attr_original">原创 #</string>
     <string name="attr_male">受男性欢迎 #</string>
-    <string name="attr_female">受男性欢迎 #</string>
+    <string name="attr_female">受女性欢迎 #</string>
+    <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
+    <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
+    <string name="prefCat_advFiltering">高级过滤</string>
+    <string name="prefCat_fileOptions">文件选项</string>
+
 </resources>
