@@ -23,6 +23,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -40,6 +41,7 @@ import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,6 +181,12 @@ public class SettingsActivity extends AppCompatActivity
 				|| !oldArtist.equals(newArtist))
 		{
 			WorkManager.getInstance().cancelUniqueWork("ANTONY");
+			File dir = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+			String[] children = dir.list();
+			for (String child : children)
+			{
+				new File(dir, child).delete();
+			}
 			PixivArtWorker.enqueueLoad(true);
 			if (!oldUpdateMode.equals(newUpdateMode))
 			{
@@ -222,6 +230,13 @@ public class SettingsActivity extends AppCompatActivity
 			findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 			{
 				WorkManager.getInstance().cancelUniqueWork("ANTONY");
+				File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+				String[] children = dir.list();
+				for (String child : children)
+				{
+					new File(dir, child).delete();
+				}
 				PixivArtWorker.enqueueLoad(true);
 				Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
 				return true;

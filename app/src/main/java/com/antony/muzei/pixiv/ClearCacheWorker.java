@@ -18,10 +18,13 @@
 package com.antony.muzei.pixiv;
 
 import android.content.Context;
+import android.os.Environment;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+
+import java.io.File;
 
 public class ClearCacheWorker extends Worker
 {
@@ -36,6 +39,12 @@ public class ClearCacheWorker extends Worker
 	@Override
 	public Result doWork()
 	{
+		File dir = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+		String[] children = dir.list();
+		for (String child : children)
+		{
+			new File(dir, child).delete();
+		}
 		PixivArtWorker.enqueueLoad(true);
 		return Result.success();
 	}
