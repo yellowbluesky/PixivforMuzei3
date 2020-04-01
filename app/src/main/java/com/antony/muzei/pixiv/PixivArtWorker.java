@@ -810,6 +810,11 @@ public class PixivArtWorker extends Worker
 
 				}
 			}
+			// can be replaced with a labelled break
+			if (found)
+			{
+				break;
+			}
 		}
 		if (!found)
 		{
