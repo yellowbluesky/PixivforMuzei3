@@ -759,6 +759,7 @@ public class PixivArtWorker extends Worker
 
 		int[] shuffledArray = generateShuffledArray(illusts.length());
 
+		loop:
 		for (int i = 0; i < illusts.length(); i++)
 		{
 			pictureMetadata = illusts.getJSONObject(shuffledArray[i]);
@@ -801,26 +802,19 @@ public class PixivArtWorker extends Worker
 				{
 					Log.d(LOG_TAG, "sanity_level found is " + pictureMetadata.getInt("sanity_level"));
 					found = true;
-					break;
+					break loop;
 				} else if (s.equals("8") && pictureMetadata.getInt("x_restrict") == 1)
 				{
 					Log.d(LOG_TAG, "x_restrict found");
 					found = true;
-					break;
-
+					break loop;
 				}
-			}
-			// can be replaced with a labelled break
-			if (found)
-			{
-				break;
 			}
 		}
 		if (!found)
 		{
 			throw new FilterMatchNotFoundException("too many retries");
 		}
-
 		return pictureMetadata;
 	}
 
