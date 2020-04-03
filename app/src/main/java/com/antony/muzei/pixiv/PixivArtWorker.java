@@ -76,10 +76,10 @@ public class PixivArtWorker extends Worker
 	private static final String LOG_TAG = "ANTONY_WORKER";
 	private static final String WORKER_TAG = "ANTONY";
 
-	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
+	private static final String[] IMAGE_SUFFIXES = {".png", ".jpg"};
 	private static boolean clearArtwork = false;
 	private final String[] AUTH_MODES = {"follow", "bookmark", "tag_search", "artist", "recommended"};
-	private final String[] RANKING_MODES = {"daily", "weekly", "monthly", "rookie", "original", "male", "female"}
+	private final String[] RANKING_MODES = {"daily", "weekly", "monthly", "rookie", "original", "male", "female"};
 
 	public PixivArtWorker(
 			@NonNull Context context,
@@ -157,7 +157,7 @@ public class PixivArtWorker extends Worker
 				.replace("_master1200", "");
 		String uri2 = uri1.substring(0, uri1.length() - 4);
 
-		for (String suffix : IMAGE_SUFFIXS)
+		for (String suffix : IMAGE_SUFFIXES)
 		{
 			String uri = uri2 + suffix;
 			response = PixivArtService.sendGetRequestRanking(HttpUrl.parse(uri));
