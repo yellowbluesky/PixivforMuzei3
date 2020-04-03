@@ -79,6 +79,7 @@ public class PixivArtWorker extends Worker
 	private static final String[] IMAGE_SUFFIXS = {".png", ".jpg", ".gif",};
 	private static boolean clearArtwork = false;
 	private final String[] AUTH_MODES = {"follow", "bookmark", "tag_search", "artist", "recommended"};
+	private final String[] RANKING_MODES = {"daily", "weekly", "monthly", "rookie", "original", "male", "female"}
 
 	public PixivArtWorker(
 			@NonNull Context context,
@@ -771,13 +772,11 @@ public class PixivArtWorker extends Worker
 			}
 
 			// If user does not want manga to display
-			if (!showManga)
+			if (!showManga && !pictureMetadata.getString("type").equals("illust"))
 			{
-				if (!pictureMetadata.getString("type").equals("illust"))
-				{
-					Log.v(LOG_TAG, "Manga not desired");
-					continue;
-				}
+				Log.v(LOG_TAG, "Manga not desired");
+				continue;
+
 			}
 
 			// Filter artwork based on chosen aspect ratio
@@ -898,7 +897,8 @@ public class PixivArtWorker extends Worker
 				artworkArrayList.add(artwork);
 			}
 		}
-
+		Log.i(LOG_TAG, "Submitting " + sharedPrefs.getInt("prefSlider_numToDownload", 2) +
+		      " artworks");
 		return artworkArrayList;
 	}
 
