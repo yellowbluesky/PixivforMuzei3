@@ -101,6 +101,13 @@
             android:key="pref_showManga"
             android:persistent="true"
             android:title="@string/prefTitle_showManga" />
+        <DropDownPreference
+            android:entries="@array/pref_tagFilterLanguage_entries"
+            android:entryValues="@array/pref_tagFilterLanguage_entryValues"
+            android:key="pref_tagFilterLanguage"
+            android:persistent="true"
+            android:summary="%s"
+            android:title="Filter by tag language" />
         <SeekBarPreference
             android:defaultValue="0"
             android:key="prefSlider_minViews"
