@@ -88,7 +88,7 @@ public class PixivArtWorker extends Worker
 		super(context, params);
 	}
 
-	static void enqueueLoad(boolean clear)
+	public static void enqueueLoad(boolean clear)
 	{
 		if (clear)
 		{

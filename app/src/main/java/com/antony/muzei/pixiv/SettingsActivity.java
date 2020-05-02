@@ -62,11 +62,6 @@ public class SettingsActivity extends AppCompatActivity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.settings_activity);
-		getSupportFragmentManager()
-				.beginTransaction()
-				.add(R.id.FeedPreferencesFragment, new SettingsFragment())
-				.commit();
 
 		// If Muzei is not installed, this will redirect the user to Muzei's Play Store listing
 		if (!isMuzeiInstalled())
@@ -223,7 +218,7 @@ public class SettingsActivity extends AppCompatActivity
 		@Override
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
 		{
-			setPreferencesFromResource(R.xml.feed_preferences_layout, rootKey);
+			setPreferencesFromResource(R.xml.main_preference_layout, rootKey);
 			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
 			// Immediately clear image cache Preference

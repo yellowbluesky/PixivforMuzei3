@@ -66,5 +66,10 @@
     <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
     <string name="prefCat_advFiltering">Advanced filtering</string>
     <string name="prefCat_fileOptions">File Options</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="tab_heading_main">Main</string>
+    <string name="tab_heading_filtering">Filtering settings</string>
+    <string name="tab_heading_credits">Credits</string>
+    <string name="tab_heading_fileOptions">File Options</string>
 
 </resources>
