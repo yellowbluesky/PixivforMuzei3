@@ -13,11 +13,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".SettingsActivity"
-            android:exported="true"
-            android:label="@string/action_bar_title">
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -33,13 +34,12 @@
             </intent-filter>
 
             <meta-data
-                android:name="settingsActivity"
-                android:value="com.antony.muzei.pixiv.SettingsActivity" />
+                android:name="mainActivity"
+                android:value="com.antony.muzei.pixiv.MainActivity" />
             <meta-data
                 android:name="color"
                 android:value="#0096db" />
         </provider>
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.antony.muzei.pixiv.fileprovider"
@@ -50,4 +50,5 @@
                 android:resource="@xml/provider_paths" />
         </provider>
     </application>
+
 </manifest>
