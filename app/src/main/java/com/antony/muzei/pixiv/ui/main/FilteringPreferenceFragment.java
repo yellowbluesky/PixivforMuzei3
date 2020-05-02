@@ -19,18 +19,12 @@ package com.antony.muzei.pixiv.ui.main;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 
-import androidx.preference.MultiSelectListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
 
 import com.antony.muzei.pixiv.R;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 public class FilteringPreferenceFragment extends PreferenceFragmentCompat
 {

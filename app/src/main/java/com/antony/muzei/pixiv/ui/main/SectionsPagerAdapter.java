@@ -58,9 +58,9 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 			case 2:
 				return new FileOptionsPreferenceFragment();
 			case 3:
-				return new CreditsFragment();
+				return new CreditsPreferenceFragment();
 			default:
-				return new CreditsFragment();
+				return new CreditsPreferenceFragment();
 		}
 	}
 
