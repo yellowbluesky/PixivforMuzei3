@@ -23,7 +23,7 @@ import androidx.preference.PreferenceFragmentCompat;
 
 import com.antony.muzei.pixiv.R;
 
-public class CreditsFragment extends PreferenceFragmentCompat
+public class CreditsPreferenceFragment extends PreferenceFragmentCompat
 {
 	@Override
 	public void onCreate(Bundle savedInstanceState)
