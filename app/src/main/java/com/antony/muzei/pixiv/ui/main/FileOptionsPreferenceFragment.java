@@ -75,6 +75,35 @@ public class FileOptionsPreferenceFragment extends PreferenceFragmentCompat
 	}
 
 	@Override
+	public void onStop()
+	{
+		super.onStop();
+		// Automatic cache clearing at 1AM every night for as long as the setting is toggled active
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		if (sharedPrefs.getBoolean("pref_autoClearMode", false))
+		{
+			// Calculates the hours to midnight
+			SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
+			int hoursToMidnight = 24 - Integer.parseInt(simpleDateFormat.format(new Date()));
+
+			// Builds and submits the work request
+			Constraints constraints = new Constraints.Builder()
+					.setRequiredNetworkType(NetworkType.CONNECTED)
+					.build();
+			PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+					.setInitialDelay(hoursToMidnight, TimeUnit.HOURS)
+					.addTag("PIXIV_CACHE_AUTO")
+					.setConstraints(constraints)
+					.build();
+			WorkManager.getInstance(getContext())
+					.enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request);
+		} else
+		{
+			WorkManager.getInstance(getContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
+		}
+	}
+
+	@Override
 	public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
 	{
 
