@@ -305,6 +305,60 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 	{
 	}
 
+	// Functions in here action only on app exit
+	@Override
+	public void onStop()
+	{
+		super.onStop();
+
+		// If new user credentials were entered and saved, then clear and invalidate existing stored user credentials
+		if (!oldCreds.equals(newCreds))
+		{
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+			SharedPreferences.Editor editor = sharedPrefs.edit();
+			editor.remove("accessToken");
+			editor.remove("refreshToken");
+			editor.remove("deviceToken");
+			editor.remove("accessTokenIssueTime");
+			editor.commit();
+			Toast.makeText(getContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
+		}
+
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		newCreds = sharedPrefs.getString("pref_loginPassword", "");
+		newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
+		newTag = sharedPrefs.getString("pref_tagSearch", "");
+		newArtist = sharedPrefs.getString("pref_artistId", "");
+
+		// If user has changed update, filter mode, or search tag:
+		//  Immediately stop any pending work, clear the Provider of any Artwork, and then toast
+		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
+				|| !oldArtist.equals(newArtist))
+		{
+			WorkManager.getInstance().cancelUniqueWork("ANTONY");
+			File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+			String[] children = dir.list();
+			for (String child : children)
+			{
+				new File(dir, child).delete();
+			}
+			PixivArtWorker.enqueueLoad(true);
+			if (!oldUpdateMode.equals(newUpdateMode))
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
+			} else if (!oldArtist.equals(newArtist))
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
+			} else if (!oldTag.equals(newTag))
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
+			} else
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+
 	private boolean isMuzeiInstalled()
 	{
 		boolean found = true;
