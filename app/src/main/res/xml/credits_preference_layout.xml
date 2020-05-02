@@ -19,25 +19,23 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <PreferenceCategory android:title="@string/prefCat_about">
-        <Preference
-            android:summary="@string/prefTitle_mainDeveloper"
-            android:title="yellowbluesky">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="https://github.com/yellowbluesky/PixivforMuzei3" />
-        </Preference>
-        <Preference
-            android:summary="@string/prefTitle_keyContributor"
-            android:title="Perol_Notsfsssf">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="https://github.com/Notsfsssf/Pix-EzViewer" />
-        </Preference>
-        <Preference android:title="@string/prefTitle_openNsfwWiki">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="https://github.com/yellowbluesky/PixivforMuzei3/wiki/Explanation-of-NSFW-filtering-levels" />
-        </Preference>
-    </PreferenceCategory>
+    <Preference
+        android:summary="@string/prefTitle_mainDeveloper"
+        android:title="yellowbluesky">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/yellowbluesky/PixivforMuzei3" />
+    </Preference>
+    <Preference
+        android:summary="@string/prefTitle_keyContributor"
+        android:title="Perol_Notsfsssf">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/Notsfsssf/Pix-EzViewer" />
+    </Preference>
+    <Preference android:title="@string/prefTitle_openNsfwWiki">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/yellowbluesky/PixivforMuzei3/wiki/Explanation-of-NSFW-filtering-levels" />
+    </Preference>
 </PreferenceScreen>
