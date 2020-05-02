@@ -226,35 +226,15 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		{
 			// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
 			// and hide the ranking NSFW filtering
-			if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
-					.contains(newValue))
-			{
-				findPreference("prefCat_loginSettings").setVisible(true);
-				findPreference("pref_authFilterSelect").setVisible(true);
-				findPreference("pref_rankingFilterSelect").setVisible(false);
-			} else
-			{
-				findPreference("pref_rankingFilterSelect").setVisible(true);
-				findPreference("prefCat_loginSettings").setVisible(false);
-				findPreference("pref_authFilterSelect").setVisible(false);
-			}
+			boolean authFeedModeSelected = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+					.contains(newValue);
 
-			if (newValue.equals("tag_search"))
-			{
-				findPreference("pref_tagSearch").setVisible(true);
-			} else
-			{
-				findPreference("pref_tagSearch").setVisible(false);
-			}
+			findPreference("prefCat_loginSettings").setVisible(authFeedModeSelected);
+			findPreference("pref_authFilterSelect").setVisible(authFeedModeSelected);
+			findPreference("pref_rankingFilterSelect").setVisible(!authFeedModeSelected);
 
-			if (newValue.equals("artist"))
-			{
-				findPreference("pref_artistId").setVisible(true);
-			} else
-			{
-				findPreference("pref_artistId").setVisible(false);
-			}
-
+			findPreference("pref_tagSearch").setVisible(newValue.equals("tag_search"));
+			findPreference("pref_artistId").setVisible(newValue.equals("artist"));
 			return true;
 		});
 
