@@ -65,6 +65,9 @@
         android:key="prefCat_loginSettings"
         android:title="@string/prefCat_authSettings"
         app:isPreferenceVisible="false">
+<!--        <Preference-->
+<!--            android:key="pref_loginActivity"-->
+<!--            android:title="Login" />-->
         <EditTextPreference
             android:dialogTitle="@string/pref_loginId"
             android:inputType="text"

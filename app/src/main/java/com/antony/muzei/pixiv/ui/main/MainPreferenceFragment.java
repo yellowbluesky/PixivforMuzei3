@@ -266,6 +266,13 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			return true;
 		});
 
+//		Preference loginActivityPreference = findPreference("pref_loginActivity");
+//		loginActivityPreference.setOnPreferenceClickListener(preference ->
+//		{
+//			Log.d("sdfs", "sdf");
+//			return false;
+//		});
+
 		// Show authentication status as summary string below login button
 		if (sharedPrefs.getString("accessToken", "").isEmpty())
 		{
