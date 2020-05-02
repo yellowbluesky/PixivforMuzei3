@@ -43,7 +43,6 @@ import java.util.Set;
 
 public class MainPreferenceFragment extends PreferenceFragmentCompat
 {
-	private SharedPreferences.OnSharedPreferenceChangeListener prefChangeListener;
 	private String newCreds, oldCreds;
 	private String oldUpdateMode, newUpdateMode;
 	private String oldTag, newTag;
@@ -251,25 +250,6 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		oldArtist = sharedPrefs.getString("pref_artistId", "");
 		newArtist = oldArtist;
-
-		prefChangeListener = (sharedPreferences, key) ->
-		{
-			switch (key)
-			{
-				case "pref_loginPassword":
-					newCreds = sharedPrefs.getString("pref_loginPassword", "");
-					break;
-				case "pref_updateMode":
-					newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
-					break;
-				case "pref_tagSearch":
-					newTag = sharedPrefs.getString("pref_tagSearch", "");
-					break;
-				case "pref_artistId":
-					newArtist = sharedPrefs.getString("pref_artistId", "");
-					break;
-			}
-		};
 
 		findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 		{
