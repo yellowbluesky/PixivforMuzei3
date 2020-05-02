@@ -71,5 +71,6 @@
     <string name="tab_heading_filtering">Filtering settings</string>
     <string name="tab_heading_credits">Credits</string>
     <string name="tab_heading_fileOptions">File Options</string>
+    <string name="tab_heading_roadmap">Roadmap</string>
 
 </resources>
