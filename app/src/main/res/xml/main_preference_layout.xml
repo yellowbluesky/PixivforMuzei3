@@ -63,11 +63,7 @@
     </PreferenceCategory>
     <PreferenceCategory
         android:key="prefCat_loginSettings"
-        android:title="@string/prefCat_authSettings"
-        app:isPreferenceVisible="false">
-<!--        <Preference-->
-<!--            android:key="pref_loginActivity"-->
-<!--            android:title="Login" />-->
+        android:title="@string/prefCat_authSettings">
         <EditTextPreference
             android:dialogTitle="@string/pref_loginId"
             android:inputType="text"
@@ -80,6 +76,9 @@
             android:key="pref_loginPassword"
             android:persistent="true"
             android:title="@string/pref_loginPassword" />
+        <Preference
+            android:key="pref_login"
+            android:title="Login!" />
         <DropDownPreference
             android:entries="@array/array_authFailActions_entries"
             android:entryValues="@array/array_authFailActions_entryvalues"

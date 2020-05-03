@@ -45,7 +45,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 import static com.antony.muzei.pixiv.PixivArtProviderDefines.HASH_SECRET;
 
-class PixivArtService
+public class PixivArtService
 {
 	private static final String LOG_TAG = "ANTONY_SERVICE";
 	private static OkHttpClient httpClient = new OkHttpClient();
@@ -100,7 +100,7 @@ class PixivArtService
 		}
 	}
 
-	static String getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
+	public static String getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
 	{
 		String accessToken = sharedPrefs.getString("accessToken", "");
 		long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);

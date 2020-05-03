@@ -28,8 +28,8 @@
     <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>
-    <string name="pref_loginId">Pixiv ID</string>
-    <string name="pref_loginPassword">Password</string>
+    <string name="pref_loginId">Pixiv username</string>
+    <string name="pref_loginPassword">Pixiv Password</string>
 
     <string name="pref_authFailActionDropDown">Authentication failure action</string>
 

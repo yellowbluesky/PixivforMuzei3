@@ -122,6 +122,7 @@ public class PixivArtWorker extends Worker
 		editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
 		editor.putString("refreshToken", tokens.getString("refresh_token"));
 		editor.putString("userId", tokens.getJSONObject("user").getString("id"));
+		editor.remove("pref_loginPassword");
 		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
 		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
 		editor.commit();

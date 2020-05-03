@@ -26,12 +26,15 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.preference.DropDownPreference;
 import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.WorkManager;
 
+import com.antony.muzei.pixiv.AccessTokenAcquisitionException;
+import com.antony.muzei.pixiv.PixivArtService;
 import com.antony.muzei.pixiv.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
 
@@ -63,11 +66,30 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
 			} catch (android.content.ActivityNotFoundException ex)
 			{
-				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+				startActivity(new Intent(Intent.ACTION_VIEW,
+						Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
 			}
 		}
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+		// Ensures that the user has logged in first before selecting any update mode requiring authentication
+
+		DropDownPreference updateModeDropDownPreference = findPreference("pref_updateMode");
+		updateModeDropDownPreference.setOnPreferenceChangeListener((preference, newValue) ->
+		{
+			//Log.d("MANUAL", newValue.toString());
+			boolean isAuthUpdateMode = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+					.contains(newValue.toString());
+			// User has selected an authenticated feed mode, but has not yet logged in as evidenced
+			// by the lack of an access token
+			if (isAuthUpdateMode && sharedPrefs.getString("accessToken", "").isEmpty())
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show();
+				return false;
+			}
+			return true;
+		});
 
 		// All this is needed for the arbitrary selection NSFW filtering
 		// Resets to default SFW filtering is all options are unchecked
@@ -197,45 +219,45 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		String summaryAuth = stringBuilderAuth.toString();
 		authFilterSelectPref.setSummary(summaryAuth);
 
-		// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
-		String updateMode = sharedPrefs.getString("pref_updateMode", "daily");
-		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
-				.contains(updateMode))
-		{
-			findPreference("pref_authFilterSelect").setVisible(true);
-			findPreference("prefCat_loginSettings").setVisible(true);
-			if (updateMode.equals("tag_search"))
-			{
-				Preference tagSearch = findPreference("pref_tagSearch");
-				tagSearch.setVisible(true);
-				tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
-			} else if (updateMode.equals("artist"))
-			{
-				Preference artistId = findPreference("pref_artistId");
-				artistId.setVisible(true);
-				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
-			}
-		} else
-		{
-			findPreference("pref_rankingFilterSelect").setVisible(true);
-		}
-
-		// Reveals UI elements as needed depending on Update Mode selection
-		findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
-		{
-			// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
-			// and hide the ranking NSFW filtering
-			boolean authFeedModeSelected = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
-					.contains(newValue);
-
-			findPreference("prefCat_loginSettings").setVisible(authFeedModeSelected);
-			findPreference("pref_authFilterSelect").setVisible(authFeedModeSelected);
-			findPreference("pref_rankingFilterSelect").setVisible(!authFeedModeSelected);
-
-			findPreference("pref_tagSearch").setVisible(newValue.equals("tag_search"));
-			findPreference("pref_artistId").setVisible(newValue.equals("artist"));
-			return true;
-		});
+//		// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
+//		String updateMode = sharedPrefs.getString("pref_updateMode", "daily");
+//		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+//				.contains(updateMode))
+//		{
+//			findPreference("pref_authFilterSelect").setVisible(true);
+//			findPreference("prefCat_loginSettings").setVisible(true);
+//			if (updateMode.equals("tag_search"))
+//			{
+//				Preference tagSearch = findPreference("pref_tagSearch");
+//				tagSearch.setVisible(true);
+//				tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
+//			} else if (updateMode.equals("artist"))
+//			{
+//				Preference artistId = findPreference("pref_artistId");
+//				artistId.setVisible(true);
+//				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
+//			}
+//		} else
+//		{
+//			findPreference("pref_rankingFilterSelect").setVisible(true);
+//		}
+//
+//		// Reveals UI elements as needed depending on Update Mode selection
+//		findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
+//		{
+//			// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
+//			// and hide the ranking NSFW filtering
+//			boolean authFeedModeSelected = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+//					.contains(newValue);
+//
+//			findPreference("prefCat_loginSettings").setVisible(authFeedModeSelected);
+//			findPreference("pref_authFilterSelect").setVisible(authFeedModeSelected);
+//			findPreference("pref_rankingFilterSelect").setVisible(!authFeedModeSelected);
+//
+//			findPreference("pref_tagSearch").setVisible(newValue.equals("tag_search"));
+//			findPreference("pref_artistId").setVisible(newValue.equals("artist"));
+//			return true;
+//		});
 
 		// Stores user toggleable variables into a temporary store for later comparison in onStop()
 		// If the value of the preference on Activity creation is different to Activity stop, then take certain action
@@ -266,12 +288,29 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			return true;
 		});
 
-//		Preference loginActivityPreference = findPreference("pref_loginActivity");
-//		loginActivityPreference.setOnPreferenceClickListener(preference ->
-//		{
-//			Log.d("sdfs", "sdf");
-//			return false;
-//		});
+		// Users click this preference to execute the login
+		Preference loginActivityPreference = findPreference("pref_login");
+		loginActivityPreference.setOnPreferenceClickListener(preference ->
+		{
+			if (sharedPrefs.getString("pref_loginId", "").isEmpty()
+					|| sharedPrefs.getString("pref_loginPassword", "").isEmpty())
+			{
+				Toast.makeText(getContext(), "Please enter a Pixiv username and password", Toast.LENGTH_SHORT).show();
+				return true;
+			}
+			try
+			{
+				// NetworkOnMainThreadException
+				PixivArtService.getAccessToken(sharedPrefs);
+			} catch (AccessTokenAcquisitionException e)
+			{
+				Toast.makeText(getContext(), "Login failed, check your credentials", Toast.LENGTH_SHORT).show();
+				e.printStackTrace();
+				return true;
+			}
+			Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
+			return true;
+		});
 
 		// Show authentication status as summary string below login button
 		if (sharedPrefs.getString("accessToken", "").isEmpty())
@@ -298,19 +337,6 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 	{
 		super.onStop();
 
-		// If new user credentials were entered and saved, then clear and invalidate existing stored user credentials
-		if (!oldCreds.equals(newCreds))
-		{
-			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-			SharedPreferences.Editor editor = sharedPrefs.edit();
-			editor.remove("accessToken");
-			editor.remove("refreshToken");
-			editor.remove("deviceToken");
-			editor.remove("accessTokenIssueTime");
-			editor.commit();
-			Toast.makeText(getContext(), getString(R.string.toast_newCredentials), Toast.LENGTH_SHORT).show();
-		}
-
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 		newCreds = sharedPrefs.getString("pref_loginPassword", "");
 		newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
@@ -319,31 +345,31 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		// If user has changed update, filter mode, or search tag:
 		//  Immediately stop any pending work, clear the Provider of any Artwork, and then toast
-		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
-				|| !oldArtist.equals(newArtist))
-		{
-			WorkManager.getInstance().cancelUniqueWork("ANTONY");
-			File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			String[] children = dir.list();
-			for (String child : children)
-			{
-				new File(dir, child).delete();
-			}
-			PixivArtWorker.enqueueLoad(true);
-			if (!oldUpdateMode.equals(newUpdateMode))
-			{
-				Toast.makeText(getContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-			} else if (!oldArtist.equals(newArtist))
-			{
-				Toast.makeText(getContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
-			} else if (!oldTag.equals(newTag))
-			{
-				Toast.makeText(getContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
-			} else
-			{
-				Toast.makeText(getContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
-			}
-		}
+//		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
+//				|| !oldArtist.equals(newArtist))
+//		{
+//			WorkManager.getInstance().cancelUniqueWork("ANTONY");
+//			File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+//			String[] children = dir.list();
+//			for (String child : children)
+//			{
+//				new File(dir, child).delete();
+//			}
+//			PixivArtWorker.enqueueLoad(true);
+//			if (!oldUpdateMode.equals(newUpdateMode))
+//			{
+//				Toast.makeText(getContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
+//			} else if (!oldArtist.equals(newArtist))
+//			{
+//				Toast.makeText(getContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
+//			} else if (!oldTag.equals(newTag))
+//			{
+//				Toast.makeText(getContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
+//			} else
+//			{
+//				Toast.makeText(getContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
+//			}
+//		}
 	}
 
 	private boolean isMuzeiInstalled()
