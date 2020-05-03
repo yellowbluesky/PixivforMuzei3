@@ -34,7 +34,7 @@
             </intent-filter>
 
             <meta-data
-                android:name="mainActivity"
+                android:name="settingsActivity"
                 android:value="com.antony.muzei.pixiv.MainActivity" />
             <meta-data
                 android:name="color"
