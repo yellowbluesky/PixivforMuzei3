@@ -37,6 +37,7 @@ import com.antony.muzei.pixiv.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.PixivArtService;
 import com.antony.muzei.pixiv.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.ui.activity.LoginActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -294,19 +295,20 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		{
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
-				// TODO start activity for result
+				Intent intent = new Intent(getContext(), LoginActivity.class);
+				startActivityForResult(intent, 0);
 			}
-			try
-			{
-				// NetworkOnMainThreadException
-				PixivArtService.getAccessToken(sharedPrefs);
-			} catch (AccessTokenAcquisitionException e)
-			{
-				Toast.makeText(getContext(), "Login failed, check your credentials", Toast.LENGTH_SHORT).show();
-				e.printStackTrace();
-				return true;
-			}
-			Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
+//			try
+//			{
+//				// NetworkOnMainThreadException
+//				PixivArtService.getAccessToken(sharedPrefs);
+//			} catch (AccessTokenAcquisitionException e)
+//			{
+//				Toast.makeText(getContext(), "Login failed, check your credentials", Toast.LENGTH_SHORT).show();
+//				e.printStackTrace();
+//				return true;
+//			}
+//			Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
 			return true;
 		});
 

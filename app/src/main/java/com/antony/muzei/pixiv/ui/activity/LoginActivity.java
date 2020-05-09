@@ -18,8 +18,10 @@
 package com.antony.muzei.pixiv.ui.activity;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -32,19 +34,36 @@ public class LoginActivity extends AppCompatActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_pixiv_sign_in);
-		Button loginButton = (Button) findViewById(R.id.login);
-		loginButton.setOnClickListener(new View.OnClickListener()
+		((EditText) findViewById(R.id.loginPassword)).addTextChangedListener(new TextWatcher()
 		{
 			@Override
-			public void onClick(View v)
+			public void beforeTextChanged(CharSequence s, int start, int count, int after)
 			{
-				executeLogin();
+
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count)
+			{
+
+			}
+
+			@Override
+			public void afterTextChanged(Editable s)
+			{
+				if (!((EditText) findViewById(R.id.loginUsername)).getText().toString().isEmpty() && !s.toString().isEmpty())
+				{
+					findViewById(R.id.loginButton).setEnabled(true);
+				}
 			}
 		});
+
+		findViewById(R.id.loginButton).setOnClickListener(v -> executeLogin());
+		// TODO enable the button when both fields have valid inputs
 	}
 
 	private void executeLogin()
 	{
-
+		Log.v("DEMO", "attempting to login");
 	}
 }
