@@ -71,5 +71,8 @@
     <string name="tab_heading_adv_options">Advanced settings</string>
     <string name="tab_heading_credits">Credits</string>
     <string name="tab_heading_roadmap">Roadmap</string>
+    <string name="prompt_email">Pixiv username</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Login</string>
 
 </resources>

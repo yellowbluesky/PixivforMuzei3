@@ -38,6 +38,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.6.0'
     implementation 'com.google.android.material:material:1.1.0'
     implementation 'commons-io:commons-io:2.6'
+    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation "androidx.constraintlayout:constraintlayout:2.0.0-beta5"
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
