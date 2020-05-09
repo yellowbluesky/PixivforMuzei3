@@ -75,10 +75,9 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
 		// Ensures that the user has logged in first before selecting any update mode requiring authentication
-		DropDownPreference updateModeDropDownPreference = findPreference("pref_updateMode");
-		updateModeDropDownPreference.setOnPreferenceChangeListener((preference, newValue) ->
+		// Reveals UI elements as needed depending on Update Mode selection
+		findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 		{
-			//Log.d("MANUAL", newValue.toString());
 			boolean isAuthUpdateMode = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
 					.contains(newValue.toString());
 			// User has selected an authenticated feed mode, but has not yet logged in as evidenced
@@ -88,6 +87,16 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 				Toast.makeText(getContext(), getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show();
 				return false;
 			}
+			// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
+			// and hide the ranking NSFW filtering
+			boolean authFeedModeSelected = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+					.contains(newValue);
+
+			findPreference("pref_authFilterSelect").setVisible(authFeedModeSelected);
+			findPreference("pref_rankingFilterSelect").setVisible(!authFeedModeSelected);
+
+			findPreference("pref_tagSearch").setVisible(newValue.equals("tag_search"));
+			findPreference("pref_artistId").setVisible(newValue.equals("artist"));
 			return true;
 		});
 
@@ -219,45 +228,28 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		String summaryAuth = stringBuilderAuth.toString();
 		authFilterSelectPref.setSummary(summaryAuth);
 
-//		// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
-//		String updateMode = sharedPrefs.getString("pref_updateMode", "daily");
-//		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
-//				.contains(updateMode))
-//		{
-//			findPreference("pref_authFilterSelect").setVisible(true);
-//			findPreference("prefCat_loginSettings").setVisible(true);
-//			if (updateMode.equals("tag_search"))
-//			{
-//				Preference tagSearch = findPreference("pref_tagSearch");
-//				tagSearch.setVisible(true);
-//				tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
-//			} else if (updateMode.equals("artist"))
-//			{
-//				Preference artistId = findPreference("pref_artistId");
-//				artistId.setVisible(true);
-//				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
-//			}
-//		} else
-//		{
-//			findPreference("pref_rankingFilterSelect").setVisible(true);
-//		}
-//
-//		// Reveals UI elements as needed depending on Update Mode selection
-//		findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
-//		{
-//			// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
-//			// and hide the ranking NSFW filtering
-//			boolean authFeedModeSelected = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
-//					.contains(newValue);
-//
-//			findPreference("prefCat_loginSettings").setVisible(authFeedModeSelected);
-//			findPreference("pref_authFilterSelect").setVisible(authFeedModeSelected);
-//			findPreference("pref_rankingFilterSelect").setVisible(!authFeedModeSelected);
-//
-//			findPreference("pref_tagSearch").setVisible(newValue.equals("tag_search"));
-//			findPreference("pref_artistId").setVisible(newValue.equals("artist"));
-//			return true;
-//		});
+		// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
+		String updateMode = sharedPrefs.getString("pref_updateMode", "daily");
+		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+				.contains(updateMode))
+		{
+			findPreference("pref_authFilterSelect").setVisible(true);
+			findPreference("prefCat_loginSettings").setVisible(true);
+			if (updateMode.equals("tag_search"))
+			{
+				Preference tagSearch = findPreference("pref_tagSearch");
+				tagSearch.setVisible(true);
+				tagSearch.setSummary(sharedPrefs.getString("pref_tagSearch", ""));
+			} else if (updateMode.equals("artist"))
+			{
+				Preference artistId = findPreference("pref_artistId");
+				artistId.setVisible(true);
+				artistId.setSummary(sharedPrefs.getString("pref_artistId", ""));
+			}
+		} else
+		{
+			findPreference("pref_rankingFilterSelect").setVisible(true);
+		}
 
 		// Stores user toggleable variables into a temporary store for later comparison in onStop()
 		// If the value of the preference on Activity creation is different to Activity stop, then take certain action
