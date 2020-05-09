@@ -47,6 +47,7 @@ import java.util.Set;
 
 public class MainPreferenceFragment extends PreferenceFragmentCompat
 {
+	private static final int REQUEST_CODE_LOGIN = 1;
 	private String newCreds, oldCreds;
 	private String oldUpdateMode, newUpdateMode;
 	private String oldTag, newTag;
@@ -283,12 +284,20 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		// Users click this preference to execute the login
 		Preference loginActivityPreference = findPreference("pref_login");
+		if(!sharedPrefs.getString("accessToken", "").isEmpty())
+		{
+			loginActivityPreference.setTitle("Logout");
+			loginActivityPreference.setSummary("Currently logged in as " + sharedPrefs.getString("name", ""));
+		}
 		loginActivityPreference.setOnPreferenceClickListener(preference ->
 		{
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
 				Intent intent = new Intent(getContext(), LoginActivity.class);
-				startActivityForResult(intent, 0);
+				startActivityForResult(intent, REQUEST_CODE_LOGIN);
+			} else
+			{
+				// TODO clear credentials, change label to say "LOGOUT"
 			}
 //			try
 //			{
@@ -303,18 +312,17 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 //			Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
 			return true;
 		});
+	}
 
-		// Show authentication status as summary string below login button
-		if (sharedPrefs.getString("accessToken", "").isEmpty())
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == REQUEST_CODE_LOGIN && resultCode == Activity.RESULT_OK)
 		{
-			findPreference("pref_loginId").setSummary(getString(R.string.prefSummary_authFail));
-			//loginId.setSummary(Long.toString(System.currentTimeMillis()));
-		} else
-		{
-			String summaryString = getString(R.string.prefSummary_authSuccess) + " " + sharedPrefs.getString("pref_loginId", "");
-			findPreference("pref_loginId").setSummary(summaryString);
-//                Uri profileImageUri = Uri.parse(sharedPrefs.getString("profileImageUri", ""));
-//                loginId.setIcon();
+			Preference loginButtonMain = findPreference("pref_login");
+			loginButtonMain.setSummary("Currently logged in as " + data.getStringExtra("username"));
+			loginButtonMain.setTitle("Logout");
 		}
 	}
 
