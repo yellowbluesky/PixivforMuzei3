@@ -41,15 +41,28 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class FileOptionsPreferenceFragment extends PreferenceFragmentCompat
+public class AdvOptionsPreferenceFragment extends PreferenceFragmentCompat
 {
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.file_options_preference_layout);
+		addPreferencesFromResource(R.xml.adv_setting_preference_layout);
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+		// Artwork minimum views slider
+		// Updates the summary in real time as the user drags the thumb
+		// Increments of 500, hence the scalar
+		SeekBarPreference minimumViewSliderPref = findPreference("prefSlider_minViews");
+		minimumViewSliderPref.setUpdatesContinuously(true);
+		minimumViewSliderPref.setSummary(Integer.toString(
+				sharedPrefs.getInt("prefSlider_minViews", 0) * 500));
+		minimumViewSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
+		{
+			minimumViewSliderPref.setSummary(Integer.toString((Integer) newValue * 500));
+			return true;
+		})));
 
 		// Requests the WRITE_EXTERNAL_STORAGE permission
 		// is needed if the user has checked the option to store artworks into external storage
