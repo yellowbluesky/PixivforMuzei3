@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.ui.main;
+package com.antony.muzei.pixiv.ui.fragments;
 
 import android.os.Bundle;
 

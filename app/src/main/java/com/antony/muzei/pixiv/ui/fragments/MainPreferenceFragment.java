@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.ui.main;
+package com.antony.muzei.pixiv.ui.fragments;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -74,7 +74,6 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
 		// Ensures that the user has logged in first before selecting any update mode requiring authentication
-
 		DropDownPreference updateModeDropDownPreference = findPreference("pref_updateMode");
 		updateModeDropDownPreference.setOnPreferenceChangeListener((preference, newValue) ->
 		{
@@ -273,6 +272,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		oldArtist = sharedPrefs.getString("pref_artistId", "");
 		newArtist = oldArtist;
 
+		// Preference that immediately clears Muzei's image cache when pressed
 		findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 		{
 			WorkManager.getInstance().cancelUniqueWork("ANTONY");
@@ -292,11 +292,9 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		Preference loginActivityPreference = findPreference("pref_login");
 		loginActivityPreference.setOnPreferenceClickListener(preference ->
 		{
-			if (sharedPrefs.getString("pref_loginId", "").isEmpty()
-					|| sharedPrefs.getString("pref_loginPassword", "").isEmpty())
+			if (sharedPrefs.getString("accessToken", "").isEmpty())
 			{
-				Toast.makeText(getContext(), "Please enter a Pixiv username and password", Toast.LENGTH_SHORT).show();
-				return true;
+				// TODO start activity for result
 			}
 			try
 			{
