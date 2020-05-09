@@ -97,6 +97,9 @@ public class RestClient
 						.build();
 				return chain.proceed(request);
 			})
+			.addInterceptor(new HttpLoggingInterceptor(s ->
+					Log.v("ANTONY_LOGIN", "message====" + s))
+					.setLevel(HttpLoggingInterceptor.Level.BODY))
 			.build();
 	private static Retrofit retrofitOauth;
 
@@ -159,8 +162,8 @@ public class RestClient
 		if (retrofitOauth == null)
 		{
 			retrofitOauth = new Retrofit.Builder()
-					.baseUrl("https://oauth.secure.pixiv.net/auth/token")
-					.client(imageHttpClient)
+					.baseUrl("https://oauth.secure.pixiv.net")
+					.client(okHttpClientAuth)
 					.addConverterFactory(GsonConverterFactory.create())
 					.build();
 		}

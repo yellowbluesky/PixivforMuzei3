@@ -36,7 +36,7 @@
 
             <meta-data
                 android:name="settingsActivity"
-                android:value="com.antony.muzei.pixiv.MainActivity" />
+                android:value="com.antony.muzei.pixiv.ui.activity.MainActivity" />
             <meta-data
                 android:name="color"
                 android:value="#0096db" />

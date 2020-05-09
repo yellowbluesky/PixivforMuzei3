@@ -123,16 +123,16 @@ public class PixivArtWorker extends Worker
 	}
 
 	// Upon successful authentication stores tokens returned from Pixiv into device memory
-	static void storeTokens(SharedPreferences sharedPrefs,
-	                        JSONObject tokens) throws JSONException
+	public static void storeTokens(SharedPreferences sharedPrefs,
+	                               OauthResponse response)
 	{
 		Log.i(LOG_TAG, "Storing tokens");
 		SharedPreferences.Editor editor = sharedPrefs.edit();
-		editor.putString("accessToken", tokens.getString("access_token"));
+		editor.putString("accessToken", response.getPixivOauthResponse().getAccess_token());
 		editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
-		editor.putString("refreshToken", tokens.getString("refresh_token"));
-		editor.putString("userId", tokens.getJSONObject("user").getString("id"));
-		editor.remove("pref_loginPassword");
+		editor.putString("refreshToken", response.getPixivOauthResponse().getRefresh_token());
+		editor.putString("userId", response.getPixivOauthResponse().getUser().getId());
+		editor.putString("name", response.getPixivOauthResponse().getUser().getName());
 		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
 		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
 		editor.commit();
