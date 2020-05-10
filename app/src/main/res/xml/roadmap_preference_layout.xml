@@ -25,7 +25,7 @@
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/yellowbluesky/PixivforMuzei3/issues/85" />
     </Preference>
-    <Preference android:title="Improved tag exclusion filter">
+    <Preference android:title="Tag exclusion filter">
         <intent
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/yellowbluesky/PixivforMuzei3/issues/73" />

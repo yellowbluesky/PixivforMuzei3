@@ -50,8 +50,10 @@ public class LoginActivity extends AppCompatActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_pixiv_sign_in);
+		EditText loginUsername = findViewById(R.id.loginUsername);
+		EditText loginPassword = findViewById(R.id.loginPassword);
 
-		((EditText) findViewById(R.id.loginPassword)).addTextChangedListener(new TextWatcher()
+		loginPassword.addTextChangedListener(new TextWatcher()
 		{
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after)
@@ -69,7 +71,7 @@ public class LoginActivity extends AppCompatActivity
 			public void afterTextChanged(Editable s)
 			{
 				// this monster of a logical expression needs to be extracted out
-				if (!((EditText) findViewById(R.id.loginUsername)).getText().toString().isEmpty() && !s.toString().isEmpty())
+				if (!loginUsername.getText().toString().isEmpty() && !s.toString().isEmpty())
 				{
 					findViewById(R.id.loginButton).setEnabled(true);
 				}
@@ -102,6 +104,7 @@ public class LoginActivity extends AppCompatActivity
 
 		OAuthResponseService service = RestClient.getRetrofitOauthInstance().create(OAuthResponseService.class);
 		Call<OauthResponse> call = service.postRefreshToken(fieldParams);
+		// Callback because we are on a main UI thread, Android will throw a NetworkOnMainThreadException
 		call.enqueue(new Callback<OauthResponse>()
 		{
 			@Override
@@ -110,7 +113,10 @@ public class LoginActivity extends AppCompatActivity
 				if (response.isSuccessful())
 				{
 					SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+					// Store the recently received tokens
 					PixivArtWorker.storeTokens(sharedPrefs, response.body());
+					// Returns the username for immediate consumption by MainPreferenceFragment
+					// Sets the "Logged in as XXX" preference summary
 					Intent username = new Intent()
 							.putExtra("username", response.body().getPixivOauthResponse().getUser().getName());
 					setResult(RESULT_OK, username);
@@ -126,8 +132,8 @@ public class LoginActivity extends AppCompatActivity
 			@Override
 			public void onFailure(Call<OauthResponse> call, Throwable t)
 			{
-				// TODO toast
 				progressBar.setVisibility(View.INVISIBLE);
+				Toast.makeText(getApplicationContext(), getString(R.string.toast_authFailed), Toast.LENGTH_SHORT).show();
 			}
 		});
 	}
