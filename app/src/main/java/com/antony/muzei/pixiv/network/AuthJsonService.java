@@ -37,8 +37,8 @@ public interface AuthJsonService
 	@GET("v1/search/illust?search_target=partial_match_for_tags&sort=date_desc&filter=for_ios")
 	Call<Illusts> getTagSearchJson(@Header("Authorization") String accessToken, @Query("word") String tag);
 
-	@GET("v1/user/illust?filter=for_ios")
-	Call<Illusts> getArtistJson(@Header("Authorization") String accessToken, @Query("user_id") String userId);
+	@GET("v1/user/illusts?filter=for_ios")
+	Call<Illusts> getArtistJson(@Header("Authorization") String accessToken, @Query("user_id") String artist_id);
 
 	@GET("v1/illust/recommended?content_type=illust&include_ranking_label=true&include_ranking_illusts=true&filter=for_ios")
 	Call<Illusts> getRecommendedJson(@Header("Authorization") String accessToken);
