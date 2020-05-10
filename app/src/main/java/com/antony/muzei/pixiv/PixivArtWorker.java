@@ -54,6 +54,7 @@ import com.antony.muzei.pixiv.gson.Illusts;
 import com.antony.muzei.pixiv.gson.OauthResponse;
 import com.antony.muzei.pixiv.gson.RankingArtwork;
 import com.antony.muzei.pixiv.network.AuthJsonService;
+import com.antony.muzei.pixiv.network.ImageDownloadService;
 import com.antony.muzei.pixiv.network.RankingJsonService;
 import com.antony.muzei.pixiv.network.RestClient;
 import com.google.android.apps.muzei.api.provider.Artwork;
@@ -80,6 +81,7 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 
 public class PixivArtWorker extends Worker
@@ -238,7 +240,7 @@ public class PixivArtWorker extends Worker
 		The external storage copy is not used for backing any database
 		The external storage copy also has correct file extensions
 	 */
-	private Uri downloadFile(Response response,
+	private Uri downloadFile(ResponseBody response,
 	                         String filename) throws IOException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "Downloading file");
@@ -248,7 +250,7 @@ public class PixivArtWorker extends Worker
 		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
 
-		InputStream inputStreamNetwork = response.body().byteStream();
+		InputStream inputStreamNetwork = response.byteStream();
 
 		byte[] bufferTemp = new byte[1024 * 1024 * 10];
 		int readTemp;
@@ -635,7 +637,9 @@ public class PixivArtWorker extends Worker
 		String token = Integer.toString(selectedArtwork.getId());
 
 		// Actually downloading the file
-		Response imageDataResponse = PixivArtService.sendGetRequestUnauth(HttpUrl.parse(imageUrl));
+		ImageDownloadService service = RestClient.getRetrofitImageInstance().create(ImageDownloadService.class);
+		Call<ResponseBody> call = service.downloadImage(imageUrl);
+		ResponseBody imageDataResponse = call.execute().body();
 		Uri localUri = downloadFile(imageDataResponse, token);
 		imageDataResponse.close();
 

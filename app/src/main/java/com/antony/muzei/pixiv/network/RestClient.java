@@ -23,7 +23,6 @@ import android.util.Log;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -78,7 +77,7 @@ public class RestClient
 						.header("App-OS", "Android")
 						.header("App-OS-Version", Build.VERSION.RELEASE)
 						.header("App-Version", "5.0.166")
-						.header("Accept-Language", Locale.getDefault().toString())
+						//.header("Accept-Language", Locale.getDefault().toString())
 						.header("X-Client-Time", rfc3339Date)
 						.header("X-Client-Hash", hashSecret)
 						.build();
@@ -86,14 +85,14 @@ public class RestClient
 			})
 			.build();
 
-	// Not sure why this is named such, but it's different because it does very little with the headers
+	private static Retrofit retrofitImages;
 	private static OkHttpClient imageHttpClient = new OkHttpClient.Builder()
 			.addInterceptor(chain ->
 			{
 				Request original = chain.request();
 				Request request = original.newBuilder()
 						.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")")
-						// Notsssf adds a Referer header here
+						.header("Referer", "https://www.pixiv.net")
 						.build();
 				return chain.proceed(request);
 			})
@@ -127,6 +126,19 @@ public class RestClient
 					.build();
 		}
 		return retrofitAuth;
+	}
+
+	public static Retrofit getRetrofitImageInstance()
+	{
+		if (retrofitImages == null)
+		{
+			retrofitImages = new Retrofit.Builder()
+					.client(imageHttpClient)
+					.baseUrl("https://i.pximg.net")
+					.addConverterFactory(GsonConverterFactory.create())
+					.build();
+		}
+		return retrofitImages;
 	}
 
 	private static String getHashSecret(String dateSecretConcat)
