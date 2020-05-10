@@ -152,11 +152,10 @@ public class PixivArtWorker extends Worker
 			i.e. a response that is not a 400 error
 		Returns a Response whose body contains the picture selected to be downloaded
 	*/
-	private Response getRemoteFileExtension(String url) throws IOException
+	private ResponseBody getRemoteFileExtension(String url) throws IOException
 	{
 		Log.i(LOG_TAG, "Getting remote file extensions");
 		Response response;
-
 		/*
 			Thumbnail URL:
 				https://tc-pximg01.techorus-cdn.com/c/240x480/img-master/img/2020/02/19/00/00/39/79583564_p0_master1200.jpg
@@ -174,14 +173,15 @@ public class PixivArtWorker extends Worker
 		for (String suffix : IMAGE_SUFFIXES)
 		{
 			String uri = uri2 + suffix;
-			response = PixivArtService.sendGetRequestRanking(HttpUrl.parse(uri));
-			if (response.code() == 200)
+			ImageDownloadService service = RestClient.getRetrofitImageInstance().create(ImageDownloadService.class);
+			Call<ResponseBody> call = service.downloadImage(uri);
+			retrofit2.Response<ResponseBody> responseBodyResponse = call.execute();
+			response = responseBodyResponse.raw();
+
+			if (response.isSuccessful())
 			{
 				Log.i(LOG_TAG, "Gotten remote file extensions");
-				return response;
-			} else
-			{
-				response.close();
+				return responseBodyResponse.body();
 			}
 		}
 		Log.e(LOG_TAG, "Failed to get remote file extensions");
@@ -240,7 +240,7 @@ public class PixivArtWorker extends Worker
 		The external storage copy is not used for backing any database
 		The external storage copy also has correct file extensions
 	 */
-	private Uri downloadFile(ResponseBody response,
+	private Uri downloadFile(ResponseBody responseBody,
 	                         String filename) throws IOException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "Downloading file");
@@ -250,7 +250,7 @@ public class PixivArtWorker extends Worker
 		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
 
-		InputStream inputStreamNetwork = response.byteStream();
+		InputStream inputStreamNetwork = responseBody.byteStream();
 
 		byte[] bufferTemp = new byte[1024 * 1024 * 10];
 		int readTemp;
@@ -260,7 +260,7 @@ public class PixivArtWorker extends Worker
 		}
 		inputStreamNetwork.close();
 		fosInternal.close();
-		response.close();
+		responseBody.close();
 
 		// TODO make this an enum
 		int fileExtension = getLocalFileExtension(imageInternal);
@@ -489,7 +489,7 @@ public class PixivArtWorker extends Worker
 		int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
 
 		// Filtering
-		RankingArtwork rankingArtwork = filterRanking(contents.getArtworks(),
+		RankingArtwork rankingArtwork = filterArtworkRanking(contents.getArtworks(),
 				showManga, rankingFilterSelect, aspectRatioSettings, minimumViews);
 
 		// Variables to submit to Muzei
@@ -498,7 +498,7 @@ public class PixivArtWorker extends Worker
 		attribution += rankingArtwork.getRank();
 
 		// Actually downloading the selected artwork
-		Response remoteFileExtension = getRemoteFileExtension(rankingArtwork.getUrl());
+		ResponseBody remoteFileExtension = getRemoteFileExtension(rankingArtwork.getUrl());
 		Uri localUri = downloadFile(remoteFileExtension, token);
 		remoteFileExtension.close();
 
