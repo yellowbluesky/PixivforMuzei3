@@ -263,20 +263,6 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			findPreference("pref_rankingFilterSelect").setVisible(true);
 		}
 
-		// Stores user toggleable variables into a temporary store for later comparison in onStop()
-		// If the value of the preference on Activity creation is different to Activity stop, then take certain action
-		oldCreds = sharedPrefs.getString("pref_loginPassword", "");
-		newCreds = oldCreds;
-
-		oldUpdateMode = sharedPrefs.getString("pref_updateMode", "");
-		newUpdateMode = oldUpdateMode;
-
-		oldTag = sharedPrefs.getString("pref_tagSearch", "");
-		newTag = oldTag;
-
-		oldArtist = sharedPrefs.getString("pref_artistId", "");
-		newArtist = oldArtist;
-
 		// Preference that immediately clears Muzei's image cache when pressed
 		findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 		{
@@ -359,40 +345,41 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		super.onStop();
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-		newCreds = sharedPrefs.getString("pref_loginPassword", "");
 		newUpdateMode = sharedPrefs.getString("pref_updateMode", "");
 		newTag = sharedPrefs.getString("pref_tagSearch", "");
 		newArtist = sharedPrefs.getString("pref_artistId", "");
 
 		// If user has changed update, filter mode, or search tag:
-		//  Immediately stop any pending work, clear the Provider of any Artwork, and then toast
-//		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
-//				|| !oldArtist.equals(newArtist))
-//		{
-//			WorkManager.getInstance().cancelUniqueWork("ANTONY");
-//			File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-//			String[] children = dir.list();
-//			for (String child : children)
-//			{
-//				new File(dir, child).delete();
-//			}
-//			PixivArtWorker.enqueueLoad(true);
-//			if (!oldUpdateMode.equals(newUpdateMode))
-//			{
-//				Toast.makeText(getContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
-//			} else if (!oldArtist.equals(newArtist))
-//			{
-//				Toast.makeText(getContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
-//			} else if (!oldTag.equals(newTag))
-//			{
-//				Toast.makeText(getContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
-//			} else
-//			{
-//				Toast.makeText(getContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
-//			}
-//		}
+		// Immediately stop any pending work, clear the Provider of any Artwork, and then toast
+		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
+				|| !oldArtist.equals(newArtist))
+		{
+			WorkManager.getInstance().cancelUniqueWork("ANTONY");
+			File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+			String[] children = dir.list();
+			for (String child : children)
+			{
+				new File(dir, child).delete();
+			}
+			PixivArtWorker.enqueueLoad(true);
+			if (!oldUpdateMode.equals(newUpdateMode))
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
+			} else if (!oldArtist.equals(newArtist))
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show();
+			} else if (!oldTag.equals(newTag))
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show();
+			} else
+			{
+				Toast.makeText(getContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
+			}
+		}
 	}
 
+	// Redirects the user to Muzei's Play Store listing if it's not detected to be installed
+	// TODO have a nicer dialog that explains why Muzei needs to be installed, instead of forcing them to the store
 	private boolean isMuzeiInstalled()
 	{
 		boolean found = true;
