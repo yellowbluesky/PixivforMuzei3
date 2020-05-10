@@ -286,7 +286,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		} else
 		{
 			loginActivityPreference.setTitle(R.string.prefTitle_logoutButton);
-			loginActivityPreference.setSummary(R.string.prefSummary_LoggedIn + sharedPrefs.getString("name", ""));
+			loginActivityPreference.setSummary(getString(R.string.prefSummary_LoggedIn) + " " + sharedPrefs.getString("name", ""));
 		}
 		// Users click this preference to execute the login or logout
 		loginActivityPreference.setOnPreferenceClickListener(preference ->
@@ -327,8 +327,9 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		if (requestCode == REQUEST_CODE_LOGIN && resultCode == Activity.RESULT_OK)
 		{
 			Preference loginButtonMain = findPreference("pref_login");
-			loginButtonMain.setSummary("Currently logged in as " + data.getStringExtra("username"));
-			loginButtonMain.setTitle("Logout");
+
+			loginButtonMain.setSummary(R.string.prefSummary_LoggedIn + data.getStringExtra("username"));
+			loginButtonMain.setTitle(R.string.prefTitle_logoutButton);
 		}
 	}
 

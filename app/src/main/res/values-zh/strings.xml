@@ -75,5 +75,6 @@
     <string name="prompt_email">Pixiv电子邮件</string>
     <string name="prompt_password">密码</string>
     <string name="action_sign_in">登录</string>
+    <string name="prefSummary_currentlyLoggedInAs">当前登录为</string>
 
 </resources>
