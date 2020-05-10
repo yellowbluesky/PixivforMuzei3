@@ -43,6 +43,7 @@ import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 
+// TODO deprecate this entire class
 public class PixivArtService
 {
 	private static final String LOG_TAG = "ANTONY_SERVICE";
@@ -52,7 +53,7 @@ public class PixivArtService
 	{
 		Log.d(LOG_TAG, "locale is : " + Locale.getDefault().getISO3Language());
 		/* SNI Bypass begin */
-		//if (Locale.getDefault().getISO3Language().equals("zho"))
+		if (Locale.getDefault().getISO3Language().equals("zho"))
 		{
 			Log.d(LOG_TAG, "Bypass in effect");
 			HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
@@ -83,14 +84,7 @@ public class PixivArtService
 					return new X509Certificate[0];
 				}
 			});//SNI bypass
-			builder.hostnameVerifier(new HostnameVerifier()
-			{
-				@Override
-				public boolean verify(String s, SSLSession sslSession)
-				{
-					return true;
-				}
-			});//disable hostnameVerifier
+			builder.hostnameVerifier((s, sslSession) -> true);//disable hostnameVerifier
 			builder.addInterceptor(httpLoggingInterceptor);
 			builder.dns(new RubyHttpDns());//define the direct ip address
 			httpClient = builder.build();
@@ -98,10 +92,11 @@ public class PixivArtService
 		}
 	}
 
-	public static String getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
+	static String getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
 	{
 		String accessToken = sharedPrefs.getString("accessToken", "");
 		long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
+
 		if (!accessToken.isEmpty() && accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
 		{
 			Log.i(LOG_TAG, "Existing access token found, using it");
@@ -143,25 +138,6 @@ public class PixivArtService
 		Log.d(LOG_TAG, "Acquired access token");
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
 		return accessToken;
-	}
-
-	// This function used by modes that do not require authentication (ranking) to acquire the JSON
-	// Used by all modes to download the actual image
-	// Can either return either a:
-	//      Response containing a JSON within its body
-	//      An image to be downloaded
-	// Depending on callee function
-	static Response sendGetRequestUnauth(HttpUrl url) throws IOException
-	{
-		Request request = new Request.Builder()
-				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
-				.addHeader("Referer", PixivArtProviderDefines.PIXIV_HOST)
-				.addHeader("Accept-Language", "en-us")
-				.get()
-				.url(url)
-				.build();
-
-		return httpClient.newCall(request).execute();
 	}
 
 	static void sendBookmarkPostRequest(String accessToken, String token)
