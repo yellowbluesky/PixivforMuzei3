@@ -20,6 +20,8 @@ package com.antony.muzei.pixiv.network;
 import android.os.Build;
 import android.util.Log;
 
+import com.antony.muzei.pixiv.BuildConfig;
+
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,16 +35,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RestClient
 {
-	// Acquires Authenticated JSON
+	// Prints detailed network logs if built type is debug
+	private static HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(s ->
+			Log.v("ANTONY_REST", "message===" + s))
+			.setLevel(BuildConfig.BUILD_TYPE.contentEquals("debug") ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
 	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
-	// Acquires Ranking JSON
 	private static Retrofit retrofitRanking;
+
 	private static OkHttpClient okHttpClientRanking = new OkHttpClient.Builder()
 			// Debug logging interceptor
 			// TODO make this only work on DEBUG flavor builds
-			.addInterceptor(new HttpLoggingInterceptor(s ->
-					Log.v("ANTONY_SERVICE", "message====" + s))
-					.setLevel(HttpLoggingInterceptor.Level.BODY))
+			.addInterceptor(httpLoggingInterceptor)
 			// This interceptor only adds in the "format" "json" query parameter
 			.addInterceptor(chain ->
 			{
@@ -60,9 +63,7 @@ public class RestClient
 
 	private static Retrofit retrofitAuth;
 	private static OkHttpClient okHttpClientAuth = new OkHttpClient.Builder()
-			.addInterceptor(new HttpLoggingInterceptor(s ->
-					Log.v("ANTONY_SERVICE", "message====" + s))
-					.setLevel(HttpLoggingInterceptor.Level.BODY))
+			.addInterceptor(httpLoggingInterceptor)
 			// This adds the necessary headers minus the auth header
 			// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
 			.addInterceptor(chain ->
@@ -96,9 +97,7 @@ public class RestClient
 						.build();
 				return chain.proceed(request);
 			})
-			.addInterceptor(new HttpLoggingInterceptor(s ->
-					Log.v("ANTONY_LOGIN", "message====" + s))
-					.setLevel(HttpLoggingInterceptor.Level.BODY))
+			.addInterceptor(httpLoggingInterceptor)
 			.build();
 	private static Retrofit retrofitOauth;
 
