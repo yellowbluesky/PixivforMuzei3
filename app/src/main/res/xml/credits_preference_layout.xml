@@ -30,8 +30,23 @@
         android:title="Perol_Notsfsssf">
         <intent
             android:action="android.intent.action.VIEW"
-            android:data="https://github.com/Notsfsssf/Pix-EzViewer" />
+            android:data="https://github.com/Notsfsssf" />
     </Preference>
+    <Preference
+        android:summary="Localisations and F-Droid submitter"
+        android:title="linsui">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/linsui" />
+    </Preference>
+    <Preference
+        android:summary="Localisations"
+        android:title="SettingDust">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/SettingDust" />
+    </Preference>
+
     <Preference android:title="@string/prefTitle_openNsfwWiki">
         <intent
             android:action="android.intent.action.VIEW"

@@ -1,20 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~     This file is part of PixivforMuzei3.
-  ~
-  ~     PixivforMuzei3 is free software: you can redistribute it and/or modify
-  ~     it under the terms of the GNU General Public License as published by
-  ~     the Free Software Foundation, either version 3 of the License, or
-  ~     (at your option) any later version.
-  ~
-  ~     This program  is distributed in the hope that it will be useful,
-  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~     GNU General Public License for more details.
-  ~
-  ~     You should have received a copy of the GNU General Public License
-  ~     along with this program.  If not, see <https://www.gnu.org/licenses/>.
-  -->
 
 <!--
   ~     This file is part of PixivforMuzei3.
@@ -36,22 +20,21 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <Preference
-        android:title="Option to delete specific artwork the user chooses">
+    <Preference android:title="Option to delete specific artwork the user chooses">
         <intent
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/yellowbluesky/PixivforMuzei3/issues/85" />
     </Preference>
-    <Preference
-        android:title="Improved tag exclusion filter">
+    <Preference android:title="Improved tag exclusion filter">
         <intent
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/yellowbluesky/PixivforMuzei3/issues/73" />
     </Preference>
-    <Preference
-        android:title="Improve user experience">
+    <Preference android:title="Improve user experience">
         <intent
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/yellowbluesky/PixivforMuzei3/issues/92" />
+    </Preference>
+    <Preference android:title="Reenable SNI bypass">
     </Preference>
 </PreferenceScreen>
