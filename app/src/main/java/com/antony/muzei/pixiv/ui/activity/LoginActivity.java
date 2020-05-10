@@ -22,8 +22,10 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
@@ -48,6 +50,7 @@ public class LoginActivity extends AppCompatActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_pixiv_sign_in);
+
 		((EditText) findViewById(R.id.loginPassword)).addTextChangedListener(new TextWatcher()
 		{
 			@Override
@@ -78,28 +81,24 @@ public class LoginActivity extends AppCompatActivity
 
 	private void executeLogin()
 	{
+		// Enables the indeterminate progress bar (spinning circle)
+		ProgressBar progressBar = findViewById(R.id.loginLoading);
+		progressBar.setVisibility(View.VISIBLE);
+
+		// Builds the header fields for the OAuth POST request
 		Map<String, String> fieldParams = new HashMap<>();
 		fieldParams.put("get_secure_url", "1");
 		fieldParams.put("client_id", "MOBrBDS8blbauoSck0ZfDbtuzpyT");
 		fieldParams.put("client_secret", "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj");
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-		// If no refresh token present
-		if (sharedPrefs.getString("refreshToken", "").isEmpty())
-		{
-			EditText usernameInput = findViewById(R.id.loginUsername);
-			String username = usernameInput.getText().toString();
-
-			EditText passwordInput = findViewById(R.id.loginPassword);
-			String password = passwordInput.getText().toString();
-			fieldParams.put("grant_type", "password");
-			fieldParams.put("username", username);
-			fieldParams.put("password", password);
-		} else
-		{
-			fieldParams.put("grant_type", "refresh_token");
-			fieldParams.put("refresh_token", sharedPrefs.getString("refreshToken", ""));
-		}
+		// When a new user is logging in, they cannot be an existing valid refresh token
+		EditText usernameInput = findViewById(R.id.loginUsername);
+		String username = usernameInput.getText().toString();
+		EditText passwordInput = findViewById(R.id.loginPassword);
+		String password = passwordInput.getText().toString();
+		fieldParams.put("grant_type", "password");
+		fieldParams.put("username", username);
+		fieldParams.put("password", password);
 
 		OAuthResponseService service = RestClient.getRetrofitOauthInstance().create(OAuthResponseService.class);
 		Call<OauthResponse> call = service.postRefreshToken(fieldParams);
@@ -110,13 +109,17 @@ public class LoginActivity extends AppCompatActivity
 			{
 				if (response.isSuccessful())
 				{
+					SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 					PixivArtWorker.storeTokens(sharedPrefs, response.body());
 					Intent username = new Intent()
 							.putExtra("username", response.body().getPixivOauthResponse().getUser().getName());
 					setResult(RESULT_OK, username);
 					finish();
-
-					// TODO store tokens
+				}
+				else
+				{
+					progressBar.setVisibility(View.INVISIBLE);
+					Toast.makeText(getApplicationContext(), getString(R.string.toast_authFailed), Toast.LENGTH_SHORT).show();
 				}
 			}
 
@@ -124,6 +127,7 @@ public class LoginActivity extends AppCompatActivity
 			public void onFailure(Call<OauthResponse> call, Throwable t)
 			{
 				// TODO toast
+				progressBar.setVisibility(View.INVISIBLE);
 			}
 		});
 	}
