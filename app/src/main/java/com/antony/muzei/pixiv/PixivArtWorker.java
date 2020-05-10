@@ -826,8 +826,9 @@ public class PixivArtWorker extends Worker
 				} catch (FilterMatchNotFoundException e)
 				{
 					e.printStackTrace();
-					// offset += 30;
-					//jsonObject = getArtworkJson(accessToken, mode, offset);
+					call = service.getNextUrl("Bearer " + accessToken, illusts.getNext_url());
+					illusts = call.execute().body();
+					authArtworkList = illusts.getArtworks();
 				}
 			}
 		} else

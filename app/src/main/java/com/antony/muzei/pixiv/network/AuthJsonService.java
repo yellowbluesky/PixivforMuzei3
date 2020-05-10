@@ -23,6 +23,7 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Query;
+import retrofit2.http.Url;
 
 public interface AuthJsonService
 {
@@ -42,4 +43,7 @@ public interface AuthJsonService
 
 	@GET("v1/illust/recommended?content_type=illust&include_ranking_label=true&include_ranking_illusts=true&filter=for_ios")
 	Call<Illusts> getRecommendedJson(@Header("Authorization") String accessToken);
+
+	@GET
+	Call<Illusts> getNextUrl(@Header("Authorization") String accessToken, @Url String url);
 }
