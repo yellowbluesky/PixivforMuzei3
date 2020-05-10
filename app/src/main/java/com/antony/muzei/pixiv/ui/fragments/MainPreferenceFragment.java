@@ -295,12 +295,16 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		// On app launch set the Preference to show to appropriate text if logged in
 		Preference loginActivityPreference = findPreference("pref_login");
-		if(!sharedPrefs.getString("accessToken", "").isEmpty())
+		if (sharedPrefs.getString("accessToken", "").isEmpty())
 		{
-			loginActivityPreference.setTitle("Logout");
-			loginActivityPreference.setSummary("Currently logged in as " + sharedPrefs.getString("name", ""));
+			loginActivityPreference.setTitle(R.string.prefTitle_loginButton);
+			loginActivityPreference.setSummary(R.string.prefSummary_notLoggedIn);
+		} else
+		{
+			loginActivityPreference.setTitle(R.string.prefTitle_logoutButton);
+			loginActivityPreference.setSummary(R.string.prefSummary_LoggedIn + sharedPrefs.getString("name", ""));
 		}
-		// Users click this preference to execute the login
+		// Users click this preference to execute the login or logout
 		loginActivityPreference.setOnPreferenceClickListener(preference ->
 		{
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
@@ -309,14 +313,23 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 				startActivityForResult(intent, REQUEST_CODE_LOGIN);
 			} else
 			{
+				// Logging out
 				SharedPreferences.Editor editor = sharedPrefs.edit();
 				editor.remove("accessTokenIssueTime");
 				editor.remove("name");
 				editor.remove("accessToken");
 				editor.remove("userId");
 				editor.remove("refreshToken");
-				editor.apply();
-				loginActivityPreference.setTitle("Login");
+
+				loginActivityPreference.setTitle(R.string.prefTitle_loginButton);
+				loginActivityPreference.setSummary(R.string.prefSummary_notLoggedIn);
+				// If the user has an authenticated feed mode, reset it to daily ranking on logout
+				if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES)
+						.contains(updateMode))
+				{
+					editor.putString("pref_updateMode", "daily");
+				}
+				editor.commit();
 			}
 			return true;
 		});
