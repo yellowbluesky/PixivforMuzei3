@@ -22,16 +22,15 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.antony.muzei.pixiv.gson.OauthResponse;
+import com.antony.muzei.pixiv.network.OAuthResponseService;
+import com.antony.muzei.pixiv.network.RestClient;
 
 import java.io.IOException;
-import java.security.MessageDigest;
 import java.security.cert.X509Certificate;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.net.ssl.X509TrustManager;
 
@@ -42,8 +41,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
-
-import static com.antony.muzei.pixiv.PixivArtProviderDefines.HASH_SECRET;
+import retrofit2.Call;
 
 public class PixivArtService
 {
@@ -114,42 +112,30 @@ public class PixivArtService
 
 		try
 		{
-			MultipartBody.Builder authData = new MultipartBody.Builder()
-					.setType(MultipartBody.FORM)
-					.addFormDataPart("get_secure_url", "1")
-					.addFormDataPart("client_id", PixivArtProviderDefines.CLIENT_ID)
-					.addFormDataPart("client_secret", PixivArtProviderDefines.CLIENT_SECRET);
+			Map<String, String> fieldParams = new HashMap<>();
+			fieldParams.put("get_secure_url", "1");
+			fieldParams.put("client_id", "MOBrBDS8blbauoSck0ZfDbtuzpyT");
+			fieldParams.put("client_secret", "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj");
+			fieldParams.put("grant_type", "refresh_token");
+			fieldParams.put("refresh_token", sharedPrefs.getString("refreshToken", ""));
 
-			if (sharedPrefs.getString("refreshToken", "").isEmpty())
-			{
-				Log.i(LOG_TAG, "Using username and password to acquire an access token");
-				authData.addFormDataPart("grant_type", "password")
-						.addFormDataPart("username", sharedPrefs.getString("pref_loginId", ""))
-						.addFormDataPart("password", sharedPrefs.getString("pref_loginPassword", ""));
-			} else
-			{
-				Log.i(LOG_TAG, "Using refresh token to acquire an access token");
-				authData.addFormDataPart("grant_type", "refresh_token")
-						.addFormDataPart("refresh_token", sharedPrefs.getString("refreshToken", ""));
-			}
-			Response response = sendPostRequest(authData.build());
-			JSONObject authResponseBody = new JSONObject(response.body().string());
-			response.close();
+			OAuthResponseService service = RestClient.getRetrofitOauthInstance().create(OAuthResponseService.class);
+			Call<OauthResponse> call = service.postRefreshToken(fieldParams);
+			OauthResponse oauthResponse = call.execute().body();
+			PixivArtWorker.storeTokens(sharedPrefs, oauthResponse);
+			accessToken = oauthResponse.getPixivOauthResponse().getAccess_token();
 
-			if (authResponseBody.has("has_error"))
-			{
-				// Clearing loginPassword is a hacky way to alerting to the user that their credentials do not work
-				sharedPrefs.edit().putString("pref_loginPassword", "").apply();
-				throw new AccessTokenAcquisitionException("Error authenticating, check username or password");
-			}
+//			if (authResponseBody.has("has_error"))
+//			{
+//				throw new AccessTokenAcquisitionException("Error authenticating, check username or password");
+//			}
 
 			// Authentication succeeded, storing tokens returned from Pixiv
 			//Log.d(LOG_TAG, authResponseBody.toString());
 //            Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
 //            sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
-			PixivArtWorker.storeTokens(sharedPrefs, authResponseBody.getJSONObject("response"));
-			accessToken = authResponseBody.getJSONObject("response").getString("access_token");
-		} catch (IOException | JSONException ex)
+			//PixivArtWorker.storeTokens(sharedPrefs, authResponseBody.getJSONObject("response"));
+		} catch (IOException ex)
 		{
 			ex.printStackTrace();
 			throw new AccessTokenAcquisitionException("getAccessToken(): Exited with error");
