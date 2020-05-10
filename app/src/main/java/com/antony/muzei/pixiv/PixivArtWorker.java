@@ -91,8 +91,7 @@ public class PixivArtWorker extends Worker
 
 	private static final String[] IMAGE_SUFFIXES = {".png", ".jpg"};
 	private static boolean clearArtwork = false;
-	private final String[] AUTH_MODES = {"follow", "bookmark", "tag_search", "artist", "recommended"};
-	private final String[] RANKING_MODES = {"daily", "weekly", "monthly", "rookie", "original", "male", "female"};
+
 
 	public PixivArtWorker(
 			@NonNull Context context,
@@ -753,7 +752,7 @@ public class PixivArtWorker extends Worker
 		String accessToken = "";
 
 		// These modes require an access token, so we check for and acquire one first
-		if (Arrays.asList(AUTH_MODES).contains(mode))
+		if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES).contains(mode))
 		{
 			try
 			{
@@ -783,15 +782,11 @@ public class PixivArtWorker extends Worker
 			}
 		}
 
-		int offset = 0;
-		//JSONObject jsonObject = getArtworkJson(accessToken, mode, offset);
-
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		Artwork artwork;
 
-		if (Arrays.asList(AUTH_MODES).contains(mode))
+		if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES).contains(mode))
 		{
-			// TODO pass an access token to the methods
 			AuthJsonService service = RestClient.getRetrofitAuthInstance().create(AuthJsonService.class);
 			Call<Illusts> call;
 			switch (mode)

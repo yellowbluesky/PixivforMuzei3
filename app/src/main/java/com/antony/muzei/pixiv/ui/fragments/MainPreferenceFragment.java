@@ -75,11 +75,22 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
+		// Stores user toggleable variables into a temporary store for later comparison in onStop()
+		// If the value of the preference on Activity creation is different to Activity stop, then take certain action
+		oldUpdateMode = sharedPrefs.getString("pref_updateMode", "");
+		newUpdateMode = oldUpdateMode;
+
+		oldTag = sharedPrefs.getString("pref_tagSearch", "");
+		newTag = oldTag;
+
+		oldArtist = sharedPrefs.getString("pref_artistId", "");
+		newArtist = oldArtist;
+
 		// Ensures that the user has logged in first before selecting any update mode requiring authentication
 		// Reveals UI elements as needed depending on Update Mode selection
 		findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
 		{
-			boolean isAuthUpdateMode = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+			boolean isAuthUpdateMode = Arrays.asList(PixivArtProviderDefines.AUTH_MODES)
 					.contains(newValue.toString());
 			// User has selected an authenticated feed mode, but has not yet logged in as evidenced
 			// by the lack of an access token
@@ -231,7 +242,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		// Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
 		String updateMode = sharedPrefs.getString("pref_updateMode", "daily");
-		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+		if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES)
 				.contains(updateMode))
 		{
 			findPreference("pref_authFilterSelect").setVisible(true);
