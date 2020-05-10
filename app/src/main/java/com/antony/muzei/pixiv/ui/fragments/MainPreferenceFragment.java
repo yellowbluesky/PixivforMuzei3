@@ -282,13 +282,14 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			return true;
 		});
 
-		// Users click this preference to execute the login
+		// On app launch set the Preference to show to appropriate text if logged in
 		Preference loginActivityPreference = findPreference("pref_login");
 		if(!sharedPrefs.getString("accessToken", "").isEmpty())
 		{
 			loginActivityPreference.setTitle("Logout");
 			loginActivityPreference.setSummary("Currently logged in as " + sharedPrefs.getString("name", ""));
 		}
+		// Users click this preference to execute the login
 		loginActivityPreference.setOnPreferenceClickListener(preference ->
 		{
 			if (sharedPrefs.getString("accessToken", "").isEmpty())
@@ -297,19 +298,15 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 				startActivityForResult(intent, REQUEST_CODE_LOGIN);
 			} else
 			{
-				// TODO clear credentials, change label to say "LOGOUT"
+				SharedPreferences.Editor editor = sharedPrefs.edit();
+				editor.remove("accessTokenIssueTime");
+				editor.remove("name");
+				editor.remove("accessToken");
+				editor.remove("userId");
+				editor.remove("refreshToken");
+				editor.apply();
+				loginActivityPreference.setTitle("Login");
 			}
-//			try
-//			{
-//				// NetworkOnMainThreadException
-//				PixivArtService.getAccessToken(sharedPrefs);
-//			} catch (AccessTokenAcquisitionException e)
-//			{
-//				Toast.makeText(getContext(), "Login failed, check your credentials", Toast.LENGTH_SHORT).show();
-//				e.printStackTrace();
-//				return true;
-//			}
-//			Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
 			return true;
 		});
 	}
