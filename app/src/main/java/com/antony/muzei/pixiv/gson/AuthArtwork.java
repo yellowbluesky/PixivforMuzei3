@@ -34,7 +34,7 @@ public class AuthArtwork
 	private int page_count;
 	private int width;
 	private int height;
-	private int sanity;
+	private int sanity_level;
 	private int x_restrict;
 	//private String series;
 	private Meta_Single_Page meta_single_page;
@@ -110,9 +110,9 @@ public class AuthArtwork
 		return height;
 	}
 
-	public int getSanity()
+	public int getSanity_Level()
 	{
-		return sanity;
+		return sanity_level;
 	}
 
 	public int getX_restrict()

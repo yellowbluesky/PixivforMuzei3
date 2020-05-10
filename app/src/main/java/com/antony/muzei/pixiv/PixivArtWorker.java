@@ -693,7 +693,7 @@ public class PixivArtWorker extends Worker
 			// If user does not want manga to display
 			if (!showManga && !selectedArtwork.getType().equals("illust"))
 			{
-				Log.v(LOG_TAG, "Manga not desired");
+				Log.d(LOG_TAG, "Manga not desired");
 				continue;
 
 			}
@@ -702,13 +702,13 @@ public class PixivArtWorker extends Worker
 			if (!(isDesiredAspectRatio(selectedArtwork.getWidth(),
 					selectedArtwork.getHeight(), aspectRatioSetting)))
 			{
-				Log.v(LOG_TAG, "Rejecting aspect ratio");
+				Log.d(LOG_TAG, "Rejecting aspect ratio");
 				continue;
 			}
 
 			if (!isEnoughViews(selectedArtwork.getTotal_view(), minimumViews))
 			{
-				Log.v(LOG_TAG, "Not enough views");
+				Log.d(LOG_TAG, "Not enough views");
 				continue;
 			}
 
@@ -716,9 +716,9 @@ public class PixivArtWorker extends Worker
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{
-				if (s.equals(Integer.toString(selectedArtwork.getSanity())))
+				if (s.equals(Integer.toString(selectedArtwork.getSanity_Level())))
 				{
-					Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.getSanity());
+					Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.getSanity_Level());
 					found = true;
 					break loop;
 				} else if (s.equals("8") && selectedArtwork.getX_restrict() == 1)
