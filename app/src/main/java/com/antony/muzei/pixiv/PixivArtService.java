@@ -145,31 +145,13 @@ public class PixivArtService
 		return accessToken;
 	}
 
-	// This function is used for modes that require authentication
-	// Feed, bookmark, tag_search, or artist
-	// Returns a Response containing a JSON within its body
-	static Response sendGetRequestAuth(HttpUrl url, String accessToken) throws IOException
-	{
-		Request request = new Request.Builder()
-				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-				.addHeader("App-OS", PixivArtProviderDefines.APP_OS)
-				.addHeader("App-OS-Version", PixivArtProviderDefines.APP_OS_VERSION)
-				.addHeader("App-Version", PixivArtProviderDefines.APP_VERSION)
-				.addHeader("Authorization", "Bearer " + accessToken)
-				.addHeader("Accept-Language", "en-us")
-				.get()
-				.url(url)
-				.build();
-		return httpClient.newCall(request).execute();
-	}
-
 	// This function used by modes that do not require authentication (ranking) to acquire the JSON
 	// Used by all modes to download the actual image
 	// Can either return either a:
 	//      Response containing a JSON within its body
 	//      An image to be downloaded
 	// Depending on callee function
-	static Response sendGetRequestRanking(HttpUrl url) throws IOException
+	static Response sendGetRequestUnauth(HttpUrl url) throws IOException
 	{
 		Request request = new Request.Builder()
 				.addHeader("User-Agent", PixivArtProviderDefines.BROWSER_USER_AGENT)
@@ -182,49 +164,7 @@ public class PixivArtService
 		return httpClient.newCall(request).execute();
 	}
 
-	// Returns an access token, provided credentials are correct
-	private static Response sendPostRequest(RequestBody authQuery) throws IOException
-	{
-		// Pixiv API update requires this to prevent replay attacks
-		String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
-		String concatSecret = rfc3339Date + HASH_SECRET;
-		String hashedSecret = "";
-		try
-		{
-			MessageDigest digest = MessageDigest.getInstance("MD5");
-			digest.update(concatSecret.getBytes());
-			byte[] messageDigest = digest.digest();
-			StringBuilder hexString = new StringBuilder();
-			// this loop is horrifically inefficient on CPU and memory
-			// but is only executed once to acquire a new access token
-			// i.e. at most once per hour for normal use case
-			for (byte aMessageDigest : messageDigest)
-			{
-				StringBuilder h = new StringBuilder(Integer.toHexString(0xFF & aMessageDigest));
-				while (h.length() < 2)
-				{
-					h.insert(0, "0");
-				}
-				hexString.append(h);
-			}
-			hashedSecret = hexString.toString();
-		} catch (java.security.NoSuchAlgorithmException ex)
-		{
-			ex.printStackTrace();
-		}
-
-		Request request = new Request.Builder()
-				.addHeader("Content-Type", "application/x-www-form-urlencoded")
-				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-				.addHeader("x-client-time", rfc3339Date)
-				.addHeader("x-client-hash", hashedSecret)
-				.post(authQuery)
-				.url(PixivArtProviderDefines.OAUTH_URL)
-				.build();
-		return httpClient.newCall(request).execute();
-	}
-
-	static void sendPostRequest(String accessToken, String token)
+	static void sendBookmarkPostRequest(String accessToken, String token)
 	{
 		HttpUrl rankingUrl = new HttpUrl.Builder()
 				.scheme("https")
