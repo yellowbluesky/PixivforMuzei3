@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 import androidx.preference.PreferenceManager;
 
+import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
 import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;

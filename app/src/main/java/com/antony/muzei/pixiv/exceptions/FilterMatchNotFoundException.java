@@ -15,17 +15,12 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv;
+package com.antony.muzei.pixiv.exceptions;
 
-public class CorruptFileException extends Exception
+public class FilterMatchNotFoundException extends Exception
 {
-	public CorruptFileException(String message)
+	public FilterMatchNotFoundException(String message)
 	{
 		super(message);
-	}
-
-	public CorruptFileException(String message, Throwable throwable)
-	{
-		super(message, throwable);
 	}
 }

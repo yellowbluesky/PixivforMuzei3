@@ -15,11 +15,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv;
+package com.antony.muzei.pixiv.exceptions;
 
-public class FilterMatchNotFoundException extends Exception
+public class AccessTokenAcquisitionException extends Exception
 {
-	public FilterMatchNotFoundException(String message)
+	public AccessTokenAcquisitionException(String message)
 	{
 		super(message);
 	}

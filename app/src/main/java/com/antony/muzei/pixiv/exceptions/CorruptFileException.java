@@ -15,12 +15,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv;
+package com.antony.muzei.pixiv.exceptions;
 
-public class AccessTokenAcquisitionException extends Exception
+public class CorruptFileException extends Exception
 {
-	public AccessTokenAcquisitionException(String message)
+	public CorruptFileException(String message)
 	{
 		super(message);
+	}
+
+	public CorruptFileException(String message, Throwable throwable)
+	{
+		super(message, throwable);
 	}
 }

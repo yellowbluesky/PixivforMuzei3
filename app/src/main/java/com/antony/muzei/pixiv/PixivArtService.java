@@ -21,6 +21,8 @@ import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,8 +33,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.HttpUrl;
