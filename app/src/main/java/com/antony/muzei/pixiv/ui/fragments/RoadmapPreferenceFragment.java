@@ -31,6 +31,7 @@ public class RoadmapPreferenceFragment extends PreferenceFragmentCompat
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.roadmap_preference_layout);
 	}
+
 	@Override
 	public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
 	{

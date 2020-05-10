@@ -79,7 +79,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.HttpUrl;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -356,13 +355,13 @@ public class PixivArtWorker extends Worker
 		Provided an artowrk ID (token), traverses the PixivArtProvider ContentProvider and sees
 		if there is already a duplicate artwork with the same ID (token)
 	 */
-	private boolean isDuplicateArtwork(String token)
+	private boolean isDuplicateArtwork(int token)
 	{
 		boolean duplicateFound = false;
 
 		String[] projection = {"_id"};
 		String selection = "token = ?";
-		String[] selectionArgs = {token};
+		String[] selectionArgs = {Integer.toString(token)};
 		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
 		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, projection, selection, selectionArgs, null);
 
@@ -398,7 +397,7 @@ public class PixivArtWorker extends Worker
 
 	// Scalar must match with scalar in SettingsActivity
 	private boolean isEnoughViews(int artworkViewCount,
-	                      int minimumDesiredViews)
+	                              int minimumDesiredViews)
 	{
 		return artworkViewCount >= (minimumDesiredViews * 500);
 	}
@@ -419,7 +418,6 @@ public class PixivArtWorker extends Worker
 			array[index] = array[i];
 			array[i] = a;
 		}
-
 		return array;
 	}
 
@@ -442,7 +440,7 @@ public class PixivArtWorker extends Worker
 		Receives a JSON of the ranking artworks.
 		Passes it off to filterArtworkRanking(), then builds the Artwork for submission to Muzei
 	 */
-	private Artwork getArtworkRanking(Contents contents) throws IOException, JSONException, CorruptFileException
+	private Artwork getArtworkRanking(Contents contents) throws IOException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "getArtworkRanking(): Entering");
 		String mode = contents.getMode();
@@ -863,7 +861,7 @@ public class PixivArtWorker extends Worker
 		try
 		{
 			artworkArrayList = getArtwork();
-		} catch (IOException | JSONException | CorruptFileException e)
+		} catch (IOException | CorruptFileException e)
 		{
 			e.printStackTrace();
 			return Result.retry();

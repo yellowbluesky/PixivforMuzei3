@@ -17,6 +17,7 @@
 
 package com.antony.muzei.pixiv.ui.fragments;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -26,15 +27,13 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.preference.DropDownPreference;
 import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.WorkManager;
 
-import com.antony.muzei.pixiv.AccessTokenAcquisitionException;
-import com.antony.muzei.pixiv.PixivArtService;
+import com.antony.muzei.pixiv.PixivArtProviderDefines;
 import com.antony.muzei.pixiv.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.activity.LoginActivity;
@@ -48,7 +47,6 @@ import java.util.Set;
 public class MainPreferenceFragment extends PreferenceFragmentCompat
 {
 	private static final int REQUEST_CODE_LOGIN = 1;
-	private String newCreds, oldCreds;
 	private String oldUpdateMode, newUpdateMode;
 	private String oldTag, newTag;
 	private String oldArtist, newArtist;
@@ -101,7 +99,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			}
 			// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
 			// and hide the ranking NSFW filtering
-			boolean authFeedModeSelected = Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended")
+			boolean authFeedModeSelected = Arrays.asList(PixivArtProviderDefines.AUTH_MODES)
 					.contains(newValue);
 
 			findPreference("pref_authFilterSelect").setVisible(authFeedModeSelected);
@@ -325,6 +323,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		super.onActivityResult(requestCode, resultCode, data);
+		// Currently only used by LoginActivity
 		if (requestCode == REQUEST_CODE_LOGIN && resultCode == Activity.RESULT_OK)
 		{
 			Preference loginButtonMain = findPreference("pref_login");

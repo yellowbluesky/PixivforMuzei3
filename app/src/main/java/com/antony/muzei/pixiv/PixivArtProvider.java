@@ -116,7 +116,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 					Toast.makeText(getContext(), getContext().getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
 			return;
 		}
-		PixivArtService.sendPostRequest(accessToken, artwork.getToken());
+		PixivArtService.sendBookmarkPostRequest(accessToken, artwork.getToken());
 		Log.d("ANTONY_WORKER", "Added to bookmarks");
 	}
 

@@ -32,7 +32,7 @@ public class Contents
 	private int next;
 	private String date;
 	private boolean next_date;
-	private  int rank_total;
+	private int rank_total;
 
 	public List<RankingArtwork> getArtworks()
 	{
