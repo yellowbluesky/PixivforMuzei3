@@ -48,6 +48,7 @@ import androidx.work.WorkerParameters;
 import com.antony.muzei.pixiv.gson.AuthArtwork;
 import com.antony.muzei.pixiv.gson.Contents;
 import com.antony.muzei.pixiv.gson.Illusts;
+import com.antony.muzei.pixiv.gson.OauthResponse;
 import com.antony.muzei.pixiv.gson.RankingArtwork;
 import com.antony.muzei.pixiv.network.AuthJsonService;
 import com.antony.muzei.pixiv.network.RankingJsonService;
@@ -690,7 +691,7 @@ public class PixivArtWorker extends Worker
 	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
 	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
-	private Artwork getArtworkAuth(JSONObject illustsJson) throws FilterMatchNotFoundException, JSONException, IOException, CorruptFileException
+	private Artwork getArtworkAuth(List<AuthArtwork> authArtworkList) throws FilterMatchNotFoundException, IOException, CorruptFileException
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -705,27 +706,27 @@ public class PixivArtWorker extends Worker
 		int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
 
 		// Filtering
-		JSONObject pictureMetadata = filterArtworkAuth(illustsJson.getJSONArray("illusts"),
+		AuthArtwork selectedArtwork = filterArtworkAuth(authArtworkList,
 				showManga, selectedFilterLevel, aspectRatioSettings, minimumViews);
 
 		// Variables for submitting to Muzei
 		String imageUrl;
-		if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
+		if (selectedArtwork.getMeta_pages().size() == 0)
 		{
 			Log.d(LOG_TAG, "Picture is a single image");
-			imageUrl = pictureMetadata
-					.getJSONObject("meta_single_page")
-					.getString("original_image_url");
+			imageUrl = selectedArtwork
+					.getMeta_single_page()
+					.getOriginal_image_url();
 		} else
 		{
 			Log.d(LOG_TAG, "Picture is part of an album");
-			imageUrl = pictureMetadata
-					.getJSONArray("meta_pages")
-					.getJSONObject(0)
-					.getJSONObject("image_urls")
-					.getString("original");
+			imageUrl = selectedArtwork
+					.getMeta_pages()
+					.get(0)
+					.getImage_urls()
+					.getOriginal();
 		}
-		String token = pictureMetadata.getString("id");
+		String token = Integer.toString(selectedArtwork.getId());
 
 		// Actually downloading the file
 		Response imageDataResponse = PixivArtService.sendGetRequestUnauth(HttpUrl.parse(imageUrl));
@@ -734,8 +735,8 @@ public class PixivArtWorker extends Worker
 
 		Log.i(LOG_TAG, "getArtworkAuth(): Exited");
 		return new Artwork.Builder()
-				.title(pictureMetadata.getString("title"))
-				.byline(pictureMetadata.getJSONObject("user").getString("name"))
+				.title(selectedArtwork.getTitle())
+				.byline(selectedArtwork.getUser().getName())
 				.persistentUri(localUri)
 				.token(token)
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
@@ -759,31 +760,32 @@ public class PixivArtWorker extends Worker
 		For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
 
 	 */
-	private JSONObject filterArtworkAuth(JSONArray illusts,
-	                                     boolean showManga,
-	                                     Set<String> selectedFilterLevelSet,
-	                                     int aspectRatioSetting,
-	                                     int minimumViews) throws JSONException, FilterMatchNotFoundException
+	private AuthArtwork filterArtworkAuth(List<AuthArtwork> authArtworkList,
+	                                      boolean showManga,
+	                                      Set<String> selectedFilterLevelSet,
+	                                      int aspectRatioSetting,
+	                                      int minimumViews) throws FilterMatchNotFoundException
 	{
-		Log.i(LOG_TAG, "filterFeedAuth(): Entering");
+		Log.i(LOG_TAG, "filterArtworkAuth(): Entering");
 		boolean found = false;
-		JSONObject pictureMetadata = null;
+		AuthArtwork selectedArtwork = null;
 
-		int[] shuffledArray = generateShuffledArray(illusts.length());
+		int[] shuffledArray = generateShuffledArray(authArtworkList.size());
 
 		loop:
-		for (int i = 0; i < illusts.length(); i++)
+		for (int i = 0; i < authArtworkList.size(); i++)
 		{
-			pictureMetadata = illusts.getJSONObject(shuffledArray[i]);
+			selectedArtwork = authArtworkList.get(shuffledArray[i]);
+
 			// Check if duplicate before any other check to not waste time
-			if (isDuplicateArtwork(Integer.toString(pictureMetadata.getInt("id"))))
+			if (isDuplicateArtwork(selectedArtwork.getId()))
 			{
-				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
+				Log.v(LOG_TAG, "Duplicate ID: " + selectedArtwork.getId());
 				continue;
 			}
 
 			// If user does not want manga to display
-			if (!showManga && !pictureMetadata.getString("type").equals("illust"))
+			if (!showManga && !selectedArtwork.getType().equals("illust"))
 			{
 				Log.v(LOG_TAG, "Manga not desired");
 				continue;
@@ -791,14 +793,14 @@ public class PixivArtWorker extends Worker
 			}
 
 			// Filter artwork based on chosen aspect ratio
-			if (!(isDesiredAspectRatio(pictureMetadata.getInt("width"),
-					pictureMetadata.getInt("height"), aspectRatioSetting)))
+			if (!(isDesiredAspectRatio(selectedArtwork.getWidth(),
+					selectedArtwork.getHeight(), aspectRatioSetting)))
 			{
 				Log.v(LOG_TAG, "Rejecting aspect ratio");
 				continue;
 			}
 
-			if (!isEnoughViews(pictureMetadata.getInt("total_view"), minimumViews))
+			if (!isEnoughViews(selectedArtwork.getTotal_view(), minimumViews))
 			{
 				Log.v(LOG_TAG, "Not enough views");
 				continue;
@@ -808,12 +810,12 @@ public class PixivArtWorker extends Worker
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{
-				if (s.equals(Integer.toString(pictureMetadata.getInt("sanity_level"))))
+				if (s.equals(Integer.toString(selectedArtwork.getSanity())))
 				{
-					Log.d(LOG_TAG, "sanity_level found is " + pictureMetadata.getInt("sanity_level"));
+					Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.getSanity());
 					found = true;
 					break loop;
-				} else if (s.equals("8") && pictureMetadata.getInt("x_restrict") == 1)
+				} else if (s.equals("8") && selectedArtwork.getX_restrict() == 1)
 				{
 					Log.d(LOG_TAG, "x_restrict found");
 					found = true;
@@ -825,7 +827,7 @@ public class PixivArtWorker extends Worker
 		{
 			throw new FilterMatchNotFoundException("too many retries");
 		}
-		return pictureMetadata;
+		return selectedArtwork;
 	}
 
 	/*
@@ -834,7 +836,7 @@ public class PixivArtWorker extends Worker
 		Also acquires an access token to be passed into getArtworkAuth()
 			Why is this function the one acquiring the access token?
 	 */
-	private ArrayList<Artwork> getArtwork() throws IOException, JSONException, CorruptFileException
+	private ArrayList<Artwork> getArtwork() throws IOException, CorruptFileException
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		String mode = sharedPrefs.getString("pref_updateMode", "daily");
@@ -885,52 +887,49 @@ public class PixivArtWorker extends Worker
 			switch (mode)
 			{
 				case "follow":
-					call = service.getFollowJson(accessToken);
+					// This concat is ugly af
+					call = service.getFollowJson("Bearer " + accessToken);
 					break;
 				case "bookmark":
-					call = service.getBookmarkJson(accessToken, sharedPrefs.getString("userId", ""));
+					call = service.getBookmarkJson("Bearer " + accessToken, sharedPrefs.getString("userId", ""));
 					break;
 				case "recommended":
-					call = service.getRecommendedJson(accessToken);
+					call = service.getRecommendedJson("Bearer " + accessToken);
 					break;
 				case "artist":
-					call = service.getArtistJson(accessToken, sharedPrefs.getString("pref_artistId", ""));
+					call = service.getArtistJson("Bearer " + accessToken, sharedPrefs.getString("pref_artistId", ""));
 					break;
 				case "tag_search":
-					call = service.getTagSearchJson(accessToken, sharedPrefs.getString("pref_tagSearch", ""));
+					call = service.getTagSearchJson("Bearer " + accessToken, sharedPrefs.getString("pref_tagSearch", ""));
 					break;
 				default:
 					throw new IllegalStateException("Unexpected value: " + mode);
 			}
 			Illusts illusts = call.execute().body();
 			List<AuthArtwork> authArtworkList = illusts.getArtworks();
-			for (AuthArtwork authArtwork : authArtworkList)
+
+			for (int i = 0; i < sharedPrefs.getInt("prefSlider_numToDownload", 2); i++)
 			{
-				Log.v("DEMO", authArtwork.getTitle());
+				try
+				{
+					artwork = getArtworkAuth(authArtworkList);
+					if (isArtworkNull(artwork))
+					{
+						throw new CorruptFileException("");
+					}
+					artworkArrayList.add(artwork);
+				} catch (FilterMatchNotFoundException e)
+				{
+					e.printStackTrace();
+					// offset += 30;
+					//jsonObject = getArtworkJson(accessToken, mode, offset);
+				}
 			}
-//			for (int i = 0; i < sharedPrefs.getInt("prefSlider_numToDownload", 2); i++)
-//			{
-//				try
-//				{
-//					artwork = getArtworkAuth(jsonObject);
-//					if (isArtworkNull(artwork))
-//					{
-//						throw new CorruptFileException("");
-//					}
-//					artworkArrayList.add(artwork);
-//				} catch (FilterMatchNotFoundException e)
-//				{
-//					e.printStackTrace();
-//					offset += 30;
-//					jsonObject = getArtworkJson(accessToken, mode, offset);
-//				}
-//			}
 		} else
 		{
 			RankingJsonService service = RestClient.getRetrofitRankingInstance().create(RankingJsonService.class);
 			Call<Contents> call = service.getRankingJson(mode);
 			Contents contents = call.execute().body();
-			Log.e("DEMO", "${android.os.Build.VERSION.RELEASE}");
 
 			for (int i = 0; i < sharedPrefs.getInt("prefSlider_numToDownload", 2); i++)
 			{
