@@ -67,7 +67,7 @@
         android:title="@string/prefCat_authSettings">
         <Preference
             android:key="pref_login"
-            android:title="Login!" />
+            android:title="@string/prefTitle_loginButton" />
         <!--        <DropDownPreference-->
         <!--            android:entries="@array/array_authFailActions_entries"-->
         <!--            android:entryValues="@array/array_authFailActions_entryvalues"-->
