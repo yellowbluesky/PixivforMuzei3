@@ -45,13 +45,23 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
+import com.antony.muzei.pixiv.exceptions.CorruptFileException;
+import com.antony.muzei.pixiv.exceptions.FilterMatchNotFoundException;
+import com.antony.muzei.pixiv.gson.AuthArtwork;
+import com.antony.muzei.pixiv.gson.Contents;
+import com.antony.muzei.pixiv.gson.Illusts;
+import com.antony.muzei.pixiv.gson.OauthResponse;
+import com.antony.muzei.pixiv.gson.RankingArtwork;
+import com.antony.muzei.pixiv.network.AuthJsonService;
+import com.antony.muzei.pixiv.network.ImageDownloadService;
+import com.antony.muzei.pixiv.network.RankingJsonService;
+import com.antony.muzei.pixiv.network.RestClient;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -64,12 +74,14 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.HttpUrl;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
 
 public class PixivArtWorker extends Worker
 {
@@ -78,8 +90,7 @@ public class PixivArtWorker extends Worker
 
 	private static final String[] IMAGE_SUFFIXES = {".png", ".jpg"};
 	private static boolean clearArtwork = false;
-	private final String[] AUTH_MODES = {"follow", "bookmark", "tag_search", "artist", "recommended"};
-	private final String[] RANKING_MODES = {"daily", "weekly", "monthly", "rookie", "original", "male", "female"};
+
 
 	public PixivArtWorker(
 			@NonNull Context context,
@@ -88,7 +99,7 @@ public class PixivArtWorker extends Worker
 		super(context, params);
 	}
 
-	static void enqueueLoad(boolean clear)
+	public static void enqueueLoad(boolean clear)
 	{
 		if (clear)
 		{
@@ -113,15 +124,16 @@ public class PixivArtWorker extends Worker
 	}
 
 	// Upon successful authentication stores tokens returned from Pixiv into device memory
-	static void storeTokens(SharedPreferences sharedPrefs,
-	                        JSONObject tokens) throws JSONException
+	public static void storeTokens(SharedPreferences sharedPrefs,
+	                               OauthResponse response)
 	{
 		Log.i(LOG_TAG, "Storing tokens");
 		SharedPreferences.Editor editor = sharedPrefs.edit();
-		editor.putString("accessToken", tokens.getString("access_token"));
+		editor.putString("accessToken", response.getPixivOauthResponse().getAccess_token());
 		editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
-		editor.putString("refreshToken", tokens.getString("refresh_token"));
-		editor.putString("userId", tokens.getJSONObject("user").getString("id"));
+		editor.putString("refreshToken", response.getPixivOauthResponse().getRefresh_token());
+		editor.putString("userId", response.getPixivOauthResponse().getUser().getId());
+		editor.putString("name", response.getPixivOauthResponse().getUser().getName());
 		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
 		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
 		editor.commit();
@@ -138,11 +150,10 @@ public class PixivArtWorker extends Worker
 			i.e. a response that is not a 400 error
 		Returns a Response whose body contains the picture selected to be downloaded
 	*/
-	private Response getRemoteFileExtension(String url) throws IOException
+	private ResponseBody getRemoteFileExtension(String url) throws IOException
 	{
 		Log.i(LOG_TAG, "Getting remote file extensions");
 		Response response;
-
 		/*
 			Thumbnail URL:
 				https://tc-pximg01.techorus-cdn.com/c/240x480/img-master/img/2020/02/19/00/00/39/79583564_p0_master1200.jpg
@@ -160,14 +171,15 @@ public class PixivArtWorker extends Worker
 		for (String suffix : IMAGE_SUFFIXES)
 		{
 			String uri = uri2 + suffix;
-			response = PixivArtService.sendGetRequestRanking(HttpUrl.parse(uri));
-			if (response.code() == 200)
+			ImageDownloadService service = RestClient.getRetrofitImageInstance().create(ImageDownloadService.class);
+			Call<ResponseBody> call = service.downloadImage(uri);
+			retrofit2.Response<ResponseBody> responseBodyResponse = call.execute();
+			response = responseBodyResponse.raw();
+
+			if (response.isSuccessful())
 			{
 				Log.i(LOG_TAG, "Gotten remote file extensions");
-				return response;
-			} else
-			{
-				response.close();
+				return responseBodyResponse.body();
 			}
 		}
 		Log.e(LOG_TAG, "Failed to get remote file extensions");
@@ -226,7 +238,7 @@ public class PixivArtWorker extends Worker
 		The external storage copy is not used for backing any database
 		The external storage copy also has correct file extensions
 	 */
-	private Uri downloadFile(Response response,
+	private Uri downloadFile(ResponseBody responseBody,
 	                         String filename) throws IOException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "Downloading file");
@@ -236,7 +248,7 @@ public class PixivArtWorker extends Worker
 		File imageInternal = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename + ".png");
 		FileOutputStream fosInternal = new FileOutputStream(imageInternal);
 
-		InputStream inputStreamNetwork = response.body().byteStream();
+		InputStream inputStreamNetwork = responseBody.byteStream();
 
 		byte[] bufferTemp = new byte[1024 * 1024 * 10];
 		int readTemp;
@@ -246,7 +258,7 @@ public class PixivArtWorker extends Worker
 		}
 		inputStreamNetwork.close();
 		fosInternal.close();
-		response.close();
+		responseBody.close();
 
 		// TODO make this an enum
 		int fileExtension = getLocalFileExtension(imageInternal);
@@ -329,100 +341,6 @@ public class PixivArtWorker extends Worker
 		return Uri.fromFile(imageInternal);
 	}
 
-	/*
-		One function for obtaining the correct JSON, including the offset or page
-		mode must be passed, not obtained from SharedPreferences, in the event that the user has failed
-		authentication, but only want a single temporary daily ranking artwork
-	 */
-	private JSONObject getArtworkJson(String accessToken,
-	                                  String mode,
-	                                  int offset) throws IOException, JSONException
-	{
-		Log.d(LOG_TAG, "Acquiring JSON");
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		String userId = sharedPrefs.getString("userId", "");
-		JSONObject overallJson;
-
-		if (Arrays.asList("follow", "bookmark", "tag_search", "artist", "recommended").contains(mode))
-		{
-			// Modes that require authentication, and more complex query URLs
-			HttpUrl feedBookmarkTagUrl = null;
-			HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
-					.scheme("https")
-					.host("app-api.pixiv.net");
-			switch (mode)
-			{
-				case "follow":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v2/illust/follow")
-							.addQueryParameter("restrict", "public")
-							.addQueryParameter("offset", Integer.toString(offset)) // adding offset works
-							.build();
-					break;
-				case "bookmark":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/user/bookmarks/illust")
-							.addQueryParameter("user_id", userId)
-							.addQueryParameter("restrict", "public")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-				case "tag_search":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/search/illust")
-							.addQueryParameter("word", sharedPrefs.getString("pref_tagSearch", ""))
-							.addQueryParameter("search_target", "partial_match_for_tags")
-							.addQueryParameter("sort", "date_desc")
-							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-				case "artist":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/user/illusts")
-							.addQueryParameter("user_id", userId)
-							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-				case "recommended":
-					feedBookmarkTagUrl = urlBuilder
-							.addPathSegments("v1/illust/recommended")
-							.addQueryParameter("content_type", "illust")
-							.addQueryParameter("include_ranking_label", "true")
-//				.addQueryParameter("min_bookmark_id_for_recent_illust", "")
-//				.addQueryParameter("offset", "")
-							.addQueryParameter("include_ranking_illusts", "true")
-//				.addQueryParameter("bookmark_illust_ids", "")
-							.addQueryParameter("filter", "for_ios")
-							.addQueryParameter("offset", Integer.toString(offset))
-							.build();
-					break;
-			}
-			Response authResponse = PixivArtService.sendGetRequestAuth(feedBookmarkTagUrl,
-					accessToken);
-			overallJson = new JSONObject((authResponse.body().string()));
-			authResponse.close();
-		} else
-		{
-			// Ranking modes
-			HttpUrl rankingUrl = new HttpUrl.Builder()
-					.scheme("https")
-					.host("www.pixiv.net")
-					.addPathSegment("ranking.php")
-					.addQueryParameter("format", "json")
-					.addQueryParameter("mode", mode)
-					.build();
-
-			Response rankingResponse = PixivArtService.sendGetRequestRanking(rankingUrl);
-			Log.d(LOG_TAG, rankingResponse.toString());
-			overallJson = new JSONObject((rankingResponse.body().string()));
-			rankingResponse.close();
-		}
-		Log.d(LOG_TAG, "Acquired JSON");
-		return overallJson;
-	}
-
 	private boolean isArtworkNull(Artwork artwork)
 	{
 		if (artwork == null)
@@ -437,13 +355,13 @@ public class PixivArtWorker extends Worker
 		Provided an artowrk ID (token), traverses the PixivArtProvider ContentProvider and sees
 		if there is already a duplicate artwork with the same ID (token)
 	 */
-	private boolean isDuplicateArtwork(String token)
+	private boolean isDuplicateArtwork(int token)
 	{
 		boolean duplicateFound = false;
 
 		String[] projection = {"_id"};
 		String selection = "token = ?";
-		String[] selectionArgs = {token};
+		String[] selectionArgs = {Integer.toString(token)};
 		Uri conResUri = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class).getContentUri();
 		Cursor cursor = getApplicationContext().getContentResolver().query(conResUri, projection, selection, selectionArgs, null);
 
@@ -479,7 +397,7 @@ public class PixivArtWorker extends Worker
 
 	// Scalar must match with scalar in SettingsActivity
 	private boolean isEnoughViews(int artworkViewCount,
-	                      int minimumDesiredViews)
+	                              int minimumDesiredViews)
 	{
 		return artworkViewCount >= (minimumDesiredViews * 500);
 	}
@@ -500,7 +418,6 @@ public class PixivArtWorker extends Worker
 			array[index] = array[i];
 			array[i] = a;
 		}
-
 		return array;
 	}
 
@@ -523,10 +440,10 @@ public class PixivArtWorker extends Worker
 		Receives a JSON of the ranking artworks.
 		Passes it off to filterArtworkRanking(), then builds the Artwork for submission to Muzei
 	 */
-	private Artwork getArtworkRanking(JSONObject contentsJson) throws IOException, JSONException, CorruptFileException
+	private Artwork getArtworkRanking(Contents contents) throws IOException, CorruptFileException
 	{
 		Log.i(LOG_TAG, "getArtworkRanking(): Entering");
-		String mode = contentsJson.getString("mode");
+		String mode = contents.getMode();
 		String attribution = null;
 
 		switch (mode)
@@ -553,7 +470,7 @@ public class PixivArtWorker extends Worker
 				attribution = getApplicationContext().getString(R.string.attr_female);
 				break;
 		}
-		String attributionDate = contentsJson.getString("date");
+		String attributionDate = contents.getDate();
 		String attTrans = attributionDate.substring(0, 4) + "/" + attributionDate.substring(4, 6) + "/" + attributionDate.substring(6, 8) + " ";
 
 		//writeToFile(overallJson, "rankingLog.txt");
@@ -569,24 +486,24 @@ public class PixivArtWorker extends Worker
 		int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
 
 		// Filtering
-		JSONObject selectedArtworkMetadata = filterRanking(contentsJson.getJSONArray("contents"),
+		RankingArtwork rankingArtwork = filterArtworkRanking(contents.getArtworks(),
 				showManga, rankingFilterSelect, aspectRatioSettings, minimumViews);
 
 		// Variables to submit to Muzei
-		String token = selectedArtworkMetadata.getString("illust_id");
+		String token = Integer.toString(rankingArtwork.getIllust_id());
 		attribution = attTrans + attribution;
-		attribution += selectedArtworkMetadata.get("rank");
+		attribution += rankingArtwork.getRank();
 
 		// Actually downloading the selected artwork
-		Response remoteFileExtension = getRemoteFileExtension(selectedArtworkMetadata.getString("url"));
+		ResponseBody remoteFileExtension = getRemoteFileExtension(rankingArtwork.getUrl());
 		Uri localUri = downloadFile(remoteFileExtension, token);
 		remoteFileExtension.close();
 
 		Log.i(LOG_TAG, "getArtworkRanking(): Exited");
 
 		return new Artwork.Builder()
-				.title(selectedArtworkMetadata.getString("title"))
-				.byline(selectedArtworkMetadata.getString("user_name"))
+				.title(rankingArtwork.getTitle())
+				.byline(rankingArtwork.getUser_name())
 				.attribution(attribution)
 				.persistentUri(localUri)
 				.token(token)
@@ -601,30 +518,30 @@ public class PixivArtWorker extends Worker
 			NSFW filtering is performed by checking the value of the "sexual" JSON string
 			Manga filtering is performed by checking the value of the "illust_type" JSON string
 	*/
-	private JSONObject filterRanking(JSONArray contents,
-	                                 boolean showManga,
-	                                 Set<String> selectedFilterLevelSet,
-	                                 int aspectRatioSetting,
-	                                 int minimumViews) throws JSONException
+	private RankingArtwork filterArtworkRanking(List<RankingArtwork> rankingArtworkList,
+	                                            boolean showManga,
+	                                            Set<String> selectedFilterLevelSet,
+	                                            int aspectRatioSetting,
+	                                            int minimumViews)
 	{
 		Log.i(LOG_TAG, "filterRanking(): Entering");
-		JSONObject pictureMetadata;
+		RankingArtwork rankingArtwork;
 		Random random = new Random();
 		boolean found = false;
 		int retryCount = 0;
 
 		do
 		{
-			pictureMetadata = contents.getJSONObject(random.nextInt(contents.length()));
+			rankingArtwork = rankingArtworkList.get(random.nextInt(rankingArtworkList.size()));
 
 			retryCount++;
-			if (isDuplicateArtwork(Integer.toString(pictureMetadata.getInt("illust_id"))))
+			if (isDuplicateArtwork(rankingArtwork.getIllust_id()))
 			{
-				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("illust_id"));
+				Log.v(LOG_TAG, "Duplicate ID: " + rankingArtwork.getIllust_id());
 				continue;
 			}
 
-			if (!isEnoughViews(pictureMetadata.getInt("view_count"), minimumViews))
+			if (!isEnoughViews(rankingArtwork.getView_count(), minimumViews))
 			{
 				Log.v(LOG_TAG, "Not enough views");
 				continue;
@@ -632,7 +549,7 @@ public class PixivArtWorker extends Worker
 
 			if (!showManga)
 			{
-				if (pictureMetadata.getInt("illust_type") != 0)
+				if (rankingArtwork.getIllust_type() != 0)
 				{
 					Log.v(LOG_TAG, "Manga not desired");
 					continue;
@@ -641,8 +558,8 @@ public class PixivArtWorker extends Worker
 
 			if (retryCount < 50)
 			{
-				if (!isDesiredAspectRatio(pictureMetadata.getInt("width"),
-						pictureMetadata.getInt("height"), aspectRatioSetting))
+				if (!isDesiredAspectRatio(rankingArtwork.getWidth(),
+						rankingArtwork.getHeight(), aspectRatioSetting))
 				{
 					Log.v(LOG_TAG, "Rejecting aspect ratio");
 					continue;
@@ -654,7 +571,7 @@ public class PixivArtWorker extends Worker
 				String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 				for (String s : selectedFilterLevelArray)
 				{
-					if (Integer.parseInt(s) == pictureMetadata.getJSONObject("illust_content_type").getInt("sexual"))
+					if (Integer.parseInt(s) == rankingArtwork.getIllust_content_type().getSexual())
 					{
 						found = true;
 						break;
@@ -668,7 +585,7 @@ public class PixivArtWorker extends Worker
 		} while (!found);
 
 		Log.i(LOG_TAG, "filterRanking(): Exited");
-		return pictureMetadata;
+		return rankingArtwork;
 	}
 
     /*
@@ -679,7 +596,7 @@ public class PixivArtWorker extends Worker
 	Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
 	for filtering, then downloads the image and returns it Muzei for insertion
 	 */
-	private Artwork getArtworkAuth(JSONObject illustsJson) throws FilterMatchNotFoundException, JSONException, IOException, CorruptFileException
+	private Artwork getArtworkAuth(List<AuthArtwork> authArtworkList) throws FilterMatchNotFoundException, IOException, CorruptFileException
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -694,37 +611,39 @@ public class PixivArtWorker extends Worker
 		int minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0);
 
 		// Filtering
-		JSONObject pictureMetadata = filterArtworkAuth(illustsJson.getJSONArray("illusts"),
+		AuthArtwork selectedArtwork = filterArtworkAuth(authArtworkList,
 				showManga, selectedFilterLevel, aspectRatioSettings, minimumViews);
 
 		// Variables for submitting to Muzei
 		String imageUrl;
-		if (pictureMetadata.getJSONArray("meta_pages").length() == 0)
+		if (selectedArtwork.getMeta_pages().size() == 0)
 		{
 			Log.d(LOG_TAG, "Picture is a single image");
-			imageUrl = pictureMetadata
-					.getJSONObject("meta_single_page")
-					.getString("original_image_url");
+			imageUrl = selectedArtwork
+					.getMeta_single_page()
+					.getOriginal_image_url();
 		} else
 		{
 			Log.d(LOG_TAG, "Picture is part of an album");
-			imageUrl = pictureMetadata
-					.getJSONArray("meta_pages")
-					.getJSONObject(0)
-					.getJSONObject("image_urls")
-					.getString("original");
+			imageUrl = selectedArtwork
+					.getMeta_pages()
+					.get(0)
+					.getImage_urls()
+					.getOriginal();
 		}
-		String token = pictureMetadata.getString("id");
+		String token = Integer.toString(selectedArtwork.getId());
 
 		// Actually downloading the file
-		Response imageDataResponse = PixivArtService.sendGetRequestRanking(HttpUrl.parse(imageUrl));
+		ImageDownloadService service = RestClient.getRetrofitImageInstance().create(ImageDownloadService.class);
+		Call<ResponseBody> call = service.downloadImage(imageUrl);
+		ResponseBody imageDataResponse = call.execute().body();
 		Uri localUri = downloadFile(imageDataResponse, token);
 		imageDataResponse.close();
 
 		Log.i(LOG_TAG, "getArtworkAuth(): Exited");
 		return new Artwork.Builder()
-				.title(pictureMetadata.getString("title"))
-				.byline(pictureMetadata.getJSONObject("user").getString("name"))
+				.title(selectedArtwork.getTitle())
+				.byline(selectedArtwork.getUser().getName())
 				.persistentUri(localUri)
 				.token(token)
 				.webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
@@ -748,48 +667,49 @@ public class PixivArtWorker extends Worker
 		For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
 
 	 */
-	private JSONObject filterArtworkAuth(JSONArray illusts,
-	                                     boolean showManga,
-	                                     Set<String> selectedFilterLevelSet,
-	                                     int aspectRatioSetting,
-	                                     int minimumViews) throws JSONException, FilterMatchNotFoundException
+	private AuthArtwork filterArtworkAuth(List<AuthArtwork> authArtworkList,
+	                                      boolean showManga,
+	                                      Set<String> selectedFilterLevelSet,
+	                                      int aspectRatioSetting,
+	                                      int minimumViews) throws FilterMatchNotFoundException
 	{
-		Log.i(LOG_TAG, "filterFeedAuth(): Entering");
+		Log.i(LOG_TAG, "filterArtworkAuth(): Entering");
 		boolean found = false;
-		JSONObject pictureMetadata = null;
+		AuthArtwork selectedArtwork = null;
 
-		int[] shuffledArray = generateShuffledArray(illusts.length());
+		int[] shuffledArray = generateShuffledArray(authArtworkList.size());
 
 		loop:
-		for (int i = 0; i < illusts.length(); i++)
+		for (int i = 0; i < authArtworkList.size(); i++)
 		{
-			pictureMetadata = illusts.getJSONObject(shuffledArray[i]);
+			selectedArtwork = authArtworkList.get(shuffledArray[i]);
+
 			// Check if duplicate before any other check to not waste time
-			if (isDuplicateArtwork(Integer.toString(pictureMetadata.getInt("id"))))
+			if (isDuplicateArtwork(selectedArtwork.getId()))
 			{
-				Log.v(LOG_TAG, "Duplicate ID: " + pictureMetadata.getInt("id"));
+				Log.v(LOG_TAG, "Duplicate ID: " + selectedArtwork.getId());
 				continue;
 			}
 
 			// If user does not want manga to display
-			if (!showManga && !pictureMetadata.getString("type").equals("illust"))
+			if (!showManga && !selectedArtwork.getType().equals("illust"))
 			{
-				Log.v(LOG_TAG, "Manga not desired");
+				Log.d(LOG_TAG, "Manga not desired");
 				continue;
 
 			}
 
 			// Filter artwork based on chosen aspect ratio
-			if (!(isDesiredAspectRatio(pictureMetadata.getInt("width"),
-					pictureMetadata.getInt("height"), aspectRatioSetting)))
+			if (!(isDesiredAspectRatio(selectedArtwork.getWidth(),
+					selectedArtwork.getHeight(), aspectRatioSetting)))
 			{
-				Log.v(LOG_TAG, "Rejecting aspect ratio");
+				Log.d(LOG_TAG, "Rejecting aspect ratio");
 				continue;
 			}
 
-			if (!isEnoughViews(pictureMetadata.getInt("total_view"), minimumViews))
+			if (!isEnoughViews(selectedArtwork.getTotal_view(), minimumViews))
 			{
-				Log.v(LOG_TAG, "Not enough views");
+				Log.d(LOG_TAG, "Not enough views");
 				continue;
 			}
 
@@ -797,12 +717,12 @@ public class PixivArtWorker extends Worker
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{
-				if (s.equals(Integer.toString(pictureMetadata.getInt("sanity_level"))))
+				if (s.equals(Integer.toString(selectedArtwork.getSanity_Level())))
 				{
-					Log.d(LOG_TAG, "sanity_level found is " + pictureMetadata.getInt("sanity_level"));
+					Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.getSanity_Level());
 					found = true;
 					break loop;
-				} else if (s.equals("8") && pictureMetadata.getInt("x_restrict") == 1)
+				} else if (s.equals("8") && selectedArtwork.getX_restrict() == 1)
 				{
 					Log.d(LOG_TAG, "x_restrict found");
 					found = true;
@@ -814,7 +734,7 @@ public class PixivArtWorker extends Worker
 		{
 			throw new FilterMatchNotFoundException("too many retries");
 		}
-		return pictureMetadata;
+		return selectedArtwork;
 	}
 
 	/*
@@ -823,14 +743,14 @@ public class PixivArtWorker extends Worker
 		Also acquires an access token to be passed into getArtworkAuth()
 			Why is this function the one acquiring the access token?
 	 */
-	private ArrayList<Artwork> getArtwork() throws IOException, JSONException, CorruptFileException
+	private ArrayList<Artwork> getArtwork() throws IOException, CorruptFileException
 	{
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		String mode = sharedPrefs.getString("pref_updateMode", "daily");
 		String accessToken = "";
 
 		// These modes require an access token, so we check for and acquire one first
-		if (Arrays.asList(AUTH_MODES).contains(mode))
+		if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES).contains(mode))
 		{
 			try
 			{
@@ -860,19 +780,42 @@ public class PixivArtWorker extends Worker
 			}
 		}
 
-		int offset = 0;
-		JSONObject jsonObject = getArtworkJson(accessToken, mode, offset);
-
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		Artwork artwork;
 
-		if (Arrays.asList(AUTH_MODES).contains(mode))
+		if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES).contains(mode))
 		{
+			AuthJsonService service = RestClient.getRetrofitAuthInstance().create(AuthJsonService.class);
+			Call<Illusts> call;
+			switch (mode)
+			{
+				case "follow":
+					// This concat is ugly af
+					call = service.getFollowJson("Bearer " + accessToken);
+					break;
+				case "bookmark":
+					call = service.getBookmarkJson("Bearer " + accessToken, sharedPrefs.getString("userId", ""));
+					break;
+				case "recommended":
+					call = service.getRecommendedJson("Bearer " + accessToken);
+					break;
+				case "artist":
+					call = service.getArtistJson("Bearer " + accessToken, sharedPrefs.getString("pref_artistId", ""));
+					break;
+				case "tag_search":
+					call = service.getTagSearchJson("Bearer " + accessToken, sharedPrefs.getString("pref_tagSearch", ""));
+					break;
+				default:
+					throw new IllegalStateException("Unexpected value: " + mode);
+			}
+			Illusts illusts = call.execute().body();
+			List<AuthArtwork> authArtworkList = illusts.getArtworks();
+
 			for (int i = 0; i < sharedPrefs.getInt("prefSlider_numToDownload", 2); i++)
 			{
 				try
 				{
-					artwork = getArtworkAuth(jsonObject);
+					artwork = getArtworkAuth(authArtworkList);
 					if (isArtworkNull(artwork))
 					{
 						throw new CorruptFileException("");
@@ -881,15 +824,20 @@ public class PixivArtWorker extends Worker
 				} catch (FilterMatchNotFoundException e)
 				{
 					e.printStackTrace();
-					offset += 30;
-					jsonObject = getArtworkJson(accessToken, mode, offset);
+					call = service.getNextUrl("Bearer " + accessToken, illusts.getNext_url());
+					illusts = call.execute().body();
+					authArtworkList = illusts.getArtworks();
 				}
 			}
 		} else
 		{
+			RankingJsonService service = RestClient.getRetrofitRankingInstance().create(RankingJsonService.class);
+			Call<Contents> call = service.getRankingJson(mode);
+			Contents contents = call.execute().body();
+
 			for (int i = 0; i < sharedPrefs.getInt("prefSlider_numToDownload", 2); i++)
 			{
-				artwork = getArtworkRanking(jsonObject);
+				artwork = getArtworkRanking(contents);
 				if (isArtworkNull(artwork))
 				{
 					throw new CorruptFileException("");
@@ -898,7 +846,7 @@ public class PixivArtWorker extends Worker
 			}
 		}
 		Log.i(LOG_TAG, "Submitting " + sharedPrefs.getInt("prefSlider_numToDownload", 2) +
-		      " artworks");
+				" artworks");
 		return artworkArrayList;
 	}
 
@@ -913,7 +861,7 @@ public class PixivArtWorker extends Worker
 		try
 		{
 			artworkArrayList = getArtwork();
-		} catch (IOException | JSONException | CorruptFileException e)
+		} catch (IOException | CorruptFileException e)
 		{
 			e.printStackTrace();
 			return Result.retry();

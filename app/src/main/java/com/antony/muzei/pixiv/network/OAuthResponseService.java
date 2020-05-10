@@ -15,17 +15,20 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv;
+package com.antony.muzei.pixiv.network;
 
-public class CorruptFileException extends Exception
+import com.antony.muzei.pixiv.gson.OauthResponse;
+
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.http.FieldMap;
+import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.POST;
+
+public interface OAuthResponseService
 {
-	public CorruptFileException(String message)
-	{
-		super(message);
-	}
-
-	public CorruptFileException(String message, Throwable throwable)
-	{
-		super(message, throwable);
-	}
+	@FormUrlEncoded
+	@POST("/auth/token")
+	Call<OauthResponse> postRefreshToken(@FieldMap Map<String, String> params);
 }

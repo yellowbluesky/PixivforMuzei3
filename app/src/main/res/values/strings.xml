@@ -28,24 +28,22 @@
     <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>
-    <string name="pref_loginId">Pixiv ID</string>
-    <string name="pref_loginPassword">Password</string>
+    <string name="prefTitle_loginButton">Login</string>
+    <string name="prefSummary_notLoggedIn">Not logged in</string>
+    <string name="prefTitle_logoutButton">Logout</string>
+    <string name="prefSummary_LoggedIn">Logged in as </string>
 
     <string name="pref_authFailActionDropDown">Authentication failure action</string>
-
-    <string name="prefTitle_authStatus">Pixiv Authentication Status</string>
-    <string name="prefSummary_authSuccess">Logged in as </string>
-    <string name="prefSummary_authFail">Not logged in</string>
 
     <string name="prefCat_about">About</string>
     <string name="prefTitle_openNsfwWiki">Explanation of NSFW levels</string>
     <string name="prefTitle_mainDeveloper">Main developer</string>
     <string name="prefTitle_keyContributor">Key contributor</string>
 
+    <string name="toast_authFailed">Authentication failed. Check your username or password</string>
     <string name="toast_authFailedSwitch">Pixiv for Muzei 3: Login failed, switching to daily ranking</string>
     <string name="toast_authFailedDown">Pixiv for Muzei 3: Login failed, temporarily downloading daily ranking</string>
     <string name="toast_authFailedRetry">Pixiv for Muzei 3: Login failed, will try again</string>
-    <string name="toast_newCredentials">New credentials found</string>
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
     <string name="toast_newFilterMode">New filtering mode, clearing image cache</string>
     <string name="toast_clearingCache">Clearing image cache</string>
@@ -66,5 +64,14 @@
     <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
     <string name="prefCat_advFiltering">Advanced filtering</string>
     <string name="prefCat_fileOptions">File Options</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="tab_heading_main">Main</string>
+    <string name="tab_heading_adv_options">Advanced settings</string>
+    <string name="tab_heading_credits">Credits</string>
+    <string name="tab_heading_roadmap">Roadmap</string>
+    <string name="prompt_email">Pixiv username</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Login</string>
+    <string name="prefSummary_currentlyLoggedInAs">"Currently logged in as "</string>
 
 </resources>

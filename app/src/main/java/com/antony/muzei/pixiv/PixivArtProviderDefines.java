@@ -17,8 +17,10 @@
 
 package com.antony.muzei.pixiv;
 
-class PixivArtProviderDefines
+public class PixivArtProviderDefines
 {
+	public static final String[] AUTH_MODES = {"follow", "bookmark", "tag_search", "artist", "recommended"};
+	static final String[] RANKING_MODES = {"daily", "weekly", "monthly", "rookie", "original", "male", "female"};
 	// browser strings
 	static final String BROWSER_USER_AGENT =
 			"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0";

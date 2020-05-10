@@ -15,12 +15,15 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv;
+package com.antony.muzei.pixiv.network;
 
-public class FilterMatchNotFoundException extends Exception
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Url;
+
+public interface ImageDownloadService
 {
-	public FilterMatchNotFoundException(String message)
-	{
-		super(message);
-	}
+	@GET
+	Call<ResponseBody> downloadImage(@Url String url);
 }
