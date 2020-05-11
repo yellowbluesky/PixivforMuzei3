@@ -72,5 +72,6 @@
     <string name="prompt_password">密码</string>
     <string name="action_sign_in">登录</string>
     <string name="prefSummary_currentlyLoggedInAs">当前登录为</string>
+    <string name="prefSummary_stuckApp">如果应用无法正常运行，请按此处</string>
 
 </resources>

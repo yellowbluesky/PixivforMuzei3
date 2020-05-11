@@ -74,4 +74,6 @@
     <string name="action_sign_in">Login</string>
     <string name="prefSummary_currentlyLoggedInAs">"Currently logged in as "</string>
 
+    <string name="prefSummary_stuckApp">If the app is not working, press here</string>
+
 </resources>
