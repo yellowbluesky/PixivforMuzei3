@@ -30,10 +30,6 @@
     <string name="prefCat_authSettings">Pixiv 登录</string>
 
     <string name="pref_authFailActionDropDown">验证失败后措施</string>
-    
-    <string name="prefTitle_authStatus">Pixiv 身份验证状态</string>
-    <string name="prefSummary_authSuccess">登录身份</string>
-    <string name="prefSummary_authFail">未登录</string>
 
     <string name="prefCat_about">关于</string>
     <string name="prefTitle_openNsfwWiki">NSFW 级别解释</string>
