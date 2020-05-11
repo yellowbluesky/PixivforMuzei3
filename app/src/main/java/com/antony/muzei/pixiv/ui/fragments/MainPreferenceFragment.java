@@ -281,11 +281,11 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		Preference loginActivityPreference = findPreference("pref_login");
 		if (sharedPrefs.getString("accessToken", "").isEmpty())
 		{
-			loginActivityPreference.setTitle(R.string.prefTitle_loginButton);
-			loginActivityPreference.setSummary(R.string.prefSummary_notLoggedIn);
+			loginActivityPreference.setTitle(getString(R.string.prefTitle_loginButton));
+			loginActivityPreference.setSummary(getString(R.string.prefSummary_notLoggedIn));
 		} else
 		{
-			loginActivityPreference.setTitle(R.string.prefTitle_logoutButton);
+			loginActivityPreference.setTitle(getString(R.string.prefTitle_logoutButton));
 			loginActivityPreference.setSummary(getString(R.string.prefSummary_LoggedIn) + " " + sharedPrefs.getString("name", ""));
 		}
 		// Users click this preference to execute the login or logout
@@ -328,8 +328,8 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		{
 			Preference loginButtonMain = findPreference("pref_login");
 
-			loginButtonMain.setSummary(R.string.prefSummary_LoggedIn + data.getStringExtra("username"));
-			loginButtonMain.setTitle(R.string.prefTitle_logoutButton);
+			loginButtonMain.setSummary(getString(R.string.prefSummary_LoggedIn) + data.getStringExtra("username"));
+			loginButtonMain.setTitle(getString(R.string.prefTitle_logoutButton));
 		}
 	}
 
