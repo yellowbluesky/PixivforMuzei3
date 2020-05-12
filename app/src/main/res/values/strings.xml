@@ -75,5 +75,7 @@
     <string name="prefSummary_currentlyLoggedInAs">"Currently logged in as "</string>
 
     <string name="prefSummary_stuckApp">If the app is not working, press here</string>
+    <string name="prefTitle_MaximumFileSize">Maximum artwork size</string>
+    <string name="prefSummary_noFileSizeLimit">No limit</string>
 
 </resources>

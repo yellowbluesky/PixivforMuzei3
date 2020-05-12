@@ -51,6 +51,12 @@
     <PreferenceCategory
         android:key="prefCat_fileOptions"
         android:title="@string/prefCat_fileOptions">
+        <SeekBarPreference
+            android:defaultValue="0"
+            android:key="prefSlider_maxFileSize"
+            android:max="50"
+            android:persistent="true"
+            android:title="@string/prefTitle_MaximumFileSize" />
         <SwitchPreference
             android:key="pref_autoClearMode"
             android:persistent="true"

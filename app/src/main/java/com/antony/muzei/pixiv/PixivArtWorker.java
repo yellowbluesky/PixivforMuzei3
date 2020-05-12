@@ -47,6 +47,7 @@ import androidx.work.WorkerParameters;
 
 import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.exceptions.CorruptFileException;
+import com.antony.muzei.pixiv.exceptions.ImageTooLargeException;
 import com.antony.muzei.pixiv.exceptions.FilterMatchNotFoundException;
 import com.antony.muzei.pixiv.moshi.AuthArtwork;
 import com.antony.muzei.pixiv.moshi.Contents;
@@ -402,6 +403,11 @@ public class PixivArtWorker extends Worker
 		return artworkViewCount >= (minimumDesiredViews * 500);
 	}
 
+	private boolean isImageTooLarge(long sizeBytes, long limitBytes)
+	{
+		return sizeBytes > limitBytes;
+	}
+
 	private int[] generateShuffledArray(int length)
 	{
 		Random random = new Random();
@@ -496,6 +502,18 @@ public class PixivArtWorker extends Worker
 
 		// Actually downloading the selected artwork
 		ResponseBody remoteFileExtension = getRemoteFileExtension(rankingArtwork.getUrl());
+		int fileSizeLimit = sharedPrefs.getInt("prefSlider_maxFileSize", 0);
+		// 1024 scalar to convert MB to byte
+		if (fileSizeLimit != 0 && isImageTooLarge(remoteFileExtension.contentLength(), fileSizeLimit * 1048576))
+		{
+			Log.v("SIZE", "too chonk");
+			//throw new ImageTooLargeException("");
+			// grab a new image, somehwo loop back
+		}
+		else
+		{
+			Log.v("SIZE", "good size");
+		}
 		Uri localUri = downloadFile(remoteFileExtension, token);
 		remoteFileExtension.close();
 
@@ -630,6 +648,16 @@ public class PixivArtWorker extends Worker
 		ImageDownloadService service = RestClient.getRetrofitImageInstance().create(ImageDownloadService.class);
 		Call<ResponseBody> call = service.downloadImage(imageUrl);
 		ResponseBody imageDataResponse = call.execute().body();
+		int fileSizeLimitMegabytes = sharedPrefs.getInt("prefSlider_maxFileSize", 0);
+		// 1024 scalar to convert from MB to bytes
+		if (fileSizeLimitMegabytes != 0 && isImageTooLarge(imageDataResponse.contentLength(), fileSizeLimitMegabytes * 1048576))
+		{
+			Log.v("SIZE", "too chonk");
+		}
+		else
+		{
+			Log.v("SIZE", "good size");
+		}
 		Uri localUri = downloadFile(imageDataResponse, token);
 		imageDataResponse.close();
 

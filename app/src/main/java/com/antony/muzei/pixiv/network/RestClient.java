@@ -35,13 +35,16 @@ import retrofit2.converter.moshi.MoshiConverterFactory;
 
 public class RestClient
 {
-	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
+	{
+		Log.v("TEST", "rest client entered");
+	}
 	// Prints detailed network logs if built type is debug
 	private static HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(s ->
 			Log.v("ANTONY_REST", "message===" + s))
 			.setLevel(BuildConfig.BUILD_TYPE.contentEquals("debug") ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
-	private static Retrofit retrofitRanking;
 
+	// Used for acquiring ranking feed mode JSON
+	private static Retrofit retrofitRanking;
 	private static OkHttpClient okHttpClientRanking = new OkHttpClient.Builder()
 			// Debug logging interceptor
 			// TODO make this only work on DEBUG flavor builds
@@ -61,6 +64,9 @@ public class RestClient
 			})
 			.build();
 
+	// Used for acquiring auth feed mode JSON's
+	// Also used to acquire access tokens
+	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
 	private static Retrofit retrofitAuth;
 	private static OkHttpClient okHttpClientAuth = new OkHttpClient.Builder()
 			.addInterceptor(httpLoggingInterceptor)
@@ -86,6 +92,7 @@ public class RestClient
 			})
 			.build();
 
+	// Used only to download images
 	private static Retrofit retrofitImages;
 	private static OkHttpClient imageHttpClient = new OkHttpClient.Builder()
 			.addInterceptor(chain ->

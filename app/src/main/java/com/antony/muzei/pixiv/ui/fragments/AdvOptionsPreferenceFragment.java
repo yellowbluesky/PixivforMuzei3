@@ -64,6 +64,32 @@ public class AdvOptionsPreferenceFragment extends PreferenceFragmentCompat
 			return true;
 		})));
 
+		// Maximum file size slider
+		SeekBarPreference maximumFileSizeSliderPref = findPreference("prefSlider_maxFileSize");
+		maximumFileSizeSliderPref.setUpdatesContinuously(true);
+		int fileSizeSetting = sharedPrefs.getInt("prefSlider_maxFileSize", 0);
+		if (fileSizeSetting == 0)
+		{
+			maximumFileSizeSliderPref.setSummary(getString(R.string.prefSummary_noFileSizeLimit));
+		}
+		else
+		{
+			maximumFileSizeSliderPref.setSummary(fileSizeSetting + "MB");
+		}
+
+		maximumFileSizeSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
+		{
+			if ((int) newValue == 0)
+			{
+				maximumFileSizeSliderPref.setSummary(getString(R.string.prefSummary_noFileSizeLimit));
+			}
+			else
+			{
+				maximumFileSizeSliderPref.setSummary(newValue + "MB");
+			}
+			return true;
+		})));
+
 		// Requests the WRITE_EXTERNAL_STORAGE permission
 		// is needed if the user has checked the option to store artworks into external storage
 		// These artworks are not cleared when the Android cache is cleared
