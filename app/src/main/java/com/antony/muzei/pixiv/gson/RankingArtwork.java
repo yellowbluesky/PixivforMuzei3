@@ -93,15 +93,15 @@ public class RankingArtwork
 		return illust_content_type;
 	}
 
-//	public boolean isIllust_series()
-//	{
-//		return illust_series;
-//	}
-
 	public int getIllust_id()
 	{
 		return illust_id;
 	}
+
+//	public boolean isIllust_series()
+//	{
+//		return illust_series;
+//	}
 
 	public int getWidth()
 	{
@@ -146,5 +146,87 @@ public class RankingArtwork
 	public String getAttr()
 	{
 		return attr;
+	}
+
+	public class Illust_Content_Type
+	{
+		private int sexual;
+		private boolean lo;
+		private boolean grotesque;
+		private boolean violent;
+		private boolean homosexual;
+		private boolean drug;
+		private boolean thoughts;
+		private boolean antisocial;
+		private boolean religion;
+		private boolean original;
+		private boolean furry;
+		private boolean bl;
+		private boolean yuri;
+
+		public int getSexual()
+		{
+			return sexual;
+		}
+
+		public boolean isLo()
+		{
+			return lo;
+		}
+
+		public boolean isGrotesque()
+		{
+			return grotesque;
+		}
+
+		public boolean isViolent()
+		{
+			return violent;
+		}
+
+		public boolean isHomosexual()
+		{
+			return homosexual;
+		}
+
+		public boolean isDrug()
+		{
+			return drug;
+		}
+
+		public boolean isThoughts()
+		{
+			return thoughts;
+		}
+
+		public boolean isAntisocial()
+		{
+			return antisocial;
+		}
+
+		public boolean isReligion()
+		{
+			return religion;
+		}
+
+		public boolean isOriginal()
+		{
+			return original;
+		}
+
+		public boolean isFurry()
+		{
+			return furry;
+		}
+
+		public boolean isBl()
+		{
+			return bl;
+		}
+
+		public boolean isYuri()
+		{
+			return yuri;
+		}
 	}
 }
