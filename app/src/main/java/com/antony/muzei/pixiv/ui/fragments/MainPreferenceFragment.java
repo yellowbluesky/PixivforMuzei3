@@ -328,7 +328,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		{
 			Preference loginButtonMain = findPreference("pref_login");
 
-			loginButtonMain.setSummary(getString(R.string.prefSummary_LoggedIn) + data.getStringExtra("username"));
+			loginButtonMain.setSummary(getString(R.string.prefSummary_LoggedIn) + " " + data.getStringExtra("username"));
 			loginButtonMain.setTitle(getString(R.string.prefTitle_logoutButton));
 		}
 	}
