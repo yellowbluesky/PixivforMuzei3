@@ -17,8 +17,11 @@
 
 package com.antony.muzei.pixiv.ui.fragments;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
 import com.antony.muzei.pixiv.R;
@@ -30,6 +33,17 @@ public class CreditsPreferenceFragment extends PreferenceFragmentCompat
 	{
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.credits_preference_layout);
+
+		Preference sendFeedbackPreference = findPreference("pref_sendFeedback");
+		sendFeedbackPreference.setOnPreferenceClickListener(preference ->
+		{
+			Intent intent = new Intent(Intent.ACTION_SENDTO);
+			intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+			intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"yellowbluesky1@gmail.com"});
+			intent.putExtra(Intent.EXTRA_SUBJECT, "Pixiv for Muzei 3 Feedback and Suggestions");
+			startActivity(intent);
+			return true;
+		});
 	}
 
 	@Override
