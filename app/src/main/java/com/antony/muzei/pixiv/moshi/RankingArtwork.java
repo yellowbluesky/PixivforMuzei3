@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.gson;
+package com.antony.muzei.pixiv.moshi;
 
 import java.util.List;
 
@@ -148,7 +148,7 @@ public class RankingArtwork
 		return attr;
 	}
 
-	public class Illust_Content_Type
+	public static class Illust_Content_Type
 	{
 		private int sexual;
 		private boolean lo;

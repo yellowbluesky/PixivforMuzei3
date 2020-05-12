@@ -17,7 +17,7 @@
 
 package com.antony.muzei.pixiv.network;
 
-import com.antony.muzei.pixiv.gson.OauthResponse;
+import com.antony.muzei.pixiv.moshi.OauthResponse;
 
 import java.util.Map;
 

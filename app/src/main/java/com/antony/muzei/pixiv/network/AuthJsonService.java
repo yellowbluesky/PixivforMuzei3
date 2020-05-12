@@ -17,7 +17,7 @@
 
 package com.antony.muzei.pixiv.network;
 
-import com.antony.muzei.pixiv.gson.Illusts;
+import com.antony.muzei.pixiv.moshi.Illusts;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

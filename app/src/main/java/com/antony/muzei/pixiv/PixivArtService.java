@@ -22,7 +22,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
-import com.antony.muzei.pixiv.gson.OauthResponse;
+import com.antony.muzei.pixiv.moshi.OauthResponse;
 import com.antony.muzei.pixiv.network.OAuthResponseService;
 import com.antony.muzei.pixiv.network.RestClient;
 
@@ -39,7 +39,6 @@ import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 

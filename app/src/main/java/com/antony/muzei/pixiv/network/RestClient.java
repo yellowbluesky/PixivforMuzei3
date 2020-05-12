@@ -31,15 +31,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.moshi.MoshiConverterFactory;
 
 public class RestClient
 {
+	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
 	// Prints detailed network logs if built type is debug
 	private static HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(s ->
 			Log.v("ANTONY_REST", "message===" + s))
 			.setLevel(BuildConfig.BUILD_TYPE.contentEquals("debug") ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
-	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
 	private static Retrofit retrofitRanking;
 
 	private static OkHttpClient okHttpClientRanking = new OkHttpClient.Builder()
@@ -108,7 +108,7 @@ public class RestClient
 			retrofitRanking = new Retrofit.Builder()
 					.client(okHttpClientRanking)
 					.baseUrl("https://www.pixiv.net")
-					.addConverterFactory(GsonConverterFactory.create())
+					.addConverterFactory(MoshiConverterFactory.create())
 					.build();
 		}
 		return retrofitRanking;
@@ -121,7 +121,7 @@ public class RestClient
 			retrofitAuth = new Retrofit.Builder()
 					.client(okHttpClientAuth)
 					.baseUrl("https://app-api.pixiv.net")
-					.addConverterFactory(GsonConverterFactory.create())
+					.addConverterFactory(MoshiConverterFactory.create())
 					.build();
 		}
 		return retrofitAuth;
@@ -134,7 +134,7 @@ public class RestClient
 			retrofitImages = new Retrofit.Builder()
 					.client(imageHttpClient)
 					.baseUrl("https://i.pximg.net")
-					.addConverterFactory(GsonConverterFactory.create())
+					.addConverterFactory(MoshiConverterFactory.create())
 					.build();
 		}
 		return retrofitImages;
@@ -175,7 +175,7 @@ public class RestClient
 			retrofitOauth = new Retrofit.Builder()
 					.baseUrl("https://oauth.secure.pixiv.net")
 					.client(okHttpClientAuth)
-					.addConverterFactory(GsonConverterFactory.create())
+					.addConverterFactory(MoshiConverterFactory.create())
 					.build();
 		}
 		return retrofitOauth;

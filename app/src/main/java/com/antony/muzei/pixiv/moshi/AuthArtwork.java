@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.gson;
+package com.antony.muzei.pixiv.moshi;
 
 import java.util.List;
 

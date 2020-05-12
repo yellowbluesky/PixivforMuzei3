@@ -48,11 +48,11 @@ import androidx.work.WorkerParameters;
 import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.exceptions.CorruptFileException;
 import com.antony.muzei.pixiv.exceptions.FilterMatchNotFoundException;
-import com.antony.muzei.pixiv.gson.AuthArtwork;
-import com.antony.muzei.pixiv.gson.Contents;
-import com.antony.muzei.pixiv.gson.Illusts;
-import com.antony.muzei.pixiv.gson.OauthResponse;
-import com.antony.muzei.pixiv.gson.RankingArtwork;
+import com.antony.muzei.pixiv.moshi.AuthArtwork;
+import com.antony.muzei.pixiv.moshi.Contents;
+import com.antony.muzei.pixiv.moshi.Illusts;
+import com.antony.muzei.pixiv.moshi.OauthResponse;
+import com.antony.muzei.pixiv.moshi.RankingArtwork;
 import com.antony.muzei.pixiv.network.AuthJsonService;
 import com.antony.muzei.pixiv.network.ImageDownloadService;
 import com.antony.muzei.pixiv.network.RankingJsonService;
@@ -560,6 +560,8 @@ public class PixivArtWorker extends Worker
 				continue;
 			}
 
+			// TODO this doesn't appear to work at all
+			// I selected to show only NSFW artwork, and I got some random stuff
 			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
 			for (String s : selectedFilterLevelArray)
 			{

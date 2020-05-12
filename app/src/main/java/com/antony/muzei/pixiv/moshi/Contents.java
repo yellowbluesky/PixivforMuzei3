@@ -15,25 +15,64 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.gson;
+package com.antony.muzei.pixiv.moshi;
 
-import com.google.gson.annotations.SerializedName;
+import com.squareup.moshi.Json;
 
 import java.util.List;
 
-public class Illusts
+public class Contents
 {
-	@SerializedName("illusts")
-	private List<AuthArtwork> artworks;
-	private String next_url;
+	@Json(name = "contents")
+	private List<RankingArtwork> artworks;
+	private String mode;
+	private String content;
+	private int page;
+	//private int prev;
+	private int next;
+	private String date;
+	//private boolean next_date;
+	private String prev_date;
+	private int rank_total;
 
-	public List<AuthArtwork> getArtworks()
+	public String getPrev_date()
+	{
+		return prev_date;
+	}
+
+	public List<RankingArtwork> getArtworks()
 	{
 		return artworks;
 	}
 
-	public String getNext_url()
+	public String getMode()
 	{
-		return next_url;
+		return mode;
 	}
+
+	public String getContent()
+	{
+		return content;
+	}
+
+	public int getPage()
+	{
+		return page;
+	}
+
+	public int getNext()
+	{
+		return next;
+	}
+
+	public String getDate()
+	{
+		return date;
+	}
+
+	public int getRank_total()
+	{
+		return rank_total;
+	}
+
 }

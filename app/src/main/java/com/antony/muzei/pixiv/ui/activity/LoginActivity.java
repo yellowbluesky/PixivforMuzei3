@@ -32,7 +32,7 @@ import androidx.preference.PreferenceManager;
 
 import com.antony.muzei.pixiv.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
-import com.antony.muzei.pixiv.gson.OauthResponse;
+import com.antony.muzei.pixiv.moshi.OauthResponse;
 import com.antony.muzei.pixiv.network.OAuthResponseService;
 import com.antony.muzei.pixiv.network.RestClient;
 
