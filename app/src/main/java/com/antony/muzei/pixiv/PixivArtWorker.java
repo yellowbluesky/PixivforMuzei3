@@ -440,7 +440,7 @@ public class PixivArtWorker extends Worker
 		Receives a JSON of the ranking artworks.
 		Passes it off to filterArtworkRanking(), then builds the Artwork for submission to Muzei
 	 */
-	private Artwork getArtworkRanking(Contents contents) throws IOException, CorruptFileException
+	private Artwork getArtworkRanking(Contents contents) throws IOException, CorruptFileException, FilterMatchNotFoundException
 	{
 		Log.i(LOG_TAG, "getArtworkRanking(): Entering");
 		String mode = contents.getMode();
@@ -522,19 +522,18 @@ public class PixivArtWorker extends Worker
 	                                            boolean showManga,
 	                                            Set<String> selectedFilterLevelSet,
 	                                            int aspectRatioSetting,
-	                                            int minimumViews)
+	                                            int minimumViews) throws FilterMatchNotFoundException
 	{
 		Log.i(LOG_TAG, "filterRanking(): Entering");
-		RankingArtwork rankingArtwork;
-		Random random = new Random();
+		RankingArtwork rankingArtwork = null;
 		boolean found = false;
-		int retryCount = 0;
 
-		do
+		int[] shuffledArray = generateShuffledArray(rankingArtworkList.size());
+
+		for (int i = 0; i < rankingArtworkList.size(); i++)
 		{
-			rankingArtwork = rankingArtworkList.get(random.nextInt(rankingArtworkList.size()));
+			rankingArtwork = rankingArtworkList.get(shuffledArray[i]);
 
-			retryCount++;
 			if (isDuplicateArtwork(rankingArtwork.getIllust_id()))
 			{
 				Log.v(LOG_TAG, "Duplicate ID: " + rankingArtwork.getIllust_id());
@@ -547,42 +546,34 @@ public class PixivArtWorker extends Worker
 				continue;
 			}
 
-			if (!showManga)
+			if (!showManga && rankingArtwork.getIllust_type() != 0)
 			{
-				if (rankingArtwork.getIllust_type() != 0)
-				{
-					Log.v(LOG_TAG, "Manga not desired");
-					continue;
-				}
+				Log.v(LOG_TAG, "Manga not desired");
+				continue;
+
 			}
 
-			if (retryCount < 50)
+			if (!isDesiredAspectRatio(rankingArtwork.getWidth(),
+					rankingArtwork.getHeight(), aspectRatioSetting))
 			{
-				if (!isDesiredAspectRatio(rankingArtwork.getWidth(),
-						rankingArtwork.getHeight(), aspectRatioSetting))
-				{
-					Log.v(LOG_TAG, "Rejecting aspect ratio");
-					continue;
-				}
+				Log.v(LOG_TAG, "Rejecting aspect ratio");
+				continue;
 			}
 
-			if (retryCount < 100)
+			String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
+			for (String s : selectedFilterLevelArray)
 			{
-				String[] selectedFilterLevelArray = selectedFilterLevelSet.toArray(new String[0]);
-				for (String s : selectedFilterLevelArray)
+				if (Integer.parseInt(s) == rankingArtwork.getIllust_content_type().getSexual())
 				{
-					if (Integer.parseInt(s) == rankingArtwork.getIllust_content_type().getSexual())
-					{
-						found = true;
-						break;
-					}
-				}
-				if (!found)
-				{
-					Log.d(LOG_TAG, "matching filtering not found");
+					found = true;
+					break;
 				}
 			}
-		} while (!found);
+		}
+		if (!found)
+		{
+			throw new FilterMatchNotFoundException("");
+		}
 
 		Log.i(LOG_TAG, "filterRanking(): Exited");
 		return rankingArtwork;
@@ -834,15 +825,47 @@ public class PixivArtWorker extends Worker
 			RankingJsonService service = RestClient.getRetrofitRankingInstance().create(RankingJsonService.class);
 			Call<Contents> call = service.getRankingJson(mode);
 			Contents contents = call.execute().body();
+			int pageNumber = 1;
+			String date = contents.getDate();
+			String prevDate = contents.getPrev_date();
 
 			for (int i = 0; i < sharedPrefs.getInt("prefSlider_numToDownload", 2); i++)
 			{
-				artwork = getArtworkRanking(contents);
-				if (isArtworkNull(artwork))
+				try
 				{
-					throw new CorruptFileException("");
+					artwork = getArtworkRanking(contents);
+					if (isArtworkNull(artwork))
+					{
+						throw new CorruptFileException("");
+					}
+					artworkArrayList.add(artwork);
+				} catch (FilterMatchNotFoundException e)
+				{
+					// If enough artworks are not found in the 50 from the first page of the rankings,
+					// keep looking through the next pages or days
+					e.printStackTrace();
+					// We can continue to look through the 450 rankings for that day
+					// There is a tenth page actually, but the next page number integer becomes a boolean
+					// GSON can't handle this and throws a fit.
+					// Thus I've limited my app to parsing only the top 450 rankings
+					if (pageNumber != 9)
+					{
+						pageNumber++;
+						call = service.getRankingJson(mode, pageNumber, date);
+						contents = call.execute().body();
+					}
+					// We need to go through more than 500 ranking images, wow what are you doing
+					// Reset the page number to 1, request yesterday's ranking
+					// Update the current page number and date of the JSON
+					else
+					{
+						pageNumber = 1;
+						call = service.getRankingJson(mode, pageNumber, prevDate);
+						contents = call.execute().body();
+						date = contents.getDate();
+						prevDate = contents.getPrev_date();
+					}
 				}
-				artworkArrayList.add(artwork);
 			}
 		}
 		Log.i(LOG_TAG, "Submitting " + sharedPrefs.getInt("prefSlider_numToDownload", 2) +

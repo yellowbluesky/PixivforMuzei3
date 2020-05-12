@@ -27,4 +27,7 @@ public interface RankingJsonService
 {
 	@GET("/ranking.php")
 	Call<Contents> getRankingJson(@Query("mode") String mode);
+
+	@GET("/ranking.php")
+	Call<Contents> getRankingJson(@Query("mode") String mode, @Query("p") int page, @Query("date") String date);
 }

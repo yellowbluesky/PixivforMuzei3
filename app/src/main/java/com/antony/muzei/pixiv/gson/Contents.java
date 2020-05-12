@@ -28,11 +28,17 @@ public class Contents
 	private String mode;
 	private String content;
 	private int page;
-	private boolean prev;
+	//private int prev;
 	private int next;
 	private String date;
-	private boolean next_date;
+	//private boolean next_date;
+	private String prev_date;
 	private int rank_total;
+
+	public String getPrev_date()
+	{
+		return prev_date;
+	}
 
 	public List<RankingArtwork> getArtworks()
 	{
@@ -54,11 +60,6 @@ public class Contents
 		return page;
 	}
 
-	public boolean isPrev()
-	{
-		return prev;
-	}
-
 	public int getNext()
 	{
 		return next;
@@ -67,11 +68,6 @@ public class Contents
 	public String getDate()
 	{
 		return date;
-	}
-
-	public boolean isNext_date()
-	{
-		return next_date;
 	}
 
 	public int getRank_total()
