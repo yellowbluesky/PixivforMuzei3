@@ -28,6 +28,10 @@
     <string name="button_clearCache">立即清除图像缓存</string>
 
     <string name="prefCat_authSettings">Pixiv 登录</string>
+    <string name="prefTitle_loginButton">登录</string>
+    <string name="prefSummary_notLoggedIn">未登录</string>
+    <string name="prefTitle_logoutButton">登出</string>
+    <string name="prefSummary_LoggedIn">登录为</string>
 
     <string name="pref_authFailActionDropDown">验证失败后措施</string>
 
@@ -36,6 +40,7 @@
     <string name="prefTitle_mainDeveloper">主要开发者</string>
     <string name="prefTitle_keyContributor">关键贡献者</string>
 
+    <string name="toast_authFailed">验证失败。请检查您的用户名或密码</string>
     <string name="toast_authFailedSwitch">Pixiv for Muzei 3: 登录失败，更改为日排行榜</string>
     <string name="toast_authFailedDown">Pixiv for Muzei 3: 登录失败，临时下载日排行榜</string>
     <string name="toast_authFailedRetry">Pixiv for Muzei 3: 登录失败，再次尝试</string>
@@ -59,19 +64,19 @@
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
     <string name="prefCat_advFiltering">高级过滤</string>
     <string name="prefCat_fileOptions">文件选项</string>
-    <string name="prefTitle_loginButton">登录</string>
-    <string name="prefSummary_notLoggedIn">未登录</string>
-    <string name="prefTitle_logoutButton">登出</string>
-    <string name="prefSummary_LoggedIn">登录为</string>
-    <string name="toast_authFailed">验证失败。 检查您的用户名或密码</string>
-    <string name="tab_heading_main">主要设定</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="tab_heading_main">主要设置</string>
     <string name="tab_heading_adv_options">高级设置</string>
     <string name="tab_heading_credits">贡献者</string>
     <string name="tab_heading_roadmap">未来的计划</string>
-    <string name="prompt_email">Pixiv电子邮件</string>
+    <string name="prompt_email">Pixiv 用户名</string>
     <string name="prompt_password">密码</string>
     <string name="action_sign_in">登录</string>
     <string name="prefSummary_currentlyLoggedInAs">当前登录为</string>
+
     <string name="prefSummary_stuckApp">如果应用无法正常运行，请按此处</string>
+    <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
+    <string name="prefSummary_noFileSizeLimit">无限制</string>
+    <string name="prefTitle_sendFeedback">发送反馈或建议</string>
 
 </resources>
