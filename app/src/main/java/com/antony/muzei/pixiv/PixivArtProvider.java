@@ -37,6 +37,8 @@ import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -56,6 +58,21 @@ public class PixivArtProvider extends MuzeiArtProvider
 	protected void onLoadRequested(boolean initial)
 	{
 		PixivArtWorker.enqueueLoad(false);
+	}
+
+	@Override
+	@NonNull
+	public InputStream openFile(@NonNull Artwork artwork)
+	{
+		InputStream inputStream = null;
+		try
+		{
+			inputStream = getContext().getContentResolver().openInputStream(artwork.getPersistentUri());
+		} catch (FileNotFoundException ex)
+		{
+			ex.printStackTrace();
+		}
+		return inputStream;
 	}
 
 	@Override
