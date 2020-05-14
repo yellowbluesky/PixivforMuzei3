@@ -169,10 +169,13 @@ public class PixivArtWorker extends Worker
 				.replace("_master1200", "");
 		String uri2 = uri1.substring(0, uri1.length() - 4);
 
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		boolean bypassActive = sharedPreferences.getBoolean("pref_enableNetworkBypass", false);
+
 		for (String suffix : IMAGE_SUFFIXES)
 		{
 			String uri = uri2 + suffix;
-			ImageDownloadService service = RestClient.getRetrofitImageInstance().create(ImageDownloadService.class);
+			ImageDownloadService service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadService.class);
 			Call<ResponseBody> call = service.downloadImage(uri);
 			retrofit2.Response<ResponseBody> responseBodyResponse = call.execute();
 			response = responseBodyResponse.raw();
@@ -644,8 +647,10 @@ public class PixivArtWorker extends Worker
 		}
 		String token = Integer.toString(selectedArtwork.getId());
 
+		boolean bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false);
+
 		// Actually downloading the file
-		ImageDownloadService service = RestClient.getRetrofitImageInstance().create(ImageDownloadService.class);
+		ImageDownloadService service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadService.class);
 		Call<ResponseBody> call = service.downloadImage(imageUrl);
 		ResponseBody imageDataResponse = call.execute().body();
 		int fileSizeLimitMegabytes = sharedPrefs.getInt("prefSlider_maxFileSize", 0);
@@ -653,8 +658,7 @@ public class PixivArtWorker extends Worker
 		if (fileSizeLimitMegabytes != 0 && isImageTooLarge(imageDataResponse.contentLength(), fileSizeLimitMegabytes * 1048576))
 		{
 			Log.v("SIZE", "too chonk");
-		}
-		else
+		} else
 		{
 			Log.v("SIZE", "good size");
 		}
@@ -803,10 +807,11 @@ public class PixivArtWorker extends Worker
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		Artwork artwork;
+		boolean bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false);
 
 		if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES).contains(mode))
 		{
-			AuthJsonService service = RestClient.getRetrofitAuthInstance().create(AuthJsonService.class);
+			AuthJsonService service = RestClient.getRetrofitAuthInstance(bypassActive).create(AuthJsonService.class);
 			Call<Illusts> call;
 			switch (mode)
 			{

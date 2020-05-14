@@ -17,14 +17,20 @@
 
 package com.antony.muzei.pixiv.network;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.util.Log;
 
 import com.antony.muzei.pixiv.BuildConfig;
+import com.antony.muzei.pixiv.RubyHttpDns;
+import com.antony.muzei.pixiv.RubySSLSocketFactory;
 
 import java.security.MessageDigest;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import javax.net.ssl.X509TrustManager;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -35,17 +41,16 @@ import retrofit2.converter.moshi.MoshiConverterFactory;
 
 public class RestClient
 {
-	{
-		Log.v("TEST", "rest client entered");
-	}
+	// Used for acquiring auth feed mode JSON's
+	// Also used to acquire access tokens
+	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
 	// Prints detailed network logs if built type is debug
 	private static HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(s ->
 			Log.v("ANTONY_REST", "message===" + s))
 			.setLevel(BuildConfig.BUILD_TYPE.contentEquals("debug") ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
-
 	// Used for acquiring ranking feed mode JSON
 	private static Retrofit retrofitRanking;
-	private static OkHttpClient okHttpClientRanking = new OkHttpClient.Builder()
+	private static OkHttpClient.Builder okHttpClientRankingBuilder = new OkHttpClient.Builder()
 			// Debug logging interceptor
 			// TODO make this only work on DEBUG flavor builds
 			.addInterceptor(httpLoggingInterceptor)
@@ -61,14 +66,10 @@ public class RestClient
 						.url(url)
 						.build();
 				return chain.proceed(request);
-			})
-			.build();
-
-	// Used for acquiring auth feed mode JSON's
-	// Also used to acquire access tokens
-	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
+			});
+	//.build();
 	private static Retrofit retrofitAuth;
-	private static OkHttpClient okHttpClientAuth = new OkHttpClient.Builder()
+	private static OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
 			.addInterceptor(httpLoggingInterceptor)
 			// This adds the necessary headers minus the auth header
 			// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
@@ -89,12 +90,12 @@ public class RestClient
 						.header("X-Client-Hash", hashSecret)
 						.build();
 				return chain.proceed(request);
-			})
-			.build();
+			});
+	//.build();
 
 	// Used only to download images
 	private static Retrofit retrofitImages;
-	private static OkHttpClient imageHttpClient = new OkHttpClient.Builder()
+	private static OkHttpClient.Builder imageHttpClientBuilder = new OkHttpClient.Builder()
 			.addInterceptor(chain ->
 			{
 				Request original = chain.request();
@@ -104,47 +105,152 @@ public class RestClient
 						.build();
 				return chain.proceed(request);
 			})
-			.addInterceptor(httpLoggingInterceptor)
-			.build();
+			.addInterceptor(httpLoggingInterceptor);
+	//.build();
 	private static Retrofit retrofitOauth;
 
-	public static Retrofit getRetrofitRankingInstance()
+	public static Retrofit getRetrofitRankingInstance(boolean bypass)
 	{
-		if (retrofitRanking == null)
+		if (bypass)
 		{
-			retrofitRanking = new Retrofit.Builder()
-					.client(okHttpClientRanking)
-					.baseUrl("https://www.pixiv.net")
-					.addConverterFactory(MoshiConverterFactory.create())
-					.build();
+			okHttpClientRankingBuilder
+					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
+					{
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@Override
+						public X509Certificate[] getAcceptedIssuers()
+						{
+							return new X509Certificate[0];
+						}
+					})
+					.hostnameVerifier((s, sslSession) -> true)
+					.dns(new RubyHttpDns());
 		}
+		retrofitRanking = new Retrofit.Builder()
+				.client(okHttpClientRankingBuilder.build())
+				.baseUrl("https://www.pixiv.net")
+				.addConverterFactory(MoshiConverterFactory.create())
+				.build();
 		return retrofitRanking;
 	}
 
-	public static Retrofit getRetrofitAuthInstance()
+	public static Retrofit getRetrofitAuthInstance(boolean bypass)
 	{
-		if (retrofitAuth == null)
+		if (bypass)
 		{
-			retrofitAuth = new Retrofit.Builder()
-					.client(okHttpClientAuth)
-					.baseUrl("https://app-api.pixiv.net")
-					.addConverterFactory(MoshiConverterFactory.create())
-					.build();
+			okHttpClientAuthBuilder
+					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
+					{
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@Override
+						public X509Certificate[] getAcceptedIssuers()
+						{
+							return new X509Certificate[0];
+						}
+					})
+					.hostnameVerifier((s, sslSession) -> true)
+					.dns(new RubyHttpDns());
 		}
+		retrofitAuth = new Retrofit.Builder()
+				.client(okHttpClientAuthBuilder.build())
+				.baseUrl("https://app-api.pixiv.net")
+				.addConverterFactory(MoshiConverterFactory.create())
+				.build();
 		return retrofitAuth;
 	}
 
-	public static Retrofit getRetrofitImageInstance()
+	public static Retrofit getRetrofitImageInstance(boolean bypass)
 	{
-		if (retrofitImages == null)
+		if (bypass)
 		{
-			retrofitImages = new Retrofit.Builder()
-					.client(imageHttpClient)
-					.baseUrl("https://i.pximg.net")
-					.addConverterFactory(MoshiConverterFactory.create())
-					.build();
+			imageHttpClientBuilder
+					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
+					{
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@Override
+						public X509Certificate[] getAcceptedIssuers()
+						{
+							return new X509Certificate[0];
+						}
+					})
+					.hostnameVerifier((s, sslSession) -> true)
+					.dns(new RubyHttpDns());
 		}
+		retrofitImages = new Retrofit.Builder()
+				.client(imageHttpClientBuilder.build())
+				.baseUrl("https://i.pximg.net")
+				.addConverterFactory(MoshiConverterFactory.create())
+				.build();
 		return retrofitImages;
+	}
+
+	public static Retrofit getRetrofitOauthInstance(boolean bypass)
+	{
+		if (bypass)
+		{
+			okHttpClientAuthBuilder
+					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
+					{
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@SuppressLint("TrustAllX509TrustManager")
+						@Override
+						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+						{
+						}
+
+						@Override
+						public X509Certificate[] getAcceptedIssuers()
+						{
+							return new X509Certificate[0];
+						}
+					})
+					.hostnameVerifier((s, sslSession) -> true)
+					.dns(new RubyHttpDns());
+		}
+		retrofitOauth = new Retrofit.Builder()
+				.baseUrl("https://oauth.secure.pixiv.net")
+				.client(okHttpClientAuthBuilder.build())
+				.addConverterFactory(MoshiConverterFactory.create())
+				.build();
+		return retrofitOauth;
 	}
 
 	private static String getHashSecret(String dateSecretConcat)
@@ -173,18 +279,5 @@ public class RestClient
 		}
 		// TODO replace this place holder
 		return "";
-	}
-
-	public static Retrofit getRetrofitOauthInstance()
-	{
-		if (retrofitOauth == null)
-		{
-			retrofitOauth = new Retrofit.Builder()
-					.baseUrl("https://oauth.secure.pixiv.net")
-					.client(okHttpClientAuth)
-					.addConverterFactory(MoshiConverterFactory.create())
-					.build();
-		}
-		return retrofitOauth;
 	}
 }

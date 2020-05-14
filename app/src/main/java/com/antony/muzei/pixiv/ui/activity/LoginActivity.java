@@ -102,7 +102,12 @@ public class LoginActivity extends AppCompatActivity
 		fieldParams.put("username", username);
 		fieldParams.put("password", password);
 
-		OAuthResponseService service = RestClient.getRetrofitOauthInstance().create(OAuthResponseService.class);
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+
+		boolean bypassActive = sharedPreferences.getBoolean("pref_enableNetworkBypass", false);
+
+		OAuthResponseService service = RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService.class);
 		Call<OauthResponse> call = service.postRefreshToken(fieldParams);
 		// Callback because we are on a main UI thread, Android will throw a NetworkOnMainThreadException
 		call.enqueue(new Callback<OauthResponse>()

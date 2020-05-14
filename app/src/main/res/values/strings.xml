@@ -78,5 +78,7 @@
     <string name="prefTitle_MaximumFileSize">Maximum artwork size</string>
     <string name="prefSummary_noFileSizeLimit">No limit</string>
     <string name="prefTitle_sendFeedback">Send Feedback or Suggestions</string>
+    <string name="prefCat_networkingOptions">Networking options</string>
+    <string name="pref_enableNetworkBypass">Enable network filter bypass</string>
 
 </resources>

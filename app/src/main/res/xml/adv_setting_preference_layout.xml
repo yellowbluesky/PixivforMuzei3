@@ -74,4 +74,11 @@
             android:title="@string/prefTitle_numToDownload"
             app:min="1" />
     </PreferenceCategory>
+    <PreferenceCategory
+        android:key="prefCat_networkOptions"
+        android:title="@string/prefCat_networkingOptions" >
+        <SwitchPreference
+            android:key="pref_enableNetworkBypass"
+            android:title="@string/pref_enableNetworkBypass" />
+    </PreferenceCategory>
 </PreferenceScreen>

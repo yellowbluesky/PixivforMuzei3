@@ -113,7 +113,9 @@ public class PixivArtService
 			fieldParams.put("grant_type", "refresh_token");
 			fieldParams.put("refresh_token", sharedPrefs.getString("refreshToken", ""));
 
-			OAuthResponseService service = RestClient.getRetrofitOauthInstance().create(OAuthResponseService.class);
+			boolean bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false);
+
+			OAuthResponseService service = RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService.class);
 			Call<OauthResponse> call = service.postRefreshToken(fieldParams);
 			OauthResponse oauthResponse = call.execute().body();
 			PixivArtWorker.storeTokens(sharedPrefs, oauthResponse);
