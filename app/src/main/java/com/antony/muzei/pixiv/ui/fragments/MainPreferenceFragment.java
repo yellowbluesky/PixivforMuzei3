@@ -57,20 +57,6 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.main_preference_layout);
 
-		// If Muzei is not installed, this will redirect the user to Muzei's Play Store listing
-		if (!isMuzeiInstalled())
-		{
-			final String appPackageName = "net.nurik.roman.muzei"; // getPackageName() from Context or Activity object
-			try
-			{
-				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-			} catch (android.content.ActivityNotFoundException ex)
-			{
-				startActivity(new Intent(Intent.ACTION_VIEW,
-						Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-			}
-		}
-
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
 		// Stores user toggleable variables into a temporary store for later comparison in onStop()
@@ -376,20 +362,5 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 				Toast.makeText(getContext(), getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show();
 			}
 		}
-	}
-
-	// Redirects the user to Muzei's Play Store listing if it's not detected to be installed
-	// TODO have a nicer dialog that explains why Muzei needs to be installed, instead of forcing them to the store
-	private boolean isMuzeiInstalled()
-	{
-		boolean found = true;
-		try
-		{
-			getContext().getPackageManager().getPackageInfo("net.nurik.roman.muzei", 0);
-		} catch (PackageManager.NameNotFoundException ex)
-		{
-			found = false;
-		}
-		return found;
 	}
 }

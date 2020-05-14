@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity
 					.show();
 		}
 
-		if (isProviderSelected())
+		if (!isProviderSelected())
 		{
 			// TODO localize these strings
 			new AlertDialog.Builder(this)
