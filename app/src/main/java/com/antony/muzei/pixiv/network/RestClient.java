@@ -26,6 +26,7 @@ import com.antony.muzei.pixiv.RubyHttpDns;
 import com.antony.muzei.pixiv.RubySSLSocketFactory;
 
 import java.security.MessageDigest;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -48,209 +49,165 @@ public class RestClient
 	private static HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(s ->
 			Log.v("ANTONY_REST", "message===" + s))
 			.setLevel(BuildConfig.BUILD_TYPE.contentEquals("debug") ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
-	// Used for acquiring ranking feed mode JSON
-	private static Retrofit retrofitRanking;
-	private static OkHttpClient.Builder okHttpClientRankingBuilder = new OkHttpClient.Builder()
-			// Debug logging interceptor
-			// TODO make this only work on DEBUG flavor builds
-			.addInterceptor(httpLoggingInterceptor)
-			// This interceptor only adds in the "format" "json" query parameter
-			.addInterceptor(chain ->
-			{
-				Request original = chain.request();
-				HttpUrl originalHttpUrl = original.url();
-				HttpUrl url = originalHttpUrl.newBuilder()
-						.addQueryParameter("format", "json")
-						.build();
-				Request request = original.newBuilder()
-						.url(url)
-						.build();
-				return chain.proceed(request);
-			});
-	//.build();
-	private static Retrofit retrofitAuth;
-	private static OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
-			.addInterceptor(httpLoggingInterceptor)
-			// This adds the necessary headers minus the auth header
-			// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
-			.addInterceptor(chain ->
-			{
-				String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
-				String dateSecretConcat = rfc3339Date + HASH_SECRET;
-				String hashSecret = getHashSecret(dateSecretConcat);
+	private static X509TrustManager x509TrustManager = new X509TrustManager()
+	{
+		@SuppressLint("TrustAllX509TrustManager")
+		@Override
+		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException
+		{
 
-				Request original = chain.request();
-				Request request = original.newBuilder()
-						.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + android.os.Build.VERSION.RELEASE + "; " + android.os.Build.MODEL + ")")
-						.header("App-OS", "Android")
-						.header("App-OS-Version", Build.VERSION.RELEASE)
-						.header("App-Version", "5.0.166")
-						//.header("Accept-Language", Locale.getDefault().toString())
-						.header("X-Client-Time", rfc3339Date)
-						.header("X-Client-Hash", hashSecret)
-						.build();
-				return chain.proceed(request);
-			});
-	//.build();
+		}
 
-	// Used only to download images
-	private static Retrofit retrofitImages;
-	private static OkHttpClient.Builder imageHttpClientBuilder = new OkHttpClient.Builder()
-			.addInterceptor(chain ->
-			{
-				Request original = chain.request();
-				Request request = original.newBuilder()
-						.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")")
-						.header("Referer", "https://www.pixiv.net")
-						.build();
-				return chain.proceed(request);
-			})
-			.addInterceptor(httpLoggingInterceptor);
-	//.build();
-	private static Retrofit retrofitOauth;
+		@SuppressLint("TrustAllX509TrustManager")
+		@Override
+		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException
+		{
+
+		}
+
+		@Override
+		public X509Certificate[] getAcceptedIssuers()
+		{
+			return new X509Certificate[0];
+		}
+	};
 
 	public static Retrofit getRetrofitRankingInstance(boolean bypass)
 	{
+		OkHttpClient.Builder okHttpClientRankingBuilder = new OkHttpClient.Builder()
+				// Debug logging interceptor
+				// TODO make this only work on DEBUG flavor builds
+				.addInterceptor(httpLoggingInterceptor)
+				// This interceptor only adds in the "format" "json" query parameter
+				.addInterceptor(chain ->
+				{
+					Request original = chain.request();
+					HttpUrl originalHttpUrl = original.url();
+					HttpUrl url = originalHttpUrl.newBuilder()
+							.addQueryParameter("format", "json")
+							.build();
+					Request request = original.newBuilder()
+							.header("accept-encoding", "gzip")
+							.url(url)
+							.build();
+					return chain.proceed(request);
+				});
 		if (bypass)
 		{
 			okHttpClientRankingBuilder
-					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
-					{
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@Override
-						public X509Certificate[] getAcceptedIssuers()
-						{
-							return new X509Certificate[0];
-						}
-					})
+					.sslSocketFactory(new RubySSLSocketFactory(), x509TrustManager)
 					.hostnameVerifier((s, sslSession) -> true)
 					.dns(new RubyHttpDns());
 		}
-		retrofitRanking = new Retrofit.Builder()
+		return new Retrofit.Builder()
 				.client(okHttpClientRankingBuilder.build())
 				.baseUrl("https://www.pixiv.net")
 				.addConverterFactory(MoshiConverterFactory.create())
 				.build();
-		return retrofitRanking;
 	}
 
 	public static Retrofit getRetrofitAuthInstance(boolean bypass)
 	{
+		OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
+				.addInterceptor(httpLoggingInterceptor)
+				// This adds the necessary headers minus the auth header
+				// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
+				.addInterceptor(chain ->
+				{
+					String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
+					String dateSecretConcat = rfc3339Date + HASH_SECRET;
+					String hashSecret = getHashSecret(dateSecretConcat);
+
+					Request original = chain.request();
+					Request request = original.newBuilder()
+							.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + android.os.Build.VERSION.RELEASE + "; " + android.os.Build.MODEL + ")")
+							.header("App-OS", "Android")
+							.header("App-OS-Version", Build.VERSION.RELEASE)
+							.header("App-Version", "5.0.166")
+							//.header("Accept-Language", Locale.getDefault().toString())
+							.header("X-Client-Time", rfc3339Date)
+							.header("X-Client-Hash", hashSecret)
+							.build();
+					return chain.proceed(request);
+				});
 		if (bypass)
 		{
 			okHttpClientAuthBuilder
-					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
-					{
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@Override
-						public X509Certificate[] getAcceptedIssuers()
-						{
-							return new X509Certificate[0];
-						}
-					})
+					.sslSocketFactory(new RubySSLSocketFactory(), x509TrustManager)
 					.hostnameVerifier((s, sslSession) -> true)
 					.dns(new RubyHttpDns());
 		}
-		retrofitAuth = new Retrofit.Builder()
+		return new Retrofit.Builder()
 				.client(okHttpClientAuthBuilder.build())
 				.baseUrl("https://app-api.pixiv.net")
 				.addConverterFactory(MoshiConverterFactory.create())
 				.build();
-		return retrofitAuth;
 	}
 
 	public static Retrofit getRetrofitImageInstance(boolean bypass)
 	{
+		OkHttpClient.Builder imageHttpClientBuilder = new OkHttpClient.Builder()
+				.addInterceptor(chain ->
+				{
+					Request original = chain.request();
+					Request request = original.newBuilder()
+							.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")")
+							.header("Referer", "https://www.pixiv.net")
+							.build();
+					return chain.proceed(request);
+				})
+				.addInterceptor(httpLoggingInterceptor);
 		if (bypass)
 		{
 			imageHttpClientBuilder
-					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
-					{
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@Override
-						public X509Certificate[] getAcceptedIssuers()
-						{
-							return new X509Certificate[0];
-						}
-					})
+					.sslSocketFactory(new RubySSLSocketFactory(), x509TrustManager)
 					.hostnameVerifier((s, sslSession) -> true)
 					.dns(new RubyHttpDns());
 		}
-		retrofitImages = new Retrofit.Builder()
+		return new Retrofit.Builder()
 				.client(imageHttpClientBuilder.build())
 				.baseUrl("https://i.pximg.net")
 				.addConverterFactory(MoshiConverterFactory.create())
 				.build();
-		return retrofitImages;
 	}
 
 	public static Retrofit getRetrofitOauthInstance(boolean bypass)
 	{
+		OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
+				.addInterceptor(httpLoggingInterceptor)
+				// This adds the necessary headers minus the auth header
+				// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
+				.addInterceptor(chain ->
+				{
+					String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
+					String dateSecretConcat = rfc3339Date + HASH_SECRET;
+					String hashSecret = getHashSecret(dateSecretConcat);
+
+					Request original = chain.request();
+					Request request = original.newBuilder()
+							.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + android.os.Build.VERSION.RELEASE + "; " + android.os.Build.MODEL + ")")
+							.header("App-OS", "Android")
+							.header("App-OS-Version", Build.VERSION.RELEASE)
+							.header("App-Version", "5.0.166")
+							//.header("Accept-Language", Locale.getDefault().toString())
+							.header("X-Client-Time", rfc3339Date)
+							.header("X-Client-Hash", hashSecret)
+							.build();
+					return chain.proceed(request);
+				});
 		if (bypass)
 		{
+			Log.v("REST", "bypass active");
 			okHttpClientAuthBuilder
-					.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager()
-					{
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@SuppressLint("TrustAllX509TrustManager")
-						@Override
-						public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-						{
-						}
-
-						@Override
-						public X509Certificate[] getAcceptedIssuers()
-						{
-							return new X509Certificate[0];
-						}
-					})
+					.sslSocketFactory(new RubySSLSocketFactory(), x509TrustManager)
 					.hostnameVerifier((s, sslSession) -> true)
 					.dns(new RubyHttpDns());
 		}
-		retrofitOauth = new Retrofit.Builder()
+		return new Retrofit.Builder()
 				.baseUrl("https://oauth.secure.pixiv.net")
 				.client(okHttpClientAuthBuilder.build())
 				.addConverterFactory(MoshiConverterFactory.create())
 				.build();
-		return retrofitOauth;
 	}
 
 	private static String getHashSecret(String dateSecretConcat)
