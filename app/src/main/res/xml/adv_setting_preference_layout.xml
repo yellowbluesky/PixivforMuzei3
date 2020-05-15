@@ -76,9 +76,10 @@
     </PreferenceCategory>
     <PreferenceCategory
         android:key="prefCat_networkOptions"
-        android:title="@string/prefCat_networkingOptions" >
+        android:title="@string/prefCat_networkingOptions">
         <SwitchPreference
             android:key="pref_enableNetworkBypass"
+            android:persistent="true"
             android:title="@string/pref_enableNetworkBypass" />
     </PreferenceCategory>
 </PreferenceScreen>
