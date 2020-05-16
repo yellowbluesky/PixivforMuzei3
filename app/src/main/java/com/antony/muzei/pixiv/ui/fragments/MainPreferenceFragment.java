@@ -20,13 +20,12 @@ package com.antony.muzei.pixiv.ui.fragments;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.preference.DropDownPreference;
 import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -72,7 +71,8 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		// Ensures that the user has logged in first before selecting any update mode requiring authentication
 		// Reveals UI elements as needed depending on Update Mode selection
-		findPreference("pref_updateMode").setOnPreferenceChangeListener((preference, newValue) ->
+		DropDownPreference updateModePref = findPreference("pref_updateMode");
+		updateModePref.setOnPreferenceChangeListener((preference, newValue) ->
 		{
 			boolean isAuthUpdateMode = Arrays.asList(PixivArtProviderDefines.AUTH_MODES)
 					.contains(newValue.toString());
@@ -260,6 +260,8 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			}
 			PixivArtWorker.enqueueLoad(true);
 			Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
+
+			newUpdateMode = oldUpdateMode;
 			return true;
 		});
 
@@ -291,13 +293,14 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 				editor.remove("userId");
 				editor.remove("refreshToken");
 
-				loginActivityPreference.setTitle(R.string.prefTitle_loginButton);
-				loginActivityPreference.setSummary(R.string.prefSummary_notLoggedIn);
+				loginActivityPreference.setTitle(getString(R.string.prefTitle_loginButton));
+				loginActivityPreference.setSummary(getString(R.string.prefSummary_notLoggedIn));
 				// If the user has an authenticated feed mode, reset it to daily ranking on logout
 				if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES)
 						.contains(updateMode))
 				{
 					editor.putString("pref_updateMode", "daily");
+					updateModePref.setSummary(getResources().getStringArray(R.array.pref_updateMode_entries)[0]);
 				}
 				editor.commit();
 			}
