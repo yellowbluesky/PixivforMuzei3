@@ -42,8 +42,6 @@ import retrofit2.converter.moshi.MoshiConverterFactory;
 
 public class RestClient
 {
-	// Used for acquiring auth feed mode JSON's
-	// Also used to acquire access tokens
 	private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
 	// Prints detailed network logs if built type is debug
 	private static HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(s ->
@@ -53,14 +51,14 @@ public class RestClient
 	{
 		@SuppressLint("TrustAllX509TrustManager")
 		@Override
-		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException
+		public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
 		{
 
 		}
 
 		@SuppressLint("TrustAllX509TrustManager")
 		@Override
-		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException
+		public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
 		{
 
 		}
@@ -72,12 +70,12 @@ public class RestClient
 		}
 	};
 
+	// Used for acquiring Ranking JSON
 	public static Retrofit getRetrofitRankingInstance(boolean bypass)
 	{
 		OkHttpClient.Builder okHttpClientRankingBuilder = new OkHttpClient.Builder()
 				// Debug logging interceptor
-				// TODO make this only work on DEBUG flavor builds
-				.addInterceptor(httpLoggingInterceptor)
+				.addNetworkInterceptor(httpLoggingInterceptor)
 				// This interceptor only adds in the "format" "json" query parameter
 				.addInterceptor(chain ->
 				{
@@ -87,7 +85,6 @@ public class RestClient
 							.addQueryParameter("format", "json")
 							.build();
 					Request request = original.newBuilder()
-							.header("accept-encoding", "gzip")
 							.url(url)
 							.build();
 					return chain.proceed(request);
@@ -106,10 +103,11 @@ public class RestClient
 				.build();
 	}
 
+	// Used for acquiring auth feed mode JSON
 	public static Retrofit getRetrofitAuthInstance(boolean bypass)
 	{
 		OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
-				.addInterceptor(httpLoggingInterceptor)
+				.addNetworkInterceptor(httpLoggingInterceptor)
 				// This adds the necessary headers minus the auth header
 				// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
 				.addInterceptor(chain ->
@@ -144,6 +142,7 @@ public class RestClient
 				.build();
 	}
 
+	// Downloads images from any source
 	public static Retrofit getRetrofitImageInstance(boolean bypass)
 	{
 		OkHttpClient.Builder imageHttpClientBuilder = new OkHttpClient.Builder()
@@ -156,7 +155,7 @@ public class RestClient
 							.build();
 					return chain.proceed(request);
 				})
-				.addInterceptor(httpLoggingInterceptor);
+				.addNetworkInterceptor(httpLoggingInterceptor);
 		if (bypass)
 		{
 			imageHttpClientBuilder
@@ -171,10 +170,11 @@ public class RestClient
 				.build();
 	}
 
+	// Used for getting an accessToken from a refresh token or username / password
 	public static Retrofit getRetrofitOauthInstance(boolean bypass)
 	{
 		OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
-				.addInterceptor(httpLoggingInterceptor)
+				.addNetworkInterceptor(httpLoggingInterceptor)
 				// This adds the necessary headers minus the auth header
 				// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
 				.addInterceptor(chain ->
