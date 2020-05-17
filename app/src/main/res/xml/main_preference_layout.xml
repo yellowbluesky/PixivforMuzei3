@@ -67,12 +67,12 @@
         android:key="prefCat_loginSettings"
         android:title="@string/prefCat_authSettings">
         <Preference android:key="pref_login" />
-        <!--        <DropDownPreference-->
-        <!--            android:entries="@array/array_authFailActions_entries"-->
-        <!--            android:entryValues="@array/array_authFailActions_entryvalues"-->
-        <!--            android:key="pref_authFailAction"-->
-        <!--            android:persistent="true"-->
-        <!--            android:summary="%s"-->
-        <!--            android:title="@string/pref_authFailActionDropDown" />-->
+        <DropDownPreference
+            android:entries="@array/array_authFailActions_entries"
+            android:entryValues="@array/array_authFailActions_entryvalues"
+            android:key="pref_authFailAction"
+            android:persistent="true"
+            android:summary="%s"
+            android:title="@string/pref_authFailActionDropDown" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
