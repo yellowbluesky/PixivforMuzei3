@@ -316,15 +316,21 @@ public class PixivArtWorker extends Worker
 					directory.mkdirs();
 				}
 
-				if (fileExtension == 1)
+				// If the image has already been downloaded, do not redownload
+				File imagePng = new File(directoryString, filename + ".png");
+				File imageJpg = new File(directoryString, filename + ".jpg");
+				if (!imageJpg.exists() || !imagePng.exists())
 				{
-					fosExternal = new FileOutputStream(new File(directoryString, filename + ".png"));
-				} else if (fileExtension == 2)
-				{
-					fosExternal = new FileOutputStream(new File(directoryString, filename + ".jpg"));
+					if (fileExtension == 1)
+					{
+						fosExternal = new FileOutputStream(imagePng);
+					} else if (fileExtension == 2)
+					{
+						fosExternal = new FileOutputStream(imageJpg);
+					}
+					allowedToStoreIntoExternal = true;
 				}
 
-				allowedToStoreIntoExternal = true;
 			}
 
 			// Finally copies the image into external storage if allowed to
