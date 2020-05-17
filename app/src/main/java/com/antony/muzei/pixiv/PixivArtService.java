@@ -41,6 +41,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
+import retrofit2.Response;
 
 // TODO deprecate this entire class
 public class PixivArtService
@@ -91,8 +92,9 @@ public class PixivArtService
 		}
 	}
 
-	static String getAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
+	static String refreshAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
 	{
+		Log.d(LOG_TAG, "getAccessToken(): Entering");
 		String accessToken = sharedPrefs.getString("accessToken", "");
 		long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
 
@@ -102,7 +104,7 @@ public class PixivArtService
 			Log.d(LOG_TAG, "getAccessToken(): Exited");
 			return accessToken;
 		}
-		Log.i(LOG_TAG, "Access token expired or non-existent, proceeding to acquire a new access token");
+		Log.i(LOG_TAG, "Access token expired, acquiring new access token using refresh token");
 
 		try
 		{
@@ -117,14 +119,14 @@ public class PixivArtService
 
 			OAuthResponseService service = RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService.class);
 			Call<OauthResponse> call = service.postRefreshToken(fieldParams);
-			OauthResponse oauthResponse = call.execute().body();
+			Response<OauthResponse> response = call.execute();
+			if (!response.isSuccessful())
+			{
+				throw new AccessTokenAcquisitionException("Error using refresh token to get new access token");
+			}
+			OauthResponse oauthResponse = response.body();
 			PixivArtWorker.storeTokens(sharedPrefs, oauthResponse);
 			accessToken = oauthResponse.getPixivOauthResponse().getAccess_token();
-
-//			if (authResponseBody.has("has_error"))
-//			{
-//				throw new AccessTokenAcquisitionException("Error authenticating, check username or password");
-//			}
 
 			// Authentication succeeded, storing tokens returned from Pixiv
 			//Log.d(LOG_TAG, authResponseBody.toString());
@@ -134,13 +136,14 @@ public class PixivArtService
 		} catch (IOException ex)
 		{
 			ex.printStackTrace();
-			throw new AccessTokenAcquisitionException("getAccessToken(): Exited with error");
+			throw new AccessTokenAcquisitionException("getAccessToken(): Error executing call");
 		}
-		Log.d(LOG_TAG, "Acquired access token");
+		Log.i(LOG_TAG, "Acquired access token");
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
 		return accessToken;
 	}
 
+	// TODO deprecate this function, integrate into RestClient
 	static void sendBookmarkPostRequest(String accessToken, String token)
 	{
 		HttpUrl rankingUrl = new HttpUrl.Builder()
