@@ -47,7 +47,6 @@ import androidx.work.WorkerParameters;
 
 import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.exceptions.CorruptFileException;
-import com.antony.muzei.pixiv.exceptions.ImageTooLargeException;
 import com.antony.muzei.pixiv.exceptions.FilterMatchNotFoundException;
 import com.antony.muzei.pixiv.moshi.AuthArtwork;
 import com.antony.muzei.pixiv.moshi.Contents;
@@ -518,8 +517,7 @@ public class PixivArtWorker extends Worker
 			Log.v("SIZE", "too chonk");
 			//throw new ImageTooLargeException("");
 			// grab a new image, somehwo loop back
-		}
-		else
+		} else
 		{
 			Log.v("SIZE", "good size");
 		}
@@ -863,7 +861,7 @@ public class PixivArtWorker extends Worker
 			}
 		} else
 		{
-			RankingJsonService service = RestClient.getRetrofitRankingInstance().create(RankingJsonService.class);
+			RankingJsonService service = RestClient.getRetrofitRankingInstance(bypassActive).create(RankingJsonService.class);
 			Call<Contents> call = service.getRankingJson(mode);
 			Contents contents = call.execute().body();
 			int pageNumber = 1;
@@ -919,7 +917,6 @@ public class PixivArtWorker extends Worker
 	public Result doWork()
 	{
 		Log.d(LOG_TAG, "Starting work");
-
 		ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
 		ArrayList<Artwork> artworkArrayList;
 		try

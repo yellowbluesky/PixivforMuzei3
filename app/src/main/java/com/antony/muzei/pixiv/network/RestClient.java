@@ -26,10 +26,10 @@ import com.antony.muzei.pixiv.RubyHttpDns;
 import com.antony.muzei.pixiv.RubySSLSocketFactory;
 
 import java.security.MessageDigest;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.X509TrustManager;
 
@@ -85,10 +85,16 @@ public class RestClient
 							.addQueryParameter("format", "json")
 							.build();
 					Request request = original.newBuilder()
+							// Using the Android User-Agent returns a HTML of the ranking page, instead of the JSON I need
+							.header("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0")
+							.header("Referer", "https://www.pixiv.net")
 							.url(url)
 							.build();
 					return chain.proceed(request);
-				});
+				})
+				.connectTimeout(60L, TimeUnit.SECONDS)
+				.readTimeout(60L, TimeUnit.SECONDS)
+				.writeTimeout(60L, TimeUnit.SECONDS);
 		if (bypass)
 		{
 			okHttpClientRankingBuilder
