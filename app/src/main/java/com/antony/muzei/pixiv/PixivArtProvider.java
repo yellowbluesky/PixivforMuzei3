@@ -125,7 +125,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		String accessToken;
 		try
 		{
-			accessToken = PixivArtService.getAccessToken(sharedPrefs);
+			accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
 		} catch (AccessTokenAcquisitionException e)
 		{
 			Log.d("ANTONY_WORKER", "No access token found");

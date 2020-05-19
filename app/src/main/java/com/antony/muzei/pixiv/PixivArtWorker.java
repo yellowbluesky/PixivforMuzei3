@@ -785,7 +785,7 @@ public class PixivArtWorker extends Worker
 		{
 			try
 			{
-				accessToken = PixivArtService.getAccessToken(sharedPrefs);
+				accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
 			} catch (AccessTokenAcquisitionException ex)
 			{
 				Handler handler = new Handler(Looper.getMainLooper());
