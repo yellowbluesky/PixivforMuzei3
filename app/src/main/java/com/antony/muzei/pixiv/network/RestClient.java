@@ -118,7 +118,7 @@ public class RestClient
 				// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
 				.addInterceptor(chain ->
 				{
-					String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
+					String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ").format(new Date());
 					String dateSecretConcat = rfc3339Date + HASH_SECRET;
 					String hashSecret = getHashSecret(dateSecretConcat);
 
@@ -185,7 +185,7 @@ public class RestClient
 				// The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
 				.addInterceptor(chain ->
 				{
-					String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
+					String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ").format(new Date());
 					String dateSecretConcat = rfc3339Date + HASH_SECRET;
 					String hashSecret = getHashSecret(dateSecretConcat);
 
