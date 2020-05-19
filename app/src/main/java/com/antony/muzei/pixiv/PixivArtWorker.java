@@ -575,7 +575,7 @@ public class PixivArtWorker extends Worker
 
 			if (!showManga && rankingArtwork.getIllust_type() != 0)
 			{
-				Log.v(LOG_TAG, "Manga not desired");
+				Log.v(LOG_TAG, "Manga not desired " + rankingArtwork.getIllust_id());
 				continue;
 
 			}
