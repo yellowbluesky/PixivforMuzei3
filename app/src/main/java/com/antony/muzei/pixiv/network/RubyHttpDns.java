@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv;
+package com.antony.muzei.pixiv.network;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

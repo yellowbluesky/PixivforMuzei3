@@ -22,8 +22,6 @@ import android.os.Build;
 import android.util.Log;
 
 import com.antony.muzei.pixiv.BuildConfig;
-import com.antony.muzei.pixiv.RubyHttpDns;
-import com.antony.muzei.pixiv.RubySSLSocketFactory;
 
 import java.security.MessageDigest;
 import java.security.cert.X509Certificate;

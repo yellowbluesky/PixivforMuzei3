@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv;
+package com.antony.muzei.pixiv.network;
 
 import android.net.SSLCertificateSocketFactory;
 import android.util.Log;
@@ -23,7 +23,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;

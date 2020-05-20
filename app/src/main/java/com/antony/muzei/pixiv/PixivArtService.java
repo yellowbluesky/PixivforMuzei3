@@ -25,6 +25,8 @@ import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.moshi.OauthResponse;
 import com.antony.muzei.pixiv.network.OAuthResponseService;
 import com.antony.muzei.pixiv.network.RestClient;
+import com.antony.muzei.pixiv.network.RubyHttpDns;
+import com.antony.muzei.pixiv.network.RubySSLSocketFactory;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
