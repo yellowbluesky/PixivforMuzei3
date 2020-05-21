@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity
 	{
 		Cursor authorityCursor = getApplicationContext()
 				.getContentResolver()
-				.query(MuzeiContract.Sources.CONTENT_URI,
+				.query(MuzeiContract.Sources.getContentUri(),
 						new String[]{MuzeiContract.Sources.COLUMN_NAME_AUTHORITY},
 						null,
 						null,
