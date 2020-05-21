@@ -17,10 +17,10 @@
 
 package com.antony.muzei.pixiv;
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -28,18 +28,18 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.RemoteActionCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.preference.PreferenceManager;
 
 import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
-import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.LinkedList;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
@@ -49,71 +49,58 @@ public class PixivArtProvider extends MuzeiArtProvider
 {
 	// Pass true to clear cache and download new images
 	// Pass false to append new images to cache
-
-	private final int COMMAND_ADD_TO_BOOKMARKS = 1;
-	private final int COMMAND_VIEW_IMAGE_DETAILS = 2;
-	private final int COMMAND_SHARE_IMAGE = 3;
-
 	@Override
-	protected void onLoadRequested(boolean initial)
+	public void onLoadRequested(boolean clearCache)
 	{
 		PixivArtWorker.enqueueLoad(false);
 	}
 
 	@Override
-	@NonNull
-	public InputStream openFile(@NonNull Artwork artwork)
+	public List<RemoteActionCompat> getCommandActions(Artwork artwork)
 	{
-		InputStream inputStream = null;
-		try
-		{
-			inputStream = getContext().getContentResolver().openInputStream(artwork.getPersistentUri());
-		} catch (FileNotFoundException ex)
-		{
-			ex.printStackTrace();
-		}
-		return inputStream;
+		List<RemoteActionCompat> list = null;
+		list.add(shareImage(artwork));
+		//list.add(viewArtworkDetailsAlternate(artwork));
+		return list;
 	}
 
-	@Override
-	@NonNull
-	protected List<UserCommand> getCommands(@NonNull Artwork artwork)
+	private RemoteActionCompat shareImage(Artwork artwork)
 	{
-		super.getCommands(artwork);
-		LinkedList<UserCommand> commands = new LinkedList<>();
-		// Android 10 limits the ability for activities to run in the background
-		if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
-		{
-			UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS, getContext().getString(R.string.command_addToBookmark));
-			commands.add(addToBookmark);
-			UserCommand openIntentImage = new UserCommand(COMMAND_VIEW_IMAGE_DETAILS, getContext().getString(R.string.command_viewArtworkDetails));
-			UserCommand shareImage = new UserCommand(COMMAND_SHARE_IMAGE, getContext().getString(R.string.command_shareImage));
-			commands.add(shareImage);
-			commands.add(openIntentImage);
-		}
-		return commands;
+		Log.d("ANTONY_WORKER", "Opening sharing ");
+		File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
+		Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
+		Intent sharingIntent = new Intent();
+		sharingIntent.setAction(Intent.ACTION_SEND);
+		sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
+		sharingIntent.setType("image/jpg");
+		//sharingIntent.putExtra(Intent.EXTRA_TEXT)
+		String title = getContext().getString(R.string.command_shareImage);
+
+		Intent chooserIntent = Intent.createChooser(sharingIntent, null);
+		chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		return new RemoteActionCompat(
+				IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
+				title,
+				title,
+				PendingIntent.getActivity(
+						getContext(),
+						(int) artwork.getId(),
+						chooserIntent,
+						PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
-	@Override
-	protected void onCommand(@NonNull Artwork artwork, int id)
+	private RemoteActionCompat viewArtworkDetailsAlternate(Artwork artwork)
 	{
-		Handler handler = new Handler(Looper.getMainLooper());
-		switch (id)
-		{
-			case COMMAND_ADD_TO_BOOKMARKS:
-				addToBookmarks(artwork);
-				handler.post(() -> Toast.makeText(getContext(), getContext().getString(R.string.toast_addingToBookmarks), Toast.LENGTH_SHORT).show());
-				break;
-			case COMMAND_VIEW_IMAGE_DETAILS:
-				String token = artwork.getToken();
-				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
-				intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-				getContext().startActivity(intent);
-				break;
-			case COMMAND_SHARE_IMAGE:
-				shareImage(artwork);
-				break;
-		}
+		String token = artwork.getToken();
+		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
+		intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+		return new RemoteActionCompat(IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
+				getContext().getString(R.string.command_viewArtworkDetails),
+				"sample Description",
+				PendingIntent.getActivity(getContext(),
+						0,
+						intent,
+						PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	// Provided you are logged in, adds the currently displayed images to your Pixiv bookmarks
@@ -137,20 +124,18 @@ public class PixivArtProvider extends MuzeiArtProvider
 		Log.d("ANTONY_WORKER", "Added to bookmarks");
 	}
 
-	// Creates an intent and shares the image
-	// Only works on Android 9 and lower, as Android 10 limits the ability to start activities in the background
-	private void shareImage(Artwork artwork)
+	@Override
+	@NonNull
+	public InputStream openFile(@NonNull Artwork artwork)
 	{
-		Log.d("ANTONY_WORKER", "Opening sharing ");
-		File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
-		Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
-		Intent sharingIntent = new Intent();
-		sharingIntent.setAction(Intent.ACTION_SEND);
-		sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
-		sharingIntent.setType("image/jpg");
-
-		Intent chooserIntent = Intent.createChooser(sharingIntent, null);
-		chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		getContext().startActivity(chooserIntent);
+		InputStream inputStream = null;
+		try
+		{
+			inputStream = getContext().getContentResolver().openInputStream(artwork.getPersistentUri());
+		} catch (FileNotFoundException ex)
+		{
+			ex.printStackTrace();
+		}
+		return inputStream;
 	}
 }
