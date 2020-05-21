@@ -80,5 +80,9 @@
     <string name="prefTitle_sendFeedback">Send Feedback or Suggestions</string>
     <string name="prefCat_networkingOptions">Networking options</string>
     <string name="pref_enableNetworkBypass">Enable network filter bypass</string>
+    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 is not the active source</string>
+    <string name="dialog_selectSource">Please open Muzei to the Sources tab, and select \"Pixiv for Muzei 3\"</string>
+    <string name="dialogTitle_muzeiNotInstalled">Muzei is not installed</string>
+    <string name="dialog_installMuzei">Would you like to install Muzei?</string>
 
 </resources>

@@ -53,8 +53,8 @@ public class MainActivity extends AppCompatActivity
 		{
 			// TODO localize these strings
 			new AlertDialog.Builder(this)
-					.setTitle("Muzei is not installed")
-					.setMessage("Would you like to install Muzei?")
+					.setTitle(getApplicationContext().getString(R.string.dialogTitle_muzeiNotInstalled))
+					.setMessage(getApplicationContext().getString(R.string.dialog_installMuzei))
 					.setPositiveButton(android.R.string.yes, (dialog, which) ->
 					{
 						try
@@ -75,8 +75,8 @@ public class MainActivity extends AppCompatActivity
 		{
 			// TODO localize these strings
 			new AlertDialog.Builder(this)
-					.setTitle("Pixiv for Muzei 3 is not set as the active source")
-					.setMessage("Please open Muzei to the Sources tab, and select \"Pixiv for Muzei 3\"")
+					.setTitle(getApplicationContext().getString(R.string.dialogTitle_muzeiNotActiveSource))
+					.setMessage(getApplicationContext().getString(R.string.dialog_selectSource))
 					.setNeutralButton(android.R.string.ok, null)
 					.show();
 		}
