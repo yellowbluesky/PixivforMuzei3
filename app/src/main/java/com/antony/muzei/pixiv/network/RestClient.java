@@ -22,6 +22,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.antony.muzei.pixiv.BuildConfig;
+import com.antony.muzei.pixiv.PixivArtProviderDefines;
 
 import java.security.MessageDigest;
 import java.security.cert.X509Certificate;
@@ -210,6 +211,26 @@ public class RestClient
 		return new Retrofit.Builder()
 				.baseUrl("https://oauth.secure.pixiv.net")
 				.client(okHttpClientAuthBuilder.build())
+				.addConverterFactory(MoshiConverterFactory.create())
+				.build();
+	}
+
+	public static Retrofit getRetrofitBookmarkInstance(boolean bypass)
+	{
+		OkHttpClient.Builder okHttoClientBookmarkBuilder = new OkHttpClient.Builder()
+				.addNetworkInterceptor(httpLoggingInterceptor)
+				.addInterceptor(chain ->
+				{
+					Request original = chain.request();
+					Request request = original.newBuilder()
+							.header("Content-Type", "application/x-www-form-urlencoded")
+							.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")")
+							.build();
+					return chain.proceed(request);
+				});
+		return new Retrofit.Builder()
+				.baseUrl("https://app-api.pixiv.net")
+				.client(okHttoClientBookmarkBuilder.build())
 				.addConverterFactory(MoshiConverterFactory.create())
 				.build();
 	}

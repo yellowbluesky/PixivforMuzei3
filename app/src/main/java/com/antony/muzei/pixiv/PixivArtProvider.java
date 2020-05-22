@@ -22,10 +22,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.RemoteActionCompat;
@@ -33,13 +29,13 @@ import androidx.core.content.FileProvider;
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.preference.PreferenceManager;
 
-import com.antony.muzei.pixiv.exceptions.AccessTokenAcquisitionException;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
@@ -58,28 +54,32 @@ public class PixivArtProvider extends MuzeiArtProvider
 	@Override
 	public List<RemoteActionCompat> getCommandActions(Artwork artwork)
 	{
-		List<RemoteActionCompat> list = null;
+		List<RemoteActionCompat> list = new ArrayList<>();
 		list.add(shareImage(artwork));
-		//list.add(viewArtworkDetailsAlternate(artwork));
+		list.add(viewArtworkDetailsAlternate(artwork));
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		if (!sharedPrefs.getString("accessToken", "").isEmpty())
+		{
+			list.add(addToBookmarks(artwork));
+		}
 		return list;
 	}
 
 	private RemoteActionCompat shareImage(Artwork artwork)
 	{
-		Log.d("ANTONY_WORKER", "Opening sharing ");
 		File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
 		Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
-		Intent sharingIntent = new Intent();
-		sharingIntent.setAction(Intent.ACTION_SEND);
-		sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
-		sharingIntent.setType("image/jpg");
-		//sharingIntent.putExtra(Intent.EXTRA_TEXT)
-		String title = getContext().getString(R.string.command_shareImage);
+		Intent sharingIntent = new Intent()
+				.setAction(Intent.ACTION_SEND)
+				.setType("image/*")
+				.putExtra(Intent.EXTRA_STREAM, uri);
 
-		Intent chooserIntent = Intent.createChooser(sharingIntent, null);
+		Intent chooserIntent = Intent.createChooser(sharingIntent, "Share image using");
 		chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		return new RemoteActionCompat(
-				IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
+
+		String title = getContext().getString(R.string.command_shareImage);
+		RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
+				IconCompat.createWithResource(getContext(), R.drawable.ic_share_white_24dp),
 				title,
 				title,
 				PendingIntent.getActivity(
@@ -87,6 +87,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 						(int) artwork.getId(),
 						chooserIntent,
 						PendingIntent.FLAG_UPDATE_CURRENT));
+		return remoteActionCompat;
 	}
 
 	private RemoteActionCompat viewArtworkDetailsAlternate(Artwork artwork)
@@ -94,34 +95,31 @@ public class PixivArtProvider extends MuzeiArtProvider
 		String token = artwork.getToken();
 		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
 		intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-		return new RemoteActionCompat(IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
-				getContext().getString(R.string.command_viewArtworkDetails),
-				"sample Description",
+		String title = getContext().getString(R.string.command_viewArtworkDetails);
+		RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
+				IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
+				title,
+				title,
 				PendingIntent.getActivity(getContext(),
-						0,
+						(int) artwork.getId(),
 						intent,
 						PendingIntent.FLAG_UPDATE_CURRENT));
+		remoteActionCompat.setShouldShowIcon(false);
+		return remoteActionCompat;
 	}
 
-	// Provided you are logged in, adds the currently displayed images to your Pixiv bookmarks
-	// Only works on Android 9 and lower, as Android 10 limits the ability to start activities in the background
-	private void addToBookmarks(Artwork artwork)
+	private RemoteActionCompat addToBookmarks(Artwork artwork)
 	{
-		Log.d("ANTONY_WORKER", "addToBookmarks(): Entered");
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-		String accessToken;
-		try
-		{
-			accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
-		} catch (AccessTokenAcquisitionException e)
-		{
-			Log.d("ANTONY_WORKER", "No access token found");
-			new Handler(Looper.getMainLooper()).post(() ->
-					Toast.makeText(getContext(), getContext().getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
-			return;
-		}
-		PixivArtService.sendBookmarkPostRequest(accessToken, artwork.getToken());
-		Log.d("ANTONY_WORKER", "Added to bookmarks");
+		Intent addToBookmarkIntent = new Intent(getContext(), AddToBookmarkBroadcast.class);
+		addToBookmarkIntent.putExtra("artworkId", artwork.getToken());
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 0, addToBookmarkIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		RemoteActionCompat remoteActionCompat = new RemoteActionCompat(IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
+				"Add to bookmarks",
+				"sample description",
+				pendingIntent);
+		remoteActionCompat.setShouldShowIcon(false);
+		return remoteActionCompat;
 	}
 
 	@Override

@@ -22,8 +22,11 @@ import com.antony.muzei.pixiv.moshi.OauthResponse;
 import java.util.Map;
 
 import retrofit2.Call;
+import retrofit2.http.Field;
 import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.Header;
+import retrofit2.http.Headers;
 import retrofit2.http.POST;
 
 public interface OAuthResponseService
@@ -31,4 +34,8 @@ public interface OAuthResponseService
 	@FormUrlEncoded
 	@POST("/auth/token")
 	Call<OauthResponse> postRefreshToken(@FieldMap Map<String, String> params);
+
+	@FormUrlEncoded
+	@POST("/v2/illust/bookmark/add")
+	Call<OauthResponse> postArtworkBookmark(@Header("Authorization") String accessToken, @FieldMap Map<String, String> params);
 }

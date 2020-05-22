@@ -144,34 +144,4 @@ public class PixivArtService
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
 		return accessToken;
 	}
-
-	// TODO deprecate this function, integrate into RestClient
-	static void sendBookmarkPostRequest(String accessToken, String token)
-	{
-		HttpUrl rankingUrl = new HttpUrl.Builder()
-				.scheme("https")
-				.host("app-api.pixiv.net")
-				.addPathSegments("v2/illust/bookmark/add")
-				.build();
-		RequestBody authData = new MultipartBody.Builder()
-				.setType(MultipartBody.FORM)
-				.addFormDataPart("illust_id", token)
-				.addFormDataPart("restrict", "public")
-				.build();
-		Request request = new Request.Builder()
-				.addHeader("Content-Type", "application/x-www-form-urlencoded")
-				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-				.addHeader("Authorization", "Bearer " + accessToken)
-				.post(authData)
-				.url(rankingUrl)
-				.build();
-		try
-
-		{
-			httpClient.newCall(request).execute();
-		} catch (IOException ex)
-		{
-			ex.printStackTrace();
-		}
-	}
 }
