@@ -15,25 +15,23 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.ui.adapter;
+package com.antony.muzei.pixiv.ui.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.antony.muzei.pixiv.R;
-import com.antony.muzei.pixiv.ui.AutoFitGridLayoutManager;
-import com.antony.muzei.pixiv.ui.adapter.dummy.ArtworkContent;
-import com.antony.muzei.pixiv.ui.adapter.dummy.ArtworkContent.ArtworkItem;
+import com.antony.muzei.pixiv.ui.adapter.MyItemRecyclerViewAdapter;
+import com.antony.muzei.pixiv.ArtworkContent;
+import com.antony.muzei.pixiv.ArtworkContent.ArtworkItem;
 
 /**
  * A fragment representing a list of Items.
@@ -74,7 +72,7 @@ public class ArtworkFragment extends Fragment
 	{
 		super.onCreate(savedInstanceState);
 
-		ArtworkContent.populateList(getContext());
+		ArtworkContent.populateListInitial(getContext());
 
 		if (getArguments() != null)
 		{
@@ -87,6 +85,17 @@ public class ArtworkFragment extends Fragment
 	                         Bundle savedInstanceState)
 	{
 		View view = inflater.inflate(R.layout.fragment_artwork_list, container, false);
+
+//		FloatingActionButton fab = view.findViewById(R.id.fab);
+//		fab.setOnClickListener(new View.OnClickListener()
+//		{
+//			@Override
+//			public void onClick(View view)
+//			{
+//				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//						.setAction("Action", null).show();
+//			}
+//		});
 
 		// Set the adapter
 		if (view instanceof RecyclerView)
@@ -123,19 +132,8 @@ public class ArtworkFragment extends Fragment
 		mListener = null;
 	}
 
-	/**
-	 * This interface must be implemented by activities that contain this
-	 * fragment to allow an interaction in this fragment to be communicated
-	 * to the activity and potentially other fragments contained in that
-	 * activity.
-	 * <p/>
-	 * See the Android Training lesson <a href=
-	 * "http://developer.android.com/training/basics/fragments/communicating.html"
-	 * >Communicating with Other Fragments</a> for more information.
-	 */
 	public interface OnListFragmentInteractionListener
 	{
-		// TODO: Update argument type and name
 		void onListFragmentInteraction(ArtworkItem item);
 	}
 }

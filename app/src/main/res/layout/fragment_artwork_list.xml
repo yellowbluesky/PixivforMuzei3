@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~     This file is part of PixivforMuzei3.
   ~
   ~     PixivforMuzei3 is free software: you can redistribute it and/or modify
@@ -17,7 +16,6 @@
   -->
 
 <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list"
     android:name="com.antony.muzei.pixiv.ui.adapter.ArtworkFragment"
@@ -25,6 +23,5 @@
     android:layout_height="match_parent"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
-    app:layoutManager="LinearLayoutManager"
     tools:context=".ui.adapter.ArtworkFragment"
     tools:listitem="@layout/fragment_artwork" />

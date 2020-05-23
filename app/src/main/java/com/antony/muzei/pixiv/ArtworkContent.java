@@ -50,8 +50,10 @@ public class ArtworkContent
 {
 	public static final List<ArtworkItem> ITEMS = new ArrayList<ArtworkItem>();
 
-	public static void populateList(Context context)
+	public static void populateListInitial(Context context)
 	{
+		ITEMS.clear();
+
 		String[] projection = {"token", "title", "persistent_uri"};
 		Uri conResUri = ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri();
 		Cursor cursor = context.getContentResolver().query(conResUri, projection, null, null, null);
@@ -63,10 +65,7 @@ public class ArtworkContent
 			Uri persistent_uri = Uri.parse(cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.PERSISTENT_URI)));
 
 			ArtworkItem artworkItem = new ArtworkItem(token, title, persistent_uri);
-			if (!ITEMS.contains(artworkItem))
-			{
-				ITEMS.add(artworkItem);
-			}
+			ITEMS.add(artworkItem);
 		}
 	}
 

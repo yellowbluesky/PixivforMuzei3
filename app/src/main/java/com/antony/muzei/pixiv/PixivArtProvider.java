@@ -79,7 +79,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 
 		String title = getContext().getString(R.string.command_shareImage);
 		RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
-				IconCompat.createWithResource(getContext(), R.drawable.ic_share_white_24dp),
+				null,
 				title,
 				title,
 				PendingIntent.getActivity(

@@ -84,5 +84,6 @@
     <string name="dialog_selectSource">Please open Muzei to the Sources tab, and select \"Pixiv for Muzei 3\"</string>
     <string name="dialogTitle_muzeiNotInstalled">Muzei is not installed</string>
     <string name="dialog_installMuzei">Would you like to install Muzei?</string>
+    <string name="tab_heading_artwork_delete">Delete Artwork</string>
 
 </resources>

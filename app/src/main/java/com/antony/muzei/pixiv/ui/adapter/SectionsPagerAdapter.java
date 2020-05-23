@@ -27,6 +27,7 @@ import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.fragments.AdvOptionsPreferenceFragment;
+import com.antony.muzei.pixiv.ui.fragments.ArtworkFragment;
 import com.antony.muzei.pixiv.ui.fragments.CreditsPreferenceFragment;
 import com.antony.muzei.pixiv.ui.fragments.MainPreferenceFragment;
 import com.antony.muzei.pixiv.ui.fragments.RoadmapPreferenceFragment;
@@ -64,7 +65,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 			case 3:
 				return new CreditsPreferenceFragment();
 			case 4:
-				return ArtworkFragment.newInstance(2);
+				return new ArtworkFragment();
 			default:
 				return new CreditsPreferenceFragment();
 		}

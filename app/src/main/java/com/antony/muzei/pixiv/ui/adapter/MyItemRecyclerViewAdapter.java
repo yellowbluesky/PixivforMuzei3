@@ -31,7 +31,6 @@ import com.antony.muzei.pixiv.ArtworkContent.ArtworkItem;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +80,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 					{
 						selected.put(holder.mItem, true);
 						holder.mImageView.setColorFilter(Color.argb(120, 0, 150, 250));
-					}
-					else
+					} else
 					{
 						selected.put(holder.mItem, false);
 						holder.mImageView.clearColorFilter();
