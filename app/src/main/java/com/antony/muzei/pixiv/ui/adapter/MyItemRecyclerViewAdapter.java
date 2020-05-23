@@ -19,19 +19,22 @@ package com.antony.muzei.pixiv.ui.adapter;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.antony.muzei.pixiv.R;
-import com.antony.muzei.pixiv.ui.adapter.ArtworkFragment.OnListFragmentInteractionListener;
-import com.antony.muzei.pixiv.ui.adapter.dummy.ArtworkContent.ArtworkItem;
+import com.antony.muzei.pixiv.ui.fragments.ArtworkFragment.OnListFragmentInteractionListener;
+import com.antony.muzei.pixiv.ArtworkContent.ArtworkItem;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link ArtworkItem} and makes a call to the
@@ -43,6 +46,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 
 	private final List<ArtworkItem> mValues;
 	private final OnListFragmentInteractionListener mListener;
+	private Map<ArtworkItem, Boolean> selected = new HashMap<>();
 
 	public MyItemRecyclerViewAdapter(List<ArtworkItem> items, OnListFragmentInteractionListener listener)
 	{
@@ -73,8 +77,19 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 			{
 				if (null != mListener)
 				{
+					if (!selected.containsKey(holder.mItem) || !selected.get(holder.mItem))
+					{
+						selected.put(holder.mItem, true);
+						holder.mImageView.setColorFilter(Color.argb(120, 0, 150, 250));
+					}
+					else
+					{
+						selected.put(holder.mItem, false);
+						holder.mImageView.clearColorFilter();
+					}
 					// Notify the active callbacks interface (the activity, if the
 					// fragment is attached to one) that an item has been selected.
+
 					mListener.onListFragmentInteraction(holder.mItem);
 				}
 			}
