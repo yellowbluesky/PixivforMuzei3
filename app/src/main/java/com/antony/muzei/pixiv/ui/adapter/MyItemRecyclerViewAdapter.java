@@ -22,30 +22,35 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.adapter.ArtworkFragment.OnListFragmentInteractionListener;
-import com.antony.muzei.pixiv.ui.adapter.dummy.DummyContent.DummyItem;
+import com.antony.muzei.pixiv.ui.adapter.dummy.ArtworkContent.ArtworkItem;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a call to the
+ * {@link RecyclerView.Adapter} that can display a {@link ArtworkItem} and makes a call to the
  * specified {@link OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */
 public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecyclerViewAdapter.ViewHolder>
 {
 
-	private final List<DummyItem> mValues;
+	private final List<ArtworkItem> mValues;
 	private final OnListFragmentInteractionListener mListener;
 
-	public MyItemRecyclerViewAdapter(List<DummyItem> items, OnListFragmentInteractionListener listener)
+	public MyItemRecyclerViewAdapter(List<ArtworkItem> items, OnListFragmentInteractionListener listener)
 	{
 		mValues = items;
 		mListener = listener;
 	}
 
+	@NotNull
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
 	{
@@ -58,8 +63,8 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 	public void onBindViewHolder(final ViewHolder holder, int position)
 	{
 		holder.mItem = mValues.get(position);
-		holder.mIdView.setText(mValues.get(position).id);
-		holder.mContentView.setText(mValues.get(position).content);
+		//holder.mTitleView.setText(mValues.get(position).title);
+		holder.mImageView.setImageURI(mValues.get(position).persistent_uri);
 
 		holder.mView.setOnClickListener(new View.OnClickListener()
 		{
@@ -85,22 +90,22 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 	public class ViewHolder extends RecyclerView.ViewHolder
 	{
 		public final View mView;
-		public final TextView mIdView;
-		public final TextView mContentView;
-		public DummyItem mItem;
+		//public final TextView mTitleView;
+		public final ImageView mImageView;
+		public ArtworkItem mItem;
 
 		public ViewHolder(View view)
 		{
 			super(view);
 			mView = view;
-			mIdView = (TextView) view.findViewById(R.id.item_number);
-			mContentView = (TextView) view.findViewById(R.id.content);
+			//mTitleView = view.findViewById(R.id.title);
+			mImageView = view.findViewById(R.id.image);
 		}
 
 		@Override
 		public String toString()
 		{
-			return super.toString() + " '" + mContentView.getText() + "'";
+			return super.toString();
 		}
 	}
 }

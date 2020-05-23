@@ -24,16 +24,16 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.antony.muzei.pixiv.R;
-import com.antony.muzei.pixiv.ui.adapter.dummy.DummyContent;
-import com.antony.muzei.pixiv.ui.adapter.dummy.DummyContent.DummyItem;
-
-import java.util.List;
+import com.antony.muzei.pixiv.ui.AutoFitGridLayoutManager;
+import com.antony.muzei.pixiv.ui.adapter.dummy.ArtworkContent;
+import com.antony.muzei.pixiv.ui.adapter.dummy.ArtworkContent.ArtworkItem;
 
 /**
  * A fragment representing a list of Items.
@@ -74,6 +74,8 @@ public class ArtworkFragment extends Fragment
 	{
 		super.onCreate(savedInstanceState);
 
+		ArtworkContent.populateList(getContext());
+
 		if (getArguments() != null)
 		{
 			mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
@@ -91,14 +93,10 @@ public class ArtworkFragment extends Fragment
 		{
 			Context context = view.getContext();
 			RecyclerView recyclerView = (RecyclerView) view;
-			if (mColumnCount <= 1)
-			{
-				recyclerView.setLayoutManager(new LinearLayoutManager(context));
-			} else
-			{
-				recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
-			}
-			recyclerView.setAdapter(new MyItemRecyclerViewAdapter(DummyContent.ITEMS, mListener));
+//			recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+			recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
+			//recyclerView.setLayoutManager(new AutoFitGridLayoutManager(context, 200));
+			recyclerView.setAdapter(new MyItemRecyclerViewAdapter(ArtworkContent.ITEMS, mListener));
 		}
 		return view;
 	}
@@ -138,6 +136,6 @@ public class ArtworkFragment extends Fragment
 	public interface OnListFragmentInteractionListener
 	{
 		// TODO: Update argument type and name
-		void onListFragmentInteraction(DummyItem item);
+		void onListFragmentInteraction(ArtworkItem item);
 	}
 }

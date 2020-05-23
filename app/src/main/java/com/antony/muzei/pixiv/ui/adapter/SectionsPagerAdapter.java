@@ -39,7 +39,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 {
 
 	@StringRes
-	private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_roadmap, R.string.tab_heading_credits};
+	private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_roadmap, R.string.tab_heading_credits, R.string.tab_heading_artwork_delete};
 	private final Context mContext;
 
 	public SectionsPagerAdapter(Context context, FragmentManager fm)
@@ -63,6 +63,8 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 				return new RoadmapPreferenceFragment();
 			case 3:
 				return new CreditsPreferenceFragment();
+			case 4:
+				return ArtworkFragment.newInstance(2);
 			default:
 				return new CreditsPreferenceFragment();
 		}
@@ -79,6 +81,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 	public int getCount()
 	{
 		// How many pages to show
-		return 4;
+		return 5;
 	}
 }
