@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.ui.fragments;
+package com.antony.muzei.pixiv.ui.adapter;
 
 import android.content.Context;
 
@@ -26,6 +26,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.ui.fragments.AdvOptionsPreferenceFragment;
+import com.antony.muzei.pixiv.ui.fragments.CreditsPreferenceFragment;
+import com.antony.muzei.pixiv.ui.fragments.MainPreferenceFragment;
+import com.antony.muzei.pixiv.ui.fragments.RoadmapPreferenceFragment;
 
 /**
  * A [FragmentPagerAdapter] that returns a fragment corresponding to
