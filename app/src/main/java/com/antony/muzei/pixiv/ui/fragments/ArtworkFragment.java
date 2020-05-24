@@ -18,11 +18,13 @@
 package com.antony.muzei.pixiv.ui.fragments;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -36,14 +38,18 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ArtworkFragment extends Fragment
 {
 
-	// TODO: Customize parameter argument names
+
 	private static final String ARG_COLUMN_COUNT = "column-count";
-	// TODO: Customize parameters
+
 	private int mColumnCount = 1;
-	//private OnListFragmentInteractionListener mListener;
+
+	private List<String> selected = new ArrayList<>();
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -108,6 +114,17 @@ public class ArtworkFragment extends Fragment
 				@Override
 				public void onItemClick(View itemView, int position)
 				{
+					String token = ArtworkContent.ITEMS.get(position).token;
+					ImageView imageView = itemView.findViewById(R.id.image);
+					if (!selected.contains(token))
+					{
+						selected.add(token);
+						imageView.setColorFilter(Color.argb(130, 0, 150, 250));
+					} else
+					{
+						selected.remove(token);
+						imageView.clearColorFilter();
+					}
 					Log.v("CLICK", Integer.toString(position));
 					Log.v("CLICK", ArtworkContent.ITEMS.get(position).title);
 					Log.v("CLICK", ArtworkContent.ITEMS.get(position).token);
