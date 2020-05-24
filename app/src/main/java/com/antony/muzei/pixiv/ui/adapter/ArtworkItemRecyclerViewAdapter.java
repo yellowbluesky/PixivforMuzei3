@@ -17,36 +17,36 @@
 
 package com.antony.muzei.pixiv.ui.adapter;
 
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.antony.muzei.pixiv.R;
-import com.antony.muzei.pixiv.ui.fragments.ArtworkFragment.OnListFragmentInteractionListener;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.antony.muzei.pixiv.ArtworkContent.ArtworkItem;
+import com.antony.muzei.pixiv.R;
 import com.bumptech.glide.Glide;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<ArtworkItemRecyclerViewAdapter.ViewHolder>
 {
 
 	private final List<ArtworkItem> mValues;
-	private final OnListFragmentInteractionListener mListener;
-	private Map<ArtworkItem, Boolean> selected = new HashMap<>();
 
-	public ArtworkItemRecyclerViewAdapter(List<ArtworkItem> items, OnListFragmentInteractionListener listener)
+	private OnItemClickListener listener;
+
+	public ArtworkItemRecyclerViewAdapter(List<ArtworkItem> items)
 	{
 		mValues = items;
-		mListener = listener;
+	}
+
+	public void setOnItemClickListener(OnItemClickListener listener)
+	{
+		this.listener = listener;
 	}
 
 	@NotNull
@@ -72,30 +72,6 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 				.centerCrop()
 				.into(holder.mImageView);
 		// holder.mImageView.setImageURI(mValues.get(position).persistent_uri);
-
-		holder.mView.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				if (null != mListener)
-				{
-					if (!selected.containsKey(holder.mItem) || !selected.get(holder.mItem))
-					{
-						selected.put(holder.mItem, true);
-						holder.mImageView.setColorFilter(Color.argb(120, 0, 150, 250));
-					} else
-					{
-						selected.put(holder.mItem, false);
-						holder.mImageView.clearColorFilter();
-					}
-					// Notify the active callbacks interface (the activity, if the
-					// fragment is attached to one) that an item has been selected.
-
-					mListener.onListFragmentInteraction(holder.mItem);
-				}
-			}
-		});
 	}
 
 	@Override
@@ -104,7 +80,12 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 		return mValues.size();
 	}
 
-	public class ViewHolder extends RecyclerView.ViewHolder
+	public interface OnItemClickListener
+	{
+		void onItemClick(View itemView, int position);
+	}
+
+	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
 	{
 		public final View mView;
 		//public final TextView mTitleView;
@@ -118,12 +99,28 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 			//mTitleView = view.findViewById(R.id.title);
 			mImageView = view.findViewById(R.id.image);
 			//mTitleView = view.findViewById(R.id.title);
+
+			mView.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(View v)
+				{
+					int position = getAdapterPosition();
+					listener.onItemClick(itemView, position);
+				}
+			});
 		}
 
 		@Override
 		public String toString()
 		{
 			return super.toString();
+		}
+
+		@Override
+		public void onClick(View v)
+		{
+
 		}
 	}
 }

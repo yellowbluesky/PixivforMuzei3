@@ -22,21 +22,17 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.ImageView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import com.antony.muzei.pixiv.R;
-import com.antony.muzei.pixiv.ui.fragments.ArtworkFragment;
 import com.antony.muzei.pixiv.ui.adapter.SectionsPagerAdapter;
-import com.antony.muzei.pixiv.ArtworkContent;
 import com.google.android.apps.muzei.api.MuzeiContract;
 import com.google.android.material.tabs.TabLayout;
 
-public class MainActivity extends AppCompatActivity implements ArtworkFragment.OnListFragmentInteractionListener
+public class MainActivity extends AppCompatActivity
 {
 
 	@Override
@@ -133,11 +129,5 @@ public class MainActivity extends AppCompatActivity implements ArtworkFragment.O
 		}
 		authorityCursor.close();
 		return false;
-	}
-
-	@Override
-	public void onListFragmentInteraction(ArtworkContent.ArtworkItem item)
-	{
-		Log.v("REC", item.token);
 	}
 }
