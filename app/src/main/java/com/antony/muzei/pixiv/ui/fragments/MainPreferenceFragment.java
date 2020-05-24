@@ -36,6 +36,7 @@ import com.antony.muzei.pixiv.PixivArtProviderDefines;
 import com.antony.muzei.pixiv.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.activity.LoginActivity;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,7 +81,9 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			// by the lack of an access token
 			if (isAuthUpdateMode && sharedPrefs.getString("accessToken", "").isEmpty())
 			{
-				Toast.makeText(getContext(), getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show();
+				Snackbar.make(getView(), R.string.toast_loginFirst,
+						Snackbar.LENGTH_SHORT)
+						.show();
 				return false;
 			}
 			// If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
@@ -259,7 +262,10 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 				new File(dir, child).delete();
 			}
 			PixivArtWorker.enqueueLoad(true, getContext());
-			Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
+
+			Snackbar.make(getView(), R.string.toast_clearingCache,
+					Snackbar.LENGTH_SHORT)
+					.show();
 
 			newUpdateMode = oldUpdateMode;
 			return true;
