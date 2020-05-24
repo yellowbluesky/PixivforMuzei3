@@ -71,7 +71,7 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 				.load(mValues.get(position).persistent_uri)
 				.centerCrop()
 				.into(holder.mImageView);
-		// holder.mImageView.setImageURI(mValues.get(position).persistent_uri);
+		holder.mImageView.clearColorFilter();
 	}
 
 	@Override
