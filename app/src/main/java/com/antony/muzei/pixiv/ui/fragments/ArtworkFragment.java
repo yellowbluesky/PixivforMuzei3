@@ -29,7 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.antony.muzei.pixiv.R;
-import com.antony.muzei.pixiv.ui.adapter.MyItemRecyclerViewAdapter;
+import com.antony.muzei.pixiv.ui.adapter.ArtworkItemRecyclerViewAdapter;
 import com.antony.muzei.pixiv.ArtworkContent;
 import com.antony.muzei.pixiv.ArtworkContent.ArtworkItem;
 
@@ -105,7 +105,7 @@ public class ArtworkFragment extends Fragment
 //			recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
 			recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
 			//recyclerView.setLayoutManager(new AutoFitGridLayoutManager(context, 200));
-			recyclerView.setAdapter(new MyItemRecyclerViewAdapter(ArtworkContent.ITEMS, mListener));
+			recyclerView.setAdapter(new ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS, mListener));
 		}
 		return view;
 	}

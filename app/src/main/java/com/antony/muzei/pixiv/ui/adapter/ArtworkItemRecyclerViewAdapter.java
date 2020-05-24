@@ -36,19 +36,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * {@link RecyclerView.Adapter} that can display a {@link ArtworkItem} and makes a call to the
- * specified {@link OnListFragmentInteractionListener}.
- * TODO: Replace the implementation with code for your data type.
- */
-public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecyclerViewAdapter.ViewHolder>
+public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<ArtworkItemRecyclerViewAdapter.ViewHolder>
 {
 
 	private final List<ArtworkItem> mValues;
 	private final OnListFragmentInteractionListener mListener;
 	private Map<ArtworkItem, Boolean> selected = new HashMap<>();
 
-	public MyItemRecyclerViewAdapter(List<ArtworkItem> items, OnListFragmentInteractionListener listener)
+	public ArtworkItemRecyclerViewAdapter(List<ArtworkItem> items, OnListFragmentInteractionListener listener)
 	{
 		mValues = items;
 		mListener = listener;
@@ -68,6 +63,10 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 	{
 		holder.mItem = mValues.get(position);
 		//holder.mTitleView.setText(mValues.get(position).title);
+		// Glide is used instead of simply setting the ImageView Uri directly
+		//  Without Glide, performance was unacceptable because the ImageView was directly pulling
+		//  the full size image and resizing it to fit the View every time it was asked to
+		//  Glide caches the resized image, much more performant
 		Glide.with(holder.mView)
 				.load(mValues.get(position).persistent_uri)
 				.centerCrop()
@@ -118,6 +117,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 			mView = view;
 			//mTitleView = view.findViewById(R.id.title);
 			mImageView = view.findViewById(R.id.image);
+			//mTitleView = view.findViewById(R.id.title);
 		}
 
 		@Override
