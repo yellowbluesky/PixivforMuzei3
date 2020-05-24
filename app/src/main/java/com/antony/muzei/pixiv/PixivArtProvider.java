@@ -48,7 +48,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 	@Override
 	public void onLoadRequested(boolean clearCache)
 	{
-		PixivArtWorker.enqueueLoad(false);
+		PixivArtWorker.enqueueLoad(false, getContext());
 	}
 
 	@Override

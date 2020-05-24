@@ -99,14 +99,13 @@ public class PixivArtWorker extends Worker
 		super(context, params);
 	}
 
-	public static void enqueueLoad(boolean clear)
+	public static void enqueueLoad(boolean clear, Context context)
 	{
 		if (clear)
 		{
 			clearArtwork = true;
 		}
 
-		WorkManager manager = WorkManager.getInstance();
 		Constraints constraints = new Constraints.Builder()
 				.setRequiredNetworkType(NetworkType.CONNECTED)
 				.build();
@@ -115,7 +114,7 @@ public class PixivArtWorker extends Worker
 				.addTag(WORKER_TAG)
 				.setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
 				.build();
-		manager.enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request);
+		WorkManager.getInstance(context).enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request);
 		// Must be a uniqueWork
 		// If not Muzei will queue MANY at once on initial load
 		// This is good for saturating a network link and for fast picture downloads

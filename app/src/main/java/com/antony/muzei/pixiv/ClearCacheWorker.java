@@ -45,7 +45,7 @@ public class ClearCacheWorker extends Worker
 		{
 			new File(dir, child).delete();
 		}
-		PixivArtWorker.enqueueLoad(true);
+		PixivArtWorker.enqueueLoad(true, getApplicationContext());
 		return Result.success();
 	}
 }

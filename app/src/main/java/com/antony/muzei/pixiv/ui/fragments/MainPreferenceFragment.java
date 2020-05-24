@@ -250,7 +250,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		// Preference that immediately clears Muzei's image cache when pressed
 		findPreference(getString(R.string.button_clearCache)).setOnPreferenceClickListener(preference ->
 		{
-			WorkManager.getInstance().cancelUniqueWork("ANTONY");
+			WorkManager.getInstance(getContext()).cancelUniqueWork("ANTONY");
 			File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
 			String[] children = dir.list();
@@ -258,7 +258,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 			{
 				new File(dir, child).delete();
 			}
-			PixivArtWorker.enqueueLoad(true);
+			PixivArtWorker.enqueueLoad(true, getContext());
 			Toast.makeText(getContext(), getString(R.string.toast_clearingCache), Toast.LENGTH_SHORT).show();
 
 			newUpdateMode = oldUpdateMode;
@@ -343,14 +343,14 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 		if (!oldUpdateMode.equals(newUpdateMode) || !oldTag.equals(newTag)
 				|| !oldArtist.equals(newArtist))
 		{
-			WorkManager.getInstance().cancelUniqueWork("ANTONY");
+			WorkManager.getInstance(getContext()).cancelUniqueWork("ANTONY");
 			File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 			String[] children = dir.list();
 			for (String child : children)
 			{
 				new File(dir, child).delete();
 			}
-			PixivArtWorker.enqueueLoad(true);
+			PixivArtWorker.enqueueLoad(true, getContext());
 			if (!oldUpdateMode.equals(newUpdateMode))
 			{
 				Toast.makeText(getContext(), getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show();
