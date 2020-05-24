@@ -85,5 +85,6 @@
     <string name="dialogTitle_muzeiNotInstalled">Muzei is not installed</string>
     <string name="dialog_installMuzei">Would you like to install Muzei?</string>
     <string name="tab_heading_artwork_delete">Delete Artwork</string>
+    <string name="snackbar_selectArtworkFirst">Select at least one artwork to delete</string>
 
 </resources>

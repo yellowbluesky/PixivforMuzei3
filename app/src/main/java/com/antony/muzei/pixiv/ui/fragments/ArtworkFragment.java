@@ -21,7 +21,6 @@ import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.view.LayoutInflater;
@@ -39,6 +38,7 @@ import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.adapter.ArtworkItemRecyclerViewAdapter;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -93,72 +93,84 @@ public class ArtworkFragment extends Fragment
 	{
 		View view = inflater.inflate(R.layout.fragment_artwork_list, container, false);
 
-		// Set the adapter
-		//if (view instanceof RecyclerView)
+		// The boilerplate list fragment code had the RecyclerView as the only View in the layout xml
+		// I have since added a parent View for the RecyclerView (ConstraintLayout)
+		Context context = view.getContext();
+		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
+		// TODO figure out a better way to size each image grid square
+		//  Currently have it hardcoded to 200dp
+		recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
+		ArtworkItemRecyclerViewAdapter adapter = new ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS);
+		adapter.setOnItemClickListener(new ArtworkItemRecyclerViewAdapter.OnItemClickListener()
 		{
-			Context context = view.getContext();
-			RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
-//			recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-			recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
-			//recyclerView.setLayoutManager(new AutoFitGridLayoutManager(context, 200));
-			ArtworkItemRecyclerViewAdapter adapter = new ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS);
-			adapter.setOnItemClickListener(new ArtworkItemRecyclerViewAdapter.OnItemClickListener()
+			@Override
+			public void onItemClick(View itemView, int position)
 			{
-				@Override
-				public void onItemClick(View itemView, int position)
+				ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
+				ImageView imageView = itemView.findViewById(R.id.image);
+				if (!selectedArtworks.contains(item))
 				{
-					ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
-					ImageView imageView = itemView.findViewById(R.id.image);
-					if (!selectedArtworks.contains(item))
-					{
-						selectedArtworks.add(item);
-						imageView.setColorFilter(Color.argb(130, 0, 150, 250));
-					} else
-					{
-						selectedArtworks.remove(item);
-						imageView.clearColorFilter();
-					}
+					selectedArtworks.add(item);
+					imageView.setColorFilter(Color.argb(130, 0, 150, 250));
+				} else
+				{
+					selectedArtworks.remove(item);
+					imageView.clearColorFilter();
 				}
-			});
-			recyclerView.setAdapter(adapter);
+			}
+		});
+		recyclerView.setAdapter(adapter);
 
-			FloatingActionButton fab = view.findViewById(R.id.fab);
-			fab.setOnClickListener(new View.OnClickListener()
+		// This FAB actions the delete operation from both the RecyclerView, and the
+		//  ContentProvider storing the Artwork details.
+		// All changes appear instantaneously
+		FloatingActionButton fab = view.findViewById(R.id.fab);
+		fab.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View view)
 			{
-				@Override
-				public void onClick(View view)
+				// Optimization if no artworks are selected
+				if (selectedArtworks.isEmpty())
 				{
-					// Deletes the artwork items from the ArrayList used as backing for the RecyclerView
-					ArtworkContent.ITEMS.removeAll(selectedArtworks);
-					// TODO somehow notify only single artwork change, instead of notofyDataSetChanged()
-					adapter.notifyDataSetChanged();
-
-					// Now to delete the Artwork's themselves from the ContentProvider
-					// TODO also delete the files?
-					Uri conResUri = ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri();
-					ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-					ContentProviderOperation operation;
-					String selection = ProviderContract.Artwork.TOKEN + " = ?";
-					for (ArtworkContent.ArtworkItem artworkItem : selectedArtworks)
-					{
-						operation = ContentProviderOperation
-								.newDelete(conResUri)
-								.withSelection(selection, new String[]{artworkItem.token})
-								.build();
-						operations.add(operation);
-					}
-
-					try
-					{
-						context.getContentResolver().applyBatch("com.antony.muzei.pixiv.provider", operations);
-					} catch (RemoteException | OperationApplicationException e)
-					{
-						e.printStackTrace();
-					}
-					selectedArtworks.clear();
+					Snackbar.make(view, R.string.snackbar_selectArtworkFirst,
+							Snackbar.LENGTH_SHORT)
+							.show();
+					return;
 				}
-			});
-		}
+
+				// Deletes the artwork items from the ArrayList used as backing for the RecyclerView
+				ArtworkContent.ITEMS.removeAll(selectedArtworks);
+				// TODO somehow notify only single artwork change, instead of notofyDataSetChanged()
+				adapter.notifyDataSetChanged();
+
+				// Now to delete the Artwork's themselves from the ContentProvider
+				ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+				ContentProviderOperation operation;
+				String selection = ProviderContract.Artwork.TOKEN + " = ?";
+				// Builds a new delete operation for every selected artwork
+				for (ArtworkContent.ArtworkItem artworkItem : selectedArtworks)
+				{
+					operation = ContentProviderOperation
+							.newDelete(ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri())
+							.withSelection(selection, new String[]{artworkItem.token})
+							.build();
+					operations.add(operation);
+				}
+
+				try
+				{
+					context.getContentResolver().applyBatch("com.antony.muzei.pixiv.provider", operations);
+				} catch (RemoteException | OperationApplicationException e)
+				{
+					e.printStackTrace();
+				}
+
+				// TODO also delete the files?
+
+				selectedArtworks.clear();
+			}
+		});
 
 		return view;
 	}
