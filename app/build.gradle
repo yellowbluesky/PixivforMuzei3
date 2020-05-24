@@ -23,15 +23,12 @@ android {
 //            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            postprocessing {
-                removeUnusedCode false
-                removeUnusedResources true // <--
-                obfuscate false
-                optimizeCode true
-            }
-            //minifyEnabled true
-            //shrinkResources true
-            //proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+//            postprocessing {
+//                removeUnusedCode false
+//                removeUnusedResources true // <--
+//                obfuscate false
+//                optimizeCode true
+//            }
         }
     }
     compileOptions {
@@ -45,8 +42,8 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation "androidx.constraintlayout:constraintlayout:2.0.0-beta6"
-    implementation "androidx.coordinatorlayout:coordinatorlayout:1.1.0"
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta6'
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.preference:preference:1.1.1'

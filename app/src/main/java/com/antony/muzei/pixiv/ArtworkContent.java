@@ -67,6 +67,7 @@ public class ArtworkContent
 			ArtworkItem artworkItem = new ArtworkItem(token, title, persistent_uri);
 			ITEMS.add(artworkItem);
 		}
+		cursor.close();
 	}
 
 	public static class ArtworkItem

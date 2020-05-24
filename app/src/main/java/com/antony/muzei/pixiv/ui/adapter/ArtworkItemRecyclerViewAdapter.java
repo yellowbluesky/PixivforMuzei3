@@ -105,8 +105,7 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 				@Override
 				public void onClick(View v)
 				{
-					int position = getAdapterPosition();
-					listener.onItemClick(itemView, position);
+					listener.onItemClick(itemView, getAdapterPosition());
 				}
 			});
 		}

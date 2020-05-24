@@ -51,7 +51,7 @@
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
     <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
-    <string name="toast_loginFirst">Pixiv for Muzei 3: 请先登录</string>
+    <string name="toast_loginFirst">请先登录</string>
     
     <string name="attr_daily">日排行榜 #</string>
     <string name="attr_weekly">周排行榜 #</string>

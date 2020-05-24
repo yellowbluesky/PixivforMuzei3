@@ -51,7 +51,7 @@
     <string name="toast_newTag">New search tag, clearing image cache</string>
     <string name="toast_newFilterSelect">New filter selection, clearing image cache</string>
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: Adding to bookmark</string>
-    <string name="toast_loginFirst">Pixiv for Muzei 3: Login first</string>
+    <string name="toast_loginFirst">Please login first</string>
 
     <string name="attr_daily">Daily Ranking #</string>
     <string name="attr_weekly">Weekly Ranking #</string>
@@ -86,5 +86,6 @@
     <string name="dialog_installMuzei">Would you like to install Muzei?</string>
     <string name="tab_heading_artwork_delete">Delete Artwork</string>
     <string name="snackbar_selectArtworkFirst">Select at least one artwork to delete</string>
+    <string name="snackbar_deletedArtworks">artworks deleted</string>
 
 </resources>
