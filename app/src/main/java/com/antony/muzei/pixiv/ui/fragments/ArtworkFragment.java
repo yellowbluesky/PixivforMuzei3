@@ -31,6 +31,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.antony.muzei.pixiv.ArtworkContent;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.adapter.ArtworkItemRecyclerViewAdapter;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -81,22 +83,22 @@ public class ArtworkFragment extends Fragment
 	{
 		View view = inflater.inflate(R.layout.fragment_artwork_list, container, false);
 
-//		FloatingActionButton fab = view.findViewById(R.id.fab);
-//		fab.setOnClickListener(new View.OnClickListener()
-//		{
-//			@Override
-//			public void onClick(View view)
-//			{
-//				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//						.setAction("Action", null).show();
-//			}
-//		});
+		FloatingActionButton fab = view.findViewById(R.id.fab);
+		fab.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View view)
+			{
+				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+						.setAction("Action", null).show();
+			}
+		});
 
 		// Set the adapter
-		if (view instanceof RecyclerView)
+		//if (view instanceof RecyclerView)
 		{
 			Context context = view.getContext();
-			RecyclerView recyclerView = (RecyclerView) view;
+			RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
 //			recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
 			recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
 			//recyclerView.setLayoutManager(new AutoFitGridLayoutManager(context, 200));
