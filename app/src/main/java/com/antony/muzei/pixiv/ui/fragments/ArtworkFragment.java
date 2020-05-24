@@ -137,6 +137,12 @@ public class ArtworkFragment extends Fragment
 							Snackbar.LENGTH_SHORT)
 							.show();
 					return;
+				} else
+				{
+					int numberDeleted = selectedArtworks.size();
+					Snackbar.make(view, numberDeleted + " " + getString(R.string.snackbar_deletedArtworks),
+							Snackbar.LENGTH_SHORT)
+							.show();
 				}
 
 				// Deletes the artwork items from the ArrayList used as backing for the RecyclerView
