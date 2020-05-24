@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.fragments.ArtworkFragment.OnListFragmentInteractionListener;
 import com.antony.muzei.pixiv.ArtworkContent.ArtworkItem;
+import com.bumptech.glide.Glide;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -67,7 +68,11 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 	{
 		holder.mItem = mValues.get(position);
 		//holder.mTitleView.setText(mValues.get(position).title);
-		holder.mImageView.setImageURI(mValues.get(position).persistent_uri);
+		Glide.with(holder.mView)
+				.load(mValues.get(position).persistent_uri)
+				.centerCrop()
+				.into(holder.mImageView);
+		// holder.mImageView.setImageURI(mValues.get(position).persistent_uri);
 
 		holder.mView.setOnClickListener(new View.OnClickListener()
 		{
