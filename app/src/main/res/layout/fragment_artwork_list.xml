@@ -37,7 +37,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
+        android:clickable="true"
         android:contentDescription="submit"
+        android:focusable="true"
         android:src="@drawable/ic_delete_white_24dp"
-        app:rippleColor="@color/colorAccent" />
+        app:rippleColor="@color/colorPrimaryDark" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

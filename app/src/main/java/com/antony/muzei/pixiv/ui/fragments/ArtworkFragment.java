@@ -17,10 +17,13 @@
 
 package com.antony.muzei.pixiv.ui.fragments;
 
+import android.content.ContentProviderOperation;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.RemoteException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,10 +34,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.antony.muzei.pixiv.ArtworkContent;
+import com.antony.muzei.pixiv.PixivArtProvider;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.adapter.ArtworkItemRecyclerViewAdapter;
+import com.google.android.apps.muzei.api.provider.ProviderContract;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -49,7 +53,7 @@ public class ArtworkFragment extends Fragment
 
 	private int mColumnCount = 1;
 
-	private List<String> selected = new ArrayList<>();
+	private List<ArtworkContent.ArtworkItem> selectedArtworks = new ArrayList<>();
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -89,17 +93,6 @@ public class ArtworkFragment extends Fragment
 	{
 		View view = inflater.inflate(R.layout.fragment_artwork_list, container, false);
 
-		FloatingActionButton fab = view.findViewById(R.id.fab);
-		fab.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View view)
-			{
-				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-						.setAction("Action", null).show();
-			}
-		});
-
 		// Set the adapter
 		//if (view instanceof RecyclerView)
 		{
@@ -114,23 +107,57 @@ public class ArtworkFragment extends Fragment
 				@Override
 				public void onItemClick(View itemView, int position)
 				{
-					String token = ArtworkContent.ITEMS.get(position).token;
+					ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
 					ImageView imageView = itemView.findViewById(R.id.image);
-					if (!selected.contains(token))
+					if (!selectedArtworks.contains(item))
 					{
-						selected.add(token);
+						selectedArtworks.add(item);
 						imageView.setColorFilter(Color.argb(130, 0, 150, 250));
 					} else
 					{
-						selected.remove(token);
+						selectedArtworks.remove(item);
 						imageView.clearColorFilter();
 					}
-					Log.v("CLICK", Integer.toString(position));
-					Log.v("CLICK", ArtworkContent.ITEMS.get(position).title);
-					Log.v("CLICK", ArtworkContent.ITEMS.get(position).token);
 				}
 			});
 			recyclerView.setAdapter(adapter);
+
+			FloatingActionButton fab = view.findViewById(R.id.fab);
+			fab.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(View view)
+				{
+					// Deletes the artwork items from the ArrayList used as backing for the RecyclerView
+					ArtworkContent.ITEMS.removeAll(selectedArtworks);
+					// TODO somehow notify only single artwork change, instead of notofyDataSetChanged()
+					adapter.notifyDataSetChanged();
+
+					// Now to delete the Artwork's themselves from the ContentProvider
+					// TODO also delete the files?
+					Uri conResUri = ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri();
+					ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+					ContentProviderOperation operation;
+					String selection = ProviderContract.Artwork.TOKEN + " = ?";
+					for (ArtworkContent.ArtworkItem artworkItem : selectedArtworks)
+					{
+						operation = ContentProviderOperation
+								.newDelete(conResUri)
+								.withSelection(selection, new String[]{artworkItem.token})
+								.build();
+						operations.add(operation);
+					}
+
+					try
+					{
+						context.getContentResolver().applyBatch("com.antony.muzei.pixiv.provider", operations);
+					} catch (RemoteException | OperationApplicationException e)
+					{
+						e.printStackTrace();
+					}
+					selectedArtworks.clear();
+				}
+			});
 		}
 
 		return view;
