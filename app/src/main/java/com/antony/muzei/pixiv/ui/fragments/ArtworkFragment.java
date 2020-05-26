@@ -134,14 +134,14 @@ public class ArtworkFragment extends Fragment
 				if (selectedArtworks.isEmpty())
 				{
 					Snackbar.make(view, R.string.snackbar_selectArtworkFirst,
-							Snackbar.LENGTH_SHORT)
+							Snackbar.LENGTH_LONG)
 							.show();
 					return;
 				} else
 				{
 					int numberDeleted = selectedArtworks.size();
 					Snackbar.make(view, numberDeleted + " " + getString(R.string.snackbar_deletedArtworks),
-							Snackbar.LENGTH_SHORT)
+							Snackbar.LENGTH_LONG)
 							.show();
 				}
 
