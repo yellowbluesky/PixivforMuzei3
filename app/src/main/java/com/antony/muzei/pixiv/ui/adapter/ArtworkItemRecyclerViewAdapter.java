@@ -72,7 +72,15 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 				.load(mValues.get(position).persistent_uri)
 				.centerCrop()
 				.into(holder.mImageView);
-		holder.mImageView.clearColorFilter();
+		if (holder.mItem.selected)
+		{
+			holder.mImageView.setColorFilter(Color.argb(130, 0, 150, 250));
+		}
+		else
+		{
+			holder.mImageView.clearColorFilter();
+		}
+		// holder.mImageView.clearColorFilter();
 	}
 
 	@Override
@@ -110,15 +118,7 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 				//  The tinted color state would persist onto the new View that would occupy the
 				//  recycled View, even though that new artwork was not selected.
 				//  By making it a property of the ViewHolder, the tint disappears on disposal
-				if (!selected)
-				{
-					mImageView.setColorFilter(Color.argb(130, 0, 150, 250));
-					selected = true;
-				} else
-				{
-					mImageView.clearColorFilter();
-					selected = false;
-				}
+
 			});
 		}
 

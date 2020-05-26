@@ -72,6 +72,9 @@ public class ArtworkContent
 		public final String token;
 		public final String title;
 		public final Uri persistent_uri;
+		// Stores if the image has been selected
+		//  So the image tinting will not be forgotten in the View gets recycled
+		public boolean selected = false;
 
 		public ArtworkItem(String token, String title, Uri persistent_uri)
 		{

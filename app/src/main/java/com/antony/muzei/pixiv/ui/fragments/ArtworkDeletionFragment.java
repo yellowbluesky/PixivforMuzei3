@@ -20,11 +20,14 @@ package com.antony.muzei.pixiv.ui.fragments;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -103,15 +106,23 @@ public class ArtworkDeletionFragment extends Fragment
 		adapter.setOnItemClickListener((itemView, position) ->
 		{
 			ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
+			ImageView imageView = itemView.findViewById(R.id.image);
 			if (!selectedArtworks.contains(item))
 			{
 				selectedArtworks.add(item);
 				selectedPositions.add((Integer) position);
+				imageView.setColorFilter(Color.argb(130, 0, 150, 250));
+				// TODO i've got three variables storing which artworks have been selected, and all over the place
+				//  try to cut it down
+				item.selected = true;
 			} else
 			{
 				selectedArtworks.remove(item);
 				selectedPositions.remove((Integer) position);
+				imageView.clearColorFilter();
+				item.selected = false;
 			}
+			Log.v("POSITION", Integer.toString(position));
 		});
 		recyclerView.setAdapter(adapter);
 
