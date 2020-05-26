@@ -27,7 +27,7 @@ import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.ui.fragments.AdvOptionsPreferenceFragment;
-import com.antony.muzei.pixiv.ui.fragments.ArtworkFragment;
+import com.antony.muzei.pixiv.ui.fragments.ArtworkDeletionFragment;
 import com.antony.muzei.pixiv.ui.fragments.CreditsPreferenceFragment;
 import com.antony.muzei.pixiv.ui.fragments.MainPreferenceFragment;
 import com.antony.muzei.pixiv.ui.fragments.RoadmapPreferenceFragment;
@@ -40,20 +40,18 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 {
 
 	@StringRes
-	private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_roadmap, R.string.tab_heading_credits, R.string.tab_heading_artwork_delete};
+	private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_artwork_delete, R.string.tab_heading_roadmap, R.string.tab_heading_credits};
 	private final Context mContext;
 
 	public SectionsPagerAdapter(Context context, FragmentManager fm)
 	{
-		super(fm);
+		super(fm, FragmentPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
 		mContext = context;
 	}
 
 	@Override
 	public Fragment getItem(int position)
 	{
-		// getItem is called to instantiate the fragment for the given page.
-		// Return a PlaceholderFragment (defined as a static inner class below).
 		switch (position)
 		{
 			case 0:
@@ -61,11 +59,11 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 			case 1:
 				return new AdvOptionsPreferenceFragment();
 			case 2:
-				return new RoadmapPreferenceFragment();
+				return new ArtworkDeletionFragment();
 			case 3:
 				return new CreditsPreferenceFragment();
 			case 4:
-				return new ArtworkFragment();
+				return new RoadmapPreferenceFragment();
 			default:
 				return new CreditsPreferenceFragment();
 		}

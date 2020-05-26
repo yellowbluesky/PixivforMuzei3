@@ -135,7 +135,7 @@ public class PixivArtWorker extends Worker
 		editor.putString("name", response.getPixivOauthResponse().getUser().getName());
 		// Not yet tested, but I believe that this needs to be a commit() and not an apply()
 		// Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
-		editor.commit();
+		editor.apply();
 		Log.i(LOG_TAG, "Stored tokens");
 	}
 

@@ -116,7 +116,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 				SharedPreferences.Editor editor = sharedPrefs.edit();
 				editor.putStringSet("pref_authFilterSelect", defaultSet);
-				editor.commit();
+				editor.apply();
 				authFilterSelectPref.setSummary("SFW");
 				return false;
 			}
@@ -163,7 +163,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 				SharedPreferences.Editor editor = sharedPrefs.edit();
 				editor.putStringSet("pref_rankingFilterSelect", defaultSet);
-				editor.commit();
+				editor.apply();
 				rankingFilterSelectPref.setSummary("SFW");
 				return false;
 			}
@@ -308,7 +308,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 					editor.putString("pref_updateMode", "daily");
 					updateModePref.setSummary(getResources().getStringArray(R.array.pref_updateMode_entries)[0]);
 				}
-				editor.commit();
+				editor.apply();
 			}
 			return true;
 		});

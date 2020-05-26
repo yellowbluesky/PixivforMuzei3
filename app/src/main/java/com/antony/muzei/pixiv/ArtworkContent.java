@@ -38,17 +38,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.antony.muzei.pixiv.PixivArtProvider;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ArtworkContent
 {
-	public static final List<ArtworkItem> ITEMS = new ArrayList<ArtworkItem>();
+	public static final List<ArtworkItem> ITEMS = new ArrayList<>();
 
 	public static void populateListInitial(Context context)
 	{

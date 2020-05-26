@@ -18,6 +18,7 @@
 package com.antony.muzei.pixiv.ui.fragments;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -132,7 +133,7 @@ public class AdvOptionsPreferenceFragment extends PreferenceFragmentCompat
 		if (sharedPrefs.getBoolean("pref_autoClearMode", false))
 		{
 			// Calculates the hours to midnight
-			SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
+			@SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
 			int hoursToMidnight = 24 - Integer.parseInt(simpleDateFormat.format(new Date()));
 
 			// Builds and submits the work request

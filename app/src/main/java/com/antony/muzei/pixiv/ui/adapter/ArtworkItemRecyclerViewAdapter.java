@@ -102,26 +102,22 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 			mImageView = view.findViewById(R.id.image);
 			//mTitleView = view.findViewById(R.id.title);
 
-			mView.setOnClickListener(new View.OnClickListener()
+			mView.setOnClickListener(v ->
 			{
-				@Override
-				public void onClick(View v)
+				listener.onItemClick(itemView, getAdapterPosition());
+				// Sets the image tint when the image is selected
+				// This is a property of the ViewHolder and not by the adapter, because previously
+				//  The tinted color state would persist onto the new View that would occupy the
+				//  recycled View, even though that new artwork was not selected.
+				//  By making it a property of the ViewHolder, the tint disappears on disposal
+				if (!selected)
 				{
-					listener.onItemClick(itemView, getAdapterPosition());
-					// Sets the image tint when the image is selected
-					// This is a property of the ViewHolder and not by the adapter, because previously
-					//  The tinted color state would persist onto the new View that would occupy the
-					//  recycled View, even though that new artwork was not selected.
-					//  By making it a property of the ViewHolder, the tint disappears on disposal
-					if (!selected)
-					{
-						mImageView.setColorFilter(Color.argb(130, 0, 150, 250));
-						selected = true;
-					} else
-					{
-						mImageView.clearColorFilter();
-						selected = false;
-					}
+					mImageView.setColorFilter(Color.argb(130, 0, 150, 250));
+					selected = true;
+				} else
+				{
+					mImageView.clearColorFilter();
+					selected = false;
 				}
 			});
 		}

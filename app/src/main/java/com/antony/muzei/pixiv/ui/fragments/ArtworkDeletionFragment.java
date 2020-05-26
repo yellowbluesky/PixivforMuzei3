@@ -43,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArtworkFragment extends Fragment
+public class ArtworkDeletionFragment extends Fragment
 {
 
 
@@ -58,15 +58,15 @@ public class ArtworkFragment extends Fragment
 	 * Mandatory empty constructor for the fragment manager to instantiate the
 	 * fragment (e.g. upon screen orientation changes).
 	 */
-	public ArtworkFragment()
+	public ArtworkDeletionFragment()
 	{
 	}
 
 	// TODO: Customize parameter initialization
 	@SuppressWarnings("unused")
-	public static ArtworkFragment newInstance(int columnCount)
+	public static ArtworkDeletionFragment newInstance(int columnCount)
 	{
-		ArtworkFragment fragment = new ArtworkFragment();
+		ArtworkDeletionFragment fragment = new ArtworkDeletionFragment();
 		Bundle args = new Bundle();
 		args.putInt(ARG_COLUMN_COUNT, columnCount);
 		fragment.setArguments(args);
@@ -90,31 +90,27 @@ public class ArtworkFragment extends Fragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 	                         Bundle savedInstanceState)
 	{
-		View view = inflater.inflate(R.layout.fragment_artwork_list, container, false);
+		View linearLayoutView = inflater.inflate(R.layout.fragment_artwork_list, container, false);
 
 		// The boilerplate list fragment code had the RecyclerView as the only View in the layout xml
 		// I have since added a parent View for the RecyclerView (ConstraintLayout)
-		Context context = view.getContext();
-		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
+		Context context = linearLayoutView.getContext();
+		RecyclerView recyclerView = linearLayoutView.findViewById(R.id.list);
 		// TODO figure out a better way to size each image grid square
 		//  Currently have it hardcoded to 200dp
 		recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
 		ArtworkItemRecyclerViewAdapter adapter = new ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS);
-		adapter.setOnItemClickListener(new ArtworkItemRecyclerViewAdapter.OnItemClickListener()
+		adapter.setOnItemClickListener((itemView, position) ->
 		{
-			@Override
-			public void onItemClick(View itemView, int position)
+			ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
+			if (!selectedArtworks.contains(item))
 			{
-				ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
-				if (!selectedArtworks.contains(item))
-				{
-					selectedArtworks.add(item);
-					selectedPositions.add((Integer) position);
-				} else
-				{
-					selectedArtworks.remove(item);
-					selectedPositions.remove((Integer) position);
-				}
+				selectedArtworks.add(item);
+				selectedPositions.add((Integer) position);
+			} else
+			{
+				selectedArtworks.remove(item);
+				selectedPositions.remove((Integer) position);
 			}
 		});
 		recyclerView.setAdapter(adapter);
@@ -122,69 +118,65 @@ public class ArtworkFragment extends Fragment
 		// This FAB actions the delete operation from both the RecyclerView, and the
 		//  ContentProvider storing the Artwork details.
 		// All changes appear instantaneously
-		FloatingActionButton fab = view.findViewById(R.id.fab);
-		fab.setOnClickListener(new View.OnClickListener()
+		FloatingActionButton fab = linearLayoutView.findViewById(R.id.fab);
+		fab.setOnClickListener(view ->
 		{
-			@Override
-			public void onClick(View view)
+			// Optimization if no artworks are selected
+			if (selectedArtworks.isEmpty())
 			{
-				// Optimization if no artworks are selected
-				if (selectedArtworks.isEmpty())
-				{
-					Snackbar.make(view, R.string.snackbar_selectArtworkFirst,
-							Snackbar.LENGTH_LONG)
-							.show();
-					return;
-				} else
-				{
-					int numberDeleted = selectedArtworks.size();
-					Snackbar.make(view, numberDeleted + " " + getString(R.string.snackbar_deletedArtworks),
-							Snackbar.LENGTH_LONG)
-							.show();
-				}
-
-				// Deletes the artwork items from the ArrayList used as backing for the RecyclerView
-				ArtworkContent.ITEMS.removeAll(selectedArtworks);
-
-				// Updates the RecyclerView.Adapter by removing the selected images
-				// Nice animation as we're not calling notifyDataSetChanged()
-				int deleteCount = 0;
-				for (int i : selectedPositions)
-				{
-					adapter.notifyItemRemoved(i - deleteCount);
-					deleteCount++;
-				}
-				selectedPositions.clear();
-
-				// Now to delete the Artwork's themselves from the ContentProvider
-				ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-				ContentProviderOperation operation;
-				String selection = ProviderContract.Artwork.TOKEN + " = ?";
-				// Builds a new delete operation for every selected artwork
-				for (ArtworkContent.ArtworkItem artworkItem : selectedArtworks)
-				{
-					operation = ContentProviderOperation
-							.newDelete(ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri())
-							.withSelection(selection, new String[]{artworkItem.token})
-							.build();
-					operations.add(operation);
-				}
-
-				try
-				{
-					context.getContentResolver().applyBatch("com.antony.muzei.pixiv.provider", operations);
-				} catch (RemoteException | OperationApplicationException e)
-				{
-					e.printStackTrace();
-				}
-
-				// TODO also delete the files?
-
-				selectedArtworks.clear();
+				Snackbar.make(view, R.string.snackbar_selectArtworkFirst,
+						Snackbar.LENGTH_LONG)
+						.show();
+				return;
+			} else
+			{
+				int numberDeleted = selectedArtworks.size();
+				Snackbar.make(view, numberDeleted + " " + getString(R.string.snackbar_deletedArtworks),
+						Snackbar.LENGTH_LONG)
+						.show();
 			}
+
+			// Deletes the artwork items from the ArrayList used as backing for the RecyclerView
+			ArtworkContent.ITEMS.removeAll(selectedArtworks);
+
+			// Updates the RecyclerView.Adapter by removing the selected images
+			// Nice animation as we're not calling notifyDataSetChanged()
+			int deleteCount = 0;
+			for (int i : selectedPositions)
+			{
+				adapter.notifyItemRemoved(i - deleteCount);
+				deleteCount++;
+			}
+			selectedPositions.clear();
+
+			// Now to delete the Artwork's themselves from the ContentProvider
+			ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+			ContentProviderOperation operation;
+			String selection = ProviderContract.Artwork.TOKEN + " = ?";
+			// Builds a new delete operation for every selected artwork
+			for (ArtworkContent.ArtworkItem artworkItem : selectedArtworks)
+			{
+				operation = ContentProviderOperation
+						.newDelete(ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri())
+						.withSelection(selection, new String[]{artworkItem.token})
+						.build();
+				operations.add(operation);
+			}
+
+			try
+			{
+				context.getContentResolver().applyBatch("com.antony.muzei.pixiv.provider", operations);
+			} catch (RemoteException | OperationApplicationException e)
+			{
+				e.printStackTrace();
+			}
+
+			// TODO also delete the files?
+
+			selectedArtworks.clear();
 		});
 
-		return view;
+		return linearLayoutView;
 	}
 
 
