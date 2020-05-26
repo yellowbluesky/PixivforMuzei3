@@ -54,6 +54,7 @@ public class ArtworkFragment extends Fragment
 	private int mColumnCount = 1;
 
 	private List<ArtworkContent.ArtworkItem> selectedArtworks = new ArrayList<>();
+	private List<Integer> selectedPositions = new ArrayList<>();
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -111,10 +112,12 @@ public class ArtworkFragment extends Fragment
 				if (!selectedArtworks.contains(item))
 				{
 					selectedArtworks.add(item);
+					selectedPositions.add((Integer) position);
 					imageView.setColorFilter(Color.argb(130, 0, 150, 250));
 				} else
 				{
 					selectedArtworks.remove(item);
+					selectedPositions.remove((Integer) position);
 					imageView.clearColorFilter();
 				}
 			}
@@ -147,8 +150,16 @@ public class ArtworkFragment extends Fragment
 
 				// Deletes the artwork items from the ArrayList used as backing for the RecyclerView
 				ArtworkContent.ITEMS.removeAll(selectedArtworks);
-				// TODO somehow notify only single artwork change, instead of notofyDataSetChanged()
-				adapter.notifyDataSetChanged();
+
+				// Updates the RecyclerView.Adapter by removing the selected images
+				// Nice animation as we're not calling notifyDataSetChanged()
+				int deleteCount = 0;
+				for (int i : selectedPositions)
+				{
+					adapter.notifyItemRemoved(i - deleteCount);
+					deleteCount++;
+				}
+				selectedPositions.clear();
 
 				// Now to delete the Artwork's themselves from the ContentProvider
 				ArrayList<ContentProviderOperation> operations = new ArrayList<>();
