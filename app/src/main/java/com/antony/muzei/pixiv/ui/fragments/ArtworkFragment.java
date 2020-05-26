@@ -20,13 +20,11 @@ package com.antony.muzei.pixiv.ui.fragments;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -108,17 +106,14 @@ public class ArtworkFragment extends Fragment
 			public void onItemClick(View itemView, int position)
 			{
 				ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
-				ImageView imageView = itemView.findViewById(R.id.image);
 				if (!selectedArtworks.contains(item))
 				{
 					selectedArtworks.add(item);
 					selectedPositions.add((Integer) position);
-					imageView.setColorFilter(Color.argb(130, 0, 150, 250));
 				} else
 				{
 					selectedArtworks.remove(item);
 					selectedPositions.remove((Integer) position);
-					imageView.clearColorFilter();
 				}
 			}
 		});
