@@ -20,6 +20,7 @@ package com.antony.muzei.pixiv.ui.fragments;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -101,7 +102,14 @@ public class ArtworkDeletionFragment extends Fragment
 		RecyclerView recyclerView = linearLayoutView.findViewById(R.id.list);
 		// TODO figure out a better way to size each image grid square
 		//  Currently have it hardcoded to 200dp
-		recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
+		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+		{
+			recyclerView.setLayoutManager(new GridLayoutManager(context, 4));
+		} else
+		{
+			recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
+		}
+
 		ArtworkItemRecyclerViewAdapter adapter = new ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS);
 		adapter.setOnItemClickListener((itemView, position) ->
 		{
