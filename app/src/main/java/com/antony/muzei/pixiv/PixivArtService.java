@@ -36,7 +36,11 @@ import java.util.Map;
 
 import javax.net.ssl.X509TrustManager;
 
+import okhttp3.HttpUrl;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -139,5 +143,36 @@ public class PixivArtService
 		Log.i(LOG_TAG, "Acquired access token");
 		Log.d(LOG_TAG, "getAccessToken(): Exited");
 		return accessToken;
+	}
+
+	// Function only used to add artworks to bookmarks on the old commands
+	// this function to be removed, doesn't fit with anything other method
+	static void sendPostRequest(String accessToken, String token)
+	{
+		HttpUrl rankingUrl = new HttpUrl.Builder()
+				.scheme("https")
+				.host("app-api.pixiv.net")
+				.addPathSegments("v2/illust/bookmark/add")
+				.build();
+		RequestBody authData = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("illust_id", token)
+				.addFormDataPart("restrict", "public")
+				.build();
+		Request request = new Request.Builder()
+				.addHeader("Content-Type", "application/x-www-form-urlencoded")
+				.addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+				.addHeader("Authorization", "Bearer " + accessToken)
+				.post(authData)
+				.url(rankingUrl)
+				.build();
+		try
+
+		{
+			httpClient.newCall(request).execute();
+		} catch (IOException ex)
+		{
+			ex.printStackTrace();
+		}
 	}
 }
