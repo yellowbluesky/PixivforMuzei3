@@ -53,7 +53,7 @@
 
         <receiver
             android:name=".AddToBookmarkBroadcast"
-            android:exported="true">
+            android:exported="false">
         </receiver>
 
     </application>
