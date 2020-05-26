@@ -26,7 +26,7 @@
             android:entryValues="@array/pref_updateMode_entryValues"
             android:key="pref_updateMode"
             android:persistent="true"
-            android:summary="%s"
+            app:useSimpleSummaryProvider="true"
             android:title="@string/pref_updateMode" />
         <MultiSelectListPreference
             android:defaultValue="@array/pref_rankingFilterDefault_entryvalues"
@@ -72,7 +72,7 @@
             android:entryValues="@array/array_authFailActions_entryvalues"
             android:key="pref_authFailAction"
             android:persistent="true"
-            android:summary="%s"
+            app:useSimpleSummaryProvider="true"
             android:title="@string/pref_authFailActionDropDown" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

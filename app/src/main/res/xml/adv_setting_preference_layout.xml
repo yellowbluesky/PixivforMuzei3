@@ -28,7 +28,7 @@
             android:entryValues="@array/pref_aspectRatio_entryValues"
             android:key="pref_aspectRatioSelect"
             android:persistent="true"
-            android:summary="%s"
+            app:useSimpleSummaryProvider="true"
             android:title="@string/prefTitle_aspectRatio" />
         <SwitchPreference
             android:key="pref_showManga"
