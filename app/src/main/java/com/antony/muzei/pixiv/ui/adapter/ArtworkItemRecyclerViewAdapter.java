@@ -86,7 +86,7 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 		void onItemClick(View itemView, int position);
 	}
 
-	public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+	public class ViewHolder extends RecyclerView.ViewHolder
 	{
 		public final View mView;
 		//public final TextView mTitleView;
@@ -130,12 +130,6 @@ public class ArtworkItemRecyclerViewAdapter extends RecyclerView.Adapter<Artwork
 		public String toString()
 		{
 			return super.toString();
-		}
-
-		@Override
-		public void onClick(View v)
-		{
-
 		}
 	}
 }
