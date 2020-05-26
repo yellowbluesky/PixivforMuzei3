@@ -87,5 +87,7 @@
     <string name="tab_heading_artwork_delete">Delete Artwork</string>
     <string name="snackbar_selectArtworkFirst">Select at least one artwork to delete</string>
     <string name="snackbar_deletedArtworks">artworks deleted</string>
+    <string name="fab_delete_selected_artwork">Delete selected artwork</string>
+    <string name="artwork">Artwork</string>
 
 </resources>
