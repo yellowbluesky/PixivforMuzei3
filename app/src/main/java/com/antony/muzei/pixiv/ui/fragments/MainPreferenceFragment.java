@@ -61,7 +61,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
 		// Stores user toggleable variables into a temporary store for later comparison in onStop()
 		// If the value of the preference on Activity creation is different to Activity stop, then take certain action
-		oldUpdateMode = sharedPrefs.getString("pref_updateMode", "");
+		oldUpdateMode = sharedPrefs.getString("pref_updateMode", "daily");
 		newUpdateMode = oldUpdateMode;
 
 		oldTag = sharedPrefs.getString("pref_tagSearch", "");
