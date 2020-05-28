@@ -62,12 +62,10 @@ import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 
 import org.apache.commons.io.FileUtils;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -432,21 +430,6 @@ public class PixivArtWorker extends Worker
 			array[i] = a;
 		}
 		return array;
-	}
-
-	private void writeToFile(JSONObject jsonObject,
-	                         String filename) throws IOException
-	{
-		File root = new File(getApplicationContext().getExternalCacheDir(), "Logs");
-		if (!root.exists())
-		{
-			root.mkdirs();
-		}
-		File logFile = new File(root, filename);
-		FileWriter writer = new FileWriter(logFile);
-		writer.append(jsonObject.toString());
-		writer.flush();
-		writer.close();
 	}
 
 	/*
