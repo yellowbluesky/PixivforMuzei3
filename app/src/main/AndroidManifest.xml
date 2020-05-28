@@ -51,11 +51,6 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <receiver
-            android:name=".AddToBookmarkBroadcast"
-            android:exported="false">
-        </receiver>
-
     </application>
 
 </manifest>
