@@ -69,8 +69,7 @@ public class MainActivity extends AppCompatActivity
 					.setNegativeButton(android.R.string.no, null)
 					.show();
 		}
-
-		if (!isProviderSelected())
+		else if (!isProviderSelected())
 		{
 			// TODO localize these strings
 			new AlertDialog.Builder(this)
@@ -117,7 +116,16 @@ public class MainActivity extends AppCompatActivity
 						null,
 						null);
 
-		int authorityColumn = authorityCursor.getColumnIndex(MuzeiContract.Sources.COLUMN_NAME_AUTHORITY);
+		int authorityColumn;
+		try
+		{
+			authorityColumn = authorityCursor.getColumnIndex(MuzeiContract.Sources.COLUMN_NAME_AUTHORITY);
+		}
+		catch (NullPointerException ex)
+		{
+			ex.printStackTrace();
+			return true;
+		}
 		while (authorityCursor.moveToNext())
 		{
 			String selectedAuthority = authorityCursor.getString(authorityColumn);
