@@ -20,10 +20,10 @@ package com.antony.muzei.pixiv.ui.fragments;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -100,15 +100,12 @@ public class ArtworkDeletionFragment extends Fragment
 		// I have since added a parent View for the RecyclerView (ConstraintLayout)
 		Context context = linearLayoutView.getContext();
 		RecyclerView recyclerView = linearLayoutView.findViewById(R.id.list);
-		// TODO figure out a better way to size each image grid square
-		//  Currently have it hardcoded to 200dp
-		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
-		{
-			recyclerView.setLayoutManager(new GridLayoutManager(context, 4));
-		} else
-		{
-			recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
-		}
+
+		// Dynamically sets number of grid columns
+		// The ceiling gives a minimum of 2 columns, and scales well up to a Nexus 10 tablet (1280dp width)
+		DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+		float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
+		recyclerView.setLayoutManager(new GridLayoutManager(context, (int) Math.ceil((double) dpWidth / 200)));
 
 		ArtworkItemRecyclerViewAdapter adapter = new ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS);
 		adapter.setOnItemClickListener((itemView, position) ->
