@@ -94,8 +94,8 @@ public class PixivArtProvider extends MuzeiArtProvider
 		chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
 		String title = getContext().getString(R.string.command_shareImage);
-		RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
-				null,
+		return new RemoteActionCompat(
+				IconCompat.createWithResource(getContext(), R.drawable.ic_baseline_share_24),
 				title,
 				title,
 				PendingIntent.getActivity(
@@ -103,7 +103,6 @@ public class PixivArtProvider extends MuzeiArtProvider
 						(int) artwork.getId(),
 						chooserIntent,
 						PendingIntent.FLAG_UPDATE_CURRENT));
-		return remoteActionCompat;
 	}
 
 	private RemoteActionCompat viewArtworkDetailsAlternate(Artwork artwork)
