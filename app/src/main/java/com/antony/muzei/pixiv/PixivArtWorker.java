@@ -828,10 +828,7 @@ public class PixivArtWorker extends Worker
 				try
 				{
 					artwork = getArtworkAuth(authArtworkList);
-					if (isArtworkNull(artwork))
-					{
-						throw new CorruptFileException("");
-					}
+					isArtworkNull(artwork);
 					artworkArrayList.add(artwork);
 				} catch (FilterMatchNotFoundException e)
 				{
@@ -855,10 +852,7 @@ public class PixivArtWorker extends Worker
 				try
 				{
 					artwork = getArtworkRanking(contents);
-					if (isArtworkNull(artwork))
-					{
-						throw new CorruptFileException("");
-					}
+					isArtworkNull(artwork);
 					artworkArrayList.add(artwork);
 				} catch (FilterMatchNotFoundException e)
 				{

@@ -60,10 +60,9 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 				return new AdvOptionsPreferenceFragment();
 			case 2:
 				return new ArtworkDeletionFragment();
-			case 3:
-				return new CreditsPreferenceFragment();
 			case 4:
 				return new RoadmapPreferenceFragment();
+			case 3:
 			default:
 				return new CreditsPreferenceFragment();
 		}
