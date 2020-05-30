@@ -195,7 +195,7 @@ public class RestClient
 
 	public static Retrofit getRetrofitBookmarkInstance(boolean bypass)
 	{
-		OkHttpClient.Builder okHttoClientBookmarkBuilder = new OkHttpClient.Builder()
+		OkHttpClient.Builder okHttpClientBookmarkBuilder = new OkHttpClient.Builder()
 				.addNetworkInterceptor(httpLoggingInterceptor)
 				.addInterceptor(chain ->
 				{
@@ -208,7 +208,7 @@ public class RestClient
 				});
 		return new Retrofit.Builder()
 				.baseUrl("https://app-api.pixiv.net")
-				.client(okHttoClientBookmarkBuilder.build())
+				.client(okHttpClientBookmarkBuilder.build())
 				.addConverterFactory(MoshiConverterFactory.create())
 				.build();
 	}
