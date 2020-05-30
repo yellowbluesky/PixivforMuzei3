@@ -69,11 +69,11 @@ public class PixivArtProvider extends MuzeiArtProvider
 		List<RemoteActionCompat> list = new ArrayList<>();
 		list.add(shareImage(artwork));
 		list.add(viewArtworkDetailsAlternate(artwork));
-		//SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 		//if (!sharedPrefs.getString("accessToken", "").isEmpty())
-		//{
-			//list.add(addToBookmarks(artwork));
-		//}
+		{
+			list.add(addToBookmarks(artwork));
+		}
 		return list;
 	}
 
@@ -123,19 +123,21 @@ public class PixivArtProvider extends MuzeiArtProvider
 		return remoteActionCompat;
 	}
 
-//	private RemoteActionCompat addToBookmarks(Artwork artwork)
-//	{
-//		Intent addToBookmarkIntent = new Intent(getContext(), AddToBookmarkBroadcast.class);
-//		addToBookmarkIntent.putExtra("artworkId", artwork.getToken());
-//		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 0, addToBookmarkIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//
-//		RemoteActionCompat remoteActionCompat = new RemoteActionCompat(IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
-//				"Add to bookmarks",
-//				"sample description",
-//				pendingIntent);
-//		remoteActionCompat.setShouldShowIcon(false);
-//		return remoteActionCompat;
-//	}
+	private RemoteActionCompat addToBookmarks(Artwork artwork)
+	{
+		Log.v("BOOKMARK", "adding to bookmarks");
+		Intent addToBookmarkIntent = new Intent(getContext(), AddToBookmarkService.class);
+		addToBookmarkIntent.putExtra("artworkId", artwork.getToken());
+		PendingIntent pendingIntent = PendingIntent.getService(getContext(), 0, addToBookmarkIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
+				IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
+				"Add to bookmarks",
+				"sample description",
+				pendingIntent);
+		remoteActionCompat.setShouldShowIcon(false);
+		return remoteActionCompat;
+	}
 
 	// Deprecated in Muzei
 	@Override
