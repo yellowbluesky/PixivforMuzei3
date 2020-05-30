@@ -1,13 +1,13 @@
 # Pixiv for Muzei 3
 
-Pixiv plugin for the new Muzei 3 API
+Pixiv plugin for the new Muzei 3 API.
 
 Inspired by [Pixiv for Muzei](https://github.com/dahlia/muzei-pixiv), the aim of this app is to extend functionality and improve usability.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
      height="80">](https://f-droid.org/packages/com.antony.muzei.pixiv/)
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
+[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
      alt="Get it on Google Play"
      height="80">](https://play.google.com/store/apps/details?id=com.antony.muzei.pixiv)
 
@@ -28,12 +28,14 @@ Features
   - Option to automatically clear cache on a daily basis
   - Option to save artwork to external user storage
   - Works in China, SNI bypass
-  
+
   - No tracking or collection of user details
-  
+
   [![Scc Count Badge](https://sloc.xyz/github/yellowbluesky/PixivforMuzei3/)](https://github.com/yellowbluesky/PixivforMuzei3/)
 
-<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="250"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="250"> <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="250">
+<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="250">
+<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="250">
+<img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="250">
 
 # Contributors
 
