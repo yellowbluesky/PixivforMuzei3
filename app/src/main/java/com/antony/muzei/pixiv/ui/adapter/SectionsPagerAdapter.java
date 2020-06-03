@@ -40,7 +40,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter
 {
 
 	@StringRes
-	private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_artwork_delete, R.string.tab_heading_roadmap, R.string.tab_heading_credits};
+	private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_roadmap, R.string.tab_heading_artwork_delete};
 	private final Context mContext;
 
 	public SectionsPagerAdapter(Context context, FragmentManager fm)
