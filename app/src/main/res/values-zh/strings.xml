@@ -78,14 +78,16 @@
     <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
     <string name="prefSummary_noFileSizeLimit">无限制</string>
     <string name="prefTitle_sendFeedback">发送反馈或建议</string>
-    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3不是活跃源</string>
-    <string name="dialog_selectSource">请打开Muzei到“Sources”标签，然后选择“ Pixiv for Muzei 3”</string>
-    <string name="dialogTitle_muzeiNotInstalled">Muzei尚未安装</string>
-    <string name="dialog_installMuzei">您要安装Muzei吗？</string>
-    <string name="tab_heading_artwork_delete">删除艺术品</string>
-    <string name="snackbar_selectArtworkFirst">选择至少一幅艺术品进行删除</string>
-    <string name="snackbar_deletedArtworks">艺术品已删除</string>
-    <string name="fab_delete_selected_artwork">删除所选图稿</string>
-    <string name="artwork">艺术品</string>
+    <string name="prefCat_networkingOptions">网络选项</string>
+    <string name="pref_enableNetworkBypass">绕过网络过滤器</string>
+    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 不是活动订阅源</string>
+    <string name="dialog_selectSource">请打开 Muzei 中的 Sources 标签，然后选择 \"Pixiv for Muzei 3\"</string>
+    <string name="dialogTitle_muzeiNotInstalled">Muzei 尚未安装</string>
+    <string name="dialog_installMuzei">您想要安装 Muzei 吗？</string>
+    <string name="tab_heading_artwork_delete">删除作品</string>
+    <string name="snackbar_selectArtworkFirst">选择至少一幅作品进行删除</string>
+    <string name="snackbar_deletedArtworks">作品已删除</string>
+    <string name="fab_delete_selected_artwork">删除所选作品</string>
+    <string name="artwork">作品</string>
 
 </resources>
