@@ -81,17 +81,6 @@ public class MainActivity extends AppCompatActivity
 					.setNeutralButton(android.R.string.ok, null)
 					.show();
 		}
-//		FloatingActionButton fab = findViewById(R.id.fab);
-//
-//		fab.setOnClickListener(new View.OnClickListener()
-//		{
-//			@Override
-//			public void onClick(View view)
-//			{
-//				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//						.setAction("Action", null).show();
-//			}
-//		});
 	}
 
 	// Checks if Muzei is installed
@@ -123,8 +112,7 @@ public class MainActivity extends AppCompatActivity
 		try
 		{
 			authorityColumn = authorityCursor.getColumnIndex(MuzeiContract.Sources.COLUMN_NAME_AUTHORITY);
-		}
-		catch (NullPointerException ex)
+		} catch (NullPointerException ex)
 		{
 			ex.printStackTrace();
 			return true;

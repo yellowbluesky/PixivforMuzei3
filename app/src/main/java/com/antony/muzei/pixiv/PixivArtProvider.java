@@ -178,7 +178,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 				String accessToken;
 				try
 				{
-					accessToken = PixivArtService.refreshAccessToken(PreferenceManager.getDefaultSharedPreferences(getContext()));
+					accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
 				} catch (AccessTokenAcquisitionException e)
 				{
 					new Handler(Looper.getMainLooper()).post(() ->
