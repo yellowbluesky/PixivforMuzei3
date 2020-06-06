@@ -20,11 +20,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <Preference android:title="Option to delete specific artwork the user chooses">
-        <intent
-            android:action="android.intent.action.VIEW"
-            android:data="https://github.com/yellowbluesky/PixivforMuzei3/issues/85" />
-    </Preference>
     <Preference android:title="Tag exclusion filter">
         <intent
             android:action="android.intent.action.VIEW"
