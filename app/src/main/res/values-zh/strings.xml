@@ -89,5 +89,7 @@
     <string name="snackbar_deletedArtworks">作品已删除</string>
     <string name="fab_delete_selected_artwork">删除所选作品</string>
     <string name="artwork">作品</string>
+    <string name="dialog_yes">是</string>
+    <string name="dialog_no">不</string>
 
 </resources>

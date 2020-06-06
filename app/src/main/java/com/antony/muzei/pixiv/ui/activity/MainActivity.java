@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
 			new AlertDialog.Builder(this)
 					.setTitle(getApplicationContext().getString(R.string.dialogTitle_muzeiNotInstalled))
 					.setMessage(getApplicationContext().getString(R.string.dialog_installMuzei))
-					.setPositiveButton(android.R.string.yes, (dialog, which) ->
+					.setPositiveButton(R.string.dialog_yes, (dialog, which) ->
 					{
 						try
 						{
@@ -66,10 +66,13 @@ public class MainActivity extends AppCompatActivity
 									Uri.parse("https://play.google.com/store/apps/details?id=net.nurik.roman.muzei")));
 						}
 					})
-					.setNegativeButton(android.R.string.no, null)
+					.setNegativeButton(R.string.dialog_no, (dialog, which) ->
+					{
+						// Do nothing
+						dialog.dismiss();
+					})
 					.show();
-		}
-		else if (!isProviderSelected())
+		} else if (!isProviderSelected())
 		{
 			// TODO localize these strings
 			new AlertDialog.Builder(this)
