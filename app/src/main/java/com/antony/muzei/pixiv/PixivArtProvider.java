@@ -70,7 +70,7 @@ public class PixivArtProvider extends MuzeiArtProvider
 		list.add(shareImage(artwork));
 		list.add(viewArtworkDetailsAlternate(artwork));
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-		//if (!sharedPrefs.getString("accessToken", "").isEmpty())
+		if (!sharedPrefs.getString("accessToken", "").isEmpty())
 		{
 			list.add(addToBookmarks(artwork));
 		}

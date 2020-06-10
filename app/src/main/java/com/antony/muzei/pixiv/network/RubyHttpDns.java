@@ -36,13 +36,14 @@ public class RubyHttpDns implements Dns
 		if (!hostname.contains("i.pximg"))
 		{
 
-			list.add(InetAddress.getByName("210.140.131.222"));
-			list.add(InetAddress.getByName("210.140.131.219"));
+			list.add(InetAddress.getByName("210.140.92.136"));
+			list.add(InetAddress.getByName("210.140.92.137"));
+			list.add(InetAddress.getByName("210.140.92.145"));
 		} else
 		{
-			list.add(InetAddress.getByName("210.140.92.141"));
-			list.add(InetAddress.getByName("210.140.92.138"));
-			list.add(InetAddress.getByName("210.140.92.139"));
+			list.add(InetAddress.getByName("210.140.131.187"));
+			list.add(InetAddress.getByName("210.140.131.188"));
+			list.add(InetAddress.getByName("210.140.131.189"));
 		}
 
 		return list;
