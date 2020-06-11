@@ -46,48 +46,48 @@ import java.util.List;
 
 public class ArtworkContent
 {
-	public static final List<ArtworkItem> ITEMS = new ArrayList<>();
+    public static final List<ArtworkItem> ITEMS = new ArrayList<>();
 
-	public static void populateListInitial(Context context)
-	{
-		ITEMS.clear();
+    public static void populateListInitial(Context context)
+    {
+        ITEMS.clear();
 
-		String[] projection = {"token", "title", "persistent_uri"};
-		Uri conResUri = ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri();
-		Cursor cursor = context.getContentResolver().query(conResUri, projection, null, null, null);
+        String[] projection = {"token", "title", "persistent_uri"};
+        Uri conResUri = ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri();
+        Cursor cursor = context.getContentResolver().query(conResUri, projection, null, null, null);
 
-		while (cursor.moveToNext())
-		{
-			String token = cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.TOKEN));
-			String title = cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.TITLE));
-			Uri persistent_uri = Uri.parse(cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.PERSISTENT_URI)));
+        while (cursor.moveToNext())
+        {
+            String token = cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.TOKEN));
+            String title = cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.TITLE));
+            Uri persistent_uri = Uri.parse(cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.PERSISTENT_URI)));
 
-			ArtworkItem artworkItem = new ArtworkItem(token, title, persistent_uri);
-			ITEMS.add(artworkItem);
-		}
-		cursor.close();
-	}
+            ArtworkItem artworkItem = new ArtworkItem(token, title, persistent_uri);
+            ITEMS.add(artworkItem);
+        }
+        cursor.close();
+    }
 
-	public static class ArtworkItem
-	{
-		public final String token;
-		public final String title;
-		public final Uri persistent_uri;
-		// Stores if the image has been selected
-		//  So the image tinting will not be forgotten in the View gets recycled
-		public boolean selected = false;
+    public static class ArtworkItem
+    {
+        public final String token;
+        public final String title;
+        public final Uri persistent_uri;
+        // Stores if the image has been selected
+        //  So the image tinting will not be forgotten in the View gets recycled
+        public boolean selected = false;
 
-		public ArtworkItem(String token, String title, Uri persistent_uri)
-		{
-			this.token = token;
-			this.title = title;
-			this.persistent_uri = persistent_uri;
-		}
+        public ArtworkItem(String token, String title, Uri persistent_uri)
+        {
+            this.token = token;
+            this.title = title;
+            this.persistent_uri = persistent_uri;
+        }
 
-		@Override
-		public String toString()
-		{
-			return token;
-		}
-	}
+        @Override
+        public String toString()
+        {
+            return token;
+        }
+    }
 }

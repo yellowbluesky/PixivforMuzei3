@@ -30,34 +30,34 @@ import com.antony.muzei.pixiv.R;
 
 public class AddToBookmarkService extends JobIntentService
 {
-	final Handler mHandler = new Handler();
+    final Handler mHandler = new Handler();
 
-	private static final String TAG = "MyJobIntentService";
-	/**
-	 * Unique job ID for this service.
-	 */
-	private static final int JOB_ID = 2;
-	public static void enqueueWork(Context context, Intent intent) {
-		enqueueWork(context, AddToBookmarkService.class, JOB_ID, intent);
-	}
+    private static final String TAG = "MyJobIntentService";
+    /**
+     * Unique job ID for this service.
+     */
+    private static final int JOB_ID = 2;
+    public static void enqueueWork(Context context, Intent intent) {
+        enqueueWork(context, AddToBookmarkService.class, JOB_ID, intent);
+    }
 
-	@Override
-	protected void onHandleWork(@NonNull Intent intent)
-	{
-		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
-				.setSmallIcon(R.drawable.muzei_launch_command)
-				.setContentTitle("My notification")
-				.setContentText("Hello World!");
+    @Override
+    protected void onHandleWork(@NonNull Intent intent)
+    {
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.muzei_launch_command)
+                .setContentTitle("My notification")
+                .setContentText("Hello World!");
 
-		NotificationManager mNotificationManager =
-				(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 // mId allows you to update the notification later on.
-		mNotificationManager.notify(1, mBuilder.build());
-	}
+        mNotificationManager.notify(1, mBuilder.build());
+    }
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
 
-	}
+    }
 }

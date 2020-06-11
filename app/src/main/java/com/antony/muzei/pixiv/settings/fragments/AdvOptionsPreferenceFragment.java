@@ -44,118 +44,118 @@ import java.util.concurrent.TimeUnit;
 
 public class AdvOptionsPreferenceFragment extends PreferenceFragmentCompat
 {
-	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.adv_setting_preference_layout);
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        addPreferencesFromResource(R.xml.adv_setting_preference_layout);
 
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-		// Artwork minimum views slider
-		// Updates the summary in real time as the user drags the thumb
-		// Increments of 500, hence the scalar
-		SeekBarPreference minimumViewSliderPref = findPreference("prefSlider_minViews");
-		minimumViewSliderPref.setUpdatesContinuously(true);
-		minimumViewSliderPref.setSummary(Integer.toString(
-				sharedPrefs.getInt("prefSlider_minViews", 0) * 500));
-		minimumViewSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
-		{
-			minimumViewSliderPref.setSummary(Integer.toString((Integer) newValue * 500));
-			return true;
-		})));
+        // Artwork minimum views slider
+        // Updates the summary in real time as the user drags the thumb
+        // Increments of 500, hence the scalar
+        SeekBarPreference minimumViewSliderPref = findPreference("prefSlider_minViews");
+        minimumViewSliderPref.setUpdatesContinuously(true);
+        minimumViewSliderPref.setSummary(Integer.toString(
+                sharedPrefs.getInt("prefSlider_minViews", 0) * 500));
+        minimumViewSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
+        {
+            minimumViewSliderPref.setSummary(Integer.toString((Integer) newValue * 500));
+            return true;
+        })));
 
-		// Maximum file size slider
-//		SeekBarPreference maximumFileSizeSliderPref = findPreference("prefSlider_maxFileSize");
-//		maximumFileSizeSliderPref.setUpdatesContinuously(true);
-//		int fileSizeSetting = sharedPrefs.getInt("prefSlider_maxFileSize", 0);
-//		if (fileSizeSetting == 0)
-//		{
-//			maximumFileSizeSliderPref.setSummary(getString(R.string.prefSummary_noFileSizeLimit));
-//		}
-//		else
-//		{
-//			maximumFileSizeSliderPref.setSummary(fileSizeSetting + "MB");
-//		}
+        // Maximum file size slider
+//        SeekBarPreference maximumFileSizeSliderPref = findPreference("prefSlider_maxFileSize");
+//        maximumFileSizeSliderPref.setUpdatesContinuously(true);
+//        int fileSizeSetting = sharedPrefs.getInt("prefSlider_maxFileSize", 0);
+//        if (fileSizeSetting == 0)
+//        {
+//            maximumFileSizeSliderPref.setSummary(getString(R.string.prefSummary_noFileSizeLimit));
+//        }
+//        else
+//        {
+//            maximumFileSizeSliderPref.setSummary(fileSizeSetting + "MB");
+//        }
 //
-//		maximumFileSizeSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
-//		{
-//			if ((int) newValue == 0)
-//			{
-//				maximumFileSizeSliderPref.setSummary(getString(R.string.prefSummary_noFileSizeLimit));
-//			}
-//			else
-//			{
-//				maximumFileSizeSliderPref.setSummary(newValue + "MB");
-//			}
-//			return true;
-//		})));
+//        maximumFileSizeSliderPref.setOnPreferenceChangeListener((((preference, newValue) ->
+//        {
+//            if ((int) newValue == 0)
+//            {
+//                maximumFileSizeSliderPref.setSummary(getString(R.string.prefSummary_noFileSizeLimit));
+//            }
+//            else
+//            {
+//                maximumFileSizeSliderPref.setSummary(newValue + "MB");
+//            }
+//            return true;
+//        })));
 
-		// Requests the WRITE_EXTERNAL_STORAGE permission
-		// is needed if the user has checked the option to store artworks into external storage
-		// These artworks are not cleared when the Android cache is cleared
-		Preference externalStoragePref = findPreference("pref_storeInExtStorage");
-		externalStoragePref.setOnPreferenceClickListener(preference ->
-		{
-			if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-					!= PackageManager.PERMISSION_GRANTED)
-			{
-				ActivityCompat.requestPermissions(getActivity(),
-						new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-						1);
-			}
-			return true;
-		});
+        // Requests the WRITE_EXTERNAL_STORAGE permission
+        // is needed if the user has checked the option to store artworks into external storage
+        // These artworks are not cleared when the Android cache is cleared
+        Preference externalStoragePref = findPreference("pref_storeInExtStorage");
+        externalStoragePref.setOnPreferenceClickListener(preference ->
+        {
+            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED)
+            {
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        1);
+            }
+            return true;
+        });
 
-		externalStoragePref.setOnPreferenceChangeListener(((preference, newValue) ->
-				ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-						== PackageManager.PERMISSION_GRANTED));
+        externalStoragePref.setOnPreferenceChangeListener(((preference, newValue) ->
+                ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED));
 
-		// Slider that lets the user adjust how many artworks to download at a time
-		// Draws and updates the slider position number as the user drags
-		SeekBarPreference numToDownloadSlider = findPreference("prefSlider_numToDownload");
-		numToDownloadSlider.setUpdatesContinuously(true);
-		numToDownloadSlider.setSummary(Integer.toString(
-				sharedPrefs.getInt("prefSlider_numToDownload", 2)));
-		numToDownloadSlider.setOnPreferenceChangeListener((((preference, newValue) ->
-		{
-			numToDownloadSlider.setSummary(Integer.toString((Integer) newValue));
-			return true;
-		})));
-	}
+        // Slider that lets the user adjust how many artworks to download at a time
+        // Draws and updates the slider position number as the user drags
+        SeekBarPreference numToDownloadSlider = findPreference("prefSlider_numToDownload");
+        numToDownloadSlider.setUpdatesContinuously(true);
+        numToDownloadSlider.setSummary(Integer.toString(
+                sharedPrefs.getInt("prefSlider_numToDownload", 2)));
+        numToDownloadSlider.setOnPreferenceChangeListener((((preference, newValue) ->
+        {
+            numToDownloadSlider.setSummary(Integer.toString((Integer) newValue));
+            return true;
+        })));
+    }
 
-	@Override
-	public void onStop()
-	{
-		super.onStop();
-		// Automatic cache clearing at 1AM every night for as long as the setting is toggled active
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-		if (sharedPrefs.getBoolean("pref_autoClearMode", false))
-		{
-			// Calculates the hours to midnight
-			@SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
-			int hoursToMidnight = 24 - Integer.parseInt(simpleDateFormat.format(new Date()));
+    @Override
+    public void onStop()
+    {
+        super.onStop();
+        // Automatic cache clearing at 1AM every night for as long as the setting is toggled active
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (sharedPrefs.getBoolean("pref_autoClearMode", false))
+        {
+            // Calculates the hours to midnight
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat("kk");
+            int hoursToMidnight = 24 - Integer.parseInt(simpleDateFormat.format(new Date()));
 
-			// Builds and submits the work request
-			Constraints constraints = new Constraints.Builder()
-					.setRequiredNetworkType(NetworkType.CONNECTED)
-					.build();
-			PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
-					.setInitialDelay(hoursToMidnight, TimeUnit.HOURS)
-					.addTag("PIXIV_CACHE_AUTO")
-					.setConstraints(constraints)
-					.build();
-			WorkManager.getInstance(getContext())
-					.enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request);
-		} else
-		{
-			WorkManager.getInstance(getContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
-		}
-	}
+            // Builds and submits the work request
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(ClearCacheWorker.class, 24, TimeUnit.HOURS)
+                    .setInitialDelay(hoursToMidnight, TimeUnit.HOURS)
+                    .addTag("PIXIV_CACHE_AUTO")
+                    .setConstraints(constraints)
+                    .build();
+            WorkManager.getInstance(getContext())
+                    .enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request);
+        } else
+        {
+            WorkManager.getInstance(getContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO");
+        }
+    }
 
-	@Override
-	public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
-	{
+    @Override
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
+    {
 
-	}
+    }
 }

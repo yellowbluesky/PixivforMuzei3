@@ -24,6 +24,6 @@ import retrofit2.http.Url;
 
 public interface ImageDownloadServerResponse
 {
-	@GET
-	Call<ResponseBody> downloadImage(@Url String url);
+    @GET
+    Call<ResponseBody> downloadImage(@Url String url);
 }

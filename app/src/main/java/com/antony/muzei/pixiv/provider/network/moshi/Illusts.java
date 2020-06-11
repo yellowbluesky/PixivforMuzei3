@@ -23,17 +23,17 @@ import java.util.List;
 
 public class Illusts
 {
-	@Json(name = "illusts")
-	private List<AuthArtwork> artworks;
-	private String next_url;
+    @Json(name = "illusts")
+    private List<AuthArtwork> artworks;
+    private String next_url;
 
-	public List<AuthArtwork> getArtworks()
-	{
-		return artworks;
-	}
+    public List<AuthArtwork> getArtworks()
+    {
+        return artworks;
+    }
 
-	public String getNext_url()
-	{
-		return next_url;
-	}
+    public String getNext_url()
+    {
+        return next_url;
+    }
 }

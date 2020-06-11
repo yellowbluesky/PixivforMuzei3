@@ -28,24 +28,24 @@ import java.io.File;
 
 public class ClearCacheWorker extends Worker
 {
-	public ClearCacheWorker(
-			@NonNull Context context,
-			@NonNull WorkerParameters params)
-	{
-		super(context, params);
-	}
+    public ClearCacheWorker(
+            @NonNull Context context,
+            @NonNull WorkerParameters params)
+    {
+        super(context, params);
+    }
 
-	@NonNull
-	@Override
-	public Result doWork()
-	{
-		File dir = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-		String[] children = dir.list();
-		for (String child : children)
-		{
-			new File(dir, child).delete();
-		}
-		PixivArtWorker.enqueueLoad(true, getApplicationContext());
-		return Result.success();
-	}
+    @NonNull
+    @Override
+    public Result doWork()
+    {
+        File dir = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        String[] children = dir.list();
+        for (String child : children)
+        {
+            new File(dir, child).delete();
+        }
+        PixivArtWorker.enqueueLoad(true, getApplicationContext());
+        return Result.success();
+    }
 }

@@ -19,8 +19,8 @@ package com.antony.muzei.pixiv.provider.exceptions;
 
 public class FilterMatchNotFoundException extends Exception
 {
-	public FilterMatchNotFoundException(String message)
-	{
-		super(message);
-	}
+    public FilterMatchNotFoundException(String message)
+    {
+        super(message);
+    }
 }
