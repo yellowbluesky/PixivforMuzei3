@@ -36,6 +36,7 @@ import com.antony.muzei.pixiv.provider.PixivArtProviderDefines;
 import com.antony.muzei.pixiv.provider.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.login.LoginActivity;
+import com.antony.muzei.pixiv.util.IntentUtils;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
@@ -285,12 +286,10 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
         // Users click this preference to execute the login or logout
         loginActivityPreference.setOnPreferenceClickListener(preference ->
         {
-            if (sharedPrefs.getString("accessToken", "").isEmpty())
-            {
+            if (sharedPrefs.getString("accessToken", "").isEmpty()) {
                 Intent intent = new Intent(getContext(), LoginActivity.class);
-                startActivityForResult(intent, REQUEST_CODE_LOGIN);
-            } else
-            {
+                IntentUtils.launchActivity(this, intent, REQUEST_CODE_LOGIN);
+            } else {
                 // Logging out
                 SharedPreferences.Editor editor = sharedPrefs.edit();
                 editor.remove("accessTokenIssueTime");

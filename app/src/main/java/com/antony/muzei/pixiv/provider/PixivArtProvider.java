@@ -18,6 +18,7 @@
 package com.antony.muzei.pixiv.provider;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -29,6 +30,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.RemoteActionCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.drawable.IconCompat;
@@ -36,6 +38,7 @@ import androidx.preference.PreferenceManager;
 
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
+import com.antony.muzei.pixiv.util.IntentUtils;
 import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
@@ -48,7 +51,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-
 
 public class PixivArtProvider extends MuzeiArtProvider
 {
@@ -161,57 +163,58 @@ public class PixivArtProvider extends MuzeiArtProvider
     }
 
     @Override
-    public void onCommand(@NonNull Artwork artwork, int id)
-    {
+    public void onCommand(@NonNull Artwork artwork, int id) {
+        @Nullable final Context context = getContext();
         Handler handler = new Handler(Looper.getMainLooper());
-        switch (id)
-        {
+        switch (id) {
             case COMMAND_ADD_TO_BOOKMARKS:
                 Log.d("PIXIV_DEBUG", "addToBookmarks(): Entered");
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                if (context == null) {
+                    break;
+                }
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                 if (sharedPrefs.getString("accessToken", "").isEmpty())
                 {
                     new Handler(Looper.getMainLooper()).post(() ->
-                            Toast.makeText(getContext(), getContext().getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
+                            Toast.makeText(context, context.getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
                     return;
                 }
 
                 String accessToken;
-                try
-                {
+                try {
                     accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
-                } catch (AccessTokenAcquisitionException e)
-                {
+                } catch (AccessTokenAcquisitionException e) {
                     new Handler(Looper.getMainLooper()).post(() ->
-                            Toast.makeText(getContext(), getContext().getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
+                            Toast.makeText(context, context.getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
                     return;
                 }
                 PixivArtService.sendPostRequest(accessToken, artwork.getToken());
                 Log.d("PIXIV_DEBUG", "Added to bookmarks");
-                handler.post(() -> Toast.makeText(getContext(), getContext().getString(R.string.toast_addingToBookmarks), Toast.LENGTH_SHORT).show());
+                handler.post(() -> Toast.makeText(context, context.getString(R.string.toast_addingToBookmarks), Toast.LENGTH_SHORT).show());
                 break;
             case COMMAND_VIEW_IMAGE_DETAILS:
+                if (context == null) {
+                    break;
+                }
                 String token = artwork.getToken();
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
-                intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-                getContext().startActivity(intent);
+                IntentUtils.launchActivity(context, intent);
                 break;
             case COMMAND_SHARE_IMAGE:
                 Log.d("ANTONY_WORKER", "Opening sharing ");
-                File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
-                Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
+                if (context == null) {
+                    break;
+                }
+                File newFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
+                Uri uri = FileProvider.getUriForFile(context, "com.antony.muzei.pixiv.fileprovider", newFile);
                 Intent sharingIntent = new Intent();
                 sharingIntent.setAction(Intent.ACTION_SEND);
                 sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
                 sharingIntent.setType("image/jpg");
-
-                Intent chooserIntent = Intent.createChooser(sharingIntent, null);
-                chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                getContext().startActivity(chooserIntent);
-                break;
+                IntentUtils.launchActivity(context, sharingIntent);
+            default:
         }
     }
-
 
     @Override
     @NonNull
