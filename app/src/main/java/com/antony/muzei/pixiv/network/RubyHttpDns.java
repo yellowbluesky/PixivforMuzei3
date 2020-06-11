@@ -40,9 +40,7 @@ public class RubyHttpDns implements Dns
 			list.add(InetAddress.getByName("210.140.131.219"));
 		} else
 		{
-			list.add(InetAddress.getByName("210.140.131.187"));
-			list.add(InetAddress.getByName("210.140.131.188"));
-			list.add(InetAddress.getByName("210.140.131.189"));
+			list.add(InetAddress.getByName("210.140.92.143"));
 		}
 
 		return list;

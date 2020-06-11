@@ -89,7 +89,10 @@ public class RestClient
 						.header("X-Client-Hash", hashSecret)
 						.build();
 				return chain.proceed(request);
-			});
+			})
+			.connectTimeout(60L, TimeUnit.SECONDS)
+			.readTimeout(60L, TimeUnit.SECONDS)
+			.writeTimeout(60L, TimeUnit.SECONDS);
 
 	// Used for acquiring Ranking JSON
 	public static Retrofit getRetrofitRankingInstance(boolean bypass)
@@ -155,12 +158,15 @@ public class RestClient
 				{
 					Request original = chain.request();
 					Request request = original.newBuilder()
-							.header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")")
-							.header("Referer", "https://www.pixiv.net")
+							.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36")
+							.header("Referer", "https://www.pixiv.net/ranking.php")
 							.build();
 					return chain.proceed(request);
 				})
-				.addNetworkInterceptor(httpLoggingInterceptor);
+				.addNetworkInterceptor(httpLoggingInterceptor)
+				.connectTimeout(60L, TimeUnit.SECONDS)
+				.readTimeout(60L, TimeUnit.SECONDS)
+				.writeTimeout(60L, TimeUnit.SECONDS);
 		if (bypass)
 		{
 			imageHttpClientBuilder
