@@ -166,7 +166,8 @@ public class PixivArtWorker extends Worker
 		String uri2 = uri1.substring(0, uri1.length() - 4);
 
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		boolean bypassActive = sharedPreferences.getBoolean("pref_enableNetworkBypass", false);
+		//boolean bypassActive = sharedPreferences.getBoolean("pref_enableNetworkBypass", false);
+		boolean bypassActive = true;
 
 		for (String suffix : IMAGE_SUFFIXES)
 		{
@@ -633,7 +634,8 @@ public class PixivArtWorker extends Worker
 		}
 		String token = Integer.toString(selectedArtwork.getId());
 
-		boolean bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false);
+		// boolean bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false);
+		boolean bypassActive = true;
 
 		// Actually downloading the file
 		ImageDownloadService service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadService.class);
@@ -793,7 +795,8 @@ public class PixivArtWorker extends Worker
 
 		ArrayList<Artwork> artworkArrayList = new ArrayList<>();
 		Artwork artwork;
-		boolean bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false);
+		//boolean bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false);
+		boolean bypassActive = true;
 
 		if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES).contains(mode))
 		{
