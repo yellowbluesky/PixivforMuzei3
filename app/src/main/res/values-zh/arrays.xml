@@ -1,0 +1,39 @@
+<resources>
+    <string-array name="pref_updateMode_entries">
+        <item>日排行榜</item>
+        <item>周排行榜</item>
+        <item>月排行榜</item>
+        <item>新人</item>
+        <item>原创</item>
+        <item>受男性欢迎</item>
+        <item>受女性欢迎</item>
+        <item>关注订阅（需登录）</item>
+        <item>收藏夹（需登录）</item>
+        <item>推荐（需登录）</item>
+        <item>艺术家（需登录）</item>
+        <item>标签搜索（需登录）</item>
+    </string-array>
+    
+    <string-array name="pref_authFilterLevel_entries">
+        <item>SFW</item>
+        <item>轻度色情</item>
+        <item>较多色情</item>
+        <item>R18</item>
+    </string-array>
+    <string-array name="pref_rankingFilterLevel_entries">
+        <item>SFW</item>
+        <item>NSFW</item>
+    </string-array>
+
+    <string-array name="pref_aspectRatio_entries">
+        <item>人像和风景</item>
+        <item>人像</item>
+        <item>风景</item>
+    </string-array>
+
+    <string-array name="array_authFailActions_entries">
+        <item>更改为日排行榜</item>
+        <item>不更改模式，下载日排行榜</item>
+        <item>不更改模式，且不下载新图片</item>
+    </string-array>
+</resources>

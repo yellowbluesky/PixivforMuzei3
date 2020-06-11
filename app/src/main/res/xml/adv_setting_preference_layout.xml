@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~     This file is part of PixivforMuzei3.
+  ~
+  ~     PixivforMuzei3 is free software: you can redistribute it and/or modify
+  ~     it under the terms of the GNU General Public License as published by
+  ~     the Free Software Foundation, either version 3 of the License, or
+  ~     (at your option) any later version.
+  ~
+  ~     This program  is distributed in the hope that it will be useful,
+  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~     GNU General Public License for more details.
+  ~
+  ~     You should have received a copy of the GNU General Public License
+  ~     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <PreferenceCategory
+        android:key="prefCat_advFiltering"
+        android:title="@string/prefCat_advFiltering">
+        <DropDownPreference
+            android:defaultValue="@string/pref_aspectRatioDefault_entryValues"
+            android:entries="@array/pref_aspectRatio_entries"
+            android:entryValues="@array/pref_aspectRatio_entryValues"
+            android:key="pref_aspectRatioSelect"
+            android:persistent="true"
+            app:useSimpleSummaryProvider="true"
+            android:title="@string/prefTitle_aspectRatio" />
+        <SwitchPreference
+            android:key="pref_showManga"
+            android:persistent="true"
+            android:title="@string/prefTitle_showManga" />
+        <!--    <DropDownPreference-->
+        <!--        android:entries="@array/pref_tagFilterLanguage_entries"-->
+        <!--        android:entryValues="@array/pref_tagFilterLanguage_entryValues"-->
+        <!--        android:key="pref_tagFilterLanguage"-->
+        <!--        android:persistent="true"-->
+        <!--        android:summary="%s"-->
+        <!--        android:title="Filter by tag language" />-->
+        <SeekBarPreference
+            android:defaultValue="0"
+            android:key="prefSlider_minViews"
+            android:max="100"
+            android:persistent="true"
+            android:title="@string/prefTitle_minimumViews" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="prefCat_fileOptions"
+        android:title="@string/prefCat_fileOptions">
+<!--        <SeekBarPreference-->
+<!--            android:defaultValue="0"-->
+<!--            android:key="prefSlider_maxFileSize"-->
+<!--            android:max="50"-->
+<!--            android:persistent="true"-->
+<!--            android:title="@string/prefTitle_MaximumFileSize" />-->
+        <SwitchPreference
+            android:key="pref_autoClearMode"
+            android:persistent="true"
+            android:title="@string/prefTitle_autoClearMode" />
+        <SwitchPreference
+            android:key="pref_storeInExtStorage"
+            android:persistent="true"
+            android:summary="@string/prefSummary_storeInExtStorage"
+            android:title="@string/prefTitle_storeInExtStorage" />
+        <SeekBarPreference
+            android:defaultValue="3"
+            android:key="prefSlider_numToDownload"
+            android:max="10"
+            android:persistent="true"
+            android:title="@string/prefTitle_numToDownload"
+            app:min="1" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="prefCat_networkOptions"
+        android:title="@string/prefCat_networkingOptions">
+        <SwitchPreference
+            android:key="pref_enableNetworkBypass"
+            android:persistent="true"
+            android:title="@string/pref_enableNetworkBypass" />
+    </PreferenceCategory>
+</PreferenceScreen>

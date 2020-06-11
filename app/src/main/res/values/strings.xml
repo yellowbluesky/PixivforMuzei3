@@ -1,4 +1,8 @@
 <resources>
+    <string name="command_addToBookmark">Add to bookmarks</string>
+    <string name="command_viewArtworkDetails">View image details</string>
+    <string name="command_shareImage">Share image</string>
+
     <string name="app_name">Pixiv for Muzei 3</string>
     <string name="action_bar_title">Pixiv for Muzei 3 Settings</string>
 
@@ -6,31 +10,86 @@
     <string name="pref_updateMode">Update mode</string>
     <string name="pref_updateMode_default">daily_rank</string>
 
+    <string name="prefTitle_tagSearch">Image tag</string>
+    <string name="prefTitle_artistId">Artist ID</string>
+
+    <string name="prefTitle_rankingFilterSelect">Ranking NSFW filter level</string>
+    <string name="prefTitle_authFilterSelect">Feed NSFW filter level</string>
+
     <string name="prefTitle_showManga">Show manga</string>
-    <string name="pref_restrictMode">Show NSFW images</string>
+    <string name="prefTitle_minimumViews">Artwork minimum views</string>
+    <string name="prefTitle_numToDownload">Number of artwork to download at a time</string>
+
+    <string name="prefTitle_aspectRatio">Artwork aspect ratio</string>
+    <string name="pref_aspectRatioDefault_entryValues">0</string>
 
     <string name="prefTitle_autoClearMode">Automatically clear cache at 1AM daily</string>
 
-    <string name="prefTitle_nswFilterLevel">NSFW filtering level</string>
-    <string name="pref_nsfwFilterLevel_default">2</string>
     <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="prefCat_authSettings">Pixiv Login</string>
-    <string name="pref_loginId">Pixiv ID</string>
-    <string name="pref_loginPassword">Password</string>
+    <string name="prefTitle_loginButton">Login</string>
+    <string name="prefSummary_notLoggedIn">Not logged in</string>
+    <string name="prefTitle_logoutButton">Logout</string>
+    <string name="prefSummary_LoggedIn">Logged in as </string>
 
-    <string name="prefTitle_authStatus">Pixiv Authentication Status</string>
-    <string name="prefSummary_authSuccess">Logged in as </string>
-    <string name="prefSummary_authFail">Not logged in</string>
+    <string name="pref_authFailActionDropDown">Authentication failure action</string>
 
     <string name="prefCat_about">About</string>
     <string name="prefTitle_openNsfwWiki">Explanation of NSFW levels</string>
-    <string name="appStatus">Current app status</string>
+    <string name="prefTitle_mainDeveloper">Main developer</string>
+    <string name="prefTitle_keyContributor">Key contributor</string>
 
-    <string name="toast_authFailed">Pixiv for Muzei 3: Authentication failed, switching to daily ranking</string>
-    <string name="toast_newCredentials">New credentials found</string>
+    <string name="toast_authFailed">Authentication failed. Check your username or password</string>
+    <string name="toast_authFailedSwitch">Pixiv for Muzei 3: Login failed, switching to daily ranking</string>
+    <string name="toast_authFailedDown">Pixiv for Muzei 3: Login failed, temporarily downloading daily ranking</string>
+    <string name="toast_authFailedRetry">Pixiv for Muzei 3: Login failed, will try again</string>
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
     <string name="toast_newFilterMode">New filtering mode, clearing image cache</string>
     <string name="toast_clearingCache">Clearing image cache</string>
+    <string name="toast_newArtist">New Artist, clearing image cache</string>
+    <string name="toast_newTag">New search tag, clearing image cache</string>
+    <string name="toast_newFilterSelect">New filter selection, clearing image cache</string>
+    <string name="toast_addingToBookmarks">Pixiv for Muzei 3: Adding to bookmark</string>
+    <string name="toast_loginFirst">Please login first</string>
+
+    <string name="attr_daily">Daily Ranking #</string>
+    <string name="attr_weekly">Weekly Ranking #</string>
+    <string name="attr_monthly">Monthly Ranking #</string>
+    <string name="attr_rookie">Rookie #</string>
+    <string name="attr_original">Original #</string>
+    <string name="attr_male">Popular with males #</string>
+    <string name="attr_female">Popular with females #</string>
+    <string name="prefTitle_storeInExtStorage">Save pictures into external storage</string>
+    <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
+    <string name="prefCat_advFiltering">Advanced filtering</string>
+    <string name="prefCat_fileOptions">File Options</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="tab_heading_main">Main</string>
+    <string name="tab_heading_adv_options">Advanced settings</string>
+    <string name="tab_heading_credits">Credits</string>
+    <string name="tab_heading_roadmap">Roadmap</string>
+    <string name="prompt_email">Pixiv username</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Login</string>
+    <string name="prefSummary_currentlyLoggedInAs">"Currently logged in as "</string>
+
+    <string name="prefSummary_stuckApp">If the app is not working, press here</string>
+    <string name="prefTitle_MaximumFileSize">Maximum artwork size</string>
+    <string name="prefSummary_noFileSizeLimit">No limit</string>
+    <string name="prefTitle_sendFeedback">Send Feedback or Suggestions</string>
+    <string name="prefCat_networkingOptions">Networking options</string>
+    <string name="pref_enableNetworkBypass">Enable network filter bypass</string>
+    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 is not the active source</string>
+    <string name="dialog_selectSource">Please open Muzei to the Sources tab, and select \"Pixiv for Muzei 3\"</string>
+    <string name="dialogTitle_muzeiNotInstalled">Muzei is not installed</string>
+    <string name="dialog_installMuzei">Would you like to install Muzei?</string>
+    <string name="tab_heading_artwork_delete">Delete Artwork</string>
+    <string name="snackbar_selectArtworkFirst">Select at least one artwork to delete</string>
+    <string name="snackbar_deletedArtworks">artworks deleted</string>
+    <string name="fab_delete_selected_artwork">Delete selected artwork</string>
+    <string name="artwork">Artwork</string>
+    <string name="dialog_no">No</string>
+    <string name="dialog_yes">Yes</string>
 
 </resources>

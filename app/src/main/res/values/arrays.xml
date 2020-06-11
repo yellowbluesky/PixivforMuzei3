@@ -3,26 +3,98 @@
         <item>Daily ranking</item>
         <item>Weekly ranking</item>
         <item>Monthly ranking</item>
+        <item>Rookie ranking</item>
+        <item>Original ranking</item>
+        <item>Popular with males ranking</item>
+        <item>Popular with females ranking</item>
         <item>Follow feed (Login required)</item>
         <item>Bookmark images (Login Required)</item>
+        <item>Recommended (Login Required)</item>
+        <item>Specific Artist (Login Required)</item>
+        <item>Tag search (Login Required)</item>
     </string-array>
+
     <string-array name="pref_updateMode_entryValues">
-        <item>daily_rank</item>
-        <item>weekly_rank</item>
-        <item>monthly_rank</item>
+        <item>daily</item>
+        <item>weekly</item>
+        <item>monthly</item>
+        <item>rookie</item>
+        <item>original</item>
+        <item>male</item>
+        <item>female</item>
         <item>follow</item>
         <item>bookmark</item>
+        <item>recommended</item>
+        <item>artist</item>
+        <item>tag_search</item>
     </string-array>
-    <string-array name="pref_nsfwmode_entries">
+
+    <string-array name="pref_authFilterLevel_entries">
         <item>SFW</item>
         <item>Slightly ecchi</item>
         <item>Fairly ecchi</item>
         <item>R18</item>
     </string-array>
-    <string-array name="pref_nsfwmode_entryvalues">
+    <string-array name="pref_authFilterLevel_entryvalues">
         <item>"2"</item>
         <item>"4"</item>
         <item>"6"</item>
         <item>"8"</item>
+    </string-array>
+
+    <string-array name="pref_authFilterDefault_entryvalues">
+        <item>"2"</item>
+    </string-array>
+
+    <string-array name="pref_rankingFilterLevel_entries">
+        <item>SFW</item>
+        <item>NSFW</item>
+    </string-array>
+    <string-array name="pref_rankingFilterLevel_entryvalues">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+    <string-array name="pref_rankingFilterDefault_entryvalues">
+        <item>0</item>
+    </string-array>
+
+    <string-array name="pref_aspectRatio_entries">
+        <item>Portrait and Landscape</item>
+        <item>Portrait</item>
+        <item>Landscape</item>
+    </string-array>
+
+    <string-array name="pref_aspectRatio_entryValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="pref_tagFilterLanguage_entries">
+        <item>日本語</item>
+        <item>English</item>
+        <item>한국어</item>
+        <item>简体中文</item>
+        <item>繁體中文</item>
+    </string-array>
+
+    <string-array name="pref_tagFilterLanguage_entryValues">
+        <item>ja</item>
+        <item>en</item>
+        <item>ko</item>
+        <item>zh</item>
+        <item>zh_tw</item>
+    </string-array>
+
+    <string-array name="array_authFailActions_entries">
+        <item>Change mode to Daily Ranking</item>
+        <item>Do not change mode, download Daily Ranking</item>
+        <item>Do not change mode, do not download picture</item>
+    </string-array>
+
+    <string-array name="array_authFailActions_entryvalues">
+        <item>"changeDaily</item>
+        <item>"doNotChange_downDaily</item>
+        <item>"doNotChange_doNotDown</item>
     </string-array>
 </resources>

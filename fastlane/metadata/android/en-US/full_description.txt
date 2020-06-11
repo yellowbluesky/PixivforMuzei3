@@ -1,0 +1,27 @@
+Plugin for the new Muzei 3, to display Pixiv artworks as your wallpaper
+
+Features:
+
+* Can pull artworks from a variety of sources:
+	- Daily, Weekly, Monthly, Rookie, Original, Male, or Female Rankings
+	- User's followed artists
+	- User's bookmarked artworks
+	- Artwork's from user's recommended feed
+	- A specified artist ID
+	- A specified tag
+* Can filter against multiple criteria:
+	- Four levels of granular NSFW filtering
+	- Aspect ratio
+	- View count
+	- Manga or illustration
+
+* Suports Oauth2 authentication
+
+* Option to automatically clear images everyday
+* Option to save artwork to user storage
+
+* Works in China, SNI bypass
+
+Privacy respecting
+* No tracking or collection of user information
+* No advertisements
