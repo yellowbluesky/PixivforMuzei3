@@ -19,8 +19,8 @@ package com.antony.muzei.pixiv.provider.exceptions;
 
 public class AccessTokenAcquisitionException extends Exception
 {
-	public AccessTokenAcquisitionException(String message)
-	{
-		super(message);
-	}
+    public AccessTokenAcquisitionException(String message)
+    {
+        super(message);
+    }
 }

@@ -19,8 +19,8 @@ package com.antony.muzei.pixiv.provider.exceptions;
 
 public class ImageTooLargeException extends Exception
 {
-	public ImageTooLargeException(String message)
-	{
-		super(message);
-	}
+    public ImageTooLargeException(String message)
+    {
+        super(message);
+    }
 }

@@ -25,30 +25,29 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.util.IntentUtils;
 
-public class CreditsPreferenceFragment extends PreferenceFragmentCompat
-{
-	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.credits_preference_layout);
+public class CreditsPreferenceFragment extends PreferenceFragmentCompat {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        addPreferencesFromResource(R.xml.credits_preference_layout);
 
-		Preference sendFeedbackPreference = findPreference("pref_sendFeedback");
-		sendFeedbackPreference.setOnPreferenceClickListener(preference ->
-		{
-			Intent intent = new Intent(Intent.ACTION_SENDTO);
-			intent.setData(Uri.parse("mailto:")); // only email apps should handle this
-			intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"yellowbluesky1@gmail.com"});
-			intent.putExtra(Intent.EXTRA_SUBJECT, "Pixiv for Muzei 3 Feedback and Suggestions");
-			startActivity(intent);
-			return true;
-		});
-	}
+        Preference sendFeedbackPreference = findPreference("pref_sendFeedback");
+        if (sendFeedbackPreference == null) {
+            return;
+        }
+        sendFeedbackPreference.setOnPreferenceClickListener(preference -> {
+            Intent intent = new Intent(Intent.ACTION_SENDTO);
+            intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"yellowbluesky1@gmail.com"});
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Pixiv for Muzei 3 Feedback and Suggestions");
+            return IntentUtils.launchActivity(this, intent);
+        });
+    }
 
-	@Override
-	public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
-	{
+    @Override
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 
-	}
+    }
 }

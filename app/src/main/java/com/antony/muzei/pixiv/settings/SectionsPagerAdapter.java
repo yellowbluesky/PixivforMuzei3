@@ -39,46 +39,46 @@ import com.antony.muzei.pixiv.settings.fragments.RoadmapPreferenceFragment;
 public class SectionsPagerAdapter extends FragmentPagerAdapter
 {
 
-	@StringRes
-	private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_artwork_delete, R.string.tab_heading_credits, R.string.tab_heading_roadmap};
-	private final Context mContext;
+    @StringRes
+    private static final int[] TAB_TITLES = new int[]{R.string.tab_heading_main, R.string.tab_heading_adv_options, R.string.tab_heading_artwork_delete, R.string.tab_heading_credits, R.string.tab_heading_roadmap};
+    private final Context mContext;
 
-	public SectionsPagerAdapter(Context context, FragmentManager fm)
-	{
-		super(fm, FragmentPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
-		mContext = context;
-	}
+    public SectionsPagerAdapter(Context context, FragmentManager fm)
+    {
+        super(fm, FragmentPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        mContext = context;
+    }
 
-	@Override
-	public Fragment getItem(int position)
-	{
-		switch (position)
-		{
-			case 0:
-				return new MainPreferenceFragment();
-			case 1:
-				return new AdvOptionsPreferenceFragment();
-			case 2:
-				return new ArtworkDeletionFragment();
-			case 3:
-			default:
-				return new CreditsPreferenceFragment();
-			case 4:
-				return new RoadmapPreferenceFragment();
-		}
-	}
+    @Override
+    public Fragment getItem(int position)
+    {
+        switch (position)
+        {
+            case 0:
+                return new MainPreferenceFragment();
+            case 1:
+                return new AdvOptionsPreferenceFragment();
+            case 2:
+                return new ArtworkDeletionFragment();
+            case 3:
+            default:
+                return new CreditsPreferenceFragment();
+            case 4:
+                return new RoadmapPreferenceFragment();
+        }
+    }
 
-	@Nullable
-	@Override
-	public CharSequence getPageTitle(int position)
-	{
-		return mContext.getResources().getString(TAB_TITLES[position]);
-	}
+    @Nullable
+    @Override
+    public CharSequence getPageTitle(int position)
+    {
+        return mContext.getResources().getString(TAB_TITLES[position]);
+    }
 
-	@Override
-	public int getCount()
-	{
-		// How many pages to show
-		return 5;
-	}
+    @Override
+    public int getCount()
+    {
+        // How many pages to show
+        return 5;
+    }
 }

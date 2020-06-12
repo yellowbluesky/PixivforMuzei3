@@ -23,56 +23,56 @@ import java.util.List;
 
 public class Contents
 {
-	@Json(name = "contents")
-	private List<RankingArtwork> artworks;
-	private String mode;
-	private String content;
-	private int page;
-	//private int prev;
-	private int next;
-	private String date;
-	//private boolean next_date;
-	private String prev_date;
-	private int rank_total;
+    @Json(name = "contents")
+    private List<RankingArtwork> artworks;
+    private String mode;
+    private String content;
+    private int page;
+    //private int prev;
+    private int next;
+    private String date;
+    //private boolean next_date;
+    private String prev_date;
+    private int rank_total;
 
-	public String getPrev_date()
-	{
-		return prev_date;
-	}
+    public String getPrev_date()
+    {
+        return prev_date;
+    }
 
-	public List<RankingArtwork> getArtworks()
-	{
-		return artworks;
-	}
+    public List<RankingArtwork> getArtworks()
+    {
+        return artworks;
+    }
 
-	public String getMode()
-	{
-		return mode;
-	}
+    public String getMode()
+    {
+        return mode;
+    }
 
-	public String getContent()
-	{
-		return content;
-	}
+    public String getContent()
+    {
+        return content;
+    }
 
-	public int getPage()
-	{
-		return page;
-	}
+    public int getPage()
+    {
+        return page;
+    }
 
-	public int getNext()
-	{
-		return next;
-	}
+    public int getNext()
+    {
+        return next;
+    }
 
-	public String getDate()
-	{
-		return date;
-	}
+    public String getDate()
+    {
+        return date;
+    }
 
-	public int getRank_total()
-	{
-		return rank_total;
-	}
+    public int getRank_total()
+    {
+        return rank_total;
+    }
 
 }

@@ -29,11 +29,11 @@ import retrofit2.http.POST;
 
 public interface OAuthResponseService
 {
-	@FormUrlEncoded
-	@POST("/auth/token")
-	Call<OauthResponse> postRefreshToken(@FieldMap Map<String, String> params);
+    @FormUrlEncoded
+    @POST("/auth/token")
+    Call<OauthResponse> postRefreshToken(@FieldMap Map<String, String> params);
 
-	@FormUrlEncoded
-	@POST("/v2/illust/bookmark/add")
-	Call<OauthResponse> postArtworkBookmark(@Header("Authorization") String accessToken, @FieldMap Map<String, String> params);
+    @FormUrlEncoded
+    @POST("/v2/illust/bookmark/add")
+    Call<OauthResponse> postArtworkBookmark(@Header("Authorization") String accessToken, @FieldMap Map<String, String> params);
 }

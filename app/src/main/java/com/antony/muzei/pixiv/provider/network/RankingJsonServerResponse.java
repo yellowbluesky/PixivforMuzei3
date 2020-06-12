@@ -25,9 +25,9 @@ import retrofit2.http.Query;
 
 public interface RankingJsonServerResponse
 {
-	@GET("/ranking.php")
-	Call<Contents> getRankingJson(@Query("mode") String mode);
+    @GET("/ranking.php")
+    Call<Contents> getRankingJson(@Query("mode") String mode);
 
-	@GET("/ranking.php")
-	Call<Contents> getRankingJson(@Query("mode") String mode, @Query("p") int page, @Query("date") String date);
+    @GET("/ranking.php")
+    Call<Contents> getRankingJson(@Query("mode") String mode, @Query("p") int page, @Query("date") String date);
 }

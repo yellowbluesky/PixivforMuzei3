@@ -29,23 +29,23 @@ import okhttp3.Dns;
  */
 public class RubyHttpDns implements Dns
 {
-	@Override
-	public List<InetAddress> lookup(String hostname) throws UnknownHostException
-	{
-		List<InetAddress> list = new ArrayList<>();
-		if (!hostname.contains("i.pximg"))
-		{
+    @Override
+    public List<InetAddress> lookup(String hostname) throws UnknownHostException
+    {
+        List<InetAddress> list = new ArrayList<>();
+        if (!hostname.contains("i.pximg"))
+        {
 
-			list.add(InetAddress.getByName("210.140.92.136"));
-			list.add(InetAddress.getByName("210.140.92.137"));
-			list.add(InetAddress.getByName("210.140.92.145"));
-		} else
-		{
-			list.add(InetAddress.getByName("210.140.131.187"));
-			list.add(InetAddress.getByName("210.140.131.188"));
-			list.add(InetAddress.getByName("210.140.131.189"));
-		}
+            list.add(InetAddress.getByName("210.140.92.136"));
+            list.add(InetAddress.getByName("210.140.92.137"));
+            list.add(InetAddress.getByName("210.140.92.145"));
+        } else
+        {
+            list.add(InetAddress.getByName("210.140.131.187"));
+            list.add(InetAddress.getByName("210.140.131.188"));
+            list.add(InetAddress.getByName("210.140.131.189"));
+        }
 
-		return list;
-	}
+        return list;
+    }
 }
