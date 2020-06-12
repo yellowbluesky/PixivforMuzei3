@@ -20,7 +20,7 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.fragments.ArtworkDeletionFragment">
+    tools:context=".settings.deleteArtwork.ArtworkDeletionFragment">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
