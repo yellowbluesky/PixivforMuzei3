@@ -134,4 +134,13 @@ public class IntentUtils {
         return true;
     }
 
+    @NonNull
+    public static Intent chooseIntent(@NonNull Intent origin, @NonNull String title, @Nullable Context context) {
+        Intent chooserIntent = Intent.createChooser(origin, title);
+        if (context != null && !(context instanceof ContextThemeWrapper)) {
+            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        return chooserIntent;
+    }
+
 }
