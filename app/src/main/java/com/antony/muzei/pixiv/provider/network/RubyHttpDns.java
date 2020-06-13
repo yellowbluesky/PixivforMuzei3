@@ -35,26 +35,12 @@ public class RubyHttpDns implements Dns
         List<InetAddress> list = new ArrayList<>();
         if (!hostname.contains("i.pximg"))
         {
-
-<<<<<<< HEAD:app/src/main/java/com/antony/muzei/pixiv/network/RubyHttpDns.java
 			list.add(InetAddress.getByName("210.140.131.223"));
 			list.add(InetAddress.getByName("210.140.131.219"));
 		} else
 		{
 			list.add(InetAddress.getByName("210.140.92.143"));
 		}
-=======
-            list.add(InetAddress.getByName("210.140.92.136"));
-            list.add(InetAddress.getByName("210.140.92.137"));
-            list.add(InetAddress.getByName("210.140.92.145"));
-        } else
-        {
-            list.add(InetAddress.getByName("210.140.131.187"));
-            list.add(InetAddress.getByName("210.140.131.188"));
-            list.add(InetAddress.getByName("210.140.131.189"));
-        }
->>>>>>> origin/newPackageOrganization:app/src/main/java/com/antony/muzei/pixiv/provider/network/RubyHttpDns.java
-
         return list;
     }
 }

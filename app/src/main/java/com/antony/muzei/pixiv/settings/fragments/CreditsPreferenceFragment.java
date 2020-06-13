@@ -40,7 +40,7 @@ public class CreditsPreferenceFragment extends PreferenceFragmentCompat {
         sendFeedbackPreference.setOnPreferenceClickListener(preference -> {
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(Uri.parse("mailto:")); // only email apps should handle this
-            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"yellowbluesky1@gmail.com"});
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"antonyhupro@gmail.com"});
             intent.putExtra(Intent.EXTRA_SUBJECT, "Pixiv for Muzei 3 Feedback and Suggestions");
             return IntentUtils.launchActivity(this, intent);
         });

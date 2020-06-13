@@ -100,7 +100,7 @@ public class PixivArtService
         String accessToken = sharedPrefs.getString("accessToken", "");
         long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
 
-        if (accessTokenIssueTime > (System.currentTimeMillis() / 1000) - 3600)
+        if ((System.currentTimeMillis() / 1000) - accessTokenIssueTime < 3600)
         {
             Log.i(LOG_TAG, "Existing access token found, using it");
             Log.d(LOG_TAG, "getAccessToken(): Exited");
