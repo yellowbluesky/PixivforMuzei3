@@ -91,33 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Does a check to see if PixivForMuzei3 is selected as the active provider in Muzei
     private boolean isProviderSelected() {
-        Cursor authorityCursor = getApplicationContext()
-                .getContentResolver()
-                .query(MuzeiContract.Sources.getContentUri(),
-                        new String[]{MuzeiContract.Sources.COLUMN_NAME_AUTHORITY},
-                        null,
-                        null,
-                        null);
-
-        if (authorityCursor == null) {
-            return false;
-        }
-
-        int authorityColumn;
-        try {
-            authorityColumn = authorityCursor.getColumnIndex(MuzeiContract.Sources.COLUMN_NAME_AUTHORITY);
-        } catch (NullPointerException ex) {
-            ex.printStackTrace();
-            return true;
-        }
-        while (authorityCursor.moveToNext()) {
-            String selectedAuthority = authorityCursor.getString(authorityColumn);
-            if (selectedAuthority.equals("com.antony.muzei.pixiv.provider")) {
-                authorityCursor.close();
-                return true;
-            }
-        }
-        authorityCursor.close();
-        return false;
+        return MuzeiContract.Sources.isProviderSelected(this, "com.antony.muzei.pixiv.provider");
     }
 }
