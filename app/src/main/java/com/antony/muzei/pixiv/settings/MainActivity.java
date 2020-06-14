@@ -67,11 +67,13 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .show();
         } else if (!isProviderSelected()) {
-            // TODO localize these strings
             new AlertDialog.Builder(this)
                     .setTitle(getApplicationContext().getString(R.string.dialogTitle_muzeiNotActiveSource))
                     .setMessage(getApplicationContext().getString(R.string.dialog_selectSource))
-                    .setNeutralButton(android.R.string.ok, null)
+                    .setNeutralButton(android.R.string.ok, (dialog, which) ->
+                            IntentUtils.launchActivity(
+                                    this,
+                                    MuzeiContract.Sources.createChooseProviderIntent("com.antony.muzei.pixiv.provider")))
                     .show();
         }
     }
