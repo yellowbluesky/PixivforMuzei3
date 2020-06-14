@@ -70,10 +70,11 @@ public class MainActivity extends AppCompatActivity {
             new AlertDialog.Builder(this)
                     .setTitle(getApplicationContext().getString(R.string.dialogTitle_muzeiNotActiveSource))
                     .setMessage(getApplicationContext().getString(R.string.dialog_selectSource))
-                    .setNeutralButton(android.R.string.ok, (dialog, which) ->
-                            IntentUtils.launchActivity(
-                                    this,
-                                    MuzeiContract.Sources.createChooseProviderIntent("com.antony.muzei.pixiv.provider")))
+                    .setNeutralButton(android.R.string.ok, (dialog, which) -> {
+                        Intent intent = MuzeiContract.Sources.createChooseProviderIntent("com.antony.muzei.pixiv.provider");
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        IntentUtils.launchActivity(this, intent);
+                    })
                     .show();
         }
     }
