@@ -46,23 +46,21 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.login.OauthResponse;
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException;
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException;
-import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork;
-import com.antony.muzei.pixiv.provider.network.moshi.Contents;
-import com.antony.muzei.pixiv.provider.network.moshi.Illusts;
-import com.antony.muzei.pixiv.login.OauthResponse;
-import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork;
 import com.antony.muzei.pixiv.provider.network.AuthJsonServerResponse;
 import com.antony.muzei.pixiv.provider.network.ImageDownloadServerResponse;
 import com.antony.muzei.pixiv.provider.network.RankingJsonServerResponse;
 import com.antony.muzei.pixiv.provider.network.RestClient;
+import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork;
+import com.antony.muzei.pixiv.provider.network.moshi.Contents;
+import com.antony.muzei.pixiv.provider.network.moshi.Illusts;
+import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork;
 import com.google.android.apps.muzei.api.provider.Artwork;
 import com.google.android.apps.muzei.api.provider.ProviderClient;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
-
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -80,6 +78,7 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okio.Okio;
 import retrofit2.Call;
 
 public class PixivArtWorker extends Worker
@@ -200,7 +199,7 @@ public class PixivArtWorker extends Worker
     */
     private int getLocalFileExtension(File image) throws IOException, CorruptFileException
     {
-        byte[] byteArray = FileUtils.readFileToByteArray(image);
+        byte[] byteArray = Okio.buffer(Okio.source(image)).readByteArray();
         int length = byteArray.length;
         int result = 0;
         // if jpeg
