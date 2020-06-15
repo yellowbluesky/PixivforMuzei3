@@ -81,6 +81,8 @@ import okhttp3.ResponseBody;
 import okio.Okio;
 import retrofit2.Call;
 
+import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
+
 public class PixivArtWorker extends Worker
 {
     private static final String LOG_TAG = "ANTONY_WORKER";
@@ -126,7 +128,7 @@ public class PixivArtWorker extends Worker
     {
         Log.i(LOG_TAG, "Storing tokens");
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("accessToken", response.getPixivOauthResponse().getAccess_token());
+        editor.putString(PREFERENCE_PIXIV_ACCESS_TOKEN, response.getPixivOauthResponse().getAccess_token());
         editor.putLong("accessTokenIssueTime", (System.currentTimeMillis() / 1000));
         editor.putString("refreshToken", response.getPixivOauthResponse().getRefresh_token());
         editor.putString("userId", response.getPixivOauthResponse().getUser().getId());

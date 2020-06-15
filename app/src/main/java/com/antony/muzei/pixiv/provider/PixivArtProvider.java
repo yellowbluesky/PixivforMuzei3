@@ -54,7 +54,8 @@ import java.util.List;
 import java.util.Objects;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static com.antony.muzei.pixiv.provider.ProviderConst.SHARE_IMAGE_INTENT_CHOOSER_TITLE;
+import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
+import static com.antony.muzei.pixiv.provider.PixivProviderConst.SHARE_IMAGE_INTENT_CHOOSER_TITLE;
 
 public class PixivArtProvider extends MuzeiArtProvider {
 
@@ -95,7 +96,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
             list.add(viewDetailsAction);
         }
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        if (!sharedPrefs.getString("accessToken", "").isEmpty()) {
+        if (!sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty()) {
             RemoteActionCompat collectAction = addToBookmarks(artwork);
             if (collectAction != null) {
                 list.add(collectAction);
@@ -216,7 +217,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
                     break;
                 }
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                if (sharedPrefs.getString("accessToken", "").isEmpty()) {
+                if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty()) {
                     new Handler(Looper.getMainLooper()).post(() ->
                             Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT).show());
                     return;
