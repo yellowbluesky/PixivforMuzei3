@@ -1,0 +1,5 @@
+ext {
+    cfg = [
+            libKotlin: getProperty('kotlin.version')
+    ]
+}

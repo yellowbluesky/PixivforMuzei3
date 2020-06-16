@@ -14,6 +14,7 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package com.antony.muzei.pixiv.provider
 
 import android.Manifest
@@ -49,7 +50,6 @@ import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import okhttp3.Response
 import okhttp3.ResponseBody
-import org.apache.commons.io.FileUtils
 import retrofit2.Call
 import java.io.*
 import java.util.*
@@ -57,8 +57,58 @@ import java.util.concurrent.TimeUnit
 
 class PixivArtWorker(
         context: Context,
-        params: WorkerParameters) : Worker(context, params)
-{
+        params: WorkerParameters
+) : Worker(context, params) {
+
+    companion object {
+        private const val LOG_TAG = "ANTONY_WORKER"
+        private const val WORKER_TAG = "ANTONY"
+        private val IMAGE_SUFFIXES = arrayOf(".png", ".jpg")
+        private var clearArtwork = false
+
+        @JvmStatic
+        fun enqueueLoad(clear: Boolean, context: Context?) {
+            if (clear) {
+                clearArtwork = true
+            }
+            context?.also {
+                Constraints.Builder().apply {
+                    setRequiredNetworkType(NetworkType.CONNECTED)
+                }.let { builder ->
+                    OneTimeWorkRequest.Builder(PixivArtWorker::class.java)
+                        .setConstraints(builder.build())
+                        .addTag(WORKER_TAG)
+                        .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
+                        .build()
+                }.also { request ->
+                    WorkManager.getInstance(it).enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request)
+                }
+            }
+            // Must be a uniqueWork
+            // If not Muzei will queue MANY at once on initial load
+            // This is good for saturating a network link and for fast picture downloads
+            // However, race conditions develop if work required is authenticated
+            // unique work ensures that only one Artwork is being processed at once
+        }
+
+        // Upon successful authentication stores tokens returned from Pixiv into device memory
+        @JvmStatic
+        fun storeTokens(sharedPrefs: SharedPreferences, response: OauthResponse) {
+            Log.i(LOG_TAG, "Storing tokens")
+            sharedPrefs.edit().apply {
+                putString("accessToken", response.pixivOauthResponse.access_token)
+                putLong("accessTokenIssueTime", System.currentTimeMillis() / 1000)
+                putString("refreshToken", response.pixivOauthResponse.refresh_token)
+                putString("userId", response.pixivOauthResponse.user.id)
+                putString("name", response.pixivOauthResponse.user.name)
+                apply()
+            }
+            // Not yet tested, but I believe that this needs to be a commit() and not an apply()
+            // Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
+            Log.i(LOG_TAG, "Stored tokens")
+        }
+    }
+
     /*
         Ranking images are only provided with a URL to a low resolution thumbnail
         We want the high resolution image, so we need to do some work first
@@ -266,15 +316,10 @@ class PixivArtWorker(
         return Uri.fromFile(imageInternal)
     }
 
-    private fun isArtworkNull(artwork: Artwork?): Boolean
-    {
-        if (artwork == null)
-        {
-            Log.e(LOG_TAG, "Null artwork returned, retrying at later time")
-            return true
-        }
-        return false
-    }
+    private fun isArtworkNull(artwork: Artwork?): Boolean =
+        artwork.also {
+            it ?: Log.e(LOG_TAG, "Null artwork returned, retrying at later time")
+        } == null
 
     /*
         Provided an artowrk ID (token), traverses the PixivArtProvider ContentProvider and sees
@@ -301,30 +346,25 @@ class PixivArtWorker(
         1   Landscape
         2   Portrait
      */
-    private fun isDesiredAspectRatio(width: Int,
-                                     height: Int,
-                                     aspectRatioSetting: Int): Boolean
-    {
-        when (aspectRatioSetting)
-        {
-            0 -> return true
-            1 -> return height >= width
-            2 -> return height <= width
+    private fun isDesiredAspectRatio(
+        width: Int,
+        height: Int,
+        aspectRatioSetting: Int
+    ): Boolean =
+        when (aspectRatioSetting) {
+            0 -> true
+            1 -> height >= width
+            2 -> height <= width
+            else -> true
         }
-        return true
-    }
 
     // Scalar must match with scalar in SettingsActivity
-    private fun isEnoughViews(artworkViewCount: Int,
-                              minimumDesiredViews: Int): Boolean
-    {
-        return artworkViewCount >= minimumDesiredViews * 500
-    }
+    private fun isEnoughViews(
+        artworkViewCount: Int,
+        minimumDesiredViews: Int
+    ): Boolean = artworkViewCount >= minimumDesiredViews * 500
 
-    private fun isImageTooLarge(sizeBytes: Long, limitBytes: Long): Boolean
-    {
-        return sizeBytes > limitBytes
-    }
+    private fun isImageTooLarge(sizeBytes: Long, limitBytes: Long): Boolean = sizeBytes > limitBytes
 
     private fun generateShuffledArray(length: Int): IntArray
     {
@@ -803,56 +843,4 @@ class PixivArtWorker(
         return Result.success()
     }
 
-    companion object
-    {
-        private const val LOG_TAG = "ANTONY_WORKER"
-        private const val WORKER_TAG = "ANTONY"
-        private val IMAGE_SUFFIXES = arrayOf(".png", ".jpg")
-        private var clearArtwork = false
-
-        @JvmStatic
-        fun enqueueLoad(clear: Boolean, context: Context?)
-        {
-            if (clear)
-            {
-                clearArtwork = true
-            }
-            val constraints = Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            val request = OneTimeWorkRequest.Builder(PixivArtWorker::class.java)
-                    .setConstraints(constraints)
-                    .addTag(WORKER_TAG)
-                    .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
-                    .build()
-            WorkManager.getInstance(context!!).enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request)
-            // Must be a uniqueWork
-            // If not Muzei will queue MANY at once on initial load
-            // This is good for saturating a network link and for fast picture downloads
-            // However, race conditions develop if work required is authenticated
-            // unique work ensures that only one Artwork is being processed at once
-        }
-
-        // Upon successful authentication stores tokens returned from Pixiv into device memory
-        @JvmStatic
-        fun storeTokens(sharedPrefs: SharedPreferences,
-                        response: OauthResponse)
-        {
-            Log.i(LOG_TAG, "Storing tokens")
-            val editor = sharedPrefs.edit()
-            editor.apply()
-            {
-                
-            }
-            editor.putString("accessToken", response.pixivOauthResponse.access_token)
-            editor.putLong("accessTokenIssueTime", System.currentTimeMillis() / 1000)
-            editor.putString("refreshToken", response.pixivOauthResponse.refresh_token)
-            editor.putString("userId", response.pixivOauthResponse.user.id)
-            editor.putString("name", response.pixivOauthResponse.user.name)
-            // Not yet tested, but I believe that this needs to be a commit() and not an apply()
-            // Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
-            editor.apply()
-            Log.i(LOG_TAG, "Stored tokens")
-        }
-    }
 }
