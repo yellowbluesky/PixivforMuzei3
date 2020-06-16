@@ -95,7 +95,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         if (viewDetailsAction != null) {
             list.add(viewDetailsAction);
         }
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(checkContext());
         if (!sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty()) {
             RemoteActionCompat collectAction = addToBookmarks(artwork);
             if (collectAction != null) {
@@ -110,7 +110,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         if (!running) {
             return null;
         }
-        final Context context = requireContext();
+        final Context context = checkContext();
         File newFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
                 artwork.getToken() + ".png");
         Uri uri = FileProvider.getUriForFile(context, "com.antony.muzei.pixiv.fileprovider", newFile);
@@ -142,7 +142,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         Intent intent = new Intent(Intent.ACTION_VIEW,
                 Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
         intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-        final Context context = requireContext();
+        final Context context = checkContext();
         String title = context.getString(R.string.command_viewArtworkDetails);
         RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
                 IconCompat.createWithResource(context, R.drawable.muzei_launch_command),
@@ -162,7 +162,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
             return null;
         }
         Log.v("BOOKMARK", "adding to bookmarks");
-        final Context context = requireContext();
+        final Context context = checkContext();
         Intent addToBookmarkIntent = new Intent(context, AddToBookmarkService.class);
         addToBookmarkIntent.putExtra("artworkId", artwork.getToken());
         PendingIntent pendingIntent = PendingIntent.getService(context, 0, addToBookmarkIntent,
@@ -191,7 +191,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         LinkedList<UserCommand> commands = new LinkedList<>();
         // Android 10 limits the ability for activities to run in the background
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            Context context = requireContext();
+            Context context = checkContext();
             UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS,
                     context.getString(R.string.command_addToBookmark));
             commands.add(addToBookmark);
@@ -271,7 +271,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
 
         Context context;
         try {
-            context = requireContext();
+            context = checkContext();
         } catch (IllegalStateException ex) {
             throw new IOException("", ex);
         }
@@ -301,7 +301,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
      * @throws IllegalStateException if not currently running after {@link #onCreate()}.
      */
     @NonNull
-    private Context requireContext() {
+    private Context checkContext() {
         Context context = getContext();
         if (!running || context == null) {
             throw new IllegalStateException("Provider " + this + " not in running.");
