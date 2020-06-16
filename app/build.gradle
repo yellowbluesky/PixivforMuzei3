@@ -1,9 +1,11 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
 
 android {
-    apply plugin: 'kotlin-android'
     compileSdkVersion 30
-    buildToolsVersion "29.0.3"
+
     defaultConfig {
         applicationId "com.antony.muzei.pixiv"
         minSdkVersion 21
@@ -57,7 +59,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.4.1'
     implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${cfg.libKotlin}"
 }
 
 allprojects {
