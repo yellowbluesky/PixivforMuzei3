@@ -32,10 +32,10 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.work.WorkManager;
 
-import com.antony.muzei.pixiv.provider.PixivArtProviderDefines;
-import com.antony.muzei.pixiv.provider.PixivArtWorker;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.login.LoginActivity;
+import com.antony.muzei.pixiv.provider.PixivArtProviderDefines;
+import com.antony.muzei.pixiv.provider.PixivArtWorker;
 import com.antony.muzei.pixiv.util.IntentUtils;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -44,6 +44,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
 
 public class MainPreferenceFragment extends PreferenceFragmentCompat
 {
@@ -80,7 +82,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
                     .contains(newValue.toString());
             // User has selected an authenticated feed mode, but has not yet logged in as evidenced
             // by the lack of an access token
-            if (isAuthUpdateMode && sharedPrefs.getString("accessToken", "").isEmpty())
+            if (isAuthUpdateMode && sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty())
             {
                 Snackbar.make(getView(), R.string.toast_loginFirst,
                         Snackbar.LENGTH_SHORT)
@@ -274,7 +276,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
 
         // On app launch set the Preference to show to appropriate text if logged in
         Preference loginActivityPreference = findPreference("pref_login");
-        if (sharedPrefs.getString("accessToken", "").isEmpty())
+        if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty())
         {
             loginActivityPreference.setTitle(getString(R.string.prefTitle_loginButton));
             loginActivityPreference.setSummary(getString(R.string.prefSummary_notLoggedIn));
@@ -286,7 +288,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
         // Users click this preference to execute the login or logout
         loginActivityPreference.setOnPreferenceClickListener(preference ->
         {
-            if (sharedPrefs.getString("accessToken", "").isEmpty()) {
+            if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty()) {
                 Intent intent = new Intent(getContext(), LoginActivity.class);
                 IntentUtils.launchActivity(this, intent, REQUEST_CODE_LOGIN);
             } else {
@@ -294,7 +296,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat
                 SharedPreferences.Editor editor = sharedPrefs.edit();
                 editor.remove("accessTokenIssueTime");
                 editor.remove("name");
-                editor.remove("accessToken");
+                editor.remove(PREFERENCE_PIXIV_ACCESS_TOKEN);
                 editor.remove("userId");
                 editor.remove("refreshToken");
 

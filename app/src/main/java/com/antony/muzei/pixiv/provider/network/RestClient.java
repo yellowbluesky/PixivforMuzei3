@@ -38,35 +38,32 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.moshi.MoshiConverterFactory;
 
-public class RestClient
-{
+public class RestClient {
+
     private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
     // Prints detailed network logs if built type is debug
+
     private static HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(s ->
             Log.v("ANTONY_REST", "message===" + s))
             .setLevel(BuildConfig.BUILD_TYPE.contentEquals("debug") ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
-    private static X509TrustManager x509TrustManager = new X509TrustManager()
-    {
+
+    private static X509TrustManager x509TrustManager = new X509TrustManager() {
         @SuppressLint("TrustAllX509TrustManager")
         @Override
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-        {
-
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
         }
 
         @SuppressLint("TrustAllX509TrustManager")
         @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-        {
-
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
         }
 
         @Override
-        public X509Certificate[] getAcceptedIssuers()
-        {
+        public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
     };
+
     private static OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
             .addNetworkInterceptor(httpLoggingInterceptor)
             // This adds the necessary headers minus the auth header

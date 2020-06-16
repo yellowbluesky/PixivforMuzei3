@@ -21,9 +21,9 @@ import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
-import com.antony.muzei.pixiv.login.OauthResponse;
 import com.antony.muzei.pixiv.login.OAuthResponseService;
+import com.antony.muzei.pixiv.login.OauthResponse;
+import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.provider.network.RestClient;
 import com.antony.muzei.pixiv.provider.network.RubyHttpDns;
 import com.antony.muzei.pixiv.provider.network.RubySSLSocketFactory;
@@ -44,6 +44,8 @@ import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Response;
+
+import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
 
 // TODO deprecate this entire class
 public class PixivArtService
@@ -94,22 +96,19 @@ public class PixivArtService
         }
     }
 
-    static String refreshAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException
-    {
+    static String refreshAccessToken(SharedPreferences sharedPrefs) throws AccessTokenAcquisitionException {
         Log.d(LOG_TAG, "getAccessToken(): Entering");
-        String accessToken = sharedPrefs.getString("accessToken", "");
+        String accessToken = sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "");
         long accessTokenIssueTime = sharedPrefs.getLong("accessTokenIssueTime", 0);
 
-        if ((System.currentTimeMillis() / 1000) - accessTokenIssueTime < 3600)
-        {
+        if ((System.currentTimeMillis() / 1000) - accessTokenIssueTime < 3600) {
             Log.i(LOG_TAG, "Existing access token found, using it");
             Log.d(LOG_TAG, "getAccessToken(): Exited");
             return accessToken;
         }
         Log.i(LOG_TAG, "Access token expired, acquiring new access token using refresh token");
 
-        try
-        {
+        try {
             Map<String, String> fieldParams = new HashMap<>();
             fieldParams.put("get_secure_url", "1");
             fieldParams.put("client_id", "MOBrBDS8blbauoSck0ZfDbtuzpyT");
@@ -122,8 +121,7 @@ public class PixivArtService
             OAuthResponseService service = RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService.class);
             Call<OauthResponse> call = service.postRefreshToken(fieldParams);
             Response<OauthResponse> response = call.execute();
-            if (!response.isSuccessful())
-            {
+            if (!response.isSuccessful()) {
                 throw new AccessTokenAcquisitionException("Error using refresh token to get new access token");
             }
             OauthResponse oauthResponse = response.body();
@@ -135,8 +133,7 @@ public class PixivArtService
 //            Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
 //            sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
             //PixivArtWorker.storeTokens(sharedPrefs, authResponseBody.getJSONObject("response"));
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
             ex.printStackTrace();
             throw new AccessTokenAcquisitionException("getAccessToken(): Error executing call");
         }
