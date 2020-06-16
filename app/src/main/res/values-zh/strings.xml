@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="command_addToBookmark">添加到收藏夹</string>
-    <string name="command_viewArtworkDetails">查看图像细节</string>
+    <string name="command_viewArtworkDetails">查看作品</string>
     <string name="command_shareImage">分享图像</string>
 
     <string name="app_name">Pixiv for Muzei 3</string>
     <string name="action_bar_title">Pixiv for Muzei 3 设置</string>
 
-    <string name="prefCat_pullFeedSettings">图片订阅设置</string>
+    <string name="prefCat_pullFeedSettings">作品订阅设置</string>
     <string name="pref_updateMode">更新模式</string>
     <string name="pref_updateMode_default">daily_rank</string>
 
@@ -28,11 +28,11 @@
 
     <string name="button_clearCache">立即清除图像缓存</string>
 
-    <string name="prefCat_authSettings">Pixiv 登录</string>
+    <string name="prefCat_authSettings">登录 Pixiv</string>
     <string name="prefTitle_loginButton">登录</string>
     <string name="prefSummary_notLoggedIn">未登录</string>
-    <string name="prefTitle_logoutButton">登出</string>
-    <string name="prefSummary_LoggedIn">登录为</string>
+    <string name="prefTitle_logoutButton">退出登录</string>
+    <string name="prefSummary_LoggedIn">当前登录为</string>
 
     <string name="pref_authFailActionDropDown">验证失败后措施</string>
 
@@ -54,14 +54,14 @@
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
     <string name="toast_loginFirst">请先登录</string>
 
-    <string name="attr_daily">日排行榜 #</string>
-    <string name="attr_weekly">周排行榜 #</string>
-    <string name="attr_monthly">月排行榜 #</string>
+    <string name="attr_daily">排行榜日榜 #</string>
+    <string name="attr_weekly">排行榜周榜 #</string>
+    <string name="attr_monthly">排行榜月榜 #</string>
     <string name="attr_rookie">新人 #</string>
     <string name="attr_original">原创 #</string>
-    <string name="attr_male">受男性欢迎 #</string>
-    <string name="attr_female">受女性欢迎 #</string>
-    <string name="prefTitle_storeInExtStorage">将图片保存到外部存储</string>
+    <string name="attr_male">男生喜欢 #</string>
+    <string name="attr_female">女生喜欢 #</string>
+    <string name="prefTitle_storeInExtStorage">图片保存到手机存储</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
     <string name="prefCat_advFiltering">高级过滤</string>
     <string name="prefCat_fileOptions">文件选项</string>
