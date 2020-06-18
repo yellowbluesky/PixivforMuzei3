@@ -22,6 +22,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -48,7 +49,6 @@ import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
-import okhttp3.Response
 import okhttp3.ResponseBody
 import retrofit2.Call
 import java.io.*
@@ -63,7 +63,7 @@ class PixivArtWorker(
     companion object {
         private const val LOG_TAG = "ANTONY_WORKER"
         private const val WORKER_TAG = "ANTONY"
-        private val IMAGE_SUFFIXES = arrayOf(".png", ".jpg")
+        private val IMAGE_EXTENSIONS = arrayOf(".png", ".jpg")
         private var clearArtwork = false
 
         @JvmStatic
@@ -76,10 +76,10 @@ class PixivArtWorker(
                     setRequiredNetworkType(NetworkType.CONNECTED)
                 }.let { builder ->
                     OneTimeWorkRequest.Builder(PixivArtWorker::class.java)
-                        .setConstraints(builder.build())
-                        .addTag(WORKER_TAG)
-                        .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
-                        .build()
+                            .setConstraints(builder.build())
+                            .addTag(WORKER_TAG)
+                            .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
+                            .build()
                 }.also { request ->
                     WorkManager.getInstance(it).enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request)
                 }
@@ -103,8 +103,6 @@ class PixivArtWorker(
                 putString("name", response.pixivOauthResponse.user.name)
                 apply()
             }
-            // Not yet tested, but I believe that this needs to be a commit() and not an apply()
-            // Muzei queues up many picture requests at one. Almost all of them will not have an access token to use
             Log.i(LOG_TAG, "Stored tokens")
         }
     }
@@ -115,43 +113,37 @@ class PixivArtWorker(
 
         Secondly, the thumbnail is always a .jpg
         For the high resolution image we require a correct file extension
-        This method cycles though all possible file extensions until a good response is received
-            i.e. a response that is not a 400 error
-        Returns a Response whose body contains the picture selected to be downloaded
+        This method tests all file extensions (PNG or JPG) until a good response is received
+            i.e. a response that is not a 400 class error
+        Returns a ResponseBody which contains the picture to download
     */
     @Throws(IOException::class)
-    private fun getRemoteFileExtension(url: String): ResponseBody?
-    {
+    private fun getRemoteFileExtension(url: String): ResponseBody? {
         Log.i(LOG_TAG, "Getting remote file extensions")
-        var response: Response
-        /*
-            Thumbnail URL:
-                https://tc-pximg01.techorus-cdn.com/c/240x480/img-master/img/2020/02/19/00/00/39/79583564_p0_master1200.jpg
-            High resolution URL (direct access will 403):
-                https://i.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0.png
-            Accessible high resolution URL:
-                https://i-cf.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0.png
-         */
-        val uri0 = "https://i.pximg.net/img-original" + url.substring(url.indexOf("/img/"))
-        val uri1 = uri0
-                .replace("_master1200", "")
-        val uri2 = uri1.substring(0, uri1.length - 4)
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        val bypassActive = sharedPreferences.getBoolean("pref_enableNetworkBypass", false)
-        for (suffix in IMAGE_SUFFIXES)
-        {
-            val uri = uri2 + suffix
+        // This function is given a thumbnail URL like this
+        //  https://tc-pximg01.techorus-cdn.com/c/240x480/img-master/img/2020/02/19/00/00/39/79583564_p0_master1200.jpg
+
+        val transformUrl = "https://i.pximg.net/img-original" + url.substring(url.indexOf("/img/")).replace("_master1200", "")
+        // At this point we have a url like this:
+        //  https://i.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0.jpg
+
+        val transformUrlNoExtension = transformUrl.substring(0, transformUrl.length - 4)
+        // Last transformation to remove the file extension
+        //  https://i.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0
+
+        val bypassActive = PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean("pref_enableNetworkBypass", false)
+        for (extension in IMAGE_EXTENSIONS) {
+            val urlToTest = transformUrlNoExtension + extension
             val service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadServerResponse::class.java)
-            val call = service.downloadImage(uri)
-            val responseBodyResponse = call.execute()
-            response = responseBodyResponse.raw()
-            if (response.isSuccessful)
-            {
+            val responseBodyResponse = service.downloadImage(urlToTest).execute()
+            val response = responseBodyResponse.raw()
+            if (response.isSuccessful) {
                 Log.i(LOG_TAG, "Gotten remote file extensions")
                 return responseBodyResponse.body()
             }
         }
         Log.e(LOG_TAG, "Failed to get remote file extensions")
+        // TODO don't throw a null, throw an exception
         return null
     }
 
@@ -166,9 +158,9 @@ class PixivArtWorker(
             2   jpg
             CorruptFileException
     */
+    // TODO make this work in kotlin
     @Throws(IOException::class, CorruptFileException::class)
-    private fun getLocalFileExtension(image: File): Int
-    {
+    private fun getLocalFileExtension(image: File): Int {
 //        val byteArray = FileUtils.readFileToByteArray(image)
 //        val length = byteArray.size
 //        var result = 0
@@ -213,18 +205,15 @@ class PixivArtWorker(
      */
     @Throws(IOException::class, CorruptFileException::class)
     private fun downloadFile(responseBody: ResponseBody?,
-                             filename: String): Uri
-    {
+                             filename: String): Uri {
         Log.i(LOG_TAG, "Downloading file")
         val context = applicationContext
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         val imageInternal = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.png")
         val fosInternal = FileOutputStream(imageInternal)
         val inputStreamNetwork = responseBody!!.byteStream()
         val bufferTemp = ByteArray(1024 * 1024 * 10)
         var readTemp: Int
-        while (inputStreamNetwork.read(bufferTemp).also { readTemp = it } != -1)
-        {
+        while (inputStreamNetwork.read(bufferTemp).also { readTemp = it } != -1) {
             fosInternal.write(bufferTemp, 0, readTemp)
         }
         inputStreamNetwork.close()
@@ -235,17 +224,15 @@ class PixivArtWorker(
         val fileExtension = getLocalFileExtension(imageInternal)
 
         // If option in SettingsActivity is checked AND permission is granted
-        if (sharedPrefs.getBoolean("pref_storeInExtStorage", false) &&
+        if (PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean("pref_storeInExtStorage", false) &&
                 ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED)
-        {
+                == PackageManager.PERMISSION_GRANTED) {
             var fosExternal: OutputStream? = null
             var allowedToStoreIntoExternal = false
 
             // Android 10 introduced scoped storage
             // Different code path depending on Android APi level
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val contentResolver = context.contentResolver
                 val contentValues = ContentValues()
 
@@ -255,16 +242,13 @@ class PixivArtWorker(
                 //String selection ={MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
                 val selectionArgs = arrayOf(filename)
                 val cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null)
-                if (cursor!!.count == 0)
-                {
+                if (cursor!!.count == 0) {
                     contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename)
                     contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3")
-                    if (fileExtension == 1)
-                    {
+                    if (fileExtension == 1) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
                     }
-                    else if (fileExtension == 2)
-                    {
+                    else if (fileExtension == 2) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
                     }
                     val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
@@ -273,26 +257,21 @@ class PixivArtWorker(
                 }
                 cursor.close()
             }
-            else
-            {
+            else {
                 val directoryString = "/storage/emulated/0/Pictures/PixivForMuzei3/"
                 val directory = File(directoryString)
-                if (!directory.exists())
-                {
+                if (!directory.exists()) {
                     directory.mkdirs()
                 }
 
                 // If the image has already been downloaded, do not redownload
                 val imagePng = File(directoryString, "$filename.png")
                 val imageJpg = File(directoryString, "$filename.jpg")
-                if (!imageJpg.exists() || !imagePng.exists())
-                {
-                    if (fileExtension == 1)
-                    {
+                if (!imageJpg.exists() || !imagePng.exists()) {
+                    if (fileExtension == 1) {
                         fosExternal = FileOutputStream(imagePng)
                     }
-                    else if (fileExtension == 2)
-                    {
+                    else if (fileExtension == 2) {
                         fosExternal = FileOutputStream(imageJpg)
                     }
                     allowedToStoreIntoExternal = true
@@ -300,13 +279,11 @@ class PixivArtWorker(
             }
 
             // Finally copies the image into external storage if allowed to
-            if (allowedToStoreIntoExternal)
-            {
+            if (allowedToStoreIntoExternal) {
                 val fis = FileInputStream(imageInternal)
                 val buffer = ByteArray(1024 * 1024 * 10)
                 var lengthInternal: Int
-                while (fis.read(buffer).also { lengthInternal = it } > 0)
-                {
+                while (fis.read(buffer).also { lengthInternal = it } > 0) {
                     fosExternal!!.write(buffer, 0, lengthInternal)
                 }
                 fosExternal!!.close()
@@ -316,28 +293,28 @@ class PixivArtWorker(
         return Uri.fromFile(imageInternal)
     }
 
+    // TODO is this even necessary anymore
     private fun isArtworkNull(artwork: Artwork?): Boolean =
-        artwork.also {
-            it ?: Log.e(LOG_TAG, "Null artwork returned, retrying at later time")
-        } == null
+            artwork.also {
+                it ?: Log.e(LOG_TAG, "Null artwork returned, retrying at later time")
+            } == null
 
     /*
-        Provided an artowrk ID (token), traverses the PixivArtProvider ContentProvider and sees
+        Provided an artowrk ID (token), traverses the PixivArtProvider ContentProvider to sees
         if there is already a duplicate artwork with the same ID (token)
      */
-    private fun isDuplicateArtwork(token: Int): Boolean
-    {
+    private fun isDuplicateArtwork(token: Int): Boolean {
         var duplicateFound = false
         val projection = arrayOf("_id")
         val selection = "token = ?"
         val selectionArgs = arrayOf(token.toString())
         val conResUri = getProviderClient(applicationContext, PixivArtProvider::class.java).contentUri
-        val cursor = applicationContext.contentResolver.query(conResUri, projection, selection, selectionArgs, null)
-        if (cursor!!.count > 0)
-        {
-            duplicateFound = true
+        val cursor: Cursor? = applicationContext.contentResolver.query(conResUri, projection, selection, selectionArgs, null)
+
+        if (cursor != null) {
+            duplicateFound = cursor.count > 0
         }
-        cursor.close()
+        cursor?.close()
         return duplicateFound
     }
 
@@ -347,35 +324,35 @@ class PixivArtWorker(
         2   Portrait
      */
     private fun isDesiredAspectRatio(
-        width: Int,
-        height: Int,
-        aspectRatioSetting: Int
+            width: Int,
+            height: Int,
+            aspectRatioSetting: Int
     ): Boolean =
-        when (aspectRatioSetting) {
-            0 -> true
-            1 -> height >= width
-            2 -> height <= width
-            else -> true
-        }
+            when (aspectRatioSetting) {
+                0 -> true
+                1 -> height >= width
+                2 -> height <= width
+                else -> true
+            }
 
     // Scalar must match with scalar in SettingsActivity
     private fun isEnoughViews(
-        artworkViewCount: Int,
-        minimumDesiredViews: Int
+            artworkViewCount: Int,
+            minimumDesiredViews: Int
     ): Boolean = artworkViewCount >= minimumDesiredViews * 500
 
     private fun isImageTooLarge(sizeBytes: Long, limitBytes: Long): Boolean = sizeBytes > limitBytes
 
-    private fun generateShuffledArray(length: Int): IntArray
-    {
+    private fun generateShuffledArray(length: Int): IntArray {
+        //return (0 .. length).toMutableList().shuffle()
+
+        // Not sure if the above has acceptable performance, but it is a hell of a lot more nicer
         val random = Random()
         val array = IntArray(length)
-        for (i in 0 until length)
-        {
+        for (i in 0 until length) {
             array[i] = i
         }
-        for (i in length - 1 downTo 1)
-        {
+        for (i in length - 1 downTo 1) {
             val index = random.nextInt(length)
             val a = array[index]
             array[index] = array[i]
@@ -389,13 +366,10 @@ class PixivArtWorker(
         Passes it off to filterArtworkRanking(), then builds the Artwork for submission to Muzei
      */
     @Throws(IOException::class, CorruptFileException::class, FilterMatchNotFoundException::class)
-    private fun getArtworkRanking(contents: Contents?): Artwork
-    {
+    private fun getArtworkRanking(contents: Contents?): Artwork {
         Log.i(LOG_TAG, "getArtworkRanking(): Entering")
-        val mode = contents!!.mode
-        var attribution: String? = null
-        when (mode)
-        {
+        var attribution = ""
+        when (contents!!.mode) {
             "daily" -> attribution = applicationContext.getString(R.string.attr_daily)
             "weekly" -> attribution = applicationContext.getString(R.string.attr_weekly)
             "monthly" -> attribution = applicationContext.getString(R.string.attr_monthly)
@@ -403,6 +377,7 @@ class PixivArtWorker(
             "original" -> attribution = applicationContext.getString(R.string.attr_original)
             "male" -> attribution = applicationContext.getString(R.string.attr_male)
             "female" -> attribution = applicationContext.getString(R.string.attr_female)
+            else -> ""
         }
         val attributionDate = contents.date
         val attTrans = attributionDate.substring(0, 4) + "/" + attributionDate.substring(4, 6) + "/" + attributionDate.substring(6, 8) + " "
@@ -420,7 +395,10 @@ class PixivArtWorker(
 
         // Filtering
         val rankingArtwork = filterArtworkRanking(contents.artworks,
-                showManga, rankingFilterSelect, aspectRatioSettings, minimumViews)
+                showManga,
+                rankingFilterSelect,
+                aspectRatioSettings,
+                minimumViews)
 
         // Variables to submit to Muzei
         val token = rankingArtwork!!.illust_id.toString()
@@ -429,19 +407,20 @@ class PixivArtWorker(
 
         // Actually downloading the selected artwork
         val remoteFileExtension = getRemoteFileExtension(rankingArtwork.url)
-        val fileSizeLimit = sharedPrefs.getInt("prefSlider_maxFileSize", 0)
-        // 1024 scalar to convert MB to byte
-        if (fileSizeLimit != 0 && isImageTooLarge(remoteFileExtension!!.contentLength(), fileSizeLimit * 1048576.toLong()))
-        {
-            Log.v("SIZE", "too chonk")
-            //throw new ImageTooLargeException("");
-            // grab a new image, somehwo loop back
-        }
-        else
-        {
-            Log.v("SIZE", "good size")
-        }
         val localUri = downloadFile(remoteFileExtension, token)
+
+//        val fileSizeLimit = sharedPrefs.getInt("prefSlider_maxFileSize", 0)
+//        // 1024 scalar to convert MB to byte
+//        if (fileSizeLimit != 0 && isImageTooLarge(remoteFileExtension!!.contentLength(), fileSizeLimit * 1048576.toLong()))
+//        {
+//            Log.v("SIZE", "too chonk")
+//            //throw new ImageTooLargeException("");
+//            // grab a new image, somehwo loop back
+//        }
+//        else
+//        {
+//            Log.v("SIZE", "good size")
+//        }
         remoteFileExtension!!.close()
         Log.i(LOG_TAG, "getArtworkRanking(): Exited")
         return Artwork.Builder()
@@ -466,51 +445,39 @@ class PixivArtWorker(
                                      showManga: Boolean,
                                      selectedFilterLevelSet: Set<String>?,
                                      aspectRatioSetting: Int,
-                                     minimumViews: Int): RankingArtwork?
-    {
+                                     minimumViews: Int): RankingArtwork? {
         Log.i(LOG_TAG, "filterRanking(): Entering")
         var rankingArtwork: RankingArtwork? = null
         var found = false
         val shuffledArray = generateShuffledArray(rankingArtworkList.size)
-        for (i in rankingArtworkList.indices)
-        {
+        for (i in rankingArtworkList.indices) {
             rankingArtwork = rankingArtworkList[shuffledArray[i]]
-            if (isDuplicateArtwork(rankingArtwork.illust_id))
-            {
+            if (isDuplicateArtwork(rankingArtwork.illust_id)) {
                 Log.v(LOG_TAG, "Duplicate ID: " + rankingArtwork.illust_id)
                 continue
             }
-            if (!isEnoughViews(rankingArtwork.view_count, minimumViews))
-            {
+            if (!isEnoughViews(rankingArtwork.view_count, minimumViews)) {
                 Log.v(LOG_TAG, "Not enough views")
                 continue
             }
-            if (!showManga && rankingArtwork.illust_type != 0)
-            {
+            if (!showManga && rankingArtwork.illust_type != 0) {
                 Log.v(LOG_TAG, "Manga not desired " + rankingArtwork.illust_id)
                 continue
             }
             if (!isDesiredAspectRatio(rankingArtwork.width,
-                            rankingArtwork.height, aspectRatioSetting))
-            {
+                            rankingArtwork.height, aspectRatioSetting)) {
                 Log.v(LOG_TAG, "Rejecting aspect ratio")
                 continue
             }
 
-            // TODO this doesn't appear to work at all
-            // I selected to show only NSFW artwork, and I got some random stuff
-            val selectedFilterLevelArray = selectedFilterLevelSet!!.toTypedArray()
-            for (s in selectedFilterLevelArray)
-            {
-                if (s.toInt() == rankingArtwork.illust_content_type.sexual)
-                {
+            for (s in selectedFilterLevelSet!!) {
+                if (s.toInt() == rankingArtwork.illust_content_type.sexual) {
                     found = true
                     break
                 }
             }
         }
-        if (!found)
-        {
+        if (!found) {
             throw FilterMatchNotFoundException("")
         }
         Log.i(LOG_TAG, "filterRanking(): Exited")
@@ -525,8 +492,7 @@ class PixivArtWorker(
     for filtering, then downloads the image and returns it Muzei for insertion
      */
     @Throws(FilterMatchNotFoundException::class, IOException::class, CorruptFileException::class)
-    private fun getArtworkAuth(authArtworkList: List<AuthArtwork>): Artwork
-    {
+    private fun getArtworkAuth(authArtworkList: List<AuthArtwork>): Artwork {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
         // Filter variables to pass to filterArtworkAuth()
@@ -545,15 +511,13 @@ class PixivArtWorker(
 
         // Variables for submitting to Muzei
         val imageUrl: String
-        imageUrl = if (selectedArtwork!!.meta_pages.size == 0)
-        {
+        imageUrl = if (selectedArtwork!!.meta_pages.size == 0) {
             Log.d(LOG_TAG, "Picture is a single image")
             selectedArtwork
                     .meta_single_page
                     .original_image_url
         }
-        else
-        {
+        else {
             Log.d(LOG_TAG, "Picture is part of an album")
             selectedArtwork
                     .meta_pages[0]
@@ -567,17 +531,18 @@ class PixivArtWorker(
         val service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadServerResponse::class.java)
         val call = service.downloadImage(imageUrl)
         val imageDataResponse = call.execute().body()
-        val fileSizeLimitMegabytes = sharedPrefs.getInt("prefSlider_maxFileSize", 0)
-        // 1024 scalar to convert from MB to bytes
-        if (fileSizeLimitMegabytes != 0 && isImageTooLarge(imageDataResponse!!.contentLength(), fileSizeLimitMegabytes * 1048576.toLong()))
-        {
-            Log.v("SIZE", "too chonk")
-        }
-        else
-        {
-            Log.v("SIZE", "good size")
-        }
         val localUri = downloadFile(imageDataResponse, token)
+//        val fileSizeLimitMegabytes = sharedPrefs.getInt("prefSlider_maxFileSize", 0)
+//        // 1024 scalar to convert from MB to bytes
+//        if (fileSizeLimitMegabytes != 0 && isImageTooLarge(imageDataResponse!!.contentLength(), fileSizeLimitMegabytes * 1048576.toLong()))
+//        {
+//            Log.v("SIZE", "too chonk")
+//        }
+//        else
+//        {
+//            Log.v("SIZE", "good size")
+//        }
+
         imageDataResponse!!.close()
         Log.i(LOG_TAG, "getArtworkAuth(): Exited")
         return Artwork.Builder()
@@ -611,63 +576,52 @@ class PixivArtWorker(
                                   showManga: Boolean,
                                   selectedFilterLevelSet: Set<String>?,
                                   aspectRatioSetting: Int,
-                                  minimumViews: Int): AuthArtwork?
-    {
+                                  minimumViews: Int): AuthArtwork? {
         Log.i(LOG_TAG, "filterArtworkAuth(): Entering")
         var found = false
         var selectedArtwork: AuthArtwork? = null
         val shuffledArray = generateShuffledArray(authArtworkList.size)
-        loop@ for (i in authArtworkList.indices)
-        {
+        loop@ for (i in authArtworkList.indices) {
             selectedArtwork = authArtworkList[shuffledArray[i]]
 
             // Check if duplicate before any other check to not waste time
-            if (isDuplicateArtwork(selectedArtwork.id))
-            {
+            if (isDuplicateArtwork(selectedArtwork.id)) {
                 Log.v(LOG_TAG, "Duplicate ID: " + selectedArtwork.id)
                 continue
             }
 
             // If user does not want manga to display
-            if (!showManga && selectedArtwork.type != "illust")
-            {
+            if (!showManga && selectedArtwork.type != "illust") {
                 Log.d(LOG_TAG, "Manga not desired")
                 continue
             }
 
             // Filter artwork based on chosen aspect ratio
             if (!isDesiredAspectRatio(selectedArtwork.width,
-                            selectedArtwork.height, aspectRatioSetting))
-            {
+                            selectedArtwork.height, aspectRatioSetting)) {
                 Log.d(LOG_TAG, "Rejecting aspect ratio")
                 continue
             }
-            if (!isEnoughViews(selectedArtwork.total_view, minimumViews))
-            {
+            if (!isEnoughViews(selectedArtwork.total_view, minimumViews)) {
                 Log.d(LOG_TAG, "Not enough views")
                 continue
             }
 
             // See if there is a match between chosen artwork's sanity level and those desired
-            val selectedFilterLevelArray = selectedFilterLevelSet!!.toTypedArray()
-            for (s in selectedFilterLevelArray)
-            {
-                if (s == selectedArtwork.sanity_Level.toString())
-                {
+            for (s in selectedFilterLevelSet!!) {
+                if (s == selectedArtwork.sanity_Level.toString()) {
                     Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.sanity_Level)
                     found = true
                     break@loop
                 }
-                else if (s == "8" && selectedArtwork.x_restrict == 1)
-                {
+                else if (s == "8" && selectedArtwork.x_restrict == 1) {
                     Log.d(LOG_TAG, "x_restrict found")
                     found = true
                     break@loop
                 }
             }
         }
-        if (!found)
-        {
+        if (!found) {
             throw FilterMatchNotFoundException("too many retries")
         }
         return selectedArtwork
@@ -687,38 +641,30 @@ class PixivArtWorker(
      */
     @get:Throws(IOException::class, CorruptFileException::class)
     private val artwork: ArrayList<Artwork>?
-        get()
-        {
+        get() {
             val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            var mode = sharedPrefs.getString("pref_updateMode", "daily")
+            var updateMode = sharedPrefs.getString("pref_updateMode", "daily")
             var accessToken = ""
 
             // These modes require an access token, so we check for and acquire one first
-            if (listOf(*PixivArtProviderDefines.AUTH_MODES).contains(mode))
-            {
-                try
-                {
+            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
+                try {
                     accessToken = PixivArtService.refreshAccessToken(sharedPrefs)
-                } catch (ex: AccessTokenAcquisitionException)
-                {
+                } catch (ex: AccessTokenAcquisitionException) {
                     val handler = Handler(Looper.getMainLooper())
-                    when (sharedPrefs.getString("pref_authFailAction", "changeDaily"))
-                    {
-                        "changeDaily" ->
-                        {
+                    when (sharedPrefs.getString("pref_authFailAction", "changeDaily")) {
+                        "changeDaily" -> {
                             Log.d(LOG_TAG, "Auth failed, changing mode to daily")
                             sharedPrefs.edit().putString("pref_updateMode", "daily").apply()
-                            mode = "daily"
+                            updateMode = "daily"
                             handler.post { Toast.makeText(applicationContext, R.string.toast_authFailedSwitch, Toast.LENGTH_SHORT).show() }
                         }
-                        "doNotChange_downDaily" ->
-                        {
+                        "doNotChange_downDaily" -> {
                             Log.d(LOG_TAG, "Auth failed, downloading a single daily")
-                            mode = "daily"
+                            updateMode = "daily"
                             handler.post { Toast.makeText(applicationContext, R.string.toast_authFailedDown, Toast.LENGTH_SHORT).show() }
                         }
-                        "doNotChange_doNotDown" ->
-                        {
+                        "doNotChange_doNotDown" -> {
                             Log.d(LOG_TAG, "Auth failed, retrying with no changes")
                             handler.post { Toast.makeText(applicationContext, R.string.toast_authFailedRetry, Toast.LENGTH_SHORT).show() }
                             return null
@@ -729,34 +675,28 @@ class PixivArtWorker(
             val artworkArrayList = ArrayList<Artwork>()
             var artwork: Artwork
             val bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false)
-            if (listOf(*PixivArtProviderDefines.AUTH_MODES).contains(mode))
-            {
+            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
                 val service = RestClient.getRetrofitAuthInstance(bypassActive).create(AuthJsonServerResponse::class.java)
                 var call: Call<Illusts?>
-                call = when (mode)
-                {
-                    "follow" ->                     // This concat is ugly af
+                call = when (updateMode) {
+                    "follow" ->
                         service.getFollowJson("Bearer $accessToken")
                     "bookmark" -> service.getBookmarkJson("Bearer $accessToken", sharedPrefs.getString("userId", ""))
                     "recommended" -> service.getRecommendedJson("Bearer $accessToken")
                     "artist" -> service.getArtistJson("Bearer $accessToken", sharedPrefs.getString("pref_artistId", ""))
                     "tag_search" -> service.getTagSearchJson("Bearer $accessToken", sharedPrefs.getString("pref_tagSearch", ""))
-                    else -> throw IllegalStateException("Unexpected value: $mode")
+                    else -> throw IllegalStateException("Unexpected value: $updateMode")
                 }
                 var illusts = call.execute().body()
                 var authArtworkList = illusts!!.artworks
-                for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2))
-                {
-                    try
-                    {
+                for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+                    try {
                         artwork = getArtworkAuth(authArtworkList)
-                        if (isArtworkNull(artwork))
-                        {
+                        if (isArtworkNull(artwork)) {
                             throw CorruptFileException("")
                         }
                         artworkArrayList.add(artwork)
-                    } catch (e: FilterMatchNotFoundException)
-                    {
+                    } catch (e: FilterMatchNotFoundException) {
                         e.printStackTrace()
                         call = service.getNextUrl("Bearer $accessToken", illusts!!.next_url)
                         illusts = call.execute().body()
@@ -764,26 +704,21 @@ class PixivArtWorker(
                     }
                 }
             }
-            else
-            {
+            else {
                 val service = RestClient.getRetrofitRankingInstance(bypassActive).create(RankingJsonServerResponse::class.java)
-                var call = service.getRankingJson(mode)
+                var call = service.getRankingJson(updateMode)
                 var contents = call.execute().body()
                 var pageNumber = 1
                 var date = contents!!.date
                 var prevDate = contents.prev_date
-                for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2))
-                {
-                    try
-                    {
+                for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+                    try {
                         artwork = getArtworkRanking(contents)
-                        if (isArtworkNull(artwork))
-                        {
+                        if (isArtworkNull(artwork)) {
                             throw CorruptFileException("")
                         }
                         artworkArrayList.add(artwork)
-                    } catch (e: FilterMatchNotFoundException)
-                    {
+                    } catch (e: FilterMatchNotFoundException) {
                         // If enough artworks are not found in the 50 from the first page of the rankings,
                         // keep looking through the next pages or days
                         e.printStackTrace()
@@ -791,16 +726,14 @@ class PixivArtWorker(
                         // There is a tenth page actually, but the next page number integer becomes a boolean
                         // GSON can't handle this and throws a fit.
                         // Thus I've limited my app to parsing only the top 450 rankings
-                        if (pageNumber != 9)
-                        {
+                        if (pageNumber != 9) {
                             pageNumber++
-                            call = service.getRankingJson(mode, pageNumber, date)
+                            call = service.getRankingJson(updateMode, pageNumber, date)
                             contents = call.execute().body()
                         }
-                        else
-                        {
+                        else {
                             pageNumber = 1
-                            call = service.getRankingJson(mode, pageNumber, prevDate)
+                            call = service.getRankingJson(updateMode, pageNumber, prevDate)
                             contents = call.execute().body()
                             date = contents!!.date
                             prevDate = contents.prev_date
@@ -813,30 +746,24 @@ class PixivArtWorker(
             return artworkArrayList
         }
 
-    override fun doWork(): Result
-    {
+    override fun doWork(): Result {
         Log.d(LOG_TAG, "Starting work")
         val client = getProviderClient(applicationContext, PixivArtProvider::class.java)
         val artworkArrayList: ArrayList<Artwork>?
-        artworkArrayList = try
-        {
+        artworkArrayList = try {
             artwork
-        } catch (e: IOException)
-        {
+        } catch (e: IOException) {
             e.printStackTrace()
             return Result.retry()
-        } catch (e: CorruptFileException)
-        {
+        } catch (e: CorruptFileException) {
             e.printStackTrace()
             return Result.retry()
         }
-        if (clearArtwork)
-        {
+        if (clearArtwork) {
             clearArtwork = false
             client.setArtwork(artworkArrayList!!)
         }
-        else
-        {
+        else {
             client.addArtwork(artworkArrayList!!)
         }
         Log.d(LOG_TAG, "Work completed")
