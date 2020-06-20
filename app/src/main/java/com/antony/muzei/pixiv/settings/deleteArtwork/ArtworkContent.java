@@ -47,6 +47,8 @@ import java.util.List;
 public class ArtworkContent
 {
     public static final List<ArtworkItem> ITEMS = new ArrayList<>();
+    public static final List<ArtworkItem> SELECTED_ITEMS = new ArrayList<>();
+    public static final List<Integer> SELECTED_POSITIONS = new ArrayList<>();
 
     public static void populateListInitial(Context context)
     {
@@ -56,6 +58,7 @@ public class ArtworkContent
         Uri conResUri = ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri();
         Cursor cursor = context.getContentResolver().query(conResUri, projection, null, null, null);
 
+        assert cursor != null;
         while (cursor.moveToNext())
         {
             String token = cursor.getString(cursor.getColumnIndex(ProviderContract.Artwork.TOKEN));
@@ -82,12 +85,6 @@ public class ArtworkContent
             this.token = token;
             this.title = title;
             this.persistent_uri = persistent_uri;
-        }
-
-        @Override
-        public String toString()
-        {
-            return token;
         }
     }
 }

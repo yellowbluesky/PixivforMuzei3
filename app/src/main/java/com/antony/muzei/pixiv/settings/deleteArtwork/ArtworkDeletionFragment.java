@@ -20,22 +20,19 @@ package com.antony.muzei.pixiv.settings.deleteArtwork;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.antony.muzei.pixiv.provider.PixivArtProvider;
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.provider.PixivArtProvider;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -43,18 +40,15 @@ import com.google.android.material.snackbar.Snackbar;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
+
+import static com.antony.muzei.pixiv.settings.deleteArtwork.ArtworkContent.SELECTED_ITEMS;
+import static com.antony.muzei.pixiv.settings.deleteArtwork.ArtworkContent.SELECTED_POSITIONS;
 
 public class ArtworkDeletionFragment extends Fragment
 {
 
 
     private static final String ARG_COLUMN_COUNT = "column-count";
-
-    private int mColumnCount = 1;
-
-    private List<ArtworkContent.ArtworkItem> selectedArtworks = new ArrayList<>();
-    private List<Integer> selectedPositions = new ArrayList<>();
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -81,11 +75,6 @@ public class ArtworkDeletionFragment extends Fragment
         super.onCreate(savedInstanceState);
 
         ArtworkContent.populateListInitial(getContext());
-
-        if (getArguments() != null)
-        {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
-        }
     }
 
     @Override
@@ -93,11 +82,8 @@ public class ArtworkDeletionFragment extends Fragment
                              Bundle savedInstanceState)
     {
         View linearLayoutView = inflater.inflate(R.layout.fragment_artwork_list, container, false);
-
-        // The boilerplate list fragment code had the RecyclerView as the only View in the layout xml
-        // I have since added a parent View for the RecyclerView (ConstraintLayout)
-        Context context = linearLayoutView.getContext();
         RecyclerView recyclerView = linearLayoutView.findViewById(R.id.list);
+        Context context = recyclerView.getContext();
 
         // Dynamically sets number of grid columns
         // The ceiling gives a minimum of 2 columns, and scales well up to a Nexus 10 tablet (1280dp width)
@@ -106,27 +92,6 @@ public class ArtworkDeletionFragment extends Fragment
         recyclerView.setLayoutManager(new GridLayoutManager(context, (int) Math.ceil((double) dpWidth / 200)));
 
         ArtworkItemRecyclerViewAdapter adapter = new ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS);
-        adapter.setOnItemClickListener((itemView, position) ->
-        {
-            ArtworkContent.ArtworkItem item = ArtworkContent.ITEMS.get(position);
-            ImageView imageView = itemView.findViewById(R.id.image);
-            if (!selectedArtworks.contains(item))
-            {
-                selectedArtworks.add(item);
-                selectedPositions.add((Integer) position);
-                imageView.setColorFilter(Color.argb(130, 0, 150, 250));
-                // TODO i've got three variables storing which artworks have been selected, and all over the place
-                //  try to cut it down
-                item.selected = true;
-            } else
-            {
-                selectedArtworks.remove(item);
-                selectedPositions.remove((Integer) position);
-                imageView.clearColorFilter();
-                item.selected = false;
-            }
-            Log.v("POSITION", Integer.toString(position));
-        });
         recyclerView.setAdapter(adapter);
 
         // This FAB actions the delete operation from both the RecyclerView, and the
@@ -136,7 +101,7 @@ public class ArtworkDeletionFragment extends Fragment
         fab.setOnClickListener(view ->
         {
             // Optimization if no artworks are selected
-            if (selectedArtworks.isEmpty())
+            if (SELECTED_ITEMS.isEmpty())
             {
                 Snackbar.make(view, R.string.snackbar_selectArtworkFirst,
                         Snackbar.LENGTH_LONG)
@@ -144,31 +109,31 @@ public class ArtworkDeletionFragment extends Fragment
                 return;
             } else
             {
-                int numberDeleted = selectedArtworks.size();
+                int numberDeleted = SELECTED_ITEMS.size();
                 Snackbar.make(view, numberDeleted + " " + getString(R.string.snackbar_deletedArtworks),
                         Snackbar.LENGTH_LONG)
                         .show();
             }
 
             // Deletes the artwork items from the ArrayList used as backing for the RecyclerView
-            ArtworkContent.ITEMS.removeAll(selectedArtworks);
+            ArtworkContent.ITEMS.removeAll(SELECTED_ITEMS);
 
             // Updates the RecyclerView.Adapter by removing the selected images
             // Nice animation as we're not calling notifyDataSetChanged()
             int deleteCount = 0;
-            for (int i : selectedPositions)
+            for (int i : SELECTED_POSITIONS)
             {
                 adapter.notifyItemRemoved(i - deleteCount);
                 deleteCount++;
             }
-            selectedPositions.clear();
+            SELECTED_POSITIONS.clear();
 
             // Now to delete the Artwork's themselves from the ContentProvider
             ArrayList<ContentProviderOperation> operations = new ArrayList<>();
             ContentProviderOperation operation;
             String selection = ProviderContract.Artwork.TOKEN + " = ?";
             // Builds a new delete operation for every selected artwork
-            for (ArtworkContent.ArtworkItem artworkItem : selectedArtworks)
+            for (ArtworkContent.ArtworkItem artworkItem : SELECTED_ITEMS)
             {
                 operation = ContentProviderOperation
                         .newDelete(ProviderContract.getProviderClient(context, PixivArtProvider.class).getContentUri())
@@ -187,7 +152,7 @@ public class ArtworkDeletionFragment extends Fragment
 
             // TODO also delete the files?
 
-            selectedArtworks.clear();
+            SELECTED_ITEMS.clear();
         });
 
         return linearLayoutView;
