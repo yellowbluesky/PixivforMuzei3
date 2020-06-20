@@ -45,18 +45,32 @@ import com.google.android.apps.muzei.api.provider.MuzeiArtProvider;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
+import static com.antony.muzei.pixiv.provider.PixivProviderConst.SHARE_IMAGE_INTENT_CHOOSER_TITLE;
 
-public class PixivArtProvider extends MuzeiArtProvider
-{
-    private final int COMMAND_ADD_TO_BOOKMARKS = 1;
-    private final int COMMAND_VIEW_IMAGE_DETAILS = 2;
-    private final int COMMAND_SHARE_IMAGE = 3;
+public class PixivArtProvider extends MuzeiArtProvider {
+
+    private static final int COMMAND_ADD_TO_BOOKMARKS = 1;
+    private static final int COMMAND_VIEW_IMAGE_DETAILS = 2;
+    private static final int COMMAND_SHARE_IMAGE = 3;
+
+    private boolean running = false;
+
+    @Override
+    public boolean onCreate() {
+        super.onCreate();
+        running = true;
+        return true;
+    }
 
     // Pass true to clear cache and download new images
     // Pass false to append new images to cache
@@ -66,59 +80,75 @@ public class PixivArtProvider extends MuzeiArtProvider
         PixivArtWorker.enqueueLoad(false, getContext());
     }
 
+    @NonNull
     @Override
-    public List<RemoteActionCompat> getCommandActions(Artwork artwork)
-    {
+    public List<RemoteActionCompat> getCommandActions(@NonNull Artwork artwork) {
+        if (!running) {
+            return Collections.emptyList();
+        }
         List<RemoteActionCompat> list = new ArrayList<>();
-        list.add(shareImage(artwork));
-        list.add(viewArtworkDetailsAlternate(artwork));
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        if (!sharedPrefs.getString("accessToken", "").isEmpty())
-        {
-            list.add(addToBookmarks(artwork));
+        RemoteActionCompat shareAction = shareImage(artwork);
+        if (shareAction != null) {
+            list.add(shareAction);
+        }
+        RemoteActionCompat viewDetailsAction = viewArtworkDetailsAlternate(artwork);
+        if (viewDetailsAction != null) {
+            list.add(viewDetailsAction);
+        }
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(checkContext());
+        if (!sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty()) {
+            RemoteActionCompat collectAction = addToBookmarks(artwork);
+            if (collectAction != null) {
+                list.add(collectAction);
+            }
         }
         return list;
     }
 
-    /*
-        Deprecated methods
-     */
-
-    private RemoteActionCompat shareImage(Artwork artwork)
-    {
-        File newFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
-        Uri uri = FileProvider.getUriForFile(getContext(), "com.antony.muzei.pixiv.fileprovider", newFile);
+    @Nullable
+    private RemoteActionCompat shareImage(Artwork artwork) {
+        if (!running) {
+            return null;
+        }
+        final Context context = checkContext();
+        File newFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                artwork.getToken() + ".png");
+        Uri uri = FileProvider.getUriForFile(context, "com.antony.muzei.pixiv.fileprovider", newFile);
         Intent sharingIntent = new Intent()
                 .setAction(Intent.ACTION_SEND)
                 .setType("image/*")
                 .putExtra(Intent.EXTRA_STREAM, uri);
 
-        Intent chooserIntent = Intent.createChooser(sharingIntent, "Share image using");
-        chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        String title = getContext().getString(R.string.command_shareImage);
+        String title = context.getString(R.string.command_shareImage);
         return new RemoteActionCompat(
-                IconCompat.createWithResource(getContext(), R.drawable.ic_baseline_share_24),
+                IconCompat.createWithResource(context, R.drawable.ic_baseline_share_24),
                 title,
                 title,
                 PendingIntent.getActivity(
-                        getContext(),
+                        context,
                         (int) artwork.getId(),
-                        chooserIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT));
+                        IntentUtils.chooseIntent(sharingIntent, SHARE_IMAGE_INTENT_CHOOSER_TITLE, context),
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                )
+        );
     }
 
-    private RemoteActionCompat viewArtworkDetailsAlternate(Artwork artwork)
-    {
+    @Nullable
+    private RemoteActionCompat viewArtworkDetailsAlternate(Artwork artwork) {
+        if (!running) {
+            return null;
+        }
         String token = artwork.getToken();
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
+        Intent intent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
         intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-        String title = getContext().getString(R.string.command_viewArtworkDetails);
+        final Context context = checkContext();
+        String title = context.getString(R.string.command_viewArtworkDetails);
         RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
-                IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
+                IconCompat.createWithResource(context, R.drawable.muzei_launch_command),
                 title,
                 title,
-                PendingIntent.getActivity(getContext(),
+                PendingIntent.getActivity(context,
                         (int) artwork.getId(),
                         intent,
                         PendingIntent.FLAG_UPDATE_CURRENT));
@@ -126,42 +156,56 @@ public class PixivArtProvider extends MuzeiArtProvider
         return remoteActionCompat;
     }
 
-    private RemoteActionCompat addToBookmarks(Artwork artwork)
-    {
+    @Nullable
+    private RemoteActionCompat addToBookmarks(Artwork artwork) {
+        if (!running) {
+            return null;
+        }
         Log.v("BOOKMARK", "adding to bookmarks");
-        Intent addToBookmarkIntent = new Intent(getContext(), AddToBookmarkService.class);
+        final Context context = checkContext();
+        Intent addToBookmarkIntent = new Intent(context, AddToBookmarkService.class);
         addToBookmarkIntent.putExtra("artworkId", artwork.getToken());
-        PendingIntent pendingIntent = PendingIntent.getService(getContext(), 0, addToBookmarkIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 0, addToBookmarkIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
 
+        String label = context.getString(R.string.command_addToBookmark);
         RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
-                IconCompat.createWithResource(getContext(), R.drawable.muzei_launch_command),
-                "Add to bookmarks",
-                "sample description",
+                IconCompat.createWithResource(context, R.drawable.muzei_launch_command),
+                label,
+                label,
                 pendingIntent);
         remoteActionCompat.setShouldShowIcon(false);
         return remoteActionCompat;
     }
 
-    // Deprecated in Muzei
+    //<editor-fold desc="Deprecated in Muzei">
+
+    @SuppressWarnings("deprecation")
     @Override
     @NonNull
-    public List<UserCommand> getCommands(@NonNull Artwork artwork)
-    {
+    public List<UserCommand> getCommands(@NonNull Artwork artwork) {
         super.getCommands(artwork);
+        if (!running) {
+            return Collections.emptyList();
+        }
         LinkedList<UserCommand> commands = new LinkedList<>();
         // Android 10 limits the ability for activities to run in the background
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
-        {
-            UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS, getContext().getString(R.string.command_addToBookmark));
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            Context context = checkContext();
+            UserCommand addToBookmark = new UserCommand(COMMAND_ADD_TO_BOOKMARKS,
+                    context.getString(R.string.command_addToBookmark));
             commands.add(addToBookmark);
-            UserCommand openIntentImage = new UserCommand(COMMAND_VIEW_IMAGE_DETAILS, getContext().getString(R.string.command_viewArtworkDetails));
-            UserCommand shareImage = new UserCommand(COMMAND_SHARE_IMAGE, getContext().getString(R.string.command_shareImage));
+            UserCommand openIntentImage = new UserCommand(COMMAND_VIEW_IMAGE_DETAILS,
+                    context.getString(R.string.command_viewArtworkDetails));
+            UserCommand shareImage = new UserCommand(COMMAND_SHARE_IMAGE,
+                    context.getString(R.string.command_shareImage));
             commands.add(shareImage);
             commands.add(openIntentImage);
         }
         return commands;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onCommand(@NonNull Artwork artwork, int id) {
         @Nullable final Context context = getContext();
@@ -173,10 +217,9 @@ public class PixivArtProvider extends MuzeiArtProvider
                     break;
                 }
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                if (sharedPrefs.getString("accessToken", "").isEmpty())
-                {
+                if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "").isEmpty()) {
                     new Handler(Looper.getMainLooper()).post(() ->
-                            Toast.makeText(context, context.getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
+                            Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT).show());
                     return;
                 }
 
@@ -185,19 +228,21 @@ public class PixivArtProvider extends MuzeiArtProvider
                     accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
                 } catch (AccessTokenAcquisitionException e) {
                     new Handler(Looper.getMainLooper()).post(() ->
-                            Toast.makeText(context, context.getString(R.string.toast_loginFirst), Toast.LENGTH_SHORT).show());
+                            Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT).show());
                     return;
                 }
                 PixivArtService.sendPostRequest(accessToken, artwork.getToken());
                 Log.d("PIXIV_DEBUG", "Added to bookmarks");
-                handler.post(() -> Toast.makeText(context, context.getString(R.string.toast_addingToBookmarks), Toast.LENGTH_SHORT).show());
+                handler.post(() ->
+                        Toast.makeText(context, R.string.toast_addingToBookmarks, Toast.LENGTH_SHORT).show());
                 break;
             case COMMAND_VIEW_IMAGE_DETAILS:
                 if (context == null) {
                     break;
                 }
                 String token = artwork.getToken();
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
+                Intent intent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + token));
                 IntentUtils.launchActivity(context, intent);
                 break;
             case COMMAND_SHARE_IMAGE:
@@ -205,7 +250,8 @@ public class PixivArtProvider extends MuzeiArtProvider
                 if (context == null) {
                     break;
                 }
-                File newFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), artwork.getToken() + ".png");
+                File newFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                        artwork.getToken() + ".png");
                 Uri uri = FileProvider.getUriForFile(context, "com.antony.muzei.pixiv.fileprovider", newFile);
                 Intent sharingIntent = new Intent();
                 sharingIntent.setAction(Intent.ACTION_SEND);
@@ -216,18 +262,51 @@ public class PixivArtProvider extends MuzeiArtProvider
         }
     }
 
+    //</editor-fold>
+
     @Override
     @NonNull
-    public InputStream openFile(@NonNull Artwork artwork)
-    {
-        InputStream inputStream = null;
-        try
-        {
-            inputStream = getContext().getContentResolver().openInputStream(artwork.getPersistentUri());
-        } catch (FileNotFoundException ex)
-        {
-            ex.printStackTrace();
+    public InputStream openFile(@NonNull Artwork artwork) throws IOException {
+        Objects.requireNonNull(artwork);
+
+        Context context;
+        try {
+            context = checkContext();
+        } catch (IllegalStateException ex) {
+            throw new IOException("", ex);
         }
-        return inputStream;
+
+        final Uri artworkPersistentUri = artwork.getPersistentUri();
+        if (artworkPersistentUri == null) {
+            throw new IOException("Require non-null persistent uri in Artwork " + artwork);
+        }
+
+        InputStream inputStream = null;
+        IOException exception = null;
+        try {
+            inputStream = context.getContentResolver().openInputStream(artworkPersistentUri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            exception = e;
+        }
+        if (inputStream == null) {
+            throw exception != null ? exception : new IOException("Fail to open stream with " + artworkPersistentUri);
+        }
+        return Objects.requireNonNull(inputStream);
     }
+
+    /**
+     * Return the {@link Context} this provider is running in.
+     *
+     * @throws IllegalStateException if not currently running after {@link #onCreate()}.
+     */
+    @NonNull
+    private Context checkContext() {
+        Context context = getContext();
+        if (!running || context == null) {
+            throw new IllegalStateException("Provider " + this + " not in running.");
+        }
+        return context;
+    }
+
 }
