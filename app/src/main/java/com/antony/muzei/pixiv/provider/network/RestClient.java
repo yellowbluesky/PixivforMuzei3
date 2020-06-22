@@ -21,8 +21,12 @@ import android.annotation.SuppressLint;
 import android.os.Build;
 import android.util.Log;
 
-import com.antony.muzei.pixiv.BuildConfig;
+import androidx.annotation.NonNull;
 
+import com.antony.muzei.pixiv.BuildConfig;
+import com.antony.muzei.pixiv.provider.network.interceptor.PixivAuthHeaderInterceptor;
+
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
@@ -32,8 +36,10 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.moshi.MoshiConverterFactory;
@@ -66,27 +72,10 @@ public class RestClient {
 
     private static OkHttpClient.Builder okHttpClientAuthBuilder = new OkHttpClient.Builder()
             .addNetworkInterceptor(httpLoggingInterceptor)
+            .addNetworkInterceptor(new PixivAuthHeaderInterceptor())
             // This adds the necessary headers minus the auth header
             // The auth header is a (for the moment) dynamic header in RetrofitClientAuthJson
-            .addInterceptor(chain ->
-            {
-                // Suppressed because I'm supplying a format string, no locale is implied or used
-                @SuppressLint("SimpleDateFormat") String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ").format(new Date());
-                String dateSecretConcat = rfc3339Date + HASH_SECRET;
-                String hashSecret = getHashSecret(dateSecretConcat);
-
-                Request original = chain.request();
-                Request request = original.newBuilder()
-                        .header("User-Agent", "PixivAndroidApp/5.0.155 (Android " + android.os.Build.VERSION.RELEASE + "; " + android.os.Build.MODEL + ")")
-                        .header("App-OS", "Android")
-                        .header("App-OS-Version", Build.VERSION.RELEASE)
-                        .header("App-Version", "5.0.166")
-                        //.header("Accept-Language", Locale.getDefault().toString())
-                        .header("X-Client-Time", rfc3339Date)
-                        .header("X-Client-Hash", hashSecret)
-                        .build();
-                return chain.proceed(request);
-            });
+            .addInterceptor(new CustomClientHeaderInterceptor());
 
     // Used for acquiring Ranking JSON
     public static Retrofit getRetrofitRankingInstance(boolean bypass)
@@ -237,4 +226,36 @@ public class RestClient {
         // TODO replace this place holder
         return "";
     }
+
+
+    /**
+     * Custom app client request-header {@link Interceptor}
+     */
+    private static class CustomClientHeaderInterceptor implements Interceptor {
+        @NonNull
+        @Override
+        public Response intercept(@NonNull Chain chain) throws IOException {
+            // Suppressed because I'm supplying a format string, no locale is implied or used
+            @SuppressLint("SimpleDateFormat")
+            String rfc3339Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ").format(new Date());
+            String dateSecretConcat = rfc3339Date + HASH_SECRET;
+            String hashSecret = getHashSecret(dateSecretConcat);
+
+            Request original = chain.request();
+            Request request = original.newBuilder()
+                    .header(
+                            "User-Agent",
+                            "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
+                    )
+                    .header("App-OS", "Android")
+                    .header("App-OS-Version", Build.VERSION.RELEASE)
+                    .header("App-Version", "5.0.166")
+                    //.header("Accept-Language", Locale.getDefault().toString())
+                    .header("X-Client-Time", rfc3339Date)
+                    .header("X-Client-Hash", hashSecret)
+                    .build();
+            return chain.proceed(request);
+        }
+    }
+
 }

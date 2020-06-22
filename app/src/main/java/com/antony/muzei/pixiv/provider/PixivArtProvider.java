@@ -17,6 +17,7 @@
 
 package com.antony.muzei.pixiv.provider;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -36,8 +37,11 @@ import androidx.core.content.FileProvider;
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.preference.PreferenceManager;
 
+import com.antony.muzei.pixiv.PixivMuzeiSupervisor;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
+import com.antony.muzei.pixiv.provider.network.RubyHttpDns;
+import com.antony.muzei.pixiv.provider.network.RubySSLSocketFactory;
 import com.antony.muzei.pixiv.util.IntentUtils;
 import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
@@ -47,17 +51,30 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.HttpUrl;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.logging.HttpLoggingInterceptor;
+
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
-import static com.antony.muzei.pixiv.provider.PixivProviderConst.SHARE_IMAGE_INTENT_CHOOSER_TITLE;
+import static com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
+import static com.antony.muzei.pixiv.PixivProviderConst.SHARE_IMAGE_INTENT_CHOOSER_TITLE;
 
 public class PixivArtProvider extends MuzeiArtProvider {
+
+    private static final String TAG = "PixivArtProvider";
 
     private static final int COMMAND_ADD_TO_BOOKMARKS = 1;
     private static final int COMMAND_VIEW_IMAGE_DETAILS = 2;
@@ -69,6 +86,9 @@ public class PixivArtProvider extends MuzeiArtProvider {
     public boolean onCreate() {
         super.onCreate();
         running = true;
+
+        PixivMuzeiSupervisor.INSTANCE.start(checkContext());
+
         return true;
     }
 
@@ -225,13 +245,13 @@ public class PixivArtProvider extends MuzeiArtProvider {
 
                 String accessToken;
                 try {
-                    accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
+                    accessToken = PixivMuzeiSupervisor.INSTANCE.getAccessToken();
                 } catch (AccessTokenAcquisitionException e) {
                     new Handler(Looper.getMainLooper()).post(() ->
                             Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT).show());
                     return;
                 }
-                PixivArtService.sendPostRequest(accessToken, artwork.getToken());
+                sendPostRequest(accessToken, artwork.getToken());
                 Log.d("PIXIV_DEBUG", "Added to bookmarks");
                 handler.post(() ->
                         Toast.makeText(context, R.string.toast_addingToBookmarks, Toast.LENGTH_SHORT).show());
@@ -307,6 +327,72 @@ public class PixivArtProvider extends MuzeiArtProvider {
             throw new IllegalStateException("Provider " + this + " not in running.");
         }
         return context;
+    }
+
+    // TODO: move from PixivArtService deprecated, to be refactor …
+    // Function only used to add artworks to bookmarks on the old commands
+    // this function to be removed, doesn't fit with anything other method
+    private void sendPostRequest(String accessToken, String token) {
+        HttpUrl rankingUrl = new HttpUrl.Builder()
+                .scheme("https")
+                .host("app-api.pixiv.net")
+                .addPathSegments("v2/illust/bookmark/add")
+                .build();
+        RequestBody authData = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("illust_id", token)
+                .addFormDataPart("restrict", "public")
+                .build();
+        Request request = new Request.Builder()
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
+                .addHeader("Authorization", "Bearer " + accessToken)
+                .post(authData)
+                .url(rankingUrl)
+                .build();
+
+        OkHttpClient httpClient = null;
+        if (Locale.getDefault().getISO3Language().equals("zho")) {
+            Log.d(TAG, "Bypass in effect");
+            HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
+                    s -> Log.v("ANTONY_SERVICE", "message====" + s));
+
+            httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+            builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager() {
+                @SuppressLint("TrustAllX509TrustManager")
+                @Override
+                public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
+                }
+
+                @SuppressLint("TrustAllX509TrustManager")
+                @Override
+                public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
+                }
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers()
+                {
+                    return new X509Certificate[0];
+                }
+            });//SNI bypass
+            builder.hostnameVerifier((s, sslSession) -> true);//disable hostnameVerifier
+            builder.addInterceptor(httpLoggingInterceptor);
+            builder.dns(new RubyHttpDns());//define the direct ip address
+            httpClient = builder.build();
+            /* SNI Bypass end */
+        }
+
+        if (httpClient == null) {
+            return;
+        }
+
+        try {
+            httpClient.newCall(request).execute();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
 }

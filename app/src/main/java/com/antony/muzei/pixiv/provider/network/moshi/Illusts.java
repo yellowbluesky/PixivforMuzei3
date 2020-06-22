@@ -21,19 +21,20 @@ import com.squareup.moshi.Json;
 
 import java.util.List;
 
-public class Illusts
-{
+public class Illusts {
+
     @Json(name = "illusts")
     private List<AuthArtwork> artworks;
-    private String next_url;
 
-    public List<AuthArtwork> getArtworks()
-    {
+    @Json(name = "next_url")
+    private String nextUrl;
+
+    public List<AuthArtwork> getArtworks() {
         return artworks;
     }
 
-    public String getNext_url()
-    {
-        return next_url;
+    public String getNextUrl() {
+        return nextUrl;
     }
+
 }

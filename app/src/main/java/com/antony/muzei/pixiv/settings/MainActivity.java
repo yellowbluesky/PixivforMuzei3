@@ -19,20 +19,19 @@ package com.antony.muzei.pixiv.settings;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.common.PixivMuzeiActivity;
 import com.antony.muzei.pixiv.util.IntentUtils;
 import com.google.android.apps.muzei.api.MuzeiContract;
 import com.google.android.material.tabs.TabLayout;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends PixivMuzeiActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
