@@ -20,6 +20,12 @@ class PixivAuthHeaderInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originRequest = chain.request()
+
+        // TODO: filter by url simply temporary, should split clients for different retrofit
+        if (originRequest.url.toString().endsWith("/auth/token")) {
+            return chain.proceed(originRequest)
+        }
+
         val token = try {
             PixivMuzeiSupervisor.getAccessToken()
         } catch (ex: AccessTokenAcquisitionException) {
