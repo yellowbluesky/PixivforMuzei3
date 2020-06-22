@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.antony.muzei.pixiv.BuildConfig;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.provider.PixivArtProvider;
 import com.google.android.apps.muzei.api.provider.ProviderContract;
@@ -142,11 +143,9 @@ public class ArtworkDeletionFragment extends Fragment
                 operations.add(operation);
             }
 
-            try
-            {
-                context.getContentResolver().applyBatch("com.antony.muzei.pixiv.provider", operations);
-            } catch (RemoteException | OperationApplicationException e)
-            {
+            try {
+                context.getContentResolver().applyBatch(BuildConfig.APPLICATION_ID + ".provider", operations);
+            } catch (RemoteException | OperationApplicationException e) {
                 e.printStackTrace();
             }
 

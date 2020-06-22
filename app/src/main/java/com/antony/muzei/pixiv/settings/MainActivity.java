@@ -25,6 +25,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.viewpager.widget.ViewPager;
 
+import com.antony.muzei.pixiv.BuildConfig;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.common.PixivMuzeiActivity;
 import com.antony.muzei.pixiv.util.IntentUtils;
@@ -70,7 +71,7 @@ public class MainActivity extends PixivMuzeiActivity {
                     .setTitle(getApplicationContext().getString(R.string.dialogTitle_muzeiNotActiveSource))
                     .setMessage(getApplicationContext().getString(R.string.dialog_selectSource))
                     .setNeutralButton(android.R.string.ok, (dialog, which) -> {
-                        Intent intent = MuzeiContract.Sources.createChooseProviderIntent("com.antony.muzei.pixiv.provider");
+                        Intent intent = MuzeiContract.Sources.createChooseProviderIntent(BuildConfig.APPLICATION_ID + ".provider");
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         IntentUtils.launchActivity(this, intent);
                     })
@@ -91,6 +92,6 @@ public class MainActivity extends PixivMuzeiActivity {
 
     // Does a check to see if PixivForMuzei3 is selected as the active provider in Muzei
     private boolean isProviderSelected() {
-        return MuzeiContract.Sources.isProviderSelected(this, "com.antony.muzei.pixiv.provider");
+        return MuzeiContract.Sources.isProviderSelected(this, BuildConfig.APPLICATION_ID + ".provider");
     }
 }

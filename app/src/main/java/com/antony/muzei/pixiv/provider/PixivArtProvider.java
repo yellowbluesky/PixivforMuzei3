@@ -37,6 +37,7 @@ import androidx.core.content.FileProvider;
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.preference.PreferenceManager;
 
+import com.antony.muzei.pixiv.BuildConfig;
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
@@ -133,7 +134,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
         final Context context = checkContext();
         File newFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
                 artwork.getToken() + ".png");
-        Uri uri = FileProvider.getUriForFile(context, "com.antony.muzei.pixiv.fileprovider", newFile);
+        Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".fileprovider", newFile);
         Intent sharingIntent = new Intent()
                 .setAction(Intent.ACTION_SEND)
                 .setType("image/*")
@@ -272,7 +273,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 }
                 File newFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
                         artwork.getToken() + ".png");
-                Uri uri = FileProvider.getUriForFile(context, "com.antony.muzei.pixiv.fileprovider", newFile);
+                Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".fileprovider", newFile);
                 Intent sharingIntent = new Intent();
                 sharingIntent.setAction(Intent.ACTION_SEND);
                 sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);

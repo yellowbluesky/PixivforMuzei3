@@ -15,7 +15,12 @@ android {
 
         buildConfigField "String", "PIXIV_CLIENT_ID", "\"${getProperty('pixiv.client.id')}\""
         buildConfigField "String", "PIXIV_CLIENT_SEC", "\"${getProperty('pixiv.client.sec')}\""
+
+        manifestPlaceholders = [
+                PACKAGE: "com.antony.muzei.pixiv"
+        ]
     }
+
     buildTypes {
         release {
             postprocessing {
@@ -37,9 +42,27 @@ android {
 //            }
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    flavorDimensions 'deliver'
+
+    productFlavors {
+        dev {
+            dimension = 'deliver'
+            applicationIdSuffix '.dev'
+            versionNameSuffix ':dev'
+
+            manifestPlaceholders = [
+                    PACKAGE: "com.antony.muzei.pixiv.dev"
+            ]
+        }
+        prod {
+            dimension = 'deliver'
+        }
     }
 }
 
