@@ -18,12 +18,9 @@
 package com.antony.muzei.pixiv.provider;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -31,13 +28,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.work.BackoffPolicy;
 import androidx.work.Constraints;
@@ -96,17 +91,8 @@ public class PixivArtWorker extends Worker {
     private static final String[] IMAGE_SUFFIXES = {".png", ".jpg"};
     private static boolean clearArtwork = false;
 
-    private BroadcastReceiver mTokenMissingReceiver;
-
     public PixivArtWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
-    }
-
-    @Override
-    public void onStopped() {
-        LocalBroadcastManager.getInstance(getApplicationContext())
-                .unregisterReceiver(mTokenMissingReceiver);
-        super.onStopped();
     }
 
     public static void enqueueLoad(boolean clear, Context context)
@@ -929,8 +915,6 @@ public class PixivArtWorker extends Worker {
     @Override
     public Result doWork() {
         Log.d(LOG_TAG, "Starting work");
-        observeTokenMissed();
-
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         ArrayList<Artwork> artworkArrayList;
         try {
@@ -953,30 +937,6 @@ public class PixivArtWorker extends Worker {
         Log.d(LOG_TAG, "Work completed");
 
         return Result.success();
-    }
-
-    private void observeTokenMissed() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addCategory(PixivMuzeiSupervisor.INTENT_CAT_LOCAL);
-        LocalBroadcastManager.getInstance(getApplicationContext())
-                .registerReceiver(ensureMissingTokenReceiver(), intentFilter);
-    }
-
-    private BroadcastReceiver ensureMissingTokenReceiver() {
-        if (mTokenMissingReceiver == null) {
-            mTokenMissingReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    if (intent == null) {
-                        return;
-                    }
-                    if (TextUtils.equals(PixivInstrumentation.INTENT_ACTION_ACCESS_TOKEN_MISSING, intent.getAction())) {
-
-                    }
-                }
-            };
-        }
-        return mTokenMissingReceiver;
     }
 
 }
