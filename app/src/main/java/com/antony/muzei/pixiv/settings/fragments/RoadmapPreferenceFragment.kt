@@ -14,27 +14,14 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+package com.antony.muzei.pixiv.settings.fragments
 
-package com.antony.muzei.pixiv.settings.fragments;
+import android.os.Bundle
+import androidx.preference.PreferenceFragmentCompat
+import com.antony.muzei.pixiv.R
 
-import android.os.Bundle;
-
-import androidx.preference.PreferenceFragmentCompat;
-
-import com.antony.muzei.pixiv.R;
-
-public class RoadmapPreferenceFragment extends PreferenceFragmentCompat
-{
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.roadmap_preference_layout);
-    }
-
-    @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
-    {
-
+class RoadmapPreferenceFragment : PreferenceFragmentCompat() {
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        setPreferencesFromResource(R.xml.roadmap_preference_layout, rootKey)
     }
 }
