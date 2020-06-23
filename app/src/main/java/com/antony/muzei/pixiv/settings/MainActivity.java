@@ -19,20 +19,20 @@ package com.antony.muzei.pixiv.settings;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
+import com.antony.muzei.pixiv.BuildConfig;
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.common.PixivMuzeiActivity;
 import com.antony.muzei.pixiv.util.IntentUtils;
 import com.google.android.apps.muzei.api.MuzeiContract;
 import com.google.android.material.tabs.TabLayout;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends PixivMuzeiActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                     .setTitle(getApplicationContext().getString(R.string.dialogTitle_muzeiNotActiveSource))
                     .setMessage(getApplicationContext().getString(R.string.dialog_selectSource))
                     .setNeutralButton(android.R.string.ok, (dialog, which) -> {
-                        Intent intent = MuzeiContract.Sources.createChooseProviderIntent("com.antony.muzei.pixiv.provider");
+                        Intent intent = MuzeiContract.Sources.createChooseProviderIntent(BuildConfig.APPLICATION_ID + ".provider");
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         IntentUtils.launchActivity(this, intent);
                     })
@@ -92,6 +92,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Does a check to see if PixivForMuzei3 is selected as the active provider in Muzei
     private boolean isProviderSelected() {
-        return MuzeiContract.Sources.isProviderSelected(this, "com.antony.muzei.pixiv.provider");
+        return MuzeiContract.Sources.isProviderSelected(this, BuildConfig.APPLICATION_ID + ".provider");
     }
 }

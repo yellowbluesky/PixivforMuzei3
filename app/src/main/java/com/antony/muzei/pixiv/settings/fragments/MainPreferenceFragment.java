@@ -45,7 +45,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
+import static com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
 
 public class MainPreferenceFragment extends PreferenceFragmentCompat
 {

@@ -1,15 +1,26 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 30
+
     defaultConfig {
         applicationId "com.antony.muzei.pixiv"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 288
-        versionName "3.1.2"
+        versionCode getProperty('app.version.code') as int
+        versionName getProperty('app.version.name')
+
+        buildConfigField "String", "PIXIV_CLIENT_ID", "\"${getProperty('pixiv.client.id')}\""
+        buildConfigField "String", "PIXIV_CLIENT_SEC", "\"${getProperty('pixiv.client.sec')}\""
+
+        manifestPlaceholders = [
+                PACKAGE: "com.antony.muzei.pixiv"
+        ]
     }
+
     buildTypes {
         release {
             postprocessing {
@@ -31,13 +42,32 @@ android {
 //            }
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    flavorDimensions 'deliver'
+
+    productFlavors {
+        dev {
+            dimension = 'deliver'
+            applicationIdSuffix '.dev'
+            versionNameSuffix ':dev'
+
+            manifestPlaceholders = [
+                    PACKAGE: "com.antony.muzei.pixiv.dev"
+            ]
+        }
+        prod {
+            dimension = 'deliver'
+        }
+    }
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${cfg.libKotlin}"
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta7'
@@ -45,6 +75,7 @@ dependencies {
     implementation 'androidx.preference:preference:1.1.1'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.work:work-runtime:2.3.4'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     implementation 'com.google.android.material:material:1.1.0'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'com.google.android.apps.muzei:muzei-api:3.4.0-alpha02'

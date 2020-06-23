@@ -21,29 +21,28 @@ import com.antony.muzei.pixiv.provider.network.moshi.Illusts;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Header;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
 
-public interface AuthJsonServerResponse
-{
-    // TODO access token is set as dynamic header
-    // TODO see if the access token can be set on the retrofit client instance
+public interface AuthJsonServerResponse {
+
     @GET("/v2/illust/follow?restrict=public")
-    Call<Illusts> getFollowJson(@Header("Authorization") String accessToken);
+    Call<Illusts> getFollowJson();
 
     @GET("v1/user/bookmarks/illust?restrict=public")
-    Call<Illusts> getBookmarkJson(@Header("Authorization") String accessToken, @Query("user_id") String userId);
+    Call<Illusts> getBookmarkJson(@Query("user_id") String userId);
 
     @GET("v1/search/illust?search_target=partial_match_for_tags&sort=date_desc&filter=for_ios")
-    Call<Illusts> getTagSearchJson(@Header("Authorization") String accessToken, @Query("word") String tag);
+    Call<Illusts> getTagSearchJson(@Query("word") String tag);
 
     @GET("v1/user/illusts?filter=for_ios")
-    Call<Illusts> getArtistJson(@Header("Authorization") String accessToken, @Query("user_id") String artist_id);
+    Call<Illusts> getArtistJson(@Query("user_id") String artist_id);
 
+    // filter=for_ios here, !?(･_･;?
     @GET("v1/illust/recommended?content_type=illust&include_ranking_label=true&include_ranking_illusts=true&filter=for_ios")
-    Call<Illusts> getRecommendedJson(@Header("Authorization") String accessToken);
+    Call<Illusts> getRecommendedJson();
 
     @GET
-    Call<Illusts> getNextUrl(@Header("Authorization") String accessToken, @Url String url);
+    Call<Illusts> getNextUrl(@Url String url);
+
 }

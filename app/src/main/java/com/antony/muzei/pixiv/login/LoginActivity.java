@@ -27,11 +27,13 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
-import com.antony.muzei.pixiv.provider.PixivArtWorker;
+import com.antony.muzei.pixiv.BuildConfig;
+import com.antony.muzei.pixiv.PixivInstrumentation;
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.common.PixivMuzeiActivity;
 import com.antony.muzei.pixiv.provider.network.RestClient;
 
 import java.util.HashMap;
@@ -41,36 +43,28 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginActivity extends AppCompatActivity
-{
+public class LoginActivity extends PixivMuzeiActivity {
+
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pixiv_sign_in);
         EditText loginUsername = findViewById(R.id.loginUsername);
         EditText loginPassword = findViewById(R.id.loginPassword);
 
-        loginPassword.addTextChangedListener(new TextWatcher()
-        {
+        loginPassword.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after)
-            {
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count)
-            {
-
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
             }
 
             @Override
-            public void afterTextChanged(Editable s)
-            {
+            public void afterTextChanged(Editable s) {
                 // this monster of a logical expression needs to be extracted out
-                if (!loginUsername.getText().toString().isEmpty() && !s.toString().isEmpty())
-                {
+                if (!loginUsername.getText().toString().isEmpty() && !s.toString().isEmpty()) {
                     findViewById(R.id.loginButton).setEnabled(true);
                 }
             }
@@ -79,8 +73,7 @@ public class LoginActivity extends AppCompatActivity
         findViewById(R.id.loginButton).setOnClickListener(v -> executeLogin());
     }
 
-    private void executeLogin()
-    {
+    private void executeLogin() {
         // Enables the indeterminate progress bar (spinning circle)
         ProgressBar progressBar = findViewById(R.id.loginLoading);
         progressBar.setVisibility(View.VISIBLE);
@@ -88,8 +81,8 @@ public class LoginActivity extends AppCompatActivity
         // Builds the header fields for the OAuth POST request
         Map<String, String> fieldParams = new HashMap<>();
         fieldParams.put("get_secure_url", "1");
-        fieldParams.put("client_id", "MOBrBDS8blbauoSck0ZfDbtuzpyT");
-        fieldParams.put("client_secret", "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj");
+        fieldParams.put("client_id", BuildConfig.PIXIV_CLIENT_ID);
+        fieldParams.put("client_secret", BuildConfig.PIXIV_CLIENT_SEC);
 
         // When a new user is logging in, they cannot be an existing valid refresh token
         EditText usernameInput = findViewById(R.id.loginUsername);
@@ -108,33 +101,30 @@ public class LoginActivity extends AppCompatActivity
         OAuthResponseService service = RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService.class);
         Call<OauthResponse> call = service.postRefreshToken(fieldParams);
         // Callback because we are on a main UI thread, Android will throw a NetworkOnMainThreadException
-        call.enqueue(new Callback<OauthResponse>()
-        {
+        call.enqueue(new Callback<OauthResponse>() {
             @Override
-            public void onResponse(Call<OauthResponse> call, Response<OauthResponse> response)
-            {
-                if (response.isSuccessful())
-                {
-                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            public void onResponse(@NonNull Call<OauthResponse> call, @NonNull Response<OauthResponse> response) {
+                if (response.isSuccessful()) {
                     // Store the recently received tokens
-                    PixivArtWorker.storeTokens(sharedPrefs, response.body());
+                    OauthResponse body = response.body();
+                    OauthResponse.PixivOauthResponse pixivAuthResp = body != null ? body.getPixivOauthResponse() : null;
+                    if (pixivAuthResp != null) {
+                        PixivInstrumentation.updateTokenLocal(LoginActivity.this, pixivAuthResp);
+                    }
                     // Returns the username for immediate consumption by MainPreferenceFragment
                     // Sets the "Logged in as XXX" preference summary
                     Intent username = new Intent()
                             .putExtra("username", response.body().getPixivOauthResponse().getUser().getName());
                     setResult(RESULT_OK, username);
                     finish();
-                }
-                else
-                {
+                } else {
                     progressBar.setVisibility(View.INVISIBLE);
                     Toast.makeText(getApplicationContext(), getString(R.string.toast_authFailed), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<OauthResponse> call, Throwable t)
-            {
+            public void onFailure(Call<OauthResponse> call, Throwable t) {
                 progressBar.setVisibility(View.INVISIBLE);
                 Toast.makeText(getApplicationContext(), getString(R.string.toast_authFailed), Toast.LENGTH_SHORT).show();
             }

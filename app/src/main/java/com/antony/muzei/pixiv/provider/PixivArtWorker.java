@@ -27,8 +27,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
@@ -45,6 +43,8 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.antony.muzei.pixiv.PixivInstrumentation;
+import com.antony.muzei.pixiv.PixivMuzeiSupervisor;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.login.OauthResponse;
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
@@ -81,21 +81,17 @@ import okhttp3.ResponseBody;
 import okio.Okio;
 import retrofit2.Call;
 
-import static com.antony.muzei.pixiv.provider.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
+import static com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
 
-public class PixivArtWorker extends Worker
-{
+public class PixivArtWorker extends Worker {
+
     private static final String LOG_TAG = "ANTONY_WORKER";
     private static final String WORKER_TAG = "ANTONY";
 
     private static final String[] IMAGE_SUFFIXES = {".png", ".jpg"};
     private static boolean clearArtwork = false;
 
-
-    public PixivArtWorker(
-            @NonNull Context context,
-            @NonNull WorkerParameters params)
-    {
+    public PixivArtWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
@@ -122,7 +118,12 @@ public class PixivArtWorker extends Worker
         // unique work ensures that only one Artwork is being processed at once
     }
 
-    // Upon successful authentication stores tokens returned from Pixiv into device memory
+    /**
+     * Upon successful authentication stores tokens returned from Pixiv into device memory
+     *
+     * @deprecated use {@link PixivInstrumentation#updateTokenLocal(Context, OauthResponse.PixivOauthResponse)} instead
+     */
+    @Deprecated
     public static void storeTokens(SharedPreferences sharedPrefs,
                                    OauthResponse response)
     {
@@ -760,17 +761,13 @@ public class PixivArtWorker extends Worker
     {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String mode = sharedPrefs.getString("pref_updateMode", "daily");
-        String accessToken = "";
 
         // These modes require an access token, so we check for and acquire one first
         if (Arrays.asList(PixivArtProviderDefines.AUTH_MODES).contains(mode))
         {
-            try
-            {
-                accessToken = PixivArtService.refreshAccessToken(sharedPrefs);
-            } catch (AccessTokenAcquisitionException ex)
-            {
-                Handler handler = new Handler(Looper.getMainLooper());
+            try {
+                PixivMuzeiSupervisor.INSTANCE.getAccessToken();
+            } catch (AccessTokenAcquisitionException ex) {
                 String authFailMode = sharedPrefs.getString("pref_authFailAction", "changeDaily");
                 switch (authFailMode)
                 {
@@ -778,16 +775,33 @@ public class PixivArtWorker extends Worker
                         Log.d(LOG_TAG, "Auth failed, changing mode to daily");
                         sharedPrefs.edit().putString("pref_updateMode", "daily").apply();
                         mode = "daily";
-                        handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedSwitch, Toast.LENGTH_SHORT).show());
+                        PixivMuzeiSupervisor.post(() ->
+                                Toast.makeText(
+                                        getApplicationContext(),
+                                        R.string.toast_authFailedSwitch,
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
                         break;
                     case "doNotChange_downDaily":
                         Log.d(LOG_TAG, "Auth failed, downloading a single daily");
                         mode = "daily";
-                        handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedDown, Toast.LENGTH_SHORT).show());
+                        PixivMuzeiSupervisor.post(() ->
+                                Toast.makeText(getApplicationContext(),
+                                        R.string.toast_authFailedDown,
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
                         break;
                     case "doNotChange_doNotDown":
                         Log.d(LOG_TAG, "Auth failed, retrying with no changes");
-                        handler.post(() -> Toast.makeText(getApplicationContext(), R.string.toast_authFailedRetry, Toast.LENGTH_SHORT).show());
+                        PixivMuzeiSupervisor.post(() ->
+                                Toast.makeText(
+                                        getApplicationContext(),
+                                        R.string.toast_authFailedRetry,
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
                         return null;
                 }
             }
@@ -805,19 +819,19 @@ public class PixivArtWorker extends Worker
             {
                 case "follow":
                     // This concat is ugly af
-                    call = service.getFollowJson("Bearer " + accessToken);
+                    call = service.getFollowJson();
                     break;
                 case "bookmark":
-                    call = service.getBookmarkJson("Bearer " + accessToken, sharedPrefs.getString("userId", ""));
+                    call = service.getBookmarkJson(sharedPrefs.getString("userId", ""));
                     break;
                 case "recommended":
-                    call = service.getRecommendedJson("Bearer " + accessToken);
+                    call = service.getRecommendedJson();
                     break;
                 case "artist":
-                    call = service.getArtistJson("Bearer " + accessToken, sharedPrefs.getString("pref_artistId", ""));
+                    call = service.getArtistJson(sharedPrefs.getString("pref_artistId", ""));
                     break;
                 case "tag_search":
-                    call = service.getTagSearchJson("Bearer " + accessToken, sharedPrefs.getString("pref_tagSearch", ""));
+                    call = service.getTagSearchJson(sharedPrefs.getString("pref_tagSearch", ""));
                     break;
                 default:
                     throw new IllegalStateException("Unexpected value: " + mode);
@@ -838,7 +852,7 @@ public class PixivArtWorker extends Worker
                 } catch (FilterMatchNotFoundException e)
                 {
                     e.printStackTrace();
-                    call = service.getNextUrl("Bearer " + accessToken, illusts.getNext_url());
+                    call = service.getNextUrl(illusts.getNextUrl());
                     illusts = call.execute().body();
                     authArtworkList = illusts.getArtworks();
                 }
@@ -896,32 +910,33 @@ public class PixivArtWorker extends Worker
         return artworkArrayList;
     }
 
+    // TODO: override methods should arrange on top after constructors
     @NonNull
     @Override
-    public Result doWork()
-    {
+    public Result doWork() {
         Log.d(LOG_TAG, "Starting work");
         ProviderClient client = ProviderContract.getProviderClient(getApplicationContext(), PixivArtProvider.class);
         ArrayList<Artwork> artworkArrayList;
-        try
-        {
+        try {
             artworkArrayList = getArtwork();
-        } catch (IOException | CorruptFileException e)
-        {
+        } catch (IOException | CorruptFileException e) {
             e.printStackTrace();
             return Result.retry();
         }
 
-        if (clearArtwork)
-        {
+        if (artworkArrayList == null || artworkArrayList.isEmpty()) {
+            return Result.failure();
+        }
+
+        if (clearArtwork) {
             clearArtwork = false;
             client.setArtwork(artworkArrayList);
-        } else
-        {
+        } else {
             client.addArtwork(artworkArrayList);
         }
         Log.d(LOG_TAG, "Work completed");
 
         return Result.success();
     }
+
 }

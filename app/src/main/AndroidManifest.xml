@@ -28,7 +28,7 @@
 
         <provider
             android:name=".provider.PixivArtProvider"
-            android:authorities="com.antony.muzei.pixiv.provider"
+            android:authorities="${PACKAGE}.provider"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="com.google.android.apps.muzei.api.ACCESS_PROVIDER">
@@ -45,7 +45,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.antony.muzei.pixiv.fileprovider"
+            android:authorities="${PACKAGE}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
