@@ -27,6 +27,13 @@
     </Preference>
     <Preference
         android:summary="@string/prefTitle_keyContributor"
+        android:title="alvince">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/alvince" />
+    </Preference>
+    <Preference
+        android:summary="@string/prefTitle_keyContributor"
         android:title="Perol_Notsfsssf">
         <intent
             android:action="android.intent.action.VIEW"
