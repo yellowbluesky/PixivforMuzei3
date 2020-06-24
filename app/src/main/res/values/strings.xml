@@ -92,5 +92,6 @@
     <string name="artwork">Artwork</string>
     <string name="dialog_no">No</string>
     <string name="dialog_yes">Yes</string>
+    <string name="tile_delete_artwork">Delete artwork</string>
 
 </resources>

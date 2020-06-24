@@ -96,8 +96,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
     // Pass true to clear cache and download new images
     // Pass false to append new images to cache
     @Override
-    public void onLoadRequested(boolean clearCache)
-    {
+    public void onLoadRequested(boolean clearCache) {
         PixivArtWorker.enqueueLoad(false, getContext());
     }
 
@@ -122,6 +121,11 @@ public class PixivArtProvider extends MuzeiArtProvider {
             if (collectAction != null) {
                 list.add(collectAction);
             }
+        }
+
+        RemoteActionCompat deleteArtwork = deleteArtwork(artwork);
+        if (deleteArtwork != null) {
+            list.add(deleteArtwork);
         }
         return list;
     }
@@ -195,6 +199,29 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 label,
                 label,
                 pendingIntent);
+        remoteActionCompat.setShouldShowIcon(false);
+        return remoteActionCompat;
+    }
+
+    @Nullable
+    private RemoteActionCompat deleteArtwork(Artwork artwork) {
+        if (!running) {
+            return null;
+        }
+        final Context context = checkContext();
+        Intent deleteArtworkIntent = new Intent(context, DeleteArtworkReceiver.class);
+        deleteArtworkIntent.putExtra("artworkId", artwork.getToken());
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
+                0,
+                deleteArtworkIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        String title = "Delete current artwork";
+        RemoteActionCompat remoteActionCompat = new RemoteActionCompat(
+                IconCompat.createWithResource(context, R.drawable.ic_delete_white_24dp),
+                title,
+                title,
+                pendingIntent
+        );
         remoteActionCompat.setShouldShowIcon(false);
         return remoteActionCompat;
     }
@@ -373,8 +400,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 }
 
                 @Override
-                public X509Certificate[] getAcceptedIssuers()
-                {
+                public X509Certificate[] getAcceptedIssuers() {
                     return new X509Certificate[0];
                 }
             });//SNI bypass

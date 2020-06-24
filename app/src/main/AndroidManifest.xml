@@ -12,6 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <receiver
+            android:name=".provider.DeleteArtworkReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
         <activity
             android:name=".settings.MainActivity"
@@ -23,7 +27,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".login.LoginActivity" />
 
         <provider
@@ -35,6 +38,7 @@
             <intent-filter>
                 <action android:name="com.google.android.apps.muzei.api.MuzeiArtProvider" />
             </intent-filter>
+
             <meta-data
                 android:name="settingsActivity"
                 android:value="com.antony.muzei.pixiv.settings.MainActivity" />
@@ -42,7 +46,6 @@
                 android:name="color"
                 android:value="#0096db" />
         </provider>
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${PACKAGE}.fileprovider"
@@ -56,5 +59,17 @@
         <service
             android:name=".provider.AddToBookmarkService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".provider.DeleteArtworkTileService"
+            android:icon="@drawable/ic_delete_white_24dp"
+            android:label="@string/tile_delete_artwork"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action
+                    android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
     </application>
+
 </manifest>
