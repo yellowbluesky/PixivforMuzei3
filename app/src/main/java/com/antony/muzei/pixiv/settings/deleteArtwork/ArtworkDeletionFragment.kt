@@ -26,6 +26,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.PixivArtProvider
 import com.google.android.apps.muzei.api.provider.ProviderContract.Artwork.TOKEN
@@ -36,10 +37,10 @@ import java.util.*
 import kotlin.math.ceil
 
 class ArtworkDeletionFragment : Fragment() {
-/**
- * Mandatory empty constructor for the fragment manager to instantiate the
- * fragment (e.g. upon screen orientation changes).
- */
+    /**
+     * Mandatory empty constructor for the fragment manager to instantiate the
+     * fragment (e.g. upon screen orientation changes).
+     */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +103,7 @@ class ArtworkDeletionFragment : Fragment() {
                 operations.add(operation)
             }
             try {
-                context.contentResolver.applyBatch("com.antony.muzei.pixiv.provider", operations)
+                context.contentResolver.applyBatch(BuildConfig.APPLICATION_ID + ".provider", operations)
             } catch (e: RemoteException) {
                 e.printStackTrace()
             } catch (e: OperationApplicationException) {
