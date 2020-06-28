@@ -1,5 +1,6 @@
 ext {
     cfg = [
-            libKotlin: getProperty('kotlin.version')
+            libKotlin         : getProperty('kotlin.version'),
+            libKotlinCoroutine: getProperty('kotlin.coroutines')
     ]
 }
