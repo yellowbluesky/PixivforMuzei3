@@ -43,6 +43,7 @@ import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException;
 import com.antony.muzei.pixiv.provider.network.RubyHttpDns;
 import com.antony.muzei.pixiv.provider.network.RubySSLSocketFactory;
+import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor;
 import com.antony.muzei.pixiv.util.IntentUtils;
 import com.google.android.apps.muzei.api.UserCommand;
 import com.google.android.apps.muzei.api.provider.Artwork;
@@ -67,7 +68,6 @@ import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
@@ -382,10 +382,6 @@ public class PixivArtProvider extends MuzeiArtProvider {
         OkHttpClient httpClient = null;
         if (Locale.getDefault().getISO3Language().equals("zho")) {
             Log.d(TAG, "Bypass in effect");
-            HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
-                    s -> Log.v("ANTONY_SERVICE", "message====" + s));
-
-            httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
             builder.sslSocketFactory(new RubySSLSocketFactory(), new X509TrustManager() {
@@ -405,7 +401,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
                 }
             });//SNI bypass
             builder.hostnameVerifier((s, sslSession) -> true);//disable hostnameVerifier
-            builder.addInterceptor(httpLoggingInterceptor);
+            builder.addInterceptor(new NetworkTrafficLogInterceptor());
             builder.dns(new RubyHttpDns());//define the direct ip address
             httpClient = builder.build();
             /* SNI Bypass end */
