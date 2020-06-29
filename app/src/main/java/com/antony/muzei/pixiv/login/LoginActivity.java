@@ -21,20 +21,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextWatcher;
+import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.UiThread;
 import androidx.preference.PreferenceManager;
 
 import com.antony.muzei.pixiv.BuildConfig;
 import com.antony.muzei.pixiv.PixivInstrumentation;
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.common.PixivMuzeiActivity;
+import com.antony.muzei.pixiv.common.text.SimpleTextWatcher;
+import com.antony.muzei.pixiv.databinding.LoginPixivSignInActivityBinding;
 import com.antony.muzei.pixiv.provider.network.RestClient;
+import com.antony.muzei.pixiv.util.TextViewKt;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,37 +50,39 @@ import retrofit2.Response;
 
 public class LoginActivity extends PixivMuzeiActivity {
 
+    private LoginPixivSignInActivityBinding mBinding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pixiv_sign_in);
-        EditText loginUsername = findViewById(R.id.loginUsername);
-        EditText loginPassword = findViewById(R.id.loginPassword);
+        mBinding = LoginPixivSignInActivityBinding.inflate(getLayoutInflater());
+        setContentView(mBinding.getRoot());
 
-        loginPassword.addTextChangedListener(new TextWatcher() {
+        mBinding.editUid.addTextChangedListener(new SimpleTextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                // this monster of a logical expression needs to be extracted out
-                if (!loginUsername.getText().toString().isEmpty() && !s.toString().isEmpty()) {
-                    findViewById(R.id.loginButton).setEnabled(true);
-                }
+            public void afterTextChanged(@Nullable Editable s) {
+                checkLoginEnable();
             }
         });
+        mBinding.editPwd.addTextChangedListener(new SimpleTextWatcher() {
+            @Override
+            public void afterTextChanged(@Nullable Editable s) {
+                checkLoginEnable();
+            }
+        });
+        mBinding.btnLogin.setOnClickListener(v -> executeLogin());
+    }
 
-        findViewById(R.id.loginButton).setOnClickListener(v -> executeLogin());
+    @UiThread
+    private void checkLoginEnable() {
+        boolean accountTyped = !TextUtils.isEmpty(mBinding.editUid.getText());
+        boolean passwordTyped = !TextUtils.isEmpty(mBinding.editPwd.getText());
+        mBinding.btnLogin.setEnabled(accountTyped && passwordTyped);
     }
 
     private void executeLogin() {
         // Enables the indeterminate progress bar (spinning circle)
-        ProgressBar progressBar = findViewById(R.id.loginLoading);
+        final ProgressBar progressBar = mBinding.loginLoading;
         progressBar.setVisibility(View.VISIBLE);
 
         // Builds the header fields for the OAuth POST request
@@ -85,12 +92,10 @@ public class LoginActivity extends PixivMuzeiActivity {
         fieldParams.put("client_secret", BuildConfig.PIXIV_CLIENT_SEC);
 
         // When a new user is logging in, they cannot be an existing valid refresh token
-        EditText usernameInput = findViewById(R.id.loginUsername);
-        String username = usernameInput.getText().toString();
-        EditText passwordInput = findViewById(R.id.loginPassword);
-        String password = passwordInput.getText().toString();
+        String account = TextViewKt.text(mBinding.editUid, true).toString();
+        String password = TextViewKt.text(mBinding.editPwd, true).toString();
         fieldParams.put("grant_type", "password");
-        fieldParams.put("username", username);
+        fieldParams.put("username", account);
         fieldParams.put("password", password);
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -124,7 +129,7 @@ public class LoginActivity extends PixivMuzeiActivity {
             }
 
             @Override
-            public void onFailure(Call<OauthResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<OauthResponse> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.INVISIBLE);
                 Toast.makeText(getApplicationContext(), getString(R.string.toast_authFailed), Toast.LENGTH_SHORT).show();
             }
