@@ -73,7 +73,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN;
 import static com.antony.muzei.pixiv.PixivProviderConst.SHARE_IMAGE_INTENT_CHOOSER_TITLE;
 
-public class PixivArtProvider extends MuzeiArtProvider {
+public class PixivArtProviderLegacy extends MuzeiArtProvider {
 
     private static final String TAG = "PixivArtProvider";
 
@@ -360,7 +360,7 @@ public class PixivArtProvider extends MuzeiArtProvider {
     // TODO: move from PixivArtService deprecated, to be refactor …
     // Function only used to add artworks to bookmarks on the old commands
     // this function to be removed, doesn't fit with anything other method
-    private void sendPostRequest(String accessToken, String token) {
+    static void sendPostRequest(String accessToken, String token) {
         HttpUrl rankingUrl = new HttpUrl.Builder()
                 .scheme("https")
                 .host("app-api.pixiv.net")

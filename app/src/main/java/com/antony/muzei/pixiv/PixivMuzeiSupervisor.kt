@@ -72,4 +72,8 @@ object PixivMuzeiSupervisor {
         mainHandler.post(action)
     }
 
+    fun post(block: () -> Unit) {
+        mainHandler.post(block)
+    }
+
 }

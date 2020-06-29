@@ -18,6 +18,7 @@
     <string name="button_clearCache">立即清除图像缓存</string>
 
     <string name="command_addToBookmark">添加到收藏夹</string>
+    <string name="command_delete_artwork">删除图片</string>
     <string name="command_shareImage">分享图像</string>
     <string name="command_viewArtworkDetails">查看作品</string>
 

@@ -18,8 +18,9 @@
     <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="command_addToBookmark">Add to bookmarks</string>
+    <string name="command_delete_artwork">Delete this artwork</string>
     <string name="command_shareImage">Share image</string>
-    <string name="command_viewArtworkDetails">View image details</string>
+    <string name="command_viewArtworkDetails">Show details</string>
 
     <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 is not the active source</string>
     <string name="dialogTitle_muzeiNotInstalled">Muzei is not installed</string>
