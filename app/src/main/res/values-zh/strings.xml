@@ -18,6 +18,7 @@
     <string name="button_clearCache">立即清除图像缓存</string>
 
     <string name="command_addToBookmark">添加到收藏夹</string>
+    <string name="command_delete_artwork">删除图片</string>
     <string name="command_shareImage">分享图像</string>
     <string name="command_viewArtworkDetails">查看作品</string>
 
@@ -30,6 +31,9 @@
     <string name="dialog_yes">是</string>
 
     <string name="fab_delete_selected_artwork">删除所选作品</string>
+
+    <string name="login_pixiv_account_hint">请输入 Pixiv-ID</string>
+    <string name="login_pixiv_password_hint">请输入密码</string>
 
     <string name="prefCat_about">关于</string>
     <string name="prefCat_advFiltering">高级过滤</string>
@@ -68,9 +72,6 @@
     <string name="pref_enableNetworkBypass">绕过网络过滤器</string>
     <string name="pref_updateMode">更新模式</string>
     <string name="pref_updateMode_default">daily_rank</string>
-
-    <string name="prompt_email">Pixiv 用户名</string>
-    <string name="prompt_password">密码</string>
 
     <string name="snackbar_deletedArtworks">作品已删除</string>
     <string name="snackbar_selectArtworkFirst">选择至少一幅作品进行删除</string>

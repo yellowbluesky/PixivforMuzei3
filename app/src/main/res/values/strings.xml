@@ -18,8 +18,9 @@
     <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="command_addToBookmark">Add to bookmarks</string>
+    <string name="command_delete_artwork">Delete this artwork</string>
     <string name="command_shareImage">Share image</string>
-    <string name="command_viewArtworkDetails">View image details</string>
+    <string name="command_viewArtworkDetails">Show details</string>
 
     <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 is not the active source</string>
     <string name="dialogTitle_muzeiNotInstalled">Muzei is not installed</string>
@@ -30,6 +31,9 @@
     <string name="dialog_yes">Yes</string>
 
     <string name="fab_delete_selected_artwork">Delete selected artwork</string>
+
+    <string name="login_pixiv_account_hint">Type pixiv-ID</string>
+    <string name="login_pixiv_password_hint">Pixiv account password</string>
 
     <string name="prefCat_about">About</string>
     <string name="prefCat_advFiltering">Advanced filtering</string>
@@ -68,9 +72,6 @@
     <string name="pref_enableNetworkBypass">Enable network filter bypass</string>
     <string name="pref_updateMode">Update mode</string>
     <string name="pref_updateMode_default">daily_rank</string>
-
-    <string name="prompt_email">Pixiv username</string>
-    <string name="prompt_password">Password</string>
 
     <string name="snackbar_deletedArtworks">artworks deleted</string>
     <string name="snackbar_selectArtworkFirst">Select at least one artwork to delete</string>
