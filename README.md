@@ -39,6 +39,7 @@ Features
 
 # Contributors
 
+- [alvince](https://github.com/alvince): Significant contributions to code and improvements in application safety
 - [Notsfsssf](https://github.com/Notsfsssf): SNI Bypass
   - His Android Pixiv client [Pix-EzViewer](https://github.com/Notsfsssf/Pix-EzViewer) is excellent, try it out
 - [SettingDust](https://github.com/SettingDust): Localisation
