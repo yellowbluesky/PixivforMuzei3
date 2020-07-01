@@ -32,6 +32,9 @@
 
     <string name="fab_delete_selected_artwork">Delete selected artwork</string>
 
+    <string name="login_pixiv_account_hint">Type pixiv-ID</string>
+    <string name="login_pixiv_password_hint">Pixiv account password</string>
+
     <string name="prefCat_about">About</string>
     <string name="prefCat_advFiltering">Advanced filtering</string>
     <string name="prefCat_authSettings">Pixiv Login</string>

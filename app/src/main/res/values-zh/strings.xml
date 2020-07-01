@@ -32,6 +32,9 @@
 
     <string name="fab_delete_selected_artwork">删除所选作品</string>
 
+    <string name="login_pixiv_account_hint">请输入 Pixiv-ID</string>
+    <string name="login_pixiv_password_hint">请输入密码</string>
+
     <string name="prefCat_about">关于</string>
     <string name="prefCat_advFiltering">高级过滤</string>
     <string name="prefCat_authSettings">登录 Pixiv</string>
