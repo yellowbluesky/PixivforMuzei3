@@ -73,9 +73,6 @@
     <string name="pref_updateMode">Update mode</string>
     <string name="pref_updateMode_default">daily_rank</string>
 
-    <string name="prompt_email">Pixiv username</string>
-    <string name="prompt_password">Password</string>
-
     <string name="snackbar_deletedArtworks">artworks deleted</string>
     <string name="snackbar_selectArtworkFirst">Select at least one artwork to delete</string>
 
