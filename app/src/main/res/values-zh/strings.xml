@@ -1,96 +1,96 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <resources>
-    <string name="command_addToBookmark">添加到收藏夹</string>
-    <string name="command_viewArtworkDetails">查看作品</string>
-    <string name="command_shareImage">分享图像</string>
+    <string name="action_bar_title">Pixiv for Muzei 3 设置</string>
+    <string name="action_sign_in">登录</string>
 
     <string name="app_name">Pixiv for Muzei 3</string>
-    <string name="action_bar_title">Pixiv for Muzei 3 设置</string>
 
-    <string name="prefCat_pullFeedSettings">作品订阅设置</string>
-    <string name="pref_updateMode">更新模式</string>
-    <string name="pref_updateMode_default">daily_rank</string>
+    <string name="artwork">作品</string>
 
-    <string name="prefTitle_tagSearch">图像标签</string>
-    <string name="prefTitle_artistId">艺术家 ID</string>
-
-    <string name="prefTitle_rankingFilterSelect">排行榜 NSFW 过滤级别</string>
-    <string name="prefTitle_authFilterSelect">订阅 NSFW 过滤级别</string>
-
-    <string name="prefTitle_showManga">显示漫画</string>
-    <string name="prefTitle_minimumViews">作品最低浏览量</string>
-    <string name="prefTitle_numToDownload">同时下载的作品数量</string>
-
-    <string name="prefTitle_aspectRatio">作品长宽比</string>
-    <string name="pref_aspectRatioDefault_entryValues">0</string>
-
-    <string name="prefTitle_autoClearMode">每天凌晨 1 点自动清除缓存</string>
+    <string name="attr_daily">排行榜日榜 #</string>
+    <string name="attr_female">女生喜欢 #</string>
+    <string name="attr_male">男生喜欢 #</string>
+    <string name="attr_monthly">排行榜月榜 #</string>
+    <string name="attr_original">原创 #</string>
+    <string name="attr_rookie">新人 #</string>
+    <string name="attr_weekly">排行榜周榜 #</string>
 
     <string name="button_clearCache">立即清除图像缓存</string>
 
-    <string name="prefCat_authSettings">登录 Pixiv</string>
-    <string name="prefTitle_loginButton">登录</string>
-    <string name="prefSummary_notLoggedIn">未登录</string>
-    <string name="prefTitle_logoutButton">退出登录</string>
-    <string name="prefSummary_LoggedIn">当前登录为</string>
+    <string name="command_addToBookmark">添加到收藏夹</string>
+    <string name="command_shareImage">分享图像</string>
+    <string name="command_viewArtworkDetails">查看作品</string>
 
-    <string name="pref_authFailActionDropDown">验证失败后措施</string>
+    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 不是活动订阅源</string>
+    <string name="dialogTitle_muzeiNotInstalled">Muzei 尚未安装</string>
+
+    <string name="dialog_installMuzei">您想要安装 Muzei 吗？</string>
+    <string name="dialog_no">不</string>
+    <string name="dialog_selectSource">请打开 Muzei 中的 Sources 标签，然后选择 \"Pixiv for Muzei 3\"</string>
+    <string name="dialog_yes">是</string>
+
+    <string name="fab_delete_selected_artwork">删除所选作品</string>
 
     <string name="prefCat_about">关于</string>
-    <string name="prefTitle_openNsfwWiki">NSFW 级别解释</string>
-    <string name="prefTitle_mainDeveloper">主要开发者</string>
-    <string name="prefTitle_keyContributor">关键贡献者</string>
-
-    <string name="toast_authFailed">验证失败。请检查您的用户名或密码</string>
-    <string name="toast_authFailedSwitch">Pixiv for Muzei 3: 登录失败，更改为日排行榜</string>
-    <string name="toast_authFailedDown">Pixiv for Muzei 3: 登录失败，临时下载日排行榜</string>
-    <string name="toast_authFailedRetry">Pixiv for Muzei 3: 登录失败，再次尝试</string>
-    <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
-    <string name="toast_newFilterMode">过滤更新，清除图像缓存</string>
-    <string name="toast_clearingCache">清除图像缓存</string>
-    <string name="toast_newArtist">艺术家更新，清除图像缓存</string>
-    <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
-    <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
-    <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
-    <string name="toast_loginFirst">请先登录</string>
-
-    <string name="attr_daily">排行榜日榜 #</string>
-    <string name="attr_weekly">排行榜周榜 #</string>
-    <string name="attr_monthly">排行榜月榜 #</string>
-    <string name="attr_rookie">新人 #</string>
-    <string name="attr_original">原创 #</string>
-    <string name="attr_male">男生喜欢 #</string>
-    <string name="attr_female">女生喜欢 #</string>
-    <string name="prefTitle_storeInExtStorage">图片保存到手机存储</string>
-    <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
     <string name="prefCat_advFiltering">高级过滤</string>
+    <string name="prefCat_authSettings">登录 Pixiv</string>
     <string name="prefCat_fileOptions">文件选项</string>
-    <string name="title_activity_main">MainActivity</string>
-    <string name="tab_heading_main">主要设置</string>
-    <string name="tab_heading_adv_options">高级设置</string>
-    <string name="tab_heading_credits">贡献者</string>
-    <string name="tab_heading_roadmap">未来的计划</string>
+    <string name="prefCat_networkingOptions">网络选项</string>
+    <string name="prefCat_pullFeedSettings">作品订阅设置</string>
+
+    <string name="prefSummary_LoggedIn">当前登录为</string>
+    <string name="prefSummary_currentlyLoggedInAs">当前登录为</string>
+    <string name="prefSummary_noFileSizeLimit">无限制</string>
+    <string name="prefSummary_notLoggedIn">未登录</string>
+    <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
+    <string name="prefSummary_stuckApp">如果应用无法正常运行，请按此处</string>
+
+    <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
+    <string name="prefTitle_artistId">艺术家 ID</string>
+    <string name="prefTitle_aspectRatio">作品长宽比</string>
+    <string name="prefTitle_authFilterSelect">订阅 NSFW 过滤级别</string>
+    <string name="prefTitle_autoClearMode">每天凌晨 1 点自动清除缓存</string>
+    <string name="prefTitle_keyContributor">关键贡献者</string>
+    <string name="prefTitle_loginButton">登录</string>
+    <string name="prefTitle_logoutButton">退出登录</string>
+    <string name="prefTitle_mainDeveloper">主要开发者</string>
+    <string name="prefTitle_minimumViews">作品最低浏览量</string>
+    <string name="prefTitle_numToDownload">同时下载的作品数量</string>
+    <string name="prefTitle_openNsfwWiki">NSFW 级别解释</string>
+    <string name="prefTitle_rankingFilterSelect">排行榜 NSFW 过滤级别</string>
+    <string name="prefTitle_sendFeedback">发送反馈或建议</string>
+    <string name="prefTitle_showManga">显示漫画</string>
+    <string name="prefTitle_storeInExtStorage">图片保存到手机存储</string>
+    <string name="prefTitle_tagSearch">图像标签</string>
+
+    <string name="pref_aspectRatioDefault_entryValues">0</string>
+    <string name="pref_authFailActionDropDown">验证失败后措施</string>
+    <string name="pref_enableNetworkBypass">绕过网络过滤器</string>
+    <string name="pref_updateMode">更新模式</string>
+    <string name="pref_updateMode_default">daily_rank</string>
+
     <string name="prompt_email">Pixiv 用户名</string>
     <string name="prompt_password">密码</string>
-    <string name="action_sign_in">登录</string>
-    <string name="prefSummary_currentlyLoggedInAs">当前登录为</string>
 
-    <string name="prefSummary_stuckApp">如果应用无法正常运行，请按此处</string>
-    <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
-    <string name="prefSummary_noFileSizeLimit">无限制</string>
-    <string name="prefTitle_sendFeedback">发送反馈或建议</string>
-    <string name="prefCat_networkingOptions">网络选项</string>
-    <string name="pref_enableNetworkBypass">绕过网络过滤器</string>
-    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 不是活动订阅源</string>
-    <string name="dialog_selectSource">请打开 Muzei 中的 Sources 标签，然后选择 \"Pixiv for Muzei 3\"</string>
-    <string name="dialogTitle_muzeiNotInstalled">Muzei 尚未安装</string>
-    <string name="dialog_installMuzei">您想要安装 Muzei 吗？</string>
-    <string name="tab_heading_artwork_delete">删除作品</string>
-    <string name="snackbar_selectArtworkFirst">选择至少一幅作品进行删除</string>
     <string name="snackbar_deletedArtworks">作品已删除</string>
-    <string name="fab_delete_selected_artwork">删除所选作品</string>
-    <string name="artwork">作品</string>
-    <string name="dialog_yes">是</string>
-    <string name="dialog_no">不</string>
+    <string name="snackbar_selectArtworkFirst">选择至少一幅作品进行删除</string>
 
+    <string name="tab_heading_adv_options">高级设置</string>
+    <string name="tab_heading_artwork_delete">删除作品</string>
+    <string name="tab_heading_credits">贡献者</string>
+    <string name="tab_heading_main">主要设置</string>
+    <string name="tab_heading_roadmap">未来的计划</string>
+
+    <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
+    <string name="toast_authFailed">验证失败。请检查您的用户名或密码</string>
+    <string name="toast_authFailedDown">Pixiv for Muzei 3: 登录失败，临时下载日排行榜</string>
+    <string name="toast_authFailedRetry">Pixiv for Muzei 3: 登录失败，再次尝试</string>
+    <string name="toast_authFailedSwitch">Pixiv for Muzei 3: 登录失败，更改为日排行榜</string>
+    <string name="toast_clearingCache">清除图像缓存</string>
+    <string name="toast_loginFirst">请先登录</string>
+    <string name="toast_newArtist">艺术家更新，清除图像缓存</string>
+    <string name="toast_newFilterMode">过滤更新，清除图像缓存</string>
+    <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
+    <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
+    <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
 </resources>
