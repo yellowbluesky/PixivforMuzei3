@@ -1,4 +1,5 @@
-# Pixiv for Muzei 3
+Pixiv for Muzei 3
+===
 
 Pixiv plugin for the new Muzei 3 API.
 
@@ -37,7 +38,10 @@ Features
 <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="250">
 <img src="https://github.com/yellowbluesky/PixivforMuzei3/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="250">
 
-# Contributors
+## [Contribute Guide](./CONTRIBUTE.md)
+
+Contributors
+---
 
 - [alvince](https://github.com/alvince): Significant contributions to code and improvements in application safety
 - [Notsfsssf](https://github.com/Notsfsssf): SNI Bypass
