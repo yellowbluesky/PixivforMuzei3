@@ -1,6 +1,24 @@
 ext {
-    cfg = [
-            libKotlin         : getProperty('kotlin.version'),
-            libKotlinCoroutine: getProperty('kotlin.coroutines')
+    libs = [
+            androidx   : [
+                    annotation           : getProperty('androidx.annotation'),
+                    appcompat            : getProperty('androidx.appcompat'),
+                    coordinatorlayout    : getProperty('androidx.coordinatorlayout'),
+                    constraintlayout     : getProperty('androidx.constraintlayout'),
+                    localbroadcastmanager: getProperty('androidx.localbroadcastmanager'),
+                    material             : getProperty('androidx.material'),
+                    preference           : getProperty('androidx.preference'),
+                    recyclerview         : getProperty('androidx.recyclerview'),
+                    work                 : getProperty('androidx.work'),
+            ],
+            kotlin     : [
+                    core      : getProperty('kotlin.version'),
+                    coroutines: getProperty('kotlin.coroutines'),
+            ],
+            libGlide   : getProperty('lib.glide'),
+            libMuzei   : getProperty('lib.muzei'),
+            libMoshi   : getProperty('squareup.moshi'),
+            libOkhttp  : getProperty('squareup.okhttp'),
+            libRetrofit: getProperty('squareup.retrofit'),
     ]
 }
