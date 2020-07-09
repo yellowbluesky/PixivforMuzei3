@@ -26,8 +26,6 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
@@ -113,6 +111,10 @@ class PixivArtWorker(
         }
     }
 
+    enum class FileType {
+        OTHER, JPEG, PNG
+    }
+
     /*
         Ranking images are only provided with a URL to a low resolution thumbnail
         We want the high resolution image, so we need to do some work first
@@ -160,44 +162,42 @@ class PixivArtWorker(
         in the image for a valid file closer.
         If image is incomplete, throws CorruptFileException
         Returns:
-            1   png
-            2   jpg
+            PNG
+            JPG
             CorruptFileException
     */
-    // TODO make this work in kotlin
     @Throws(IOException::class, CorruptFileException::class)
-    private fun getLocalFileExtension(image: File): Int {
-//        val byteArray = FileUtils.readFileToByteArray(image)
-//        val length = byteArray.size
-//        var result = 0
-//        // if jpeg
-//        if (byteArray[0] == -119 && byteArray[1] == 80 && byteArray[2] == 78 && byteArray[3] == 71)
-//        {
-//            result = if (byteArray[length - 8] == 73 && byteArray[length - 7] == 69 && byteArray[length - 6] == 78 && byteArray[length - 5] == 68)
-//            {
-//                Log.d(LOG_TAG, "image is intact PNG")
-//                1
-//            }
-//            else
-//            {
-//                Log.d(LOG_TAG, "image is corrupt PNG")
-//                throw CorruptFileException("Corrupt PNG")
-//            }
-//        }
-//        else if (byteArray[0] == -1 && byteArray[1] == -40)
-//        {
-//            result = if (byteArray[length - 2] == -1 && byteArray[length - 1] == -39)
-//            {
-//                Log.d(LOG_TAG, "image is intact JPG")
-//                2
-//            }
-//            else
-//            {
-//                Log.d(LOG_TAG, "image is corrupt JPG")
-//                throw CorruptFileException("Corrupt JPG")
-//            }
-//        }
-        return 1
+    private fun getLocalFileExtension(image: File): FileType {
+        Log.d("TYPEC", "getting file type")
+        val randomAccessFile = RandomAccessFile(image, "r")
+        val byteArray = ByteArray(10)
+        randomAccessFile.read(byteArray, 0, 2)
+        var fileType: FileType = FileType.OTHER
+
+        // ByteArray used instead of read()
+        //  read() increments the file-pointer offset, causing successive reads to read different bytes
+        if (byteArray[0] == 0x89.toByte() && byteArray[1] == 0x50.toByte()) {
+            randomAccessFile.seek(image.length() - 8)
+            if (randomAccessFile.readShort() == 0x4945.toShort() && randomAccessFile.readShort() == 0x4E44.toShort()) {
+                Log.d("TYPEC", "PNG")
+                fileType = FileType.PNG
+            }
+            else {
+                throw CorruptFileException("Corrupt PNG")
+            }
+        }
+        else if (byteArray[0] == 0xFF.toByte() && byteArray[1] == 0xD8.toByte()) {
+            randomAccessFile.seek(image.length() - 2)
+            if (randomAccessFile.readShort() == 0xFFD9.toShort()) {
+                Log.d("TYPEC", "JPG")
+                fileType = FileType.JPEG
+            }
+            else {
+                throw CorruptFileException("Corrupt JPG")
+            }
+        }
+        randomAccessFile.close()
+        return fileType
     }
 
     /*
@@ -251,10 +251,10 @@ class PixivArtWorker(
                 if (cursor!!.count == 0) {
                     contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename)
                     contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3")
-                    if (fileExtension == 1) {
+                    if (fileExtension == FileType.PNG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
                     }
-                    else if (fileExtension == 2) {
+                    else if (fileExtension == FileType.JPEG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
                     }
                     val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
@@ -274,10 +274,10 @@ class PixivArtWorker(
                 val imagePng = File(directoryString, "$filename.png")
                 val imageJpg = File(directoryString, "$filename.jpg")
                 if (!imageJpg.exists() || !imagePng.exists()) {
-                    if (fileExtension == 1) {
+                    if (fileExtension == FileType.PNG) {
                         fosExternal = FileOutputStream(imagePng)
                     }
-                    else if (fileExtension == 2) {
+                    else if (fileExtension == FileType.JPEG) {
                         fosExternal = FileOutputStream(imageJpg)
                     }
                     allowedToStoreIntoExternal = true
