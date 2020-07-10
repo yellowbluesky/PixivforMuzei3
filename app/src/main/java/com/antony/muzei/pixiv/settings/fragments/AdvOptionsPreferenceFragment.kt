@@ -104,8 +104,8 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
         // Automatic cache clearing at 1AM every night for as long as the setting is toggled active
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
         if (sharedPrefs.getBoolean("pref_autoClearMode", false)) {
