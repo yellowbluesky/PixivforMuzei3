@@ -48,6 +48,17 @@
                 android:name="color"
                 android:value="#0096db" />
         </provider>
+
+        <provider android:name="com.google.android.apps.muzei.api.provider.MuzeiArtDocumentsProvider"
+            android:authorities="${PACKAGE}.provider.documents"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${PACKAGE}.fileprovider"
