@@ -20,6 +20,7 @@ package com.antony.muzei.pixiv.provider
 import android.Manifest
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -250,7 +251,7 @@ class PixivArtWorker(
                 val cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null)
                 if (cursor!!.count == 0) {
                     contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename)
-                    contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/PixivForMuzei3")
+                    contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PixivForMuzei3")
                     if (fileExtension == FileType.PNG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
                     }
@@ -276,9 +277,11 @@ class PixivArtWorker(
                 if (!imageJpg.exists() || !imagePng.exists()) {
                     if (fileExtension == FileType.PNG) {
                         fosExternal = FileOutputStream(imagePng)
+                        context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imagePng)))
                     }
                     else if (fileExtension == FileType.JPEG) {
                         fosExternal = FileOutputStream(imageJpg)
+                        context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageJpg)))
                     }
                     allowedToStoreIntoExternal = true
                 }
