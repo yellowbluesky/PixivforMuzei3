@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.antony.muzei.pixiv">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -7,11 +8,13 @@
 
     <application
         android:allowBackup="false"
+        android:autoRevokePermissions="discouraged"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:targetApi="30">
         <receiver
             android:name=".provider.DeleteArtworkReceiver"
             android:enabled="true"
@@ -49,7 +52,8 @@
                 android:value="#0096db" />
         </provider>
 
-        <provider android:name="com.google.android.apps.muzei.api.provider.MuzeiArtDocumentsProvider"
+        <provider
+            android:name="com.google.android.apps.muzei.api.provider.MuzeiArtDocumentsProvider"
             android:authorities="${PACKAGE}.provider.documents"
             android:exported="true"
             android:grantUriPermissions="true"
