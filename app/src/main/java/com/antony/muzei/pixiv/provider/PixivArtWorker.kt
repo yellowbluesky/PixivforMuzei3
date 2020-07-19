@@ -229,9 +229,10 @@ class PixivArtWorker(
 
         // TODO make this an enum
         val fileExtension = getLocalFileExtension(imageInternal)
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
         // If option in SettingsActivity is checked AND permission is granted
-        if (PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean("pref_storeInExtStorage", false) &&
+        if (sharedPrefs.getBoolean("pref_storeInExtStorage", false) &&
                 ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED) {
             var fosExternal: OutputStream? = null
@@ -258,7 +259,19 @@ class PixivArtWorker(
                     else if (fileExtension == FileType.JPEG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
                     }
-                    val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                    // Gets a list of mounted volumes
+                    val stringSet = MediaStore.getExternalVolumeNames(applicationContext)
+                    val volumeName: String
+                    // Sets the download location to be on phone storage or on the SD Card
+                    val storeIntoWhichStorage: String? = sharedPrefs.getString("pref_selectWhichExtStorage", "empty")
+                    volumeName = if (storeIntoWhichStorage.equals("sdCard")) {
+                        stringSet.elementAt(1)
+                    }
+                    else {
+                        stringSet.elementAt(0)
+                    }
+                    // Gives us a URI to save the image to
+                    val imageUri = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)
                     fosExternal = contentResolver.openOutputStream(imageUri!!)
                     allowedToStoreIntoExternal = true
                 }

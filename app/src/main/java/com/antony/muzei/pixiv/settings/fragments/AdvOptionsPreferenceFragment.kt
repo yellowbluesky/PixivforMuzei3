@@ -19,13 +19,12 @@ package com.antony.muzei.pixiv.settings.fragments
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
-import androidx.preference.SeekBarPreference
+import androidx.preference.*
 import androidx.work.*
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.ClearCacheWorker
@@ -76,6 +75,12 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
 //            return true;
 //        })));
 
+        // If more than one storage is detected to be mounted, display the preference that allows the user to
+        //  select where to download pictures to
+        // Also only visible if the option to download artwork to user storage is enabled
+        val selectWhichExternalStoragePref = findPreference<DropDownPreference>("pref_selectWhichExtStorage")
+        selectWhichExternalStoragePref!!.isVisible = isMoreThanOneStorage() && sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+
         // Requests the WRITE_EXTERNAL_STORAGE permission
         // is needed if the user has checked the option to store artworks into external storage
         // These artworks are not cleared when the Android cache is cleared
@@ -88,10 +93,17 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             }
             true
         }
-        externalStoragePref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, _: Any? ->
-            (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    == PackageManager.PERMISSION_GRANTED)
+        externalStoragePref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+            (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+            // Dynamically hides and reveals select storage preference as the store into external storage preference is enabled and disabled
+            selectWhichExternalStoragePref!!.isVisible = newValue as Boolean
+            true
         }
+//        externalStoragePref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+//            (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+//
+//        }
+
 
         // Slider that lets the user adjust how many artworks to download at a time
         // Draws and updates the slider position number as the user drags
@@ -101,6 +113,17 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         numToDownloadSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any? ->
             numToDownloadSlider.summary = (newValue as Int).toString()
             true
+        }
+    }
+
+    private fun isMoreThanOneStorage(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_storeInExtStorage", false)) {
+            val stringSet = context?.let { MediaStore.getExternalVolumeNames(it) }
+            return stringSet!!.size > 1
+        }
+        else {
+            // Android M or lower
+            return true
         }
     }
 

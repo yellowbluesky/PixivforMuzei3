@@ -97,4 +97,14 @@
         <item>"doNotChange_downDaily</item>
         <item>"doNotChange_doNotDown</item>
     </string-array>
+
+    <string-array name="array_selectWhichStorage_entries">
+        <item>"Phone storage"</item>
+        <item>"SD Card</item>
+    </string-array>
+
+    <string-array name="array_selectWhichStorage_entryValues">
+        <item>"phone"</item>
+        <item>"sdCard</item>
+    </string-array>
 </resources>
