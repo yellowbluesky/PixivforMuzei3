@@ -28,6 +28,7 @@ import androidx.preference.*
 import androidx.work.*
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.ClearCacheWorker
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -79,7 +80,10 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         //  select where to download pictures to
         // Also only visible if the option to download artwork to user storage is enabled
         val selectWhichExternalStoragePref = findPreference<DropDownPreference>("pref_selectWhichExtStorage")
-        selectWhichExternalStoragePref!!.isVisible = isMoreThanOneStorage() && sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+        selectWhichExternalStoragePref!!.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                isMoreThanOneStorage() &&
+                sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+
 
         // Requests the WRITE_EXTERNAL_STORAGE permission
         // is needed if the user has checked the option to store artworks into external storage
@@ -96,7 +100,9 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         externalStoragePref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
             (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
             // Dynamically hides and reveals select storage preference as the store into external storage preference is enabled and disabled
-            selectWhichExternalStoragePref!!.isVisible = newValue as Boolean
+            if (isMoreThanOneStorage()) {
+                selectWhichExternalStoragePref.isVisible = newValue as Boolean
+            }
             true
         }
 //        externalStoragePref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
@@ -117,13 +123,14 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
     }
 
     private fun isMoreThanOneStorage(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_storeInExtStorage", false)) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_storeInExtStorage", false)) {
             val stringSet = context?.let { MediaStore.getExternalVolumeNames(it) }
-            return stringSet!!.size > 1
+            stringSet!!.size > 1
         }
         else {
-            // Android M or lower
-            return true
+            // Android P or lower
+            val files: Array<File> = requireContext().getExternalFilesDirs(null)
+            files.size > 1
         }
     }
 
@@ -145,11 +152,11 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
                     .addTag("PIXIV_CACHE_AUTO")
                     .setConstraints(constraints)
                     .build()
-            WorkManager.getInstance(context!!)
+            WorkManager.getInstance(requireContext())
                     .enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request)
         }
         else {
-            WorkManager.getInstance(context!!).cancelAllWorkByTag("PIXIV_CACHE_AUTO")
+            WorkManager.getInstance(requireContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO")
         }
     }
 }
