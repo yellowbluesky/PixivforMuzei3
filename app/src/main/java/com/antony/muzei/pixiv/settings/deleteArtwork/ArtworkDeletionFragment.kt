@@ -124,4 +124,10 @@ class ArtworkDeletionFragment : Fragment() {
             }
 
             // TODO also delete the files from the disk?
- 
+            ArtworkContent.SELECTED_ITEMS.clear()
+        }
+        return linearLayoutView
+    }
+
+    companion object
+}
