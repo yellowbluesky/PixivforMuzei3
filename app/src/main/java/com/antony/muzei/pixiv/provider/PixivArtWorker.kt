@@ -519,7 +519,7 @@ class PixivArtWorker(
     for filtering, then downloads the image and returns it Muzei for insertion
      */
     @Throws(FilterMatchNotFoundException::class, IOException::class, CorruptFileException::class)
-    private fun getArtworkAuth(authArtworkList: List<AuthArtwork>): Artwork {
+    private fun getArtworkAuth(authArtworkList: List<AuthArtwork>, isRecommended: Boolean): Artwork {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
         // Filter variables to pass to filterArtworkAuth()
@@ -534,7 +534,7 @@ class PixivArtWorker(
 
         // Filtering
         val selectedArtwork = filterArtworkAuth(authArtworkList,
-                showManga, selectedFilterLevel, aspectRatioSettings, minimumViews)
+                showManga, selectedFilterLevel, aspectRatioSettings, minimumViews, isRecommended)
 
         // Variables for submitting to Muzei
         val imageUrl: String
@@ -603,7 +603,8 @@ class PixivArtWorker(
                                   showManga: Boolean,
                                   selectedFilterLevelSet: Set<String>?,
                                   aspectRatioSetting: Int,
-                                  minimumViews: Int): AuthArtwork? {
+                                  minimumViews: Int,
+                                  isRecommended: Boolean): AuthArtwork? {
         Log.i(LOG_TAG, "filterArtworkAuth(): Entering")
         var found = false
         var selectedArtwork: AuthArtwork? = null
@@ -640,16 +641,18 @@ class PixivArtWorker(
             }
 
             // See if there is a match between chosen artwork's sanity level and those desired
-            for (s in selectedFilterLevelSet!!) {
-                if (s == selectedArtwork.sanity_Level.toString()) {
-                    Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.sanity_Level)
-                    found = true
-                    break@loop
-                }
-                else if (s == "8" && selectedArtwork.x_restrict == 1) {
-                    Log.d(LOG_TAG, "x_restrict found")
-                    found = true
-                    break@loop
+            if (!isRecommended) {
+                for (s in selectedFilterLevelSet!!) {
+                    if (s == selectedArtwork.sanity_Level.toString()) {
+                        Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.sanity_Level)
+                        found = true
+                        break@loop
+                    }
+                    else if (s == "8" && selectedArtwork.x_restrict == 1) {
+                        Log.d(LOG_TAG, "x_restrict found")
+                        found = true
+                        break@loop
+                    }
                 }
             }
         }
@@ -724,8 +727,7 @@ class PixivArtWorker(
                 val service = RestClient.getRetrofitAuthInstance(bypassActive).create(AuthJsonServerResponse::class.java)
                 var call: Call<Illusts?>
                 call = when (updateMode) {
-                    "follow" ->
-                        service.followJson
+                    "follow" -> service.followJson
                     "bookmark" -> service.getBookmarkJson(sharedPrefs.getString("userId", ""))
                     "recommended" -> service.recommendedJson
                     "artist" -> service.getArtistJson(sharedPrefs.getString("pref_artistId", ""))
@@ -736,7 +738,7 @@ class PixivArtWorker(
                 var authArtworkList = illusts!!.artworks
                 for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                     try {
-                        artwork = getArtworkAuth(authArtworkList)
+                        artwork = getArtworkAuth(authArtworkList, updateMode == "recommended")
                         if (isArtworkNull(artwork)) {
                             throw CorruptFileException("")
                         }
