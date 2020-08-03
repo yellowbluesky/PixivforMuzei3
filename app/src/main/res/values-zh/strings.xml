@@ -65,6 +65,7 @@
     <string name="prefTitle_sendFeedback">发送反馈或建议</string>
     <string name="prefTitle_showManga">显示漫画</string>
     <string name="prefTitle_storeInExtStorage">图片保存到手机存储</string>
+    <string name="prefTitle_storingInWhichExtStorage">正在将图片保存到</string>
     <string name="prefTitle_tagSearch">图像标签</string>
 
     <string name="pref_aspectRatioDefault_entryValues">0</string>
