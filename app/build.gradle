@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'org.jetbrains.kotlin.kapt'
 }
 
 android {
@@ -19,6 +20,12 @@ android {
         manifestPlaceholders = [
                 PACKAGE: "com.antony.muzei.pixiv"
         ]
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
 
     buildTypes {
@@ -95,7 +102,10 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:${libs.libRetrofit}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.kotlin.coroutines}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${libs.kotlin.coroutines}"
-    implementation "androidx.room:room-runtime:${libs.room}"
+    implementation "androidx.room:room-runtime:${libs.libroom}"
+    // not sure how to get this to follow the same syntax as the previous imports
+    annotationProcessor "androidx.room:room-compiler:2.2.5"
+    kapt "androidx.room:room-compiler:2.2.5"
 }
 
 allprojects {

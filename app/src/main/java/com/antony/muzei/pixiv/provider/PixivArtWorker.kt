@@ -33,6 +33,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import androidx.work.*
+import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.post
 import com.antony.muzei.pixiv.R
@@ -491,6 +492,10 @@ class PixivArtWorker(
                 Log.v(LOG_TAG, "Rejecting aspect ratio")
                 continue
             }
+            if (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(rankingArtwork.illust_id)!!) {
+                Log.v(LOG_TAG, "Previously deleted")
+                continue
+            }
 
             for (s in selectedFilterLevelSet!!) {
                 if (s.toInt() == rankingArtwork.illust_content_type.sexual) {
@@ -629,6 +634,11 @@ class PixivArtWorker(
                 continue
             }
 
+            if (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(selectedArtwork.id)!!) {
+                Log.v("DEL", "Previously deleted")
+                continue
+            }
+
             // See if there is a match between chosen artwork's sanity level and those desired
             for (s in selectedFilterLevelSet!!) {
                 if (s == selectedArtwork.sanity_Level.toString()) {
@@ -715,9 +725,9 @@ class PixivArtWorker(
                 var call: Call<Illusts?>
                 call = when (updateMode) {
                     "follow" ->
-                        service.getFollowJson()
+                        service.followJson
                     "bookmark" -> service.getBookmarkJson(sharedPrefs.getString("userId", ""))
-                    "recommended" -> service.getRecommendedJson()
+                    "recommended" -> service.recommendedJson
                     "artist" -> service.getArtistJson(sharedPrefs.getString("pref_artistId", ""))
                     "tag_search" -> service.getTagSearchJson(sharedPrefs.getString("pref_tagSearch", ""))
                     else -> throw IllegalStateException("Unexpected value: $updateMode")

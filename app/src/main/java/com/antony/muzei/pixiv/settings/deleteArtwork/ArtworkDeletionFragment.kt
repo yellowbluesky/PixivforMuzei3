@@ -18,6 +18,7 @@ package com.antony.muzei.pixiv.settings.deleteArtwork
 
 import android.content.ContentProviderOperation
 import android.content.OperationApplicationException
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.RemoteException
 import android.view.LayoutInflater
@@ -26,6 +27,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.PixivArtProvider
@@ -90,6 +92,9 @@ class ArtworkDeletionFragment : Fragment() {
             }
             ArtworkContent.SELECTED_POSITIONS.clear()
 
+            // Used to remember which artworks have been deleted, so we don't download them again
+            val listOfDeletedIds: MutableList<DeletedArtworkIdEntity> = mutableListOf()
+
             // Now to delete the Artwork's themselves from the ContentProvider
             val operations = ArrayList<ContentProviderOperation>()
             var operation: ContentProviderOperation
@@ -101,6 +106,9 @@ class ArtworkDeletionFragment : Fragment() {
                         .withSelection(selection, arrayOf(artworkItem.token))
                         .build()
                 operations.add(operation)
+
+                // Used to remember which artworks have been deleted, so we don't download them again
+                listOfDeletedIds.add(DeletedArtworkIdEntity(artworkItem.token))
             }
             try {
                 context.contentResolver.applyBatch(BuildConfig.APPLICATION_ID + ".provider", operations)
@@ -110,11 +118,10 @@ class ArtworkDeletionFragment : Fragment() {
                 e.printStackTrace()
             }
 
-            // TODO also delete the files?
-            ArtworkContent.SELECTED_ITEMS.clear()
-        }
-        return linearLayoutView
-    }
+            val appDatabase = AppDatabase.getInstance(context)
+            AsyncTask.execute {
+                appDatabase?.deletedArtworkIdDao()?.insertDeletedArtworkId(listOfDeletedIds.toList())
+            }
 
-    companion object
-}
+            // TODO also delete the files from the disk?
+ 
