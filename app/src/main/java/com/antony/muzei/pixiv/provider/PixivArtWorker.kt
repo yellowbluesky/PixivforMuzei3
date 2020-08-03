@@ -640,8 +640,12 @@ class PixivArtWorker(
                 continue
             }
 
-            // See if there is a match between chosen artwork's sanity level and those desired
-            if (!isRecommended) {
+            // All artworks in recommended are SFW, we can skip this check
+            if (isRecommended) {
+                found = true
+            }
+            else {
+                // See if there is a match between chosen artwork's sanity level and those desired
                 for (s in selectedFilterLevelSet!!) {
                     if (s == selectedArtwork.sanity_Level.toString()) {
                         Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.sanity_Level)
