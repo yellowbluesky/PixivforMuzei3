@@ -36,4 +36,9 @@
         <item>不更改模式，下载日排行榜</item>
         <item>不更改模式，且不下载新图片</item>
     </string-array>
+
+    <string-array name="array_selectWhichStorage_entries">
+        <item>"内部存储"</item>
+        <item>"SD 卡</item>
+    </string-array>
 </resources>
