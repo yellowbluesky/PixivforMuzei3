@@ -183,18 +183,15 @@ class PixivArtWorker(
             if (randomAccessFile.readShort() == 0x4945.toShort() && randomAccessFile.readShort() == 0x4E44.toShort()) {
                 Log.d("TYPEC", "PNG")
                 fileType = FileType.PNG
-            }
-            else {
+            } else {
                 throw CorruptFileException("Corrupt PNG")
             }
-        }
-        else if (byteArray[0] == 0xFF.toByte() && byteArray[1] == 0xD8.toByte()) {
+        } else if (byteArray[0] == 0xFF.toByte() && byteArray[1] == 0xD8.toByte()) {
             randomAccessFile.seek(image.length() - 2)
             if (randomAccessFile.readShort() == 0xFFD9.toShort()) {
                 Log.d("TYPEC", "JPG")
                 fileType = FileType.JPEG
-            }
-            else {
+            } else {
                 throw CorruptFileException("Corrupt JPG")
             }
         }
@@ -256,8 +253,7 @@ class PixivArtWorker(
                     contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PixivForMuzei3")
                     if (fileExtension == FileType.PNG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-                    }
-                    else if (fileExtension == FileType.JPEG) {
+                    } else if (fileExtension == FileType.JPEG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
                     }
                     // Gets a list of mounted volumes
@@ -267,8 +263,7 @@ class PixivArtWorker(
                     val storeIntoWhichStorage: String? = sharedPrefs.getString("pref_selectWhichExtStorage", "empty")
                     volumeName = if (storeIntoWhichStorage.equals("sdCard")) {
                         stringSet.elementAt(1)
-                    }
-                    else {
+                    } else {
                         stringSet.elementAt(0)
                     }
                     // Gives us a URI to save the image to
@@ -277,8 +272,7 @@ class PixivArtWorker(
                     allowedToStoreIntoExternal = true
                 }
                 cursor.close()
-            }
-            else {
+            } else {
                 val directoryString = "/storage/emulated/0/Pictures/PixivForMuzei3/"
                 val directory = File(directoryString)
                 if (!directory.exists()) {
@@ -292,8 +286,7 @@ class PixivArtWorker(
                     if (fileExtension == FileType.PNG) {
                         fosExternal = FileOutputStream(imagePng)
                         context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imagePng)))
-                    }
-                    else if (fileExtension == FileType.JPEG) {
+                    } else if (fileExtension == FileType.JPEG) {
                         fosExternal = FileOutputStream(imageJpg)
                         context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageJpg)))
                     }
@@ -365,6 +358,10 @@ class PixivArtWorker(
     ): Boolean = artworkViewCount >= minimumDesiredViews * 500
 
     private fun isImageTooLarge(sizeBytes: Long, limitBytes: Long): Boolean = sizeBytes > limitBytes
+
+    private fun isBeenDeleted(artworkId: int): Boolean =
+            (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(selectedArtwork.id)!!)
+
 
     private fun generateShuffledArray(length: Int): IntArray {
         //return (0 .. length).toMutableList().shuffle()
@@ -492,7 +489,8 @@ class PixivArtWorker(
                 Log.v(LOG_TAG, "Rejecting aspect ratio")
                 continue
             }
-            if (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(rankingArtwork.illust_id)!!) {
+
+            if (isBeenDeleted(rankingArtwork.illust_id)) {
                 Log.v(LOG_TAG, "Previously deleted")
                 continue
             }
@@ -543,8 +541,7 @@ class PixivArtWorker(
             selectedArtwork
                     .meta_single_page
                     .original_image_url
-        }
-        else {
+        } else {
             Log.d(LOG_TAG, "Picture is part of an album")
             selectedArtwork
                     .meta_pages[0]
@@ -635,24 +632,22 @@ class PixivArtWorker(
                 continue
             }
 
-            if (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(selectedArtwork.id)!!) {
-                Log.v("DEL", "Previously deleted")
+            if (isBeenDeleted(selectedArtwork.id)) {
+                Log.v(LOG_TAG, "Previously deleted")
                 continue
             }
 
             // All artworks in recommended are SFW, we can skip this check
             if (isRecommended) {
                 found = true
-            }
-            else {
+            } else {
                 // See if there is a match between chosen artwork's sanity level and those desired
                 for (s in selectedFilterLevelSet!!) {
                     if (s == selectedArtwork.sanity_Level.toString()) {
                         Log.d(LOG_TAG, "sanity_level found is " + selectedArtwork.sanity_Level)
                         found = true
                         break@loop
-                    }
-                    else if (s == "8" && selectedArtwork.x_restrict == 1) {
+                    } else if (s == "8" && selectedArtwork.x_restrict == 1) {
                         Log.d(LOG_TAG, "x_restrict found")
                         found = true
                         break@loop
@@ -754,8 +749,7 @@ class PixivArtWorker(
                         authArtworkList = illusts!!.artworks
                     }
                 }
-            }
-            else {
+            } else {
                 val service = RestClient.getRetrofitRankingInstance(bypassActive).create(RankingJsonServerResponse::class.java)
                 var call = service.getRankingJson(updateMode)
                 var contents = call.execute().body()
@@ -781,8 +775,7 @@ class PixivArtWorker(
                             pageNumber++
                             call = service.getRankingJson(updateMode, pageNumber, date)
                             contents = call.execute().body()
-                        }
-                        else {
+                        } else {
                             pageNumber = 1
                             call = service.getRankingJson(updateMode, pageNumber, prevDate)
                             contents = call.execute().body()
@@ -813,8 +806,7 @@ class PixivArtWorker(
         if (clearArtwork) {
             clearArtwork = false
             client.setArtwork(artworkArrayList!!)
-        }
-        else {
+        } else {
             client.addArtwork(artworkArrayList!!)
         }
         Log.d(LOG_TAG, "Work completed")
