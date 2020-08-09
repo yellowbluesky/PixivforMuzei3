@@ -359,8 +359,8 @@ class PixivArtWorker(
 
     private fun isImageTooLarge(sizeBytes: Long, limitBytes: Long): Boolean = sizeBytes > limitBytes
 
-    private fun isBeenDeleted(artworkId: int): Boolean =
-            (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(selectedArtwork.id)!!)
+    private fun isBeenDeleted(artworkId: Int): Boolean =
+            (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(artworkId)!!)
 
 
     private fun generateShuffledArray(length: Int): IntArray {
