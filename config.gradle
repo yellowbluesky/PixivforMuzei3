@@ -20,5 +20,6 @@ ext {
             libMoshi   : getProperty('squareup.moshi'),
             libOkhttp  : getProperty('squareup.okhttp'),
             libRetrofit: getProperty('squareup.retrofit'),
+            libRoom    : getProperty('lib.room'),
     ]
 }
