@@ -25,7 +25,7 @@ android {
             annotationProcessorOptions {
                 arguments = [
                         "room.schemaLocation": "$projectDir/schemas".toString(),
-                        "room.incremental":"true",
+                        "room.incremental"   : "true",
                 ]
             }
         }
@@ -105,10 +105,9 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:${libs.libRetrofit}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.kotlin.coroutines}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${libs.kotlin.coroutines}"
-    implementation "androidx.room:room-runtime:${libs.libroom}"
-    // not sure how to get this to follow the same syntax as the previous imports
-    annotationProcessor "androidx.room:room-compiler:2.2.5"
-    kapt "androidx.room:room-compiler:2.2.5"
+    implementation "androidx.room:room-runtime:${libs.libRoom}"
+    annotationProcessor "androidx.room:room-compiler:${libs.libRoom}"
+    kapt "androidx.room:room-compiler:${libs.libRoom}"
 }
 
 allprojects {
