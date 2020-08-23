@@ -26,6 +26,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.*
 import androidx.work.*
+import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.ClearCacheWorker
 import java.io.File
@@ -50,20 +51,38 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
+        // Only enable for logged-in users
+        // width/height filter works for non logged users too
+        // but they are unable to download full sized images
+        // so it's meaningless to have it visually enabled
         val minWidthSlider = findPreference<SeekBarPreference>("prefSlider_minimumWidth")
-        minWidthSlider!!.updatesContinuously = true
-        minWidthSlider.summary = (sharedPrefs.getInt("prefSlider_minimumWidth", 0) * 10).toString()+"px"
-        minWidthSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
-            minWidthSlider.summary = (newValue as Int * 10).toString()+"px"
-            true
-        }
-
         val minHeightSlider = findPreference<SeekBarPreference>("prefSlider_minimumHeight")
-        minHeightSlider!!.updatesContinuously = true
-        minHeightSlider.summary = (sharedPrefs.getInt("prefSlider_minimumHeight", 0) * 10).toString()+"px"
-        minHeightSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
-            minHeightSlider.summary = (newValue as Int * 10).toString()+"px"
-            true
+
+        // TODO: line below needs user to reload app (exit/open, kill in drawer, etc.) in order to load new value "to detect that user is logged in"
+        if(sharedPrefs.getString(PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN, "").isNullOrEmpty()) {
+            minWidthSlider!!.isEnabled = false;
+            minHeightSlider!!.isEnabled = false;
+
+            minWidthSlider.summary = getString(R.string.toast_loginFirst);
+            minHeightSlider.summary = getString(R.string.toast_loginFirst);
+
+        } else {
+            minWidthSlider!!.isEnabled = true;
+            minHeightSlider!!.isEnabled = true;
+
+            minWidthSlider!!.updatesContinuously = true
+            minWidthSlider.summary = (sharedPrefs.getInt("prefSlider_minimumWidth", 0) * 10).toString()+"px"
+            minWidthSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+                minWidthSlider.summary = (newValue as Int * 10).toString()+"px"
+                true
+            }
+
+            minHeightSlider!!.updatesContinuously = true
+            minHeightSlider.summary = (sharedPrefs.getInt("prefSlider_minimumHeight", 0) * 10).toString()+"px"
+            minHeightSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+                minHeightSlider.summary = (newValue as Int * 10).toString()+"px"
+                true
+            }
         }
 
         // Maximum file size slider
