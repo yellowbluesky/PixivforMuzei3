@@ -47,6 +47,18 @@
             android:max="100"
             android:persistent="true"
             android:title="@string/prefTitle_minimumViews" />
+        <SeekBarPreference
+            android:defaultValue="0"
+            android:key="prefSlider_minimumWidth"
+            android:max="400"
+            android:persistent="true"
+            android:title="@string/prefTitle_minimumWidth" />
+        <SeekBarPreference
+            android:defaultValue="0"
+            android:key="prefSlider_minimumHeight"
+            android:max="400"
+            android:persistent="true"
+            android:title="@string/prefTitle_minimumHeight" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="prefCat_fileOptions"

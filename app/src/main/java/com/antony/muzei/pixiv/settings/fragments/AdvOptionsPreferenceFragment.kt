@@ -50,6 +50,22 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
+        val minWidthSlider = findPreference<SeekBarPreference>("prefSlider_minimumWidth")
+        minWidthSlider!!.updatesContinuously = true
+        minWidthSlider.summary = (sharedPrefs.getInt("prefSlider_minimumWidth", 0) * 10).toString()+"px"
+        minWidthSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+            minWidthSlider.summary = (newValue as Int * 10).toString()+"px"
+            true
+        }
+
+        val minHeightSlider = findPreference<SeekBarPreference>("prefSlider_minimumHeight")
+        minHeightSlider!!.updatesContinuously = true
+        minHeightSlider.summary = (sharedPrefs.getInt("prefSlider_minimumHeight", 0) * 10).toString()+"px"
+        minHeightSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+            minHeightSlider.summary = (newValue as Int * 10).toString()+"px"
+            true
+        }
+
         // Maximum file size slider
 //        SeekBarPreference maximumFileSizeSliderPref = findPreference("prefSlider_maxFileSize");
 //        maximumFileSizeSliderPref.setUpdatesContinuously(true);
