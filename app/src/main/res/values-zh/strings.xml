@@ -48,8 +48,6 @@
     <string name="prefSummary_notLoggedIn">未登录</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
     <string name="prefSummary_stuckApp">如果应用无法正常运行，请按此处</string>
-    <string name="prefSummary_minimumWidth">TODO translate: Images below set width in px will be ignored, workaround for blurry low res picture in Portrait</string>
-    <string name="prefSummary_minimumHeight">TODO translate: Images below set height in px will be ignored, workaround for blurry low res picture in Landscape</string>
 
     <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
     <string name="prefTitle_artistId">艺术家 ID</string>
@@ -69,8 +67,8 @@
     <string name="prefTitle_storeInExtStorage">图片保存到手机存储</string>
     <string name="prefTitle_storingInWhichExtStorage">正在将图片保存到</string>
     <string name="prefTitle_tagSearch">图像标签</string>
-    <string name="prefTitle_minimumWidth">TODO translate: Minimum image width</string>
-    <string name="prefTitle_minimumHeight">TODO translate: Minimum image height</string>
+    <string name="prefTitle_minimumWidth">TODO translate: Minimum picture width</string>
+    <string name="prefTitle_minimumHeight">TODO translate: Minimum picture height</string>
 
     <string name="pref_aspectRatioDefault_entryValues">0</string>
     <string name="pref_authFailActionDropDown">验证失败后措施</string>

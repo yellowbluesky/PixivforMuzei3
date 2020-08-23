@@ -48,8 +48,6 @@
     <string name="prefSummary_notLoggedIn">Not logged in</string>
     <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
     <string name="prefSummary_stuckApp">If the app is not working, press here</string>
-    <string name="prefSummary_minimumWidth">Images below set width in px will be ignored, workaround for blurry low res picture in Portrait</string>
-    <string name="prefSummary_minimumHeight">Images below set height in px will be ignored, workaround for blurry low res picture in Landscape</string>
 
     <string name="prefTitle_MaximumFileSize">Maximum artwork size</string>
     <string name="prefTitle_artistId">Artist ID</string>
@@ -69,8 +67,8 @@
     <string name="prefTitle_storeInExtStorage">Save pictures into external storage</string>
     <string name="prefTitle_storingInWhichExtStorage">Saving pictures to</string>
     <string name="prefTitle_tagSearch">Image tag</string>
-    <string name="prefTitle_minimumWidth">Minimum image width</string>
-    <string name="prefTitle_minimumHeight">Minimum image height</string>
+    <string name="prefTitle_minimumWidth">Minimum picture width</string>
+    <string name="prefTitle_minimumHeight">Minimum picture height</string>
 
     <string name="pref_aspectRatioDefault_entryValues">0</string>
     <string name="pref_authFailActionDropDown">Authentication failure action</string>
