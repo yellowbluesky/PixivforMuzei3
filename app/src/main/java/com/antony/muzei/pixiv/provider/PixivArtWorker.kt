@@ -334,6 +334,20 @@ class PixivArtWorker(
         return duplicateFound
     }
 
+    private fun hasDesiredPixelSize(
+            width: Int,
+            height: Int,
+            minimumWidth: Int,
+            minimumHeight: Int,
+            aspectRatioSetting: Int
+    ): Boolean =
+            when (aspectRatioSetting) {
+                0 -> height >= (minimumHeight * 10) && width >= (minimumWidth * 10)
+                1 -> height >= (minimumHeight * 10)
+                2 -> width >= (minimumWidth * 10)
+                else -> true
+            }
+
     /*
         0   Any aspect ratio
         1   Landscape
@@ -418,7 +432,10 @@ class PixivArtWorker(
                 showManga,
                 rankingFilterSelect,
                 aspectRatioSettings,
-                minimumViews)
+                minimumViews,
+                sharedPrefs.getInt("prefSlider_minimumWidth", 0),
+                sharedPrefs.getInt("prefSlider_minimumHeight", 0)
+        )
 
         // Variables to submit to Muzei
         val token = rankingArtwork!!.illust_id.toString()
@@ -465,7 +482,10 @@ class PixivArtWorker(
                                      showManga: Boolean,
                                      selectedFilterLevelSet: Set<String>?,
                                      aspectRatioSetting: Int,
-                                     minimumViews: Int): RankingArtwork? {
+                                     minimumViews: Int,
+                                     minimumWidth: Int,
+                                     minimumHeight: Int
+    ): RankingArtwork? {
         Log.i(LOG_TAG, "filterRanking(): Entering")
         var rankingArtwork: RankingArtwork? = null
         var found = false
@@ -487,6 +507,11 @@ class PixivArtWorker(
             if (!isDesiredAspectRatio(rankingArtwork.width,
                             rankingArtwork.height, aspectRatioSetting)) {
                 Log.v(LOG_TAG, "Rejecting aspect ratio")
+                continue
+            }
+
+            if (!hasDesiredPixelSize(rankingArtwork.width, rankingArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
+                Log.v(LOG_TAG, "Image below desired pixel size")
                 continue
             }
 
@@ -531,8 +556,16 @@ class PixivArtWorker(
         val minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0)
 
         // Filtering
-        val selectedArtwork = filterArtworkAuth(authArtworkList,
-                showManga, selectedFilterLevel, aspectRatioSettings, minimumViews, isRecommended)
+        val selectedArtwork = filterArtworkAuth(
+                authArtworkList,
+                showManga,
+                selectedFilterLevel,
+                aspectRatioSettings,
+                minimumViews,
+                isRecommended,
+                sharedPrefs.getInt("prefSlider_minimumWidth", 0),
+                sharedPrefs.getInt("prefSlider_minimumHeight", 0)
+        )
 
         // Variables for submitting to Muzei
         val imageUrl: String
@@ -601,7 +634,10 @@ class PixivArtWorker(
                                   selectedFilterLevelSet: Set<String>?,
                                   aspectRatioSetting: Int,
                                   minimumViews: Int,
-                                  isRecommended: Boolean): AuthArtwork? {
+                                  isRecommended: Boolean,
+                                  minimumWidth: Int,
+                                  minimumHeight: Int
+    ): AuthArtwork? {
         Log.i(LOG_TAG, "filterArtworkAuth(): Entering")
         var found = false
         var selectedArtwork: AuthArtwork? = null
@@ -627,6 +663,12 @@ class PixivArtWorker(
                 Log.d(LOG_TAG, "Rejecting aspect ratio")
                 continue
             }
+
+            if (!hasDesiredPixelSize(selectedArtwork.width, selectedArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
+                Log.v(LOG_TAG, "Image below desired pixel size")
+                continue
+            }
+
             if (!isEnoughViews(selectedArtwork.total_view, minimumViews)) {
                 Log.d(LOG_TAG, "Not enough views")
                 continue

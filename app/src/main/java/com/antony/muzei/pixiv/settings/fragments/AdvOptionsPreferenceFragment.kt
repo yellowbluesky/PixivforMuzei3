@@ -49,6 +49,23 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             minimumViewSliderPref.summary = (newValue as Int * 500).toString()
             true
         }
+        
+        val minWidthSlider = findPreference<SeekBarPreference>("prefSlider_minimumWidth")
+        val minHeightSlider = findPreference<SeekBarPreference>("prefSlider_minimumHeight")
+
+        minWidthSlider!!.updatesContinuously = true
+        minWidthSlider.summary = (sharedPrefs.getInt("prefSlider_minimumWidth", 0) * 10).toString() + "px"
+        minWidthSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+            minWidthSlider.summary = (newValue as Int * 10).toString() + "px"
+            true
+        }
+
+        minHeightSlider!!.updatesContinuously = true
+        minHeightSlider.summary = (sharedPrefs.getInt("prefSlider_minimumHeight", 0) * 10).toString() + "px"
+        minHeightSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+            minHeightSlider.summary = (newValue as Int * 10).toString() + "px"
+            true
+        }
 
         // Maximum file size slider
 //        SeekBarPreference maximumFileSizeSliderPref = findPreference("prefSlider_maxFileSize");
@@ -126,8 +143,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_storeInExtStorage", false)) {
             val stringSet = context?.let { MediaStore.getExternalVolumeNames(it) }
             stringSet!!.size > 1
-        }
-        else {
+        } else {
             // Android P or lower
             val files: Array<File> = requireContext().getExternalFilesDirs(null)
             files.size > 1
@@ -154,8 +170,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
                     .build()
             WorkManager.getInstance(requireContext())
                     .enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request)
-        }
-        else {
+        } else {
             WorkManager.getInstance(requireContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO")
         }
     }
