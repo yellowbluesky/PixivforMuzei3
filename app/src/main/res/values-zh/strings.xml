@@ -67,8 +67,8 @@
     <string name="prefTitle_storeInExtStorage">图片保存到手机存储</string>
     <string name="prefTitle_storingInWhichExtStorage">正在将图片保存到</string>
     <string name="prefTitle_tagSearch">图像标签</string>
-    <string name="prefTitle_minimumWidth">TODO translate: Minimum picture width</string>
-    <string name="prefTitle_minimumHeight">TODO translate: Minimum picture height</string>
+    <string name="prefTitle_minimumWidth">最小图片宽度</string>
+    <string name="prefTitle_minimumHeight">最小图片高度</string>
 
     <string name="pref_aspectRatioDefault_entryValues">0</string>
     <string name="pref_authFailActionDropDown">验证失败后措施</string>
