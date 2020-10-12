@@ -26,6 +26,7 @@ import android.os.Environment
 import androidx.core.app.RemoteActionCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.IconCompat
+import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivProviderConst
@@ -52,16 +53,21 @@ class MuzeiCommandManager {
     }
 
     fun provideActions(context: Context, artwork: Artwork): List<RemoteActionCompat> {
-        return mutableListOf<RemoteActionCompat>().apply {
+        val list = mutableListOf<RemoteActionCompat>().apply {
             obtainActionShareImage(context, artwork)
                     ?.also { add(it) }
             obtainActionViewArtworkDetails(context, artwork)
                     ?.also { add(it) }
-            obtainActionAddToBookmarks(context, artwork)
-                    ?.also { add(it) }
             obtainActionDeleteArtwork(context, artwork)
                     ?.also { add(it) }
         }
+
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        if (!sharedPrefs.getString("accessToken", "")?.isEmpty()!!) {
+            obtainActionAddToBookmarks(context, artwork)?.let { list.add(it) }
+        }
+
+        return list
     }
 
     fun provideActionsLegacy(context: Context, artwork: Artwork): List<UserCommand> {
