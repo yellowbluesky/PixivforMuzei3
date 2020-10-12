@@ -130,6 +130,8 @@ class MuzeiCommandManager {
             Intent(context, AddToBookmarkService::class.java).apply {
                 putExtra("artworkId", artwork.token.toString())
                 putExtra("accessToken", getAccessToken())
+                putExtra("artworkTitle", artwork.title)
+                putExtra("artworkArtist", artwork.byline)
             }.let { intent ->
                 PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
             }.let { pendingIntent ->

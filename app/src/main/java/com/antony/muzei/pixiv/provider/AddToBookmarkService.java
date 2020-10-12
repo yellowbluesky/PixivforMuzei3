@@ -17,22 +17,27 @@
 
 package com.antony.muzei.pixiv.provider;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Context;
+import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Intent;
-import android.os.Handler;
-import android.util.Log;
+import android.os.Build;
+import android.os.IBinder;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.JobIntentService;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.antony.muzei.pixiv.R;
+import com.antony.muzei.pixiv.common.PixivMuzeiActivity;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
 import okhttp3.Call;
-import okhttp3.FormBody;
+import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -40,24 +45,24 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class AddToBookmarkService extends JobIntentService {
-    final Handler mHandler = new Handler();
-
-    private static final String TAG = "AddToBookmarkService";
-    /**
-     * Unique job ID for this service.
-     */
-    private static final int JOB_ID = 2;
+public class AddToBookmarkService extends Service {
+    public static final String CHANNEL_ID = "PixivForMuzei3NotificationChannel";
+    // TODO use restclient
     OkHttpClient client = new OkHttpClient();
-    String BASE_URL = "https://ptsv2.com/";
-
-    public static void enqueueWork(Context context, Intent intent) {
-        enqueueWork(context, AddToBookmarkService.class, JOB_ID, intent);
-    }
 
     @Override
-    protected void onHandleWork(@NonNull Intent intent) {
-        // TODO use RestClient
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        createNotificationChannel();
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Adding artwork to bookmarks")
+                .setContentText(intent.getStringExtra("artworkTitle") + " by" + intent.getStringExtra("artworkArtist"))
+                .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
+                .build();
+
+        startForeground(1, notification);
+
+        //do heavy work on a background thread
         HttpUrl rankingUrl = new HttpUrl.Builder()
                 .scheme("https")
                 .host("app-api.pixiv.net")
@@ -75,16 +80,40 @@ public class AddToBookmarkService extends JobIntentService {
                 .post(authData)
                 .url(rankingUrl)
                 .build();
-        try {
-            client.newCall(request).execute();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        Call call = client.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+
+            }
+        });
+
+        stopSelf();
+
+        return START_REDELIVER_INTENT;
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel serviceChannel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Pixiv for Muzei 3 Foreground Service Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(serviceChannel);
         }
     }
 
+    @Nullable
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 }
