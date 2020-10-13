@@ -53,6 +53,13 @@
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/SettingDust" />
     </Preference>
+    <Preference
+        android:summary="Feature addition"
+        android:title="FluffyDiscord">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/FluffyDiscord" />
+    </Preference>
 
     <Preference android:title="@string/prefTitle_openNsfwWiki">
         <intent
