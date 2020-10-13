@@ -43,6 +43,6 @@ public interface AuthJsonServerResponse {
     Call<Illusts> getRecommendedJson();
 
     @GET
-    Call<Illusts> getNextUrl(@Url String url, Object nextUrl);
+    Call<Illusts> getNextUrl(@Url String url);
 
 }

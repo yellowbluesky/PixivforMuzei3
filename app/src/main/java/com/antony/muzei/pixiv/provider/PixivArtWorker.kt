@@ -786,7 +786,7 @@ class PixivArtWorker(
                         artworkArrayList.add(artwork)
                     } catch (e: FilterMatchNotFoundException) {
                         e.printStackTrace()
-                        call = service.getNextUrl("Bearer $accessToken", illusts!!.nextUrl)
+                        call = service.getNextUrl(illusts!!.nextUrl)
                         illusts = call.execute().body()
                         authArtworkList = illusts!!.artworks
                     }
