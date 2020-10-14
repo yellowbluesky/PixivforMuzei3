@@ -282,7 +282,7 @@ class PixivArtWorker(
                 // If the image has already been downloaded, do not redownload
                 val imagePng = File(directoryString, "$filename.png")
                 val imageJpg = File(directoryString, "$filename.jpg")
-                if (!imageJpg.exists() || !imagePng.exists()) {
+                if (!imageJpg.exists() && !imagePng.exists()) {
                     if (fileExtension == FileType.PNG) {
                         fosExternal = FileOutputStream(imagePng)
                         context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imagePng)))
