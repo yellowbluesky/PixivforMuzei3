@@ -21,7 +21,6 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
@@ -37,7 +36,6 @@ import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.post
 import com.antony.muzei.pixiv.R
-import com.antony.muzei.pixiv.login.OauthResponse
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
@@ -150,7 +148,7 @@ class PixivArtWorker(
     */
     @Throws(IOException::class, CorruptFileException::class)
     private fun getLocalFileExtension(image: File): FileType {
-        Log.d("TYPEC", "getting file type")
+        Log.d(LOG_TAG, "getting file type")
         val randomAccessFile = RandomAccessFile(image, "r")
         val byteArray = ByteArray(10)
         randomAccessFile.read(byteArray, 0, 2)
@@ -161,17 +159,19 @@ class PixivArtWorker(
         if (byteArray[0] == 0x89.toByte() && byteArray[1] == 0x50.toByte()) {
             randomAccessFile.seek(image.length() - 8)
             if (randomAccessFile.readShort() == 0x4945.toShort() && randomAccessFile.readShort() == 0x4E44.toShort()) {
-                Log.d("TYPEC", "PNG")
+                Log.d(LOG_TAG, "PNG")
                 fileType = FileType.PNG
             } else {
+                randomAccessFile.close()
                 throw CorruptFileException("Corrupt PNG")
             }
         } else if (byteArray[0] == 0xFF.toByte() && byteArray[1] == 0xD8.toByte()) {
             randomAccessFile.seek(image.length() - 2)
             if (randomAccessFile.readShort() == 0xFFD9.toShort()) {
-                Log.d("TYPEC", "JPG")
+                Log.d(LOG_TAG, "JPG")
                 fileType = FileType.JPEG
             } else {
+                randomAccessFile.close()
                 throw CorruptFileException("Corrupt JPG")
             }
         }
@@ -391,7 +391,7 @@ class PixivArtWorker(
         val minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0)
 
         // Filtering
-        val rankingArtwork = filterArtworkRanking(contents.artworks,
+        val rankingArtwork = filterArtworkRanking(contents.artworks.toMutableList(),
                 showManga,
                 rankingFilterSelect,
                 aspectRatioSettings,
@@ -488,8 +488,9 @@ class PixivArtWorker(
     }
 
     /*
-    Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
-    for filtering, then downloads the image and returns it Muzei for insertion
+        Receives a list of auth artworks
+        Passes it off to filterArtworkRanking(), which returns one ranking artwork
+        Builds an Artwork object off returned ranking artwork
      */
     @Throws(FilterMatchNotFoundException::class, IOException::class, CorruptFileException::class)
     private fun getArtworkAuth(authArtworkList: List<AuthArtwork>, isRecommended: Boolean): Artwork {
@@ -507,7 +508,7 @@ class PixivArtWorker(
 
         // Filtering
         val selectedArtwork = filterArtworkAuth(
-                authArtworkList,
+                authArtworkList.toMutableList(),
                 showManga,
                 selectedFilterLevel,
                 aspectRatioSettings,
@@ -696,6 +697,7 @@ class PixivArtWorker(
                     }
                 }
             }
+
             val artworkArrayList = ArrayList<Artwork>()
             var artwork: Artwork
             val bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false)
@@ -721,6 +723,8 @@ class PixivArtWorker(
                         artworkArrayList.add(artwork)
                     } catch (e: FilterMatchNotFoundException) {
                         e.printStackTrace()
+                        // I'm not sure how many times we can keep getting the nextUrl
+                        // TODO implement a limit on the number of nextUrls
                         call = service.getNextUrl(illusts!!.nextUrl)
                         illusts = call.execute().body()
                         authArtworkList = illusts!!.artworks
@@ -741,9 +745,9 @@ class PixivArtWorker(
                         }
                         artworkArrayList.add(artwork)
                     } catch (e: FilterMatchNotFoundException) {
+                        e.printStackTrace()
                         // If enough artworks are not found in the 50 from the first page of the rankings,
                         // keep looking through the next pages or days
-                        e.printStackTrace()
                         // We can continue to look through the 450 rankings for that day
                         // There is a tenth page actually, but the next page number integer becomes a boolean
                         // GSON can't handle this and throws a fit.
@@ -753,6 +757,8 @@ class PixivArtWorker(
                             call = service.getRankingJson(updateMode, pageNumber, date)
                             contents = call.execute().body()
                         } else {
+                            // If we for some reason cannot find enough artwork to satisfy the filter
+                            // from the top 450, then we can look at the previous day's ranking
                             pageNumber = 1
                             call = service.getRankingJson(updateMode, pageNumber, prevDate)
                             contents = call.execute().body()
