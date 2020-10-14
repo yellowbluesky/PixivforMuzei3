@@ -471,14 +471,14 @@ class PixivArtWorker(
     }
 
     /*
-        Filters through the JSON containing the metadata of the pictures of the selected mode
-        Picks one image based on the user's setting to show manga and level of NSFW filtering
+        Filters through a MutableList containing RankingArtwork's.
+        Picks one image based on the user's various filtering settings.
 
             NSFW filtering is performed by checking the value of the "sexual" JSON string
             Manga filtering is performed by checking the value of the "illust_type" JSON string
     */
     @Throws(FilterMatchNotFoundException::class)
-    private fun filterArtworkRanking(rankingArtworkList: List<RankingArtwork>,
+    private fun filterArtworkRanking(rankingArtworkList: MutableList<RankingArtwork>,
                                      showManga: Boolean,
                                      selectedFilterLevelSet: Set<String>?,
                                      aspectRatioSetting: Int,
@@ -487,56 +487,43 @@ class PixivArtWorker(
                                      minimumHeight: Int
     ): RankingArtwork? {
         Log.i(LOG_TAG, "filterRanking(): Entering")
-        var rankingArtwork: RankingArtwork? = null
-        var found = false
-        val shuffledArray = generateShuffledArray(rankingArtworkList.size)
-        for (i in rankingArtworkList.indices) {
-            rankingArtwork = rankingArtworkList[shuffledArray[i]]
-            if (isDuplicateArtwork(rankingArtwork.illust_id)) {
-                Log.v(LOG_TAG, "Duplicate ID: " + rankingArtwork.illust_id)
+        rankingArtworkList.shuffle()
+        for (randomArtwork in rankingArtworkList) {
+            if (isDuplicateArtwork(randomArtwork.illust_id)) {
+                Log.v(LOG_TAG, "Duplicate ID: " + randomArtwork.illust_id)
                 continue
             }
-            if (!isEnoughViews(rankingArtwork.view_count, minimumViews)) {
+            if (!isEnoughViews(randomArtwork.view_count, minimumViews)) {
                 Log.v(LOG_TAG, "Not enough views")
                 continue
             }
-            if (!showManga && rankingArtwork.illust_type != 0) {
-                Log.v(LOG_TAG, "Manga not desired " + rankingArtwork.illust_id)
+            if (!showManga && randomArtwork.illust_type != 0) {
+                Log.v(LOG_TAG, "Manga not desired " + randomArtwork.illust_id)
                 continue
             }
-            if (!isDesiredAspectRatio(rankingArtwork.width,
-                            rankingArtwork.height, aspectRatioSetting)) {
+            if (!isDesiredAspectRatio(randomArtwork.width,
+                            randomArtwork.height, aspectRatioSetting)) {
                 Log.v(LOG_TAG, "Rejecting aspect ratio")
                 continue
             }
-
-            if (!hasDesiredPixelSize(rankingArtwork.width, rankingArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
+            if (!hasDesiredPixelSize(randomArtwork.width, randomArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
                 Log.v(LOG_TAG, "Image below desired pixel size")
                 continue
             }
-
-            if (isBeenDeleted(rankingArtwork.illust_id)) {
+            if (isBeenDeleted(randomArtwork.illust_id)) {
                 Log.v(LOG_TAG, "Previously deleted")
                 continue
             }
 
             for (s in selectedFilterLevelSet!!) {
-                if (s.toInt() == rankingArtwork.illust_content_type.sexual) {
-                    found = true
-                    break
+                if (s.toInt() == randomArtwork.illust_content_type.sexual) {
+                    return randomArtwork
                 }
             }
         }
-        if (!found) {
-            throw FilterMatchNotFoundException("")
-        }
-        Log.i(LOG_TAG, "filterRanking(): Exited")
-        return rankingArtwork
+        throw FilterMatchNotFoundException("")
     }
 
-    /*
-        FEED / BOOKMARK / TAG / ARTIST
-     */
     /*
     Builds the API URL, requests the JSON containing the ranking, passes it to a separate function
     for filtering, then downloads the image and returns it Muzei for insertion
