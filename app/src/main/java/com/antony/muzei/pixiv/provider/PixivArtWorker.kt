@@ -68,7 +68,6 @@ class PixivArtWorker(
         private val IMAGE_EXTENSIONS = arrayOf(".png", ".jpg")
         private var clearArtwork = false
 
-        @JvmStatic
         fun enqueueLoad(clear: Boolean, context: Context?) {
             if (clear) {
                 clearArtwork = true
@@ -91,25 +90,6 @@ class PixivArtWorker(
             // This is good for saturating a network link and for fast picture downloads
             // However, race conditions develop if work required is authenticated
             // unique work ensures that only one Artwork is being processed at once
-        }
-
-        /**
-         * Upon successful authentication stores tokens returned from Pixiv into device memory
-         *
-         * @deprecated use {@link PixivInstrumentation#updateTokenLocal(Context, OauthResponse.PixivOauthResponse)} instead
-         */
-        @JvmStatic
-        fun storeTokens(sharedPrefs: SharedPreferences, response: OauthResponse) {
-            Log.i(LOG_TAG, "Storing tokens")
-            sharedPrefs.edit().apply {
-                putString("accessToken", response.pixivOauthResponse.access_token)
-                putLong("accessTokenIssueTime", System.currentTimeMillis() / 1000)
-                putString("refreshToken", response.pixivOauthResponse.refresh_token)
-                putString("userId", response.pixivOauthResponse.user.id)
-                putString("name", response.pixivOauthResponse.user.name)
-                apply()
-            }
-            Log.i(LOG_TAG, "Stored tokens")
         }
     }
 
