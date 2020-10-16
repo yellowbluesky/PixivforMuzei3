@@ -59,5 +59,4 @@ class PixivAuthHeaderInterceptor : Interceptor {
             chain.proceed(builder.build())
         }
     }
-
 }

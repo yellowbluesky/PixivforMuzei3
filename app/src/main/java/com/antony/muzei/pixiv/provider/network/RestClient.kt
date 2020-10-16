@@ -16,27 +16,17 @@
  */
 package com.antony.muzei.pixiv.provider.network
 
-import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
-import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_HOST_URL
-import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor
 import com.antony.muzei.pixiv.provider.network.interceptor.PixivAuthHeaderInterceptor
 import okhttp3.Interceptor
-import okhttp3.OkHttpClient
 import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import java.security.cert.X509Certificate
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.SSLSession
-import javax.net.ssl.X509TrustManager
 
 object RestClient {
 
@@ -44,117 +34,74 @@ object RestClient {
 
     private const val PIXIV_API_HOST = "https://app-api.pixiv.net"
 
-    private val x509TrustManager: X509TrustManager = object : X509TrustManager {
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkClientTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-        }
-
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkServerTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-        }
-
-        override fun getAcceptedIssuers(): Array<X509Certificate> {
-            return arrayOf()
-        }
-    }
-
-    private val okHttpClientAuthBuilder = OkHttpClient.Builder()
-        .apply {
-            addNetworkInterceptor(PixivAuthHeaderInterceptor())
-            addInterceptor(CustomClientHeaderInterceptor())
-            logOnDebug()
-        }
+    private val okHttpClientAuthBuilder = OkHttpSingleton.getInstance().newBuilder()
+            .apply {
+                addNetworkInterceptor(PixivAuthHeaderInterceptor())
+                addInterceptor(CustomClientHeaderInterceptor())
+            }
 
     // Used for acquiring Ranking JSON
     fun getRetrofitRankingInstance(bypass: Boolean): Retrofit {
-        val okHttpClientRankingBuilder = OkHttpClient.Builder() // Debug logging interceptor
-            .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                val original = chain.request()
-                val originalHttpUrl = original.url
-                val url = originalHttpUrl.newBuilder()
-                    .addQueryParameter("format", "json")
-                    .build()
-                val request =
-                    original.newBuilder() // Using the Android User-Agent returns a HTML of the ranking page, instead of the JSON I need
-                        .header(
-                            "User-Agent",
-                            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0"
-                        )
-                        .header("Referer", PIXIV_HOST_URL)
-                        .url(url)
-                        .build()
-                chain.proceed(request)
-            })
-            .logOnDebug()
-            .connectTimeout(60L, TimeUnit.SECONDS)
-            .readTimeout(60L, TimeUnit.SECONDS)
-            .writeTimeout(60L, TimeUnit.SECONDS)
-        if (bypass) {
-            okHttpClientRankingBuilder
-                .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-                .hostnameVerifier(HostnameVerifier { _: String?, _: SSLSession? -> true })
-                .dns(RubyHttpDns())
-        }
+        val okHttpClientRanking = OkHttpSingleton.getInstance().newBuilder() // Debug logging interceptor
+                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                    val original = chain.request()
+                    val originalHttpUrl = original.url
+                    val url = originalHttpUrl.newBuilder()
+                            .addQueryParameter("format", "json")
+                            .build()
+                    val request =
+                            original.newBuilder() // Using the Android User-Agent returns a HTML of the ranking page, instead of the JSON I need
+                                    .header(
+                                            "User-Agent",
+                                            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0"
+                                    )
+                                    .header("Referer", PIXIV_HOST_URL)
+                                    .url(url)
+                                    .build()
+                    chain.proceed(request)
+                })
+                .build()
         return Retrofit.Builder()
-            .client(okHttpClientRankingBuilder.build())
-            .baseUrl(PIXIV_HOST_URL)
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
+                .client(okHttpClientRanking)
+                .baseUrl(PIXIV_HOST_URL)
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
     }
 
     // Used for acquiring auth feed mode JSON
     fun getRetrofitAuthInstance(bypass: Boolean): Retrofit {
-        if (bypass) {
-            okHttpClientAuthBuilder
-                .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-                .hostnameVerifier(HostnameVerifier { _: String?, _: SSLSession? -> true })
-                .dns(RubyHttpDns())
-        }
         return Retrofit.Builder()
-            .client(okHttpClientAuthBuilder.build())
-            .baseUrl(PIXIV_API_HOST)
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
+                .client(okHttpClientAuthBuilder.build())
+                .baseUrl(PIXIV_API_HOST)
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
     }
 
     // Downloads images from any source
     fun getRetrofitImageInstance(bypass: Boolean): Retrofit {
-        val imageHttpClientBuilder = OkHttpClient.Builder()
-            .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                val original = chain.request()
-                val request = original.newBuilder()
-                    .header(
-                        "User-Agent",
-                        "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
-                    )
-                    .header("Referer", PIXIV_HOST_URL)
-                    .build()
-                chain.proceed(request)
-            })
-            .logOnDebug()
-        if (bypass) {
-            imageHttpClientBuilder
-                .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-                .hostnameVerifier(HostnameVerifier { _: String?, _: SSLSession? -> true })
-                .dns(RubyHttpDns())
-        }
+        val imageHttpClient = OkHttpSingleton.getInstance().newBuilder()
+                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                    val original = chain.request()
+                    val request = original.newBuilder()
+                            .header(
+                                    "User-Agent",
+                                    "PixivAndroidApp/5.0.220 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
+                            )
+                            .header("Referer", PIXIV_HOST_URL)
+                            .build()
+                    chain.proceed(request)
+                })
+                .build()
         return Retrofit.Builder()
-            .client(imageHttpClientBuilder.build())
-            .baseUrl("https://i.pximg.net")
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
+                .client(imageHttpClient)
+                .baseUrl("https://i.pximg.net")
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
     }
 
     // Used for getting an accessToken from a refresh token or username / password
     @JvmStatic
     fun getRetrofitOauthInstance(bypass: Boolean): Retrofit {
-        if (bypass) {
-            Log.v("REST", "bypass active")
-            okHttpClientAuthBuilder
-                    .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-                    .hostnameVerifier(HostnameVerifier { _: String?, _: SSLSession? -> true })
-                    .dns(RubyHttpDns())
-        }
         return Retrofit.Builder()
                 .baseUrl("https://oauth.secure.pixiv.net")
                 .client(okHttpClientAuthBuilder.build())
@@ -163,24 +110,24 @@ object RestClient {
     }
 
     fun getRetrofitBookmarkInstance(bypass: Boolean): Retrofit {
-        val okHttpClientBookmarkBuilder = OkHttpClient.Builder()
-            .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                val original = chain.request()
-                val request = original.newBuilder()
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .header(
-                        "User-Agent",
-                        "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
-                    )
-                    .build()
-                chain.proceed(request)
-            })
-            .logOnDebug()
+        val okHttpClientBookmark = OkHttpSingleton.getInstance().newBuilder()
+                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                    val original = chain.request()
+                    val request = original.newBuilder()
+                            .header("Content-Type", "application/x-www-form-urlencoded")
+                            .header(
+                                    "User-Agent",
+                                    "PixivAndroidApp/5.0.220 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
+                            )
+                            .build()
+                    chain.proceed(request)
+                })
+                .build()
         return Retrofit.Builder()
-            .baseUrl(PIXIV_API_HOST)
-            .client(okHttpClientBookmarkBuilder.build())
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
+                .baseUrl(PIXIV_API_HOST)
+                .client(okHttpClientBookmark)
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
     }
 
     private fun getHashSecret(dateSecretConcat: String): String {
@@ -206,14 +153,6 @@ object RestClient {
         return ""
     }
 
-    private fun OkHttpClient.Builder.logOnDebug(): OkHttpClient.Builder =
-        this.apply {
-            if (BuildConfig.DEBUG) {
-                addNetworkInterceptor(NetworkTrafficLogInterceptor())
-            }
-        }
-
-
     /**
      * Custom app client request-header [Interceptor]
      */
@@ -228,16 +167,16 @@ object RestClient {
             val hashSecret = getHashSecret(dateSecretConcat)
             val original = chain.request()
             val request = original.newBuilder()
-                .header(
-                    "User-Agent",
-                    "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
-                )
-                .header("App-OS", "Android")
-                .header("App-OS-Version", Build.VERSION.RELEASE)
-                .header("App-Version", "5.0.166") //.header("Accept-Language", Locale.getDefault().toString())
-                .header("X-Client-Time", rfc3339Date)
-                .header("X-Client-Hash", hashSecret)
-                .build()
+                    .header(
+                            "User-Agent",
+                            "PixivAndroidApp/5.0.155 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
+                    )
+                    .header("App-OS", "Android")
+                    .header("App-OS-Version", Build.VERSION.RELEASE)
+                    .header("App-Version", "5.0.220") //.header("Accept-Language", Locale.getDefault().toString())
+                    .header("X-Client-Time", rfc3339Date)
+                    .header("X-Client-Hash", hashSecret)
+                    .build()
             return chain.proceed(request)
         }
     }
