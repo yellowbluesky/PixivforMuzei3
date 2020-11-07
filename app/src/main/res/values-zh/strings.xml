@@ -7,22 +7,22 @@
 
     <string name="artwork">作品</string>
 
-    <string name="attr_daily">日榜 #</string>
-    <string name="attr_female">女生喜欢 #</string>
-    <string name="attr_male">男生喜欢 #</string>
-    <string name="attr_monthly">月榜 #</string>
+    <string name="attr_daily">每日排行榜 #</string>
+    <string name="attr_female">受女性欢迎 #</string>
+    <string name="attr_male">受男性欢迎 #</string>
+    <string name="attr_monthly">每月排行榜 #</string>
     <string name="attr_original">原创 #</string>
     <string name="attr_rookie">新人 #</string>
-    <string name="attr_weekly">周榜 #</string>
+    <string name="attr_weekly">每周排行榜 #</string>
 
     <string name="button_clearCache">清除图像缓存</string>
 
-    <string name="command_addToBookmark">添加到收藏夹</string>
-    <string name="command_delete_artwork">删除图片</string>
+    <string name="command_addToBookmark">收藏</string>
+    <string name="command_delete_artwork">删除作品</string>
     <string name="command_shareImage">分享图像</string>
-    <string name="command_viewArtworkDetails">查看作品</string>
+    <string name="command_viewArtworkDetails">查看详情</string>
 
-    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 不是活动订阅源</string>
+    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 非当前激活源</string><!--未在 Muzei 中激活本源，需润色通顺-->
     <string name="dialogTitle_muzeiNotInstalled">Muzei 尚未安装</string>
 
     <string name="dialog_installMuzei">您想要安装 Muzei 吗？</string>
@@ -47,11 +47,11 @@
     <string name="prefSummary_noFileSizeLimit">无限制</string>
     <string name="prefSummary_notLoggedIn">未登录</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
-    <string name="prefSummary_stuckApp">如果应用无法正常运行，请按此处</string>
+    <string name="prefSummary_stuckApp">如果该应用未工作，请按此处</string>
 
     <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
     <string name="prefTitle_artistId">艺术家 ID</string>
-    <string name="prefTitle_aspectRatio">作品长宽比</string>
+    <string name="prefTitle_aspectRatio">作品纵横比</string>
     <string name="prefTitle_authFilterSelect">订阅 NSFW 过滤级别</string>
     <string name="prefTitle_autoClearMode">每天凌晨 1 点自动清除缓存</string>
     <string name="prefTitle_keyContributor">关键贡献者</string>
@@ -77,13 +77,13 @@
     <string name="pref_updateMode_default">daily_rank</string>
 
     <string name="snackbar_deletedArtworks">作品已删除</string>
-    <string name="snackbar_selectArtworkFirst">选择至少一幅作品进行删除</string>
+    <string name="snackbar_selectArtworkFirst">选择至少一幅作品以删除</string>
 
     <string name="tab_heading_adv_options">高级设置</string>
     <string name="tab_heading_artwork_delete">删除作品</string>
     <string name="tab_heading_credits">贡献者</string>
-    <string name="tab_heading_main">主要设置</string>
-    <string name="tab_heading_roadmap">未来的计划</string>
+    <string name="tab_heading_main">基本设置</string>
+    <string name="tab_heading_roadmap">路线图</string><!--专有-->
 
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
     <string name="toast_authFailed">验证失败，请检查您的用户名或密码</string>
