@@ -1,8 +1,8 @@
 <resources>
     <string-array name="pref_updateMode_entries">
-        <item>日排行榜</item>
-        <item>周排行榜</item>
-        <item>月排行榜</item>
+        <item>每日排行榜</item>
+        <item>每周排行榜</item>
+        <item>每月排行榜</item>
         <item>新人</item>
         <item>原创</item>
         <item>受男性欢迎</item>
