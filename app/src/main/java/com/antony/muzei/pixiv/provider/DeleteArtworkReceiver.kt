@@ -3,6 +3,9 @@ package com.antony.muzei.pixiv.provider
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.AsyncTask
+import com.antony.muzei.pixiv.AppDatabase
+import com.antony.muzei.pixiv.settings.deleteArtwork.DeletedArtworkIdEntity
 import com.google.android.apps.muzei.api.provider.ProviderContract
 
 class DeleteArtworkReceiver : BroadcastReceiver() {
@@ -20,7 +23,11 @@ class DeleteArtworkReceiver : BroadcastReceiver() {
                     selectionClause,
                     selectionArgs
             )
-        }
 
+            val appDatabase = AppDatabase.getInstance(context)
+            AsyncTask.execute {
+                appDatabase?.deletedArtworkIdDao()?.insertDeletedArtworkId(listOf(DeletedArtworkIdEntity(artworkId)))
+            }
+        }
     }
 }
