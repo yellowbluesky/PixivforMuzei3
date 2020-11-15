@@ -1,14 +1,14 @@
 <resources>
     <string-array name="pref_updateMode_entries">
-        <item>日排行榜</item>
-        <item>周排行榜</item>
-        <item>月排行榜</item>
+        <item>每日排行榜</item>
+        <item>每周排行榜</item>
+        <item>每月排行榜</item>
         <item>新人</item>
         <item>原创</item>
         <item>受男性欢迎</item>
         <item>受女性欢迎</item>
         <item>关注订阅（需登录）</item>
-        <item>收藏夹（需登录）</item>
+        <item>收藏（需登录）</item>
         <item>推荐（需登录）</item>
         <item>艺术家（需登录）</item>
         <item>标签搜索（需登录）</item>
@@ -26,9 +26,9 @@
     </string-array>
 
     <string-array name="pref_aspectRatio_entries">
-        <item>人像和风景</item>
-        <item>人像</item>
-        <item>风景</item>
+        <item>横向和纵向</item>
+        <item>横向</item>
+        <item>纵向</item>
     </string-array>
 
     <string-array name="array_authFailActions_entries">
