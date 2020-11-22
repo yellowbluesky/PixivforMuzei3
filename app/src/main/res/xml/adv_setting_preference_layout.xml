@@ -95,6 +95,15 @@
             android:title="@string/prefTitle_numToDownload"
             app:min="1" />
     </PreferenceCategory>
+    <PreferenceCategory
+        android:key="prefCat_postProcess"
+        android:title="@string/prefCat_postProcess">
+        <SwitchPreference
+            android:key="pref_autoCrop"
+            android:persistent="true"
+            android:title="@string/prefTitle_autoCrop"
+            android:summary="@string/prefSummary_autoCrop" />
+    </PreferenceCategory>
     <!--    <PreferenceCategory-->
     <!--        android:key="prefCat_networkOptions"-->
     <!--        android:title="@string/prefCat_networkingOptions">-->

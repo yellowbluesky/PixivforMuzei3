@@ -41,6 +41,7 @@
     <string name="prefCat_fileOptions">文件选项</string>
     <string name="prefCat_networkingOptions">网络选项</string>
     <string name="prefCat_pullFeedSettings">作品订阅设置</string>
+    <string name="prefCat_postProcess">TODO translate: Postprocessing Options</string>
 
     <string name="prefSummary_LoggedIn">已登录为</string>
     <string name="prefSummary_currentlyLoggedInAs">当前登录为</string>
@@ -48,6 +49,7 @@
     <string name="prefSummary_notLoggedIn">未登录</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
     <string name="prefSummary_stuckApp">如果该应用未工作，请按此处</string>
+    <string name="prefSummary_autoCrop">TODO translate: Removes blank spaces around the picture, like white/black side bars. Only available on Android 10+.</string>
 
     <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
     <string name="prefTitle_artistId">艺术家 ID</string>
@@ -69,6 +71,7 @@
     <string name="prefTitle_tagSearch">图像标签</string>
     <string name="prefTitle_minimumWidth">最小图片宽度</string>
     <string name="prefTitle_minimumHeight">最小图片高度</string>
+    <string name="prefTitle_autoCrop">TODO translate: Auto crop</string>
 
     <string name="pref_aspectRatioDefault_entryValues">0</string>
     <string name="pref_authFailActionDropDown">验证失败后措施</string>
