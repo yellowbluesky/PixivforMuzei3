@@ -33,6 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import androidx.work.*
 import com.antony.muzei.pixiv.AppDatabase
+import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.post
 import com.antony.muzei.pixiv.R
@@ -50,11 +51,14 @@ import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
 import okhttp3.ResponseBody
 import retrofit2.Call
 import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit
+
 
 class PixivArtWorker(
         context: Context,
@@ -94,6 +98,36 @@ class PixivArtWorker(
 
     enum class FileType {
         OTHER, JPEG, PNG
+    }
+
+    private fun writeToFileIllusts(illusts: Illusts) {
+        val moshi = Moshi.Builder().build()
+        val jsonAdapter: JsonAdapter<Illusts> = moshi.adapter(Illusts::class.java)
+
+        val json = jsonAdapter.toJson(illusts)
+        val file = File(applicationContext.externalCacheDir, "illusts.txt")
+
+        try {
+            // response is the data written to file
+            PrintWriter(file).use { out -> out.println(json) }
+        } catch (e: Exception) {
+            // handle the exception
+        }
+    }
+
+    private fun writeToFileRanking(contents: Contents) {
+        val moshi = Moshi.Builder().build()
+        val jsonAdapter: JsonAdapter<Contents> = moshi.adapter(Contents::class.java)
+
+        val json = jsonAdapter.toJson(contents)
+        val file = File(applicationContext.externalCacheDir, "contents.txt")
+
+        try {
+            // response is the data written to file
+            PrintWriter(file).use { out -> out.println(json) }
+        } catch (e: Exception) {
+            // handle the exception
+        }
     }
 
     /*
@@ -757,6 +791,10 @@ class PixivArtWorker(
                     else -> throw IllegalStateException("Unexpected value: $updateMode")
                 }
                 var illusts = call.execute().body()
+
+                if (BuildConfig.DEBUG && illusts != null) {
+                    writeToFileIllusts(illusts)
+                }
                 var authArtworkList = illusts!!.artworks
                 for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                     try {
@@ -778,6 +816,9 @@ class PixivArtWorker(
                 val service = RestClient.getRetrofitRankingInstance(bypassActive).create(RankingJsonServerResponse::class.java)
                 var call = service.getRankingJson(updateMode)
                 var contents = call.execute().body()
+                if (BuildConfig.DEBUG && contents != null) {
+                    writeToFileRanking(contents)
+                }
                 var pageNumber = 1
                 var date = contents!!.date
                 var prevDate = contents.prev_date
