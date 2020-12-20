@@ -39,6 +39,7 @@ import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
+import com.antony.muzei.pixiv.provider.exceptions.LoopFilterMatchNotFoundException
 import com.antony.muzei.pixiv.provider.network.AuthJsonServerResponse
 import com.antony.muzei.pixiv.provider.network.ImageDownloadServerResponse
 import com.antony.muzei.pixiv.provider.network.RankingJsonServerResponse
@@ -450,41 +451,75 @@ class PixivArtWorker(
                                      minimumHeight: Int
     ): RankingArtwork? {
         Log.i(LOG_TAG, "filterRanking(): Entering")
+        Log.i(LOG_TAG, "single 40")
+        try {
+            filterRankingArtworkSingle(rankingArtworkList[0], showManga,
+                    selectedFilterLevelSet,
+                    aspectRatioSetting,
+                    minimumViews,
+                    minimumWidth,
+                    minimumHeight)
+
+        } catch (e: LoopFilterMatchNotFoundException) {
+            Log.e(LOG_TAG, e.message!!)
+        }
+        Log.i(LOG_TAG, "regular")
         rankingArtworkList.shuffle()
         for (randomArtwork in rankingArtworkList) {
-            if (isDuplicateArtwork(randomArtwork.illust_id)) {
-                Log.v(LOG_TAG, "Duplicate ID: " + randomArtwork.illust_id)
+            try {
+                filterRankingArtworkSingle(randomArtwork,
+                        showManga,
+                        selectedFilterLevelSet,
+                        aspectRatioSetting,
+                        minimumViews,
+                        minimumWidth,
+                        minimumHeight)
+                return randomArtwork
+            } catch (e: LoopFilterMatchNotFoundException) {
+                Log.e(LOG_TAG, e.message!!)
                 continue
-            }
-            if (!isEnoughViews(randomArtwork.view_count, minimumViews)) {
-                Log.v(LOG_TAG, "Not enough views")
-                continue
-            }
-            if (!showManga && randomArtwork.illust_type != 0) {
-                Log.v(LOG_TAG, "Manga not desired " + randomArtwork.illust_id)
-                continue
-            }
-            if (!isDesiredAspectRatio(randomArtwork.width,
-                            randomArtwork.height, aspectRatioSetting)) {
-                Log.v(LOG_TAG, "Rejecting aspect ratio")
-                continue
-            }
-            if (!hasDesiredPixelSize(randomArtwork.width, randomArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
-                Log.v(LOG_TAG, "Image below desired pixel size")
-                continue
-            }
-            if (isBeenDeleted(randomArtwork.illust_id)) {
-                Log.v(LOG_TAG, "Previously deleted")
-                continue
-            }
-
-            for (s in selectedFilterLevelSet!!) {
-                if (s.toInt() == randomArtwork.illust_content_type.sexual) {
-                    return randomArtwork
-                }
             }
         }
         throw FilterMatchNotFoundException("")
+    }
+
+    private fun filterRankingArtworkSingle(rankingArtwork: RankingArtwork,
+                                           showManga: Boolean,
+                                           selectedFilterLevelSet: Set<String>?,
+                                           aspectRatioSetting: Int,
+                                           minimumViews: Int,
+                                           minimumWidth: Int,
+                                           minimumHeight: Int
+    ): RankingArtwork {
+        if (isDuplicateArtwork(rankingArtwork.illust_id)) {
+            throw LoopFilterMatchNotFoundException("Duplicate ID: " + rankingArtwork.illust_id)
+        }
+        if (!isEnoughViews(rankingArtwork.view_count, minimumViews)) {
+            throw LoopFilterMatchNotFoundException("Not enough views " + rankingArtwork.illust_id)
+        }
+        if (!showManga && rankingArtwork.illust_type == 1) {
+            throw LoopFilterMatchNotFoundException("Manga not desired " + rankingArtwork.illust_id)
+        }
+        if (!isDesiredAspectRatio(rankingArtwork.width,
+                        rankingArtwork.height, aspectRatioSetting)) {
+            throw LoopFilterMatchNotFoundException("Rejecting aspect ratio " + rankingArtwork.illust_id)
+        }
+        if (!hasDesiredPixelSize(rankingArtwork.width, rankingArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
+            throw LoopFilterMatchNotFoundException("Image below desired pixel size " + rankingArtwork.illust_id)
+        }
+        if (isBeenDeleted(rankingArtwork.illust_id)) {
+            throw LoopFilterMatchNotFoundException("Previously deleted " + rankingArtwork.illust_id)
+        }
+
+        for (s in selectedFilterLevelSet!!) {
+            if (s.toInt() == rankingArtwork.illust_content_type.sexual) {
+                Log.v(LOG_TAG, "matching NSFW")
+                return rankingArtwork
+            } else {
+                throw LoopFilterMatchNotFoundException("not matching NSFW " + rankingArtwork.illust_id)
+            }
+        }
+        throw LoopFilterMatchNotFoundException("misc filtering error")
     }
 
     /*
