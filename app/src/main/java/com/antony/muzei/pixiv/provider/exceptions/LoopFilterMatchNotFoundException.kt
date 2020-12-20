@@ -1,4 +1,3 @@
 package com.antony.muzei.pixiv.provider.exceptions
 
-class LoopFilterMatchNotFoundException {
-}
+class LoopFilterMatchNotFoundException(message: String?) : Exception(message)
