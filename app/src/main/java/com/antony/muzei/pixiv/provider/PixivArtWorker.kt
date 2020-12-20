@@ -679,7 +679,7 @@ class PixivArtWorker(
         }
 
         // If user does not want manga to display
-        if (!showManga && authArtwork.type != "illust") {
+        if (!showManga && authArtwork.type == "manga") {
             throw LoopFilterMatchNotFoundException("Manga not desired " + authArtwork.id)
         }
 
