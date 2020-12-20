@@ -598,7 +598,7 @@ class PixivArtWorker(
             }
 
             // If user does not want manga to display
-            if (!showManga && randomArtwork.type != "illust") {
+            if (!showManga && randomArtwork.type == "manga") {
                 Log.d(LOG_TAG, "Manga not desired")
                 continue
             }
