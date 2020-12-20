@@ -451,30 +451,17 @@ class PixivArtWorker(
                                      minimumHeight: Int
     ): RankingArtwork? {
         Log.i(LOG_TAG, "filterRanking(): Entering")
-        Log.i(LOG_TAG, "single 40")
-        try {
-            filterRankingArtworkSingle(rankingArtworkList[0], showManga,
-                    selectedFilterLevelSet,
-                    aspectRatioSetting,
-                    minimumViews,
-                    minimumWidth,
-                    minimumHeight)
 
-        } catch (e: LoopFilterMatchNotFoundException) {
-            Log.e(LOG_TAG, e.message!!)
-        }
-        Log.i(LOG_TAG, "regular")
         rankingArtworkList.shuffle()
         for (randomArtwork in rankingArtworkList) {
             try {
-                filterRankingArtworkSingle(randomArtwork,
+                return filterRankingArtworkSingle(randomArtwork,
                         showManga,
                         selectedFilterLevelSet,
                         aspectRatioSetting,
                         minimumViews,
                         minimumWidth,
                         minimumHeight)
-                return randomArtwork
             } catch (e: LoopFilterMatchNotFoundException) {
                 Log.e(LOG_TAG, e.message!!)
                 continue
@@ -513,7 +500,7 @@ class PixivArtWorker(
 
         for (s in selectedFilterLevelSet!!) {
             if (s.toInt() == rankingArtwork.illust_content_type.sexual) {
-                Log.v(LOG_TAG, "matching NSFW")
+                Log.v(LOG_TAG, "matching NSFW " + rankingArtwork.illust_id)
                 return rankingArtwork
             } else {
                 throw LoopFilterMatchNotFoundException("not matching NSFW " + rankingArtwork.illust_id)
@@ -624,60 +611,82 @@ class PixivArtWorker(
                                   minimumHeight: Int
     ): AuthArtwork? {
         Log.i(LOG_TAG, "filterArtworkAuth(): Entering")
+
         authArtworkList.shuffle()
         for (randomArtwork in authArtworkList) {
-            // Check if duplicate before any other check to not waste time
-            if (isDuplicateArtwork(randomArtwork.id)) {
-                Log.v(LOG_TAG, "Duplicate ID: " + randomArtwork.id)
-                continue
-            }
-
-            // If user does not want manga to display
-            if (!showManga && randomArtwork.type == "manga") {
-                Log.d(LOG_TAG, "Manga not desired")
-                continue
-            }
-
-            // Filter artwork based on chosen aspect ratio
-            if (!isDesiredAspectRatio(randomArtwork.width,
-                            randomArtwork.height, aspectRatioSetting)) {
-                Log.d(LOG_TAG, "Rejecting aspect ratio")
-                continue
-            }
-
-            if (!hasDesiredPixelSize(randomArtwork.width, randomArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
-                Log.v(LOG_TAG, "Image below desired pixel size")
-                continue
-            }
-
-            if (!isEnoughViews(randomArtwork.total_view, minimumViews)) {
-                Log.d(LOG_TAG, "Not enough views")
-                continue
-            }
-
-            if (isBeenDeleted(randomArtwork.id)) {
-                Log.v(LOG_TAG, "Previously deleted")
-                continue
-            }
-
-            // All artworks in recommended are SFW, we can skip this check
-            if (isRecommended) {
-                return randomArtwork
-            } else {
-                // See if there is a match between chosen artwork's sanity level and those desired
-                for (s in selectedFilterLevelSet!!) {
-                    if (s == randomArtwork.sanity_Level.toString()) {
-                        Log.d(LOG_TAG, "sanity_level found is " + randomArtwork.sanity_Level)
-                        return randomArtwork
-                    } else if (s == "8" && randomArtwork.x_restrict == 1) {
-                        Log.d(LOG_TAG, "x_restrict found")
-                        return randomArtwork
-                    }
-                }
+            try {
+                return filterArtworkAuthSingle(randomArtwork,
+                        showManga,
+                        selectedFilterLevelSet,
+                        aspectRatioSetting,
+                        minimumViews,
+                        isRecommended,
+                        minimumWidth,
+                        minimumHeight)
+            } catch (e: LoopFilterMatchNotFoundException) {
+                Log.e(LOG_TAG, e.message!!)
             }
         }
         throw FilterMatchNotFoundException("too many retries")
+    }
 
+    private fun filterArtworkAuthSingle(authArtwork: AuthArtwork,
+                                        showManga: Boolean,
+                                        selectedFilterLevelSet: Set<String>?,
+                                        aspectRatioSetting: Int,
+                                        minimumViews: Int,
+                                        isRecommended: Boolean,
+                                        minimumWidth: Int,
+                                        minimumHeight: Int
+    ): AuthArtwork? {
+// Check if duplicate before any other check to not waste time
+        if (isDuplicateArtwork(authArtwork.id)) {
+            throw LoopFilterMatchNotFoundException("Duplicate ID: " + authArtwork.id)
+        }
+
+        // If user does not want manga to display
+        if (!showManga && authArtwork.type != "illust") {
+            throw LoopFilterMatchNotFoundException("Manga not desired " + authArtwork.id)
+        }
+
+        // Filter artwork based on chosen aspect ratio
+        if (!isDesiredAspectRatio(authArtwork.width,
+                        authArtwork.height, aspectRatioSetting)) {
+            throw LoopFilterMatchNotFoundException("Rejecting aspect ratio " + authArtwork.id)
+        }
+
+        if (!hasDesiredPixelSize(authArtwork.width, authArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
+            throw LoopFilterMatchNotFoundException("Image below desired pixel size " + authArtwork.id)
+        }
+
+        if (!isEnoughViews(authArtwork.total_view, minimumViews)) {
+            throw LoopFilterMatchNotFoundException("Not enough views " + authArtwork.id)
+        }
+
+        if (isBeenDeleted(authArtwork.id)) {
+            throw LoopFilterMatchNotFoundException("Previously deleted " + authArtwork.id)
+        }
+
+        // All artworks in recommended are SFW, we can skip this check
+        if (isRecommended) {
+            return authArtwork
+        } else {
+            // See if there is a match between chosen artwork's sanity level and those desired
+            for (s in selectedFilterLevelSet!!) {
+                return if (s == authArtwork.sanity_Level.toString()) {
+                    Log.d(LOG_TAG, "sanity_level found is " + authArtwork.sanity_Level)
+                    Log.i(LOG_TAG, "Found artwork " + authArtwork.id)
+                    authArtwork
+                } else if (s == "8" && authArtwork.x_restrict == 1) {
+                    Log.d(LOG_TAG, "x_restrict found " + authArtwork.id)
+                    authArtwork
+                } else {
+                    Log.d(LOG_TAG, "sanity_level found is " + authArtwork.sanity_Level)
+                    throw LoopFilterMatchNotFoundException("NSFW not matching " + authArtwork.id)
+                }
+            }
+        }
+        throw LoopFilterMatchNotFoundException("misc filtering error")
     }
 
     /*
