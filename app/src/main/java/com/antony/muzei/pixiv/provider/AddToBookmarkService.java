@@ -77,6 +77,7 @@ public class AddToBookmarkService extends Service {
                 .addHeader("Content-Type", "application/x-www-form-urlencoded")
                 .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
                 .addHeader("Authorization", "Bearer " + intent.getStringExtra("accessToken"))
+                .addHeader("Connection", "close")
                 .post(authData)
                 .url(rankingUrl)
                 .build();

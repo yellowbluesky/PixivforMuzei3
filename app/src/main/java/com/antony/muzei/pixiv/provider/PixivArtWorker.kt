@@ -101,8 +101,7 @@ class PixivArtWorker(
     }
 
     private fun writeToFileIllusts(illusts: Illusts) {
-        val moshi = Moshi.Builder().build()
-        val jsonAdapter: JsonAdapter<Illusts> = moshi.adapter(Illusts::class.java)
+        val jsonAdapter: JsonAdapter<Illusts> = Moshi.Builder().build().adapter(Illusts::class.java)
 
         val json = jsonAdapter.toJson(illusts)
         val file = File(applicationContext.externalCacheDir, "illusts.txt")
@@ -116,8 +115,7 @@ class PixivArtWorker(
     }
 
     private fun writeToFileRanking(contents: Contents) {
-        val moshi = Moshi.Builder().build()
-        val jsonAdapter: JsonAdapter<Contents> = moshi.adapter(Contents::class.java)
+        val jsonAdapter: JsonAdapter<Contents> = Moshi.Builder().build().adapter(Contents::class.java)
 
         val json = jsonAdapter.toJson(contents)
         val file = File(applicationContext.externalCacheDir, "contents.txt")
@@ -501,7 +499,7 @@ class PixivArtWorker(
                 continue
             }
         }
-        throw FilterMatchNotFoundException("")
+        throw FilterMatchNotFoundException("All artworks in traversed, fetching a new Contents")
     }
 
     private fun filterRankingArtworkSingle(rankingArtwork: RankingArtwork,
@@ -663,7 +661,7 @@ class PixivArtWorker(
                 Log.e(LOG_TAG, e.message!!)
             }
         }
-        throw FilterMatchNotFoundException("too many retries")
+        throw FilterMatchNotFoundException("All artworks traversed, fetching a new Illusts")
     }
 
     private fun filterArtworkAuthSingle(authArtwork: AuthArtwork,

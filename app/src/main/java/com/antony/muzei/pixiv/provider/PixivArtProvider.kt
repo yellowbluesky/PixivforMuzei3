@@ -208,6 +208,7 @@ class PixivArtProvider : MuzeiArtProvider() {
                         .addHeader("Content-Type", "application/x-www-form-urlencoded")
                         .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
                         .addHeader("Authorization", "Bearer $accessToken")
+                        .addHeader("Connection", "close")
                         .post(authData)
                         .url(rankingUrl)
                         .build()
