@@ -532,15 +532,17 @@ class PixivArtWorker(
             throw LoopFilterMatchNotFoundException("Previously deleted " + rankingArtwork.illust_id)
         }
 
-        for (s in selectedFilterLevelSet!!) {
-            if (s.toInt() == rankingArtwork.illust_content_type.sexual) {
-                Log.v(LOG_TAG, "matching NSFW " + rankingArtwork.illust_id)
-                return rankingArtwork
-            } else {
-                throw LoopFilterMatchNotFoundException("not matching NSFW " + rankingArtwork.illust_id)
+        if (selectedFilterLevelSet!!.size == 2) {
+            return rankingArtwork
+        } else {
+            for (s in selectedFilterLevelSet) {
+                if (s.toInt() == rankingArtwork.illust_content_type.sexual) {
+                    Log.v(LOG_TAG, "matching NSFW " + rankingArtwork.illust_id)
+                    return rankingArtwork
+                }
             }
+            throw LoopFilterMatchNotFoundException("not matching NSFW " + rankingArtwork.illust_id)
         }
-        throw LoopFilterMatchNotFoundException("misc filtering error")
     }
 
     /*
@@ -702,25 +704,23 @@ class PixivArtWorker(
         }
 
         // All artworks in recommended are SFW, we can skip this check
-        if (isRecommended) {
+        if (isRecommended || selectedFilterLevelSet!!.size == 4) {
             return authArtwork
         } else {
             // See if there is a match between chosen artwork's sanity level and those desired
-            for (s in selectedFilterLevelSet!!) {
-                return if (s == authArtwork.sanity_Level.toString()) {
+            for (s in selectedFilterLevelSet) {
+                if (s == authArtwork.sanity_Level.toString()) {
                     Log.d(LOG_TAG, "sanity_level found is " + authArtwork.sanity_Level)
                     Log.i(LOG_TAG, "Found artwork " + authArtwork.id)
-                    authArtwork
+                    return authArtwork
                 } else if (s == "8" && authArtwork.x_restrict == 1) {
                     Log.d(LOG_TAG, "x_restrict found " + authArtwork.id)
-                    authArtwork
-                } else {
-                    Log.d(LOG_TAG, "sanity_level found is " + authArtwork.sanity_Level)
-                    throw LoopFilterMatchNotFoundException("NSFW not matching " + authArtwork.id)
+                    return authArtwork
                 }
             }
+            Log.d(LOG_TAG, "sanity_level found is " + authArtwork.sanity_Level)
+            throw LoopFilterMatchNotFoundException("NSFW not matching " + authArtwork.id)
         }
-        throw LoopFilterMatchNotFoundException("misc filtering error")
     }
 
     /*
