@@ -269,16 +269,24 @@ class PixivArtWorker(
                     } else if (fileExtension == FileType.JPEG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
                     }
-                    // Gets a list of mounted volumes
-                    val stringSet = MediaStore.getExternalVolumeNames(applicationContext)
-                    val volumeName: String
-                    // Sets the download location to be on phone storage or on the SD Card
-                    val storeIntoWhichStorage: String? = sharedPrefs.getString("pref_selectWhichExtStorage", "empty")
-                    volumeName = if (storeIntoWhichStorage.equals("sdCard")) {
-                        stringSet.elementAt(1)
+
+                    // Phone external storage is always "external_primary"
+                    // If user has selected artwork to be stored on SD Card external storage, then we fetch a list of
+                    // all mounted storages, and then select teh one which isn't "external_primary"
+                    // I had assumed that external_primary was always in position 0, but a user report indicated
+                    // that external;_primary was in position 1 for them
+                    var volumeName = ""
+                    if (sharedPrefs.getString("pref_selectWhichExtStorage", "phone").equals("phone")) {
+                        volumeName = MediaStore.VOLUME_EXTERNAL_PRIMARY
                     } else {
-                        stringSet.elementAt(0)
+                        val stringSet = MediaStore.getExternalVolumeNames(applicationContext)
+                        for (s: String in stringSet) {
+                            if (s != MediaStore.VOLUME_EXTERNAL_PRIMARY) {
+                                volumeName = s
+                            }
+                        }
                     }
+
                     // Gives us a URI to save the image to
                     val imageUri = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)
                     fosExternal = contentResolver.openOutputStream(imageUri!!)
