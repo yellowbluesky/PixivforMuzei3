@@ -313,8 +313,8 @@ class PixivArtWorker(
         var topX = Int.MAX_VALUE
         var bottomY = -1
         var bottomX = -1
-        for (y in 0 until height) {
-            for (x in 0 until width) {
+        for (y in 0 until height step 3) {
+            for (x in 0 until width step 3) {
                 if (isColorWithinTolerance(baseColor, sourceImage.getColor(x, y).toArgb())) {
                     isCroppable = true
                     if (x < topX) topX = x
@@ -334,7 +334,7 @@ class PixivArtWorker(
         val croppedImage = Bitmap.createBitmap(sourceImage, topX, topY, bottomX - topX + 1, bottomY - topY + 1)
 
         val output = FileOutputStream(file)
-        croppedImage.compress(Bitmap.CompressFormat.PNG, 85, output); // not bothering with JPEG as pixiv sends back only PNGs
+        croppedImage.compress(Bitmap.CompressFormat.PNG, 90, output); // not bothering with JPEG as pixiv sends back only PNGs
         output.close()
     }
 
