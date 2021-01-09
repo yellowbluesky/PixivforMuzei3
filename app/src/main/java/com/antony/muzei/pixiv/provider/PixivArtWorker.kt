@@ -226,31 +226,20 @@ class PixivArtWorker(
                              filename: String): Uri {
         Log.i(LOG_TAG, "Downloading file")
         val context = applicationContext
-        val imageInternal = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.png")
-        val fosInternal = FileOutputStream(imageInternal)
-        val inputStreamNetwork = responseBody!!.byteStream()
-        val bufferTemp = ByteArray(1024 * 1024 * 10)
-        var readTemp: Int
-        while (inputStreamNetwork.read(bufferTemp).also { readTemp = it } != -1) {
-            fosInternal.write(bufferTemp, 0, readTemp)
-        }
-        inputStreamNetwork.close()
-        fosInternal.close()
-        responseBody.close()
-
-        // TODO make this an enum
-        val fileExtension = getLocalFileExtension(imageInternal)
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
-        // If option in SettingsActivity is checked AND permission is granted
+        // If the user has desired to store artworks into external storage
         if (sharedPrefs.getBoolean("pref_storeInExtStorage", false) &&
                 ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED) {
-            var fosExternal: OutputStream? = null
             var allowedToStoreIntoExternal = false
+            // TODO stop the hardcode
+            val fileExtension = FileType.PNG
+            var fosExternal: OutputStream? = null
+            var imageUriExternal: Uri? = Uri.EMPTY
 
-            // Android 10 introduced scoped storage
-            // Different code path depending on Android APi level
+            // Android 10 introduced Scoped Storage, aimed at making storage security stronger
+            // Results in more hoops to go through to write files
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val contentResolver = context.contentResolver
                 val contentValues = ContentValues()
@@ -258,7 +247,7 @@ class PixivArtWorker(
                 // Check if existing copy of file exists
                 val projection = arrayOf(MediaStore.Images.Media._ID)
                 val selection = "title = ?"
-                //String selection ={MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
+                //String selection = {MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
                 val selectionArgs = arrayOf(filename)
                 val cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null)
                 if (cursor!!.count == 0) {
@@ -288,12 +277,14 @@ class PixivArtWorker(
                     }
 
                     // Gives us a URI to save the image to
-                    val imageUri = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)
-                    fosExternal = contentResolver.openOutputStream(imageUri!!)
+                    imageUriExternal = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)!!
+                    fosExternal = contentResolver.openOutputStream(imageUriExternal)
                     allowedToStoreIntoExternal = true
                 }
                 cursor.close()
-            } else {
+            }
+            // Android 9 or lower
+            else {
                 val directoryString = "/storage/emulated/0/Pictures/PixivForMuzei3/"
                 val directory = File(directoryString)
                 if (!directory.exists()) {
@@ -306,18 +297,19 @@ class PixivArtWorker(
                 if (!imageJpg.exists() && !imagePng.exists()) {
                     if (fileExtension == FileType.PNG) {
                         fosExternal = FileOutputStream(imagePng)
+                        imageUriExternal = Uri.fromFile(imagePng)
                         context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imagePng)))
                     } else if (fileExtension == FileType.JPEG) {
                         fosExternal = FileOutputStream(imageJpg)
+                        imageUriExternal = Uri.fromFile(imageJpg)
                         context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageJpg)))
                     }
                     allowedToStoreIntoExternal = true
                 }
             }
-
-            // Finally copies the image into external storage if allowed to
+            // Now download into external storage
             if (allowedToStoreIntoExternal) {
-                val fis = FileInputStream(imageInternal)
+                val fis = responseBody!!.byteStream()
                 val buffer = ByteArray(1024 * 1024 * 10)
                 var lengthInternal: Int
                 while (fis.read(buffer).also { lengthInternal = it } > 0) {
@@ -326,8 +318,27 @@ class PixivArtWorker(
                 fosExternal!!.close()
                 fis.close()
             }
+            return imageUriExternal!!
         }
+
+        // If user has not checked the option to "Store into external storage"
+        val imageInternal = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.png")
+        val fosInternal = FileOutputStream(imageInternal)
+        val inputStreamNetwork = responseBody!!.byteStream()
+        val bufferTemp = ByteArray(1024 * 1024 * 10)
+        var readTemp: Int
+        while (inputStreamNetwork.read(bufferTemp).also { readTemp = it } != -1) {
+            fosInternal.write(bufferTemp, 0, readTemp)
+        }
+        inputStreamNetwork.close()
+        fosInternal.close()
+        responseBody.close()
+
         return Uri.fromFile(imageInternal)
+
+
+        // TODO make this an enum
+        //val fileExtension = getLocalFileExtension(imageInternal)
     }
 
     // TODO is this even necessary anymore
