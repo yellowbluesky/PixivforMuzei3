@@ -325,8 +325,8 @@ class PixivArtWorker(
                 }
                 fosExternal!!.close()
                 fis.close()
+                return imageUriExternal!!
             }
-            return imageUriExternal!!
         }
 
         // If user has not checked the option to "Store into external storage"
