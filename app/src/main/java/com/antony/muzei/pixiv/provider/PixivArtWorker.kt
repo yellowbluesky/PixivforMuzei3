@@ -23,12 +23,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import androidx.work.*
@@ -58,7 +61,6 @@ import retrofit2.Call
 import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit
-
 
 class PixivArtWorker(
         context: Context,
@@ -282,6 +284,12 @@ class PixivArtWorker(
                     allowedToStoreIntoExternal = true
                 }
                 cursor.close()
+
+                // TODO somehow get a file handle when storing artworks into external storage on Android 10
+                // only available android 10+
+//                if (sharedPrefs.getBoolean("pref_autoCrop", false) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//                    cropBlankSpaceFromImage(imageJpg)
+//                }
             }
             // Android 9 or lower
             else {
@@ -334,11 +342,78 @@ class PixivArtWorker(
         fosInternal.close()
         responseBody.close()
 
+        // only available android 10+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && sharedPrefs.getBoolean("pref_autoCrop", false)) {
+            cropBlankSpaceFromImage(imageInternal)
+        }
+
         return Uri.fromFile(imageInternal)
 
 
         // TODO make this an enum
         //val fileExtension = getLocalFileExtension(imageInternal)
+    }
+
+    // stolen from https://stackoverflow.com/a/12645803
+    // ideal scenario would be to send the image url or whole file to some mini API service
+    // which would send back either signal if it's viable for cropping
+    // or whole cropped image, so we are not wasting phone battery
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun cropBlankSpaceFromImage(file: File) {
+        val sourceImage = BitmapFactory.decodeFile(file.path)
+        val baseColor: Int = sourceImage.getColor(0, 0).toArgb()
+
+        val width = sourceImage.width
+        val height = sourceImage.height
+
+        var isCroppable = false
+        var topY = Int.MAX_VALUE
+        var topX = Int.MAX_VALUE
+        var bottomY = -1
+        var bottomX = -1
+        for (y in 0 until height step 3) {
+            for (x in 0 until width step 3) {
+                if (isColorWithinTolerance(baseColor, sourceImage.getColor(x, y).toArgb())) {
+                    isCroppable = true
+                    if (x < topX) topX = x
+                    if (y < topY) topY = y
+                    if (x > bottomX) bottomX = x
+                    if (y > bottomY) bottomY = y
+                }
+            }
+        }
+
+        // sometimes it's off by 1 pixel, so these are not worth processing
+        if (!isCroppable || (topX == 0 && topY == 0 && (width == (bottomX + 1)) && (height == (bottomY + 1)))) {
+            return
+        }
+
+        // @NonNull Bitmap source, int x, int y, int width, int height
+        val croppedImage = Bitmap.createBitmap(sourceImage, topX, topY, bottomX - topX + 1, bottomY - topY + 1)
+
+        val output = FileOutputStream(file)
+        croppedImage.compress(Bitmap.CompressFormat.PNG, 90, output); // not bothering with JPEG as pixiv sends back only PNGs
+        output.close()
+    }
+
+    private fun isColorWithinTolerance(a: Int, b: Int): Boolean {
+        val aAlpha = (a and -0x1000000 ushr 24) // Alpha level
+        val aRed = (a and 0x00FF0000 ushr 16) // Red level
+        val aGreen = (a and 0x0000FF00 ushr 8) // Green level
+        val aBlue = (a and 0x000000FF) // Blue level
+        val bAlpha = (b and -0x1000000 ushr 24) // Alpha level
+        val bRed = (b and 0x00FF0000 ushr 16) // Red level
+        val bGreen = (b and 0x0000FF00 ushr 8) // Green level
+        val bBlue = (b and 0x000000FF) // Blue level
+        val distance = Math.sqrt((aAlpha - bAlpha) * (aAlpha - bAlpha) + (aRed - bRed) * (aRed - bRed) + (aGreen - bGreen) * (aGreen - bGreen) + ((aBlue - bBlue) * (aBlue - bBlue)).toDouble())
+
+        // 510.0 is the maximum distance between two colors
+        // (0,0,0,0 -> 255,255,255,255)
+        val percentAway = distance / 510.0
+
+        // tolerance 0.1 means that 2 pixel color values can be from each other up to 10% away
+        // to be considered okay for cropping
+        return percentAway > 0.10
     }
 
     // TODO is this even necessary anymore
