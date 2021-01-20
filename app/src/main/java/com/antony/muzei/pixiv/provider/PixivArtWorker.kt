@@ -361,6 +361,8 @@ class PixivArtWorker(
     // or whole cropped image, so we are not wasting phone battery
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun cropBlankSpaceFromImage(file: File) {
+        Log.d(LOG_TAG, "Starting cropping")
+        val cropStartTime =  System.currentTimeMillis()
         val sourceImage = BitmapFactory.decodeFile(file.path)
         val baseColor: Int = sourceImage.getColor(0, 0).toArgb()
 
@@ -395,6 +397,9 @@ class PixivArtWorker(
         val output = FileOutputStream(file)
         croppedImage.compress(Bitmap.CompressFormat.PNG, 90, output); // not bothering with JPEG as pixiv sends back only PNGs
         output.close()
+
+
+        Log.d(LOG_TAG, "Cropping completed in " + (System.currentTimeMillis() - cropStartTime) + " milliseconds")
     }
 
     private fun isColorWithinTolerance(a: Int, b: Int): Boolean {
