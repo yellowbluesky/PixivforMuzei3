@@ -127,7 +127,6 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
 //
 //        }
 
-
         // Slider that lets the user adjust how many artworks to download at a time
         // Draws and updates the slider position number as the user drags
         val numToDownloadSlider = findPreference<SeekBarPreference>("prefSlider_numToDownload")
@@ -136,6 +135,13 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         numToDownloadSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any? ->
             numToDownloadSlider.summary = (newValue as Int).toString()
             true
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+        {
+            preferenceScreen = findPreference(resources.getString(R.string.preferenceScreen))
+            val prefCatPostProcess = findPreference<PreferenceCategory>("prefCat_postProcess")
+            preferenceScreen.removePreference(prefCatPostProcess)
         }
     }
 
