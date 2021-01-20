@@ -49,7 +49,7 @@
     <string name="prefSummary_notLoggedIn">未登录</string>
     <string name="prefSummary_storeInExtStorage">保存在此处的图片不会自动清除</string>
     <string name="prefSummary_stuckApp">如果该应用未工作，请按此处</string>
-    <string name="prefSummary_autoCrop">TODO translate: Removes blank spaces around the picture, like white/black side bars. Only available on Android 10+.</string>
+    <string name="prefSummary_autoCrop">TODO translate: Crops blank spaces around artworks. Increased battery drain when downloading.</string>
 
     <string name="prefTitle_MaximumFileSize">作品最大尺寸</string>
     <string name="prefTitle_artistId">艺术家 ID</string>

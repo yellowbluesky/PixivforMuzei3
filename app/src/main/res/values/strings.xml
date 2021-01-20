@@ -49,7 +49,7 @@
     <string name="prefSummary_notLoggedIn">Not logged in</string>
     <string name="prefSummary_storeInExtStorage">Pictures saved here will not be automatically cleared</string>
     <string name="prefSummary_stuckApp">If the app is not working, press here</string>
-    <string name="prefSummary_autoCrop">Removes blank spaces around the picture, like white/black side bars. Only available on Android 10+.</string>
+    <string name="prefSummary_autoCrop">Crops blank spaces around artworks. Increased battery drain when downloading.</string>
 
     <string name="prefTitle_MaximumFileSize">Maximum artwork size</string>
     <string name="prefTitle_artistId">Artist ID</string>
@@ -104,4 +104,5 @@
     <string name="toast_newFilterSelect">New filter selection, clearing image cache</string>
     <string name="toast_newTag">New search tag, clearing image cache</string>
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
+    <string name="preferenceScreen">preferenceScreen</string>
 </resources>

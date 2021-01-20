@@ -61,6 +61,7 @@ import retrofit2.Call
 import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.sqrt
 
 class PixivArtWorker(
         context: Context,
@@ -405,7 +406,7 @@ class PixivArtWorker(
         val bRed = (b and 0x00FF0000 ushr 16) // Red level
         val bGreen = (b and 0x0000FF00 ushr 8) // Green level
         val bBlue = (b and 0x000000FF) // Blue level
-        val distance = Math.sqrt((aAlpha - bAlpha) * (aAlpha - bAlpha) + (aRed - bRed) * (aRed - bRed) + (aGreen - bGreen) * (aGreen - bGreen) + ((aBlue - bBlue) * (aBlue - bBlue)).toDouble())
+        val distance = sqrt((aAlpha - bAlpha) * (aAlpha - bAlpha) + (aRed - bRed) * (aRed - bRed) + (aGreen - bGreen) * (aGreen - bGreen) + ((aBlue - bBlue) * (aBlue - bBlue)).toDouble())
 
         // 510.0 is the maximum distance between two colors
         // (0,0,0,0 -> 255,255,255,255)
