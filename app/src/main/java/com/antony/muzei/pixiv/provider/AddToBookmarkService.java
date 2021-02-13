@@ -31,6 +31,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.antony.muzei.pixiv.R;
 import com.antony.muzei.pixiv.common.PixivMuzeiActivity;
+import com.antony.muzei.pixiv.provider.network.OkHttpSingleton;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -48,7 +49,7 @@ import okhttp3.Response;
 public class AddToBookmarkService extends Service {
     public static final String CHANNEL_ID = "PixivForMuzei3NotificationChannel";
     // TODO use restclient
-    OkHttpClient client = new OkHttpClient();
+    OkHttpClient client = OkHttpSingleton.INSTANCE.getInstance();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -56,7 +57,7 @@ public class AddToBookmarkService extends Service {
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Adding artwork to bookmarks")
-                .setContentText(intent.getStringExtra("artworkTitle") + " by" + intent.getStringExtra("artworkArtist"))
+                .setContentText(intent.getStringExtra("artworkTitle") + " by " + intent.getStringExtra("artworkArtist"))
                 .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
                 .build();
 
