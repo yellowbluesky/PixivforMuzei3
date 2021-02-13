@@ -107,4 +107,5 @@
     <string name="preferenceScreen">preferenceScreen</string>
     <string name="login_pixiv_refresh_hint">Refresh Token</string>
     <string name="action_sign_in_refresh">Login using refresh token</string>
+    <string name="dialog_logoutConfirm">Are you sure you want to logout?</string>
 </resources>

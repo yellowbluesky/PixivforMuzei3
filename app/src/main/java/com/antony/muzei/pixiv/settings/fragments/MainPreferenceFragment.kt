@@ -22,19 +22,18 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.preference.*
 import androidx.work.WorkManager
+import com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.login.LoginActivity
 import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
 import com.antony.muzei.pixiv.provider.PixivArtWorker.Companion.enqueueLoad
-import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.util.*
-
-import com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN
 
 
 class MainPreferenceFragment : PreferenceFragmentCompat() {
@@ -197,14 +196,12 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                 val tagSearch = findPreference<Preference>("pref_tagSearch")
                 tagSearch!!.isVisible = true
                 tagSearch.summary = sharedPrefs.getString("pref_tagSearch", "")
-            }
-            else if (updateMode == "artist") {
+            } else if (updateMode == "artist") {
                 val artistId = findPreference<Preference>("pref_artistId")
                 artistId!!.isVisible = true
                 artistId.summary = sharedPrefs.getString("pref_artistId", "")
             }
-        }
-        else {
+        } else {
             findPreference<Preference>("pref_rankingFilterSelect")!!.isVisible = true
         }
 
@@ -229,8 +226,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
         if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
             loginActivityPreference!!.title = getString(R.string.prefTitle_loginButton)
             loginActivityPreference.summary = getString(R.string.prefSummary_notLoggedIn)
-        }
-        else {
+        } else {
             loginActivityPreference!!.title = getString(R.string.prefTitle_logoutButton)
             loginActivityPreference.summary = getString(R.string.prefSummary_LoggedIn) + " " + sharedPrefs.getString("name", "")
         }
@@ -239,23 +235,32 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
             if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
                 val intent = Intent(context, LoginActivity::class.java)
                 IntentUtils.launchActivity(this, intent, REQUEST_CODE_LOGIN)
-            }
-            else {
-                // Logging out
-                val editor = sharedPrefs.edit()
-                editor.remove("accessTokenIssueTime")
-                editor.remove("name")
-                editor.remove(PREFERENCE_PIXIV_ACCESS_TOKEN)
-                editor.remove("userId")
-                editor.remove("refreshToken")
-                loginActivityPreference.title = getString(R.string.prefTitle_loginButton)
-                loginActivityPreference.summary = getString(R.string.prefSummary_notLoggedIn)
-                // If the user has an authenticated feed mode, reset it to daily ranking on logout
-                if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
-                    editor.putString("pref_updateMode", "daily")
-                    updateModePref.summary = resources.getStringArray(R.array.pref_updateMode_entries)[0]
-                }
-                editor.apply()
+            } else {
+                // Alert that confirms the user really wants to log out
+                // Important as it is now difficult to login, due to Pixiv API changes 02/21
+                AlertDialog.Builder(requireContext())
+                        .setMessage(getString(R.string.dialog_logoutConfirm))
+                        .setPositiveButton(R.string.dialog_yes) { _, _ ->
+                            val editor = sharedPrefs.edit()
+                            editor.remove("accessTokenIssueTime")
+                            editor.remove("name")
+                            editor.remove(PREFERENCE_PIXIV_ACCESS_TOKEN)
+                            editor.remove("userId")
+                            editor.remove("refreshToken")
+                            loginActivityPreference.title = getString(R.string.prefTitle_loginButton)
+                            loginActivityPreference.summary = getString(R.string.prefSummary_notLoggedIn)
+                            // If the user has an authenticated feed mode, reset it to daily ranking on logout
+                            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
+                                editor.putString("pref_updateMode", "daily")
+                                updateModePref.summary = resources.getStringArray(R.array.pref_updateMode_entries)[0]
+                            }
+                            editor.apply()
+                        }
+                        .setNegativeButton(R.string.dialog_no) { dialog, _ ->
+                            // Do nothing
+                            dialog.dismiss()
+                        }
+                        .show()
             }
             true
         }
@@ -292,14 +297,11 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
             enqueueLoad(true, context)
             if (oldUpdateMode != newUpdateMode) {
                 Toast.makeText(context, getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT).show()
-            }
-            else if (oldArtist != newArtist) {
+            } else if (oldArtist != newArtist) {
                 Toast.makeText(context, getString(R.string.toast_newArtist), Toast.LENGTH_SHORT).show()
-            }
-            else if (oldTag != newTag) {
+            } else if (oldTag != newTag) {
                 Toast.makeText(context, getString(R.string.toast_newTag), Toast.LENGTH_SHORT).show()
-            }
-            else {
+            } else {
                 Toast.makeText(context, getString(R.string.toast_newFilterSelect), Toast.LENGTH_SHORT).show()
             }
         }
