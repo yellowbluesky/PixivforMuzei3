@@ -70,7 +70,9 @@ public class LoginActivity extends PixivMuzeiActivity {
                 checkLoginEnable();
             }
         });
-        mBinding.btnLogin.setOnClickListener(v -> executeLogin());
+        mBinding.btnLogin.setOnClickListener(v -> loginPassword());
+
+        mBinding.btnLoginRefresh.setOnClickListener(v -> loginRefresh());
     }
 
     @UiThread
@@ -80,11 +82,22 @@ public class LoginActivity extends PixivMuzeiActivity {
         mBinding.btnLogin.setEnabled(accountTyped && passwordTyped);
     }
 
-    private void executeLogin() {
-        // Enables the indeterminate progress bar (spinning circle)
-        final ProgressBar progressBar = mBinding.loginLoading;
-        progressBar.setVisibility(View.VISIBLE);
+    private void loginRefresh() {
+        // Builds the header fields for the OAuth POST request
+        Map<String, String> fieldParams = new HashMap<>();
+        fieldParams.put("get_secure_url", "1");
+        fieldParams.put("client_id", BuildConfig.PIXIV_CLIENT_ID);
+        fieldParams.put("client_secret", BuildConfig.PIXIV_CLIENT_SEC);
 
+        // When a new user is logging in, they cannot be an existing valid refresh token
+        String refreshToken = TextViewKt.text(mBinding.editRefresh, true).toString();
+        fieldParams.put("grant_type", "refresh_token");
+        fieldParams.put("refresh_token", refreshToken);
+
+        executeLogin(fieldParams);
+    }
+
+    private void loginPassword() {
         // Builds the header fields for the OAuth POST request
         Map<String, String> fieldParams = new HashMap<>();
         fieldParams.put("get_secure_url", "1");
@@ -98,8 +111,15 @@ public class LoginActivity extends PixivMuzeiActivity {
         fieldParams.put("username", account);
         fieldParams.put("password", password);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        executeLogin(fieldParams);
+    }
 
+    private void executeLogin(Map<String, String> fieldParams) {
+        // Enables the indeterminate progress bar (spinning circle)
+        final ProgressBar progressBar = mBinding.loginLoading;
+        progressBar.setVisibility(View.VISIBLE);
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         boolean bypassActive = sharedPreferences.getBoolean("pref_enableNetworkBypass", false);
 

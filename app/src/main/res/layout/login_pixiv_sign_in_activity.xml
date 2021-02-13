@@ -66,12 +66,45 @@
         android:id="@+id/btn_login"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="8dp"
         android:minHeight="56dp"
         android:text="@string/action_sign_in"
-        app:layout_constraintEnd_toEndOf="@+id/input_layout_uid"
-        app:layout_constraintStart_toStartOf="@+id/input_layout_uid"
+        app:layout_constraintEnd_toEndOf="@+id/input_layout_pwd"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/input_layout_pwd"
         app:layout_constraintTop_toBottomOf="@+id/input_layout_pwd" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/input_layout_refresh"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:hint="@string/login_pixiv_refresh_hint"
+        app:boxBackgroundColor="@android:color/transparent"
+        app:hintEnabled="true"
+        app:layout_constraintEnd_toEndOf="@+id/btn_login"
+        app:layout_constraintStart_toStartOf="@+id/btn_login"
+        app:layout_constraintTop_toBottomOf="@+id/btn_login">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints=""
+            android:imeOptions="actionGo"
+            android:inputType="textNoSuggestions" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_login_refresh"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:minHeight="56dp"
+        android:text="@string/action_sign_in_refresh"
+        app:layout_constraintEnd_toEndOf="@+id/input_layout_refresh"
+        app:layout_constraintStart_toStartOf="@+id/input_layout_refresh"
+        app:layout_constraintTop_toBottomOf="@+id/input_layout_refresh" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_top"
@@ -84,12 +117,11 @@
         android:id="@+id/loginLoading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.3"
+        app:layout_constraintEnd_toEndOf="@+id/btn_login_refresh"
+        app:layout_constraintStart_toStartOf="@+id/btn_login_refresh"
+        app:layout_constraintTop_toBottomOf="@+id/btn_login_refresh"
         tools:visibility="visible" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

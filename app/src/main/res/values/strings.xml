@@ -32,7 +32,7 @@
 
     <string name="fab_delete_selected_artwork">Delete selected artwork</string>
 
-    <string name="login_pixiv_account_hint">Type pixiv-ID</string>
+    <string name="login_pixiv_account_hint">Type pixiv username</string>
     <string name="login_pixiv_password_hint">Pixiv account password</string>
 
     <string name="prefCat_about">About</string>
@@ -105,4 +105,6 @@
     <string name="toast_newTag">New search tag, clearing image cache</string>
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
     <string name="preferenceScreen">preferenceScreen</string>
+    <string name="login_pixiv_refresh_hint">Refresh Token</string>
+    <string name="action_sign_in_refresh">Login using refresh token</string>
 </resources>
