@@ -100,4 +100,6 @@
     <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
     <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
+    <string name="dialog_logoutConfirm">您要登出吗？</string>
+    <string name="action_sign_in_refresh">登录用Refresh Token</string>
 </resources>
