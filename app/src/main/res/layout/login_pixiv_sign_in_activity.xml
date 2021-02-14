@@ -113,15 +113,26 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.15" />
 
+    <TextView
+        android:id="@+id/textView_refreshTokenHelp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="How to get refresh token? (PC required)"
+        app:layout_constraintStart_toStartOf="@+id/btn_login_refresh"
+        app:layout_constraintEnd_toEndOf="@+id/btn_login_refresh"
+        app:layout_constraintTop_toBottomOf="@+id/btn_login_refresh"
+        android:autoLink="web"/>
+
     <ProgressBar
         android:id="@+id/loginLoading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/btn_login_refresh"
-        app:layout_constraintStart_toStartOf="@+id/btn_login_refresh"
-        app:layout_constraintTop_toBottomOf="@+id/btn_login_refresh"
-        tools:visibility="visible" />
+        app:layout_constraintEnd_toEndOf="@+id/textView_refreshTokenHelp"
+        app:layout_constraintStart_toStartOf="@+id/textView_refreshTokenHelp"
+        app:layout_constraintTop_toBottomOf="@+id/textView_refreshTokenHelp"
+        tools:visibility="invisible" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

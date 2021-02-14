@@ -19,6 +19,7 @@ package com.antony.muzei.pixiv.login;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -73,6 +74,16 @@ public class LoginActivity extends PixivMuzeiActivity {
         mBinding.btnLogin.setOnClickListener(v -> loginPassword());
 
         mBinding.btnLoginRefresh.setOnClickListener(v -> loginRefresh());
+
+        mBinding.textViewRefreshTokenHelp.setOnClickListener(v -> refreshTokenHelp());
+
+        mBinding.loginLoading.setVisibility(View.INVISIBLE);
+    }
+
+    private void refreshTokenHelp() {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW);
+        browserIntent.setData(Uri.parse("https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362"));
+        startActivity(browserIntent);
     }
 
     @UiThread
