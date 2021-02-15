@@ -17,74 +17,76 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_layout_uid"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="24dp"
-        android:hint="@string/login_pixiv_account_hint"
-        app:boxBackgroundColor="@android:color/transparent"
-        app:hintEnabled="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline_top">
+    <!-- <com.google.android.material.textfield.TextInputLayout
+         android:id="@+id/input_layout_uid"
+         android:layout_width="0dp"
+         android:layout_height="wrap_content"
+         android:layout_marginStart="24dp"
+         android:layout_marginTop="12dp"
+         android:layout_marginEnd="24dp"
+         android:hint="@string/login_pixiv_account_hint"
+         app:boxBackgroundColor="@android:color/transparent"
+         app:hintEnabled="true"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toTopOf="@+id/guideline_top">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_uid"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:autofillHints=""
-            android:imeOptions="actionNext"
-            android:maxLines="1"
-            android:nextFocusDown="@id/edit_pwd" />
-    </com.google.android.material.textfield.TextInputLayout>
+         <com.google.android.material.textfield.TextInputEditText
+             android:id="@+id/edit_uid"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:autofillHints=""
+             android:imeOptions="actionNext"
+             android:maxLines="1"
+             android:nextFocusDown="@id/edit_pwd" />
+     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_layout_pwd"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="@string/login_pixiv_password_hint"
-        app:boxBackgroundColor="@android:color/transparent"
-        app:hintEnabled="true"
-        app:layout_constraintEnd_toEndOf="@+id/input_layout_uid"
-        app:layout_constraintStart_toStartOf="@+id/input_layout_uid"
-        app:layout_constraintTop_toBottomOf="@+id/input_layout_uid">
+     <com.google.android.material.textfield.TextInputLayout
+         android:id="@+id/input_layout_pwd"
+         android:layout_width="0dp"
+         android:layout_height="wrap_content"
+         android:layout_marginTop="8dp"
+         android:hint="@string/login_pixiv_password_hint"
+         app:boxBackgroundColor="@android:color/transparent"
+         app:hintEnabled="true"
+         app:layout_constraintEnd_toEndOf="@+id/input_layout_uid"
+         app:layout_constraintStart_toStartOf="@+id/input_layout_uid"
+         app:layout_constraintTop_toBottomOf="@+id/input_layout_uid">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_pwd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:autofillHints=""
-            android:imeOptions="actionGo"
-            android:inputType="textPassword" />
-    </com.google.android.material.textfield.TextInputLayout>
+         <com.google.android.material.textfield.TextInputEditText
+             android:id="@+id/edit_pwd"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:autofillHints=""
+             android:imeOptions="actionGo"
+             android:inputType="textPassword" />
+     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_login"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:minHeight="56dp"
-        android:text="@string/action_sign_in"
-        app:layout_constraintEnd_toEndOf="@+id/input_layout_pwd"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/input_layout_pwd"
-        app:layout_constraintTop_toBottomOf="@+id/input_layout_pwd" />
+     <com.google.android.material.button.MaterialButton
+         android:id="@+id/btn_login"
+         android:layout_width="0dp"
+         android:layout_height="wrap_content"
+         android:layout_marginTop="8dp"
+         android:minHeight="56dp"
+         android:text="@string/action_sign_in"
+         app:layout_constraintEnd_toEndOf="@+id/input_layout_pwd"
+         app:layout_constraintHorizontal_bias="0.0"
+         app:layout_constraintStart_toStartOf="@+id/input_layout_pwd"
+         app:layout_constraintTop_toBottomOf="@+id/input_layout_pwd" />-->
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/input_layout_refresh"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="24dp"
         android:hint="@string/login_pixiv_refresh_hint"
         app:boxBackgroundColor="@android:color/transparent"
         app:hintEnabled="true"
-        app:layout_constraintEnd_toEndOf="@+id/btn_login"
-        app:layout_constraintStart_toStartOf="@+id/btn_login"
-        app:layout_constraintTop_toBottomOf="@+id/btn_login">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/guideline_top">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_refresh"
@@ -118,11 +120,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:autoLink="web"
         android:text="How to get refresh token? (PC required)"
-        app:layout_constraintStart_toStartOf="@+id/btn_login_refresh"
         app:layout_constraintEnd_toEndOf="@+id/btn_login_refresh"
-        app:layout_constraintTop_toBottomOf="@+id/btn_login_refresh"
-        android:autoLink="web"/>
+        app:layout_constraintStart_toStartOf="@+id/btn_login_refresh"
+        app:layout_constraintTop_toBottomOf="@+id/btn_login_refresh" />
 
     <ProgressBar
         android:id="@+id/loginLoading"

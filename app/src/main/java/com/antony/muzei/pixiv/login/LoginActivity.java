@@ -59,19 +59,19 @@ public class LoginActivity extends PixivMuzeiActivity {
         mBinding = LoginPixivSignInActivityBinding.inflate(getLayoutInflater());
         setContentView(mBinding.getRoot());
 
-        mBinding.editUid.addTextChangedListener(new SimpleTextWatcher() {
-            @Override
-            public void afterTextChanged(@Nullable Editable s) {
-                checkLoginEnable();
-            }
-        });
-        mBinding.editPwd.addTextChangedListener(new SimpleTextWatcher() {
-            @Override
-            public void afterTextChanged(@Nullable Editable s) {
-                checkLoginEnable();
-            }
-        });
-        mBinding.btnLogin.setOnClickListener(v -> loginPassword());
+//        mBinding.editUid.addTextChangedListener(new SimpleTextWatcher() {
+//            @Override
+//            public void afterTextChanged(@Nullable Editable s) {
+//                checkLoginEnable();
+//            }
+//        });
+//        mBinding.editPwd.addTextChangedListener(new SimpleTextWatcher() {
+//            @Override
+//            public void afterTextChanged(@Nullable Editable s) {
+//                checkLoginEnable();
+//            }
+//        });
+//        mBinding.btnLogin.setOnClickListener(v -> loginPassword());
 
         mBinding.btnLoginRefresh.setOnClickListener(v -> loginRefresh());
 
@@ -88,9 +88,9 @@ public class LoginActivity extends PixivMuzeiActivity {
 
     @UiThread
     private void checkLoginEnable() {
-        boolean accountTyped = !TextUtils.isEmpty(mBinding.editUid.getText());
-        boolean passwordTyped = !TextUtils.isEmpty(mBinding.editPwd.getText());
-        mBinding.btnLogin.setEnabled(accountTyped && passwordTyped);
+//        boolean accountTyped = !TextUtils.isEmpty(mBinding.editUid.getText());
+//        boolean passwordTyped = !TextUtils.isEmpty(mBinding.editPwd.getText());
+//        mBinding.btnLogin.setEnabled(accountTyped && passwordTyped);
     }
 
     private void loginRefresh() {
@@ -108,22 +108,22 @@ public class LoginActivity extends PixivMuzeiActivity {
         executeLogin(fieldParams);
     }
 
-    private void loginPassword() {
-        // Builds the header fields for the OAuth POST request
-        Map<String, String> fieldParams = new HashMap<>();
-        fieldParams.put("get_secure_url", "1");
-        fieldParams.put("client_id", BuildConfig.PIXIV_CLIENT_ID);
-        fieldParams.put("client_secret", BuildConfig.PIXIV_CLIENT_SEC);
-
-        // When a new user is logging in, they cannot be an existing valid refresh token
-        String account = TextViewKt.text(mBinding.editUid, true).toString();
-        String password = TextViewKt.text(mBinding.editPwd, true).toString();
-        fieldParams.put("grant_type", "password");
-        fieldParams.put("username", account);
-        fieldParams.put("password", password);
-
-        executeLogin(fieldParams);
-    }
+//    private void loginPassword() {
+//        // Builds the header fields for the OAuth POST request
+//        Map<String, String> fieldParams = new HashMap<>();
+//        fieldParams.put("get_secure_url", "1");
+//        fieldParams.put("client_id", BuildConfig.PIXIV_CLIENT_ID);
+//        fieldParams.put("client_secret", BuildConfig.PIXIV_CLIENT_SEC);
+//
+//        // When a new user is logging in, they cannot be an existing valid refresh token
+//        String account = TextViewKt.text(mBinding.editUid, true).toString();
+//        String password = TextViewKt.text(mBinding.editPwd, true).toString();
+//        fieldParams.put("grant_type", "password");
+//        fieldParams.put("username", account);
+//        fieldParams.put("password", password);
+//
+//        executeLogin(fieldParams);
+//    }
 
     private void executeLogin(Map<String, String> fieldParams) {
         // Enables the indeterminate progress bar (spinning circle)
