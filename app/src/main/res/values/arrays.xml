@@ -107,4 +107,18 @@
         <item>"phone"</item>
         <item>"sdCard</item>
     </string-array>
+
+    <string-array name="dark_mode_entries">
+        <item>Follow System Dark Mode</item>
+        <item>Light Mode Selected</item>
+        <item>Dark Mode Selected</item>
+        <item>Auto Battery Dark Mode</item>
+    </string-array>
+
+    <string-array name="dark_mode_values">
+        <item>MODE_NIGHT_FOLLOW_SYSTEM</item>
+        <item>MODE_NIGHT_NO</item>
+        <item>MODE_NIGHT_YES</item>
+        <item>MODE_NIGHT_AUTO_BATTERY</item>
+    </string-array>
 </resources>

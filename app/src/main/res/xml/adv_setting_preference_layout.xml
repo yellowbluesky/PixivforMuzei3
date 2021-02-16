@@ -17,9 +17,9 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:key="@string/preferenceScreen"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:key="@string/preferenceScreen">
     <PreferenceCategory
         android:key="prefCat_advFiltering"
         android:title="@string/prefCat_advFiltering">
@@ -102,8 +102,20 @@
         <SwitchPreference
             android:key="pref_autoCrop"
             android:persistent="true"
-            android:title="@string/prefTitle_autoCrop"
-            android:summary="@string/prefSummary_autoCrop" />
+            android:summary="@string/prefSummary_autoCrop"
+            android:title="@string/prefTitle_autoCrop" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="prefCat_appSettings"
+        android:title="App settings">
+        <ListPreference
+            android:persistent="true"
+            app:defaultValue="MODE_NIGHT_FOLLOW_SYSTEM"
+            app:entries="@array/dark_mode_entries"
+            app:entryValues="@array/dark_mode_values"
+            app:key="pref_nightMode"
+            app:title="Night mode preference"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
     <!--    <PreferenceCategory-->
     <!--        android:key="prefCat_networkOptions"-->

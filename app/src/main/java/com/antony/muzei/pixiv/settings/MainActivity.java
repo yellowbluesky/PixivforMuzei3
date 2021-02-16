@@ -18,11 +18,14 @@
 package com.antony.muzei.pixiv.settings;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.preference.PreferenceManager;
 import androidx.viewpager.widget.ViewPager;
 
 import com.antony.muzei.pixiv.BuildConfig;
@@ -44,6 +47,30 @@ public class MainActivity extends PixivMuzeiActivity {
         viewPager.setAdapter(sectionsPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
+
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(
+                new SharedPreferences.OnSharedPreferenceChangeListener() {
+                    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+                        if (key.equals("pref_nightMode")) {
+                            String[] darkModeValues = getResources().getStringArray(R.array.dark_mode_values);
+                            String darkModeOption = sharedPreferences.getString("pref_nightMode", "MODE_NIGHT_FOLLOW_SYSTEM");
+                            if (darkModeOption.equals(darkModeValues[0])) {
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                            } else if (darkModeOption.equals(darkModeValues[1])) {
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                            } else if (darkModeOption.equals(darkModeValues[2])) {
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                            } else if (darkModeOption.equals(darkModeValues[3])) {
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY);
+                            }
+                        }
+                    }
+                });
+
+        //AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         // If Muzei is not installed, this will redirect the user to Muzei's Play Store listing
         if (!isMuzeiInstalled()) {
