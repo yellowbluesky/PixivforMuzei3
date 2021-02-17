@@ -18,6 +18,7 @@ package com.antony.muzei.pixiv.settings.fragments
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -34,6 +35,17 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
+    interface NightModePreferenceListener {
+        fun nightModeOptionSelected(option: Int)
+    }
+
+    private lateinit var nightModePreferenceListener: NightModePreferenceListener
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        nightModePreferenceListener = context as NightModePreferenceListener
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         // Indicate here the XML resource you created above that holds the preferences
         setPreferencesFromResource(R.xml.adv_setting_preference_layout, rootKey)
@@ -49,7 +61,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             minimumViewSliderPref.summary = (newValue as Int * 500).toString()
             true
         }
-        
+
         val minWidthSlider = findPreference<SeekBarPreference>("prefSlider_minimumWidth")
         val minHeightSlider = findPreference<SeekBarPreference>("prefSlider_minimumHeight")
 
@@ -137,12 +149,18 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
-        {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             preferenceScreen = findPreference(resources.getString(R.string.preferenceScreen))
             val prefCatPostProcess = findPreference<PreferenceCategory>("prefCat_postProcess")
             preferenceScreen.removePreference(prefCatPostProcess)
         }
+
+        val nightModeListPref = findPreference<ListPreference>("pref_nightMode")
+        nightModeListPref!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+            nightModePreferenceListener.nightModeOptionSelected((newValue as String).toInt())
+            true
+        }
+
     }
 
     private fun isMoreThanOneStorage(): Boolean {
