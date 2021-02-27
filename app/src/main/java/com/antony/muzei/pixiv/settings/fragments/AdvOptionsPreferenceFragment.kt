@@ -29,7 +29,6 @@ import androidx.preference.*
 import androidx.work.*
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.ClearCacheWorker
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -76,6 +75,30 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         minHeightSlider.summary = (sharedPrefs.getInt("prefSlider_minimumHeight", 0) * 10).toString() + "px"
         minHeightSlider.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
             minHeightSlider.summary = (newValue as Int * 10).toString() + "px"
+            true
+        }
+
+        val clearCachePref = findPreference<CheckBoxPreference>("pref_autoClearMode")
+        clearCachePref!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+            if (newValue as Boolean) {
+                // Calculates the hours to midnight
+                @SuppressLint("SimpleDateFormat") val simpleDateFormat = SimpleDateFormat("kk")
+                val hoursToMidnight = 24 - simpleDateFormat.format(Date()).toInt()
+
+                // Builds and submits the work request
+                val constraints = Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build()
+                val request = PeriodicWorkRequest.Builder(ClearCacheWorker::class.java, 24, TimeUnit.HOURS)
+                        .setInitialDelay(hoursToMidnight.toLong(), TimeUnit.HOURS)
+                        .addTag("PIXIV_CACHE_AUTO")
+                        .setConstraints(constraints)
+                        .build()
+                WorkManager.getInstance(requireContext())
+                        .enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.REPLACE, request)
+            } else {
+                WorkManager.getInstance(requireContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO")
+            }
             true
         }
 
@@ -164,38 +187,11 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
     }
 
     private fun isMoreThanOneStorage(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_storeInExtStorage", false)) {
-            val stringSet = context?.let { MediaStore.getExternalVolumeNames(it) }
-            stringSet!!.size > 1
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.getExternalVolumeNames(requireContext()).size > 1
         } else {
             // Android P or lower
-            val files: Array<File> = requireContext().getExternalFilesDirs(null)
-            files.size > 1
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // Automatic cache clearing at 1AM every night for as long as the setting is toggled active
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
-        if (sharedPrefs.getBoolean("pref_autoClearMode", false)) {
-            // Calculates the hours to midnight
-            @SuppressLint("SimpleDateFormat") val simpleDateFormat = SimpleDateFormat("kk")
-            val hoursToMidnight = 24 - simpleDateFormat.format(Date()).toInt()
-
-            // Builds and submits the work request
-            val constraints = Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            val request = PeriodicWorkRequest.Builder(ClearCacheWorker::class.java, 24, TimeUnit.HOURS)
-                    .setInitialDelay(hoursToMidnight.toLong(), TimeUnit.HOURS)
-                    .addTag("PIXIV_CACHE_AUTO")
-                    .setConstraints(constraints)
-                    .build()
-            WorkManager.getInstance(requireContext())
-                    .enqueueUniquePeriodicWork("PIXIV_CACHE_AUTO", ExistingPeriodicWorkPolicy.KEEP, request)
-        } else {
-            WorkManager.getInstance(requireContext()).cancelAllWorkByTag("PIXIV_CACHE_AUTO")
+            requireContext().getExternalFilesDirs(null).size > 1
         }
     }
 }
