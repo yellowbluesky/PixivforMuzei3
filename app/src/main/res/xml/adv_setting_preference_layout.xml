@@ -116,6 +116,11 @@
             app:key="pref_nightMode"
             app:title="Night mode preference"
             app:useSimpleSummaryProvider="true" />
+        <SwitchPreference
+            android:key="pref_dataMode"
+            android:persistent="true"
+            android:summary="Stops new artworks from being downloaded"
+            android:title="Mobile data saver" />
     </PreferenceCategory>
     <!--    <PreferenceCategory-->
     <!--        android:key="prefCat_networkOptions"-->

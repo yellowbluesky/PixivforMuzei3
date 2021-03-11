@@ -22,6 +22,8 @@ package com.antony.muzei.pixiv.provider
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -74,6 +76,11 @@ class PixivArtProvider : MuzeiArtProvider() {
     }
 
     override fun onLoadRequested(initial: Boolean) {
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        if (sharedPrefs.getBoolean("pref_dataMode", false) && isOnMobileData()) {
+            Log.i("ANTONY_PROVIDER", "Data saver mode, stopping new artwork download")
+            return
+        }
         PixivArtWorker.enqueueLoad(false, context)
     }
 
@@ -113,7 +120,7 @@ class PixivArtProvider : MuzeiArtProvider() {
         }
 
         val artworkPersistentUri = artwork.persistentUri
-            ?: throw IOException("Require non-null persistent uri in Artwork $artwork")
+                ?: throw IOException("Require non-null persistent uri in Artwork $artwork")
 
         val inputStream = try {
             context.contentResolver.openInputStream(artworkPersistentUri)
@@ -122,6 +129,20 @@ class PixivArtProvider : MuzeiArtProvider() {
             throw IOException("Fail to open stream: $artworkPersistentUri", ex)
         }
         return requireNotNull(inputStream)
+    }
+
+    // ConnectivityManager.activeNetworkInfo deprecated in API level 29
+    private fun isOnMobileData(): Boolean {
+        val cm = context!!.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= 29) {
+            val networkCapabilities = cm.getNetworkCapabilities(cm.activeNetwork)
+            if (networkCapabilities!!.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return true
+            }
+        } else if (cm.activeNetworkInfo!!.type == ConnectivityManager.TYPE_MOBILE) {
+            return true
+        }
+        return false
     }
 
     /**

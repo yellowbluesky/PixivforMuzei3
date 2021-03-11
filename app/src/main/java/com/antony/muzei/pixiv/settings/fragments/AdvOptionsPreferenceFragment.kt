@@ -183,7 +183,6 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             nightModePreferenceListener.nightModeOptionSelected((newValue as String).toInt())
             true
         }
-
     }
 
     private fun isMoreThanOneStorage(): Boolean {
