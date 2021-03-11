@@ -78,7 +78,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val clearCachePref = findPreference<CheckBoxPreference>("pref_autoClearMode")
+        val clearCachePref = findPreference<SwitchPreference>("pref_autoClearMode")
         clearCachePref!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
             if (newValue as Boolean) {
                 // Calculates the hours to midnight
