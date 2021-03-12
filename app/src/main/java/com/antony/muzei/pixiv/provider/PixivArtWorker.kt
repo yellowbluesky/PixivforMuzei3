@@ -364,7 +364,7 @@ class PixivArtWorker(
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun cropBlankSpaceFromImage(file: File) {
         Log.d(LOG_TAG, "Starting cropping")
-        val cropStartTime =  System.currentTimeMillis()
+        val cropStartTime = System.currentTimeMillis()
         val sourceImage = BitmapFactory.decodeFile(file.path)
         val baseColor: Int = sourceImage.getColor(0, 0).toArgb()
 
@@ -677,8 +677,7 @@ class PixivArtWorker(
         )
 
         // Variables for submitting to Muzei
-        val imageUrl: String
-        imageUrl = if (selectedArtwork!!.meta_pages.size == 0) {
+        val imageUrl: String = if (selectedArtwork!!.meta_pages.size == 0) {
             Log.d(LOG_TAG, "Picture is a single image")
             selectedArtwork
                     .meta_single_page
@@ -960,9 +959,9 @@ class PixivArtWorker(
 
     override fun doWork(): Result {
         Log.d(LOG_TAG, "Starting work")
+
         val client = getProviderClient(applicationContext, PixivArtProvider::class.java)
-        val artworkArrayList: ArrayList<Artwork>?
-        artworkArrayList = try {
+        val artworkArrayList: ArrayList<Artwork>? = try {
             artwork
         } catch (e: IOException) {
             e.printStackTrace()
@@ -980,5 +979,4 @@ class PixivArtWorker(
         Log.d(LOG_TAG, "Work completed")
         return Result.success()
     }
-
 }
