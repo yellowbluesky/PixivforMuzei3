@@ -29,6 +29,7 @@ public class PixivArtProviderDefines {
 
     // urls
     static final String PIXIV_HOST = "https://www.pixiv.net";
+    static final String PIXIV_ARTWORK_URL = PIXIV_HOST + "/artworks/";
     static final String MEMBER_ILLUST_URL = PIXIV_HOST + "/member_illust.php?mode=medium&illust_id=";
     static final String OAUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
 }

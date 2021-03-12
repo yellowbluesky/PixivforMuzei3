@@ -33,6 +33,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
 import androidx.work.*
 import com.antony.muzei.pixiv.AppDatabase
@@ -40,6 +41,7 @@ import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.post
 import com.antony.muzei.pixiv.R
+import com.antony.muzei.pixiv.provider.PixivArtProviderDefines.PIXIV_ARTWORK_URL
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
@@ -562,7 +564,7 @@ class PixivArtWorker(
                 .attribution(attribution)
                 .persistentUri(localUri)
                 .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+                .webUri((PIXIV_ARTWORK_URL + token).toUri())
                 .build()
     }
 
@@ -714,7 +716,7 @@ class PixivArtWorker(
                 .byline(selectedArtwork.user.name)
                 .persistentUri(localUri)
                 .token(token)
-                .webUri(Uri.parse(PixivArtProviderDefines.MEMBER_ILLUST_URL + token))
+                .webUri((PIXIV_ARTWORK_URL + token).toUri())
                 .build()
     }
 
