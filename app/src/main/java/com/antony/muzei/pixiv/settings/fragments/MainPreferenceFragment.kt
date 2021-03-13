@@ -17,7 +17,6 @@
 package com.antony.muzei.pixiv.settings.fragments
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
@@ -232,35 +231,36 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
 
         // Users click this preference to execute the login or logout
         loginActivityPreference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
-                startActivityForResult(Intent(activity, LoginActivityWebview::class.java), REQUEST_CODE_LOGIN)
-            } else {
-                // Alert that confirms the user really wants to log out
-                // Important as it is now difficult to login, due to Pixiv API changes 02/21
-                AlertDialog.Builder(requireContext())
-                        .setMessage(getString(R.string.dialog_logoutConfirm))
-                        .setPositiveButton(R.string.dialog_yes) { _, _ ->
-                            val editor = sharedPrefs.edit()
-                            editor.remove("accessTokenIssueTime")
-                            editor.remove("name")
-                            editor.remove(PREFERENCE_PIXIV_ACCESS_TOKEN)
-                            editor.remove("userId")
-                            editor.remove("refreshToken")
-                            loginActivityPreference.title = getString(R.string.prefTitle_loginButton)
-                            loginActivityPreference.summary = getString(R.string.prefSummary_notLoggedIn)
-                            // If the user has an authenticated feed mode, reset it to daily ranking on logout
-                            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
-                                editor.putString("pref_updateMode", "daily")
-                                //updateModePref.summary = resources.getStringArray(R.array.pref_updateMode_entries)[0]
-                            }
-                            editor.apply()
-                        }
-                        .setNegativeButton(R.string.dialog_no) { dialog, _ ->
-                            // Do nothing
-                            dialog.dismiss()
-                        }
-                        .show()
-            }
+            startActivityForResult(Intent(activity, LoginActivityWebview::class.java), REQUEST_CODE_LOGIN)
+//            if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
+//                startActivityForResult(Intent(activity, LoginActivityWebview::class.java), REQUEST_CODE_LOGIN)
+//            } else {
+//                // Alert that confirms the user really wants to log out
+//                // Important as it is now difficult to login, due to Pixiv API changes 02/21
+//                AlertDialog.Builder(requireContext())
+//                        .setMessage(getString(R.string.dialog_logoutConfirm))
+//                        .setPositiveButton(R.string.dialog_yes) { _, _ ->
+//                            val editor = sharedPrefs.edit()
+//                            editor.remove("accessTokenIssueTime")
+//                            editor.remove("name")
+//                            editor.remove(PREFERENCE_PIXIV_ACCESS_TOKEN)
+//                            editor.remove("userId")
+//                            editor.remove("refreshToken")
+//                            loginActivityPreference.title = getString(R.string.prefTitle_loginButton)
+//                            loginActivityPreference.summary = getString(R.string.prefSummary_notLoggedIn)
+//                            // If the user has an authenticated feed mode, reset it to daily ranking on logout
+//                            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
+//                                editor.putString("pref_updateMode", "daily")
+//                                //updateModePref.summary = resources.getStringArray(R.array.pref_updateMode_entries)[0]
+//                            }
+//                            editor.apply()
+//                        }
+//                        .setNegativeButton(R.string.dialog_no) { dialog, _ ->
+//                            // Do nothing
+//                            dialog.dismiss()
+//                        }
+//                        .show()
+//            }
             true
         }
     }
