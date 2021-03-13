@@ -64,7 +64,7 @@ class LoginActivityWebview : PixivMuzeiActivity(), CoroutineScope by CoroutineSc
                 val url: Uri = request.url
                 if (url.scheme.equals("pixiv")) {
                     launch(Dispatchers.IO) {
-                        val oauthResponse = PixivInstrumentation.login(applicationContext, code_verifier, url.getQueryParameter("code")!!)
+                        val oauthResponse = PixivInstrumentation.login(code_verifier, url.getQueryParameter("code")!!)
                         if (!oauthResponse.isHas_error) {
                             withContext(Dispatchers.Main) {
                                 PixivInstrumentation.updateTokenLocal(applicationContext, oauthResponse.pixivOauthResponse)

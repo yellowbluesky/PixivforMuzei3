@@ -28,8 +28,9 @@ public class PixivArtProviderDefines {
     static final String APP_USER_AGENT = "PixivIOSApp/7.6.2 (iOS 12.2; iPhone9,1)";
 
     // urls
-    static final String PIXIV_HOST = "https://www.pixiv.net";
-    static final String PIXIV_ARTWORK_URL = PIXIV_HOST + "/artworks/";
-    static final String MEMBER_ILLUST_URL = PIXIV_HOST + "/member_illust.php?mode=medium&illust_id=";
-    static final String OAUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
+    public static final String PIXIV_HOST = "https://www.pixiv.net";
+    public static final String PIXIV_ARTWORK_URL = PIXIV_HOST + "/artworks/";
+    public static final String PIXIV_REDIRECT_URL = "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback";
+    public static final String MEMBER_ILLUST_URL = PIXIV_HOST + "/member_illust.php?mode=medium&illust_id=";
+    public static final String OAUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
 }

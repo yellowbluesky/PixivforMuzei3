@@ -24,6 +24,7 @@ import com.antony.muzei.pixiv.PixivProviderConst.*
 import com.antony.muzei.pixiv.annotation.IOThread
 import com.antony.muzei.pixiv.login.OAuthResponseService
 import com.antony.muzei.pixiv.login.OauthResponse
+import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.network.RestClient
 import java.io.IOException
@@ -60,7 +61,7 @@ class PixivInstrumentation {
         }
 
         @JvmStatic
-        fun login(context: Context, verifierCode: String, authorizationCode: String): OauthResponse {
+        fun login(verifierCode: String, authorizationCode: String): OauthResponse {
             // Building the parameters
             val formBody = mapOf(
                     "client_id" to BuildConfig.PIXIV_CLIENT_ID,
@@ -68,8 +69,8 @@ class PixivInstrumentation {
                     "grant_type" to "authorization_code",
                     "code_verifier" to verifierCode,
                     "code" to authorizationCode,
-                    "redirect_uri" to "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback",
-                    "include_police" to "true"
+                    "redirect_uri" to PixivArtProviderDefines.PIXIV_REDIRECT_URL,
+                    "include_policy" to "true"
             )
 
             // Building and executing the network call
