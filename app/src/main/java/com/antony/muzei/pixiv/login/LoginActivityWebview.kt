@@ -45,7 +45,7 @@ class LoginActivityWebview : PixivMuzeiActivity(), CoroutineScope by CoroutineSc
         private val allowDomain = listOf("app-api.pixiv.net", "accounts.pixiv.net", "oauth.secure.pixiv.net")
     }
 
-    private lateinit var code_verifier: String
+    private lateinit var verifierCode: String
     private var bypassDomainCheck = false
 
     private var mBinding: ActivityLoginWebviewBinding? = null
@@ -64,7 +64,7 @@ class LoginActivityWebview : PixivMuzeiActivity(), CoroutineScope by CoroutineSc
                 val url: Uri = request.url
                 if (url.scheme.equals("pixiv")) {
                     launch(Dispatchers.IO) {
-                        val oauthResponse = PixivInstrumentation.login(code_verifier, url.getQueryParameter("code")!!)
+                        val oauthResponse = PixivInstrumentation.login(verifierCode, url.getQueryParameter("code")!!)
                         if (!oauthResponse.isHas_error) {
                             withContext(Dispatchers.Main) {
                                 PixivInstrumentation.updateTokenLocal(applicationContext, oauthResponse.pixivOauthResponse)
@@ -93,7 +93,7 @@ class LoginActivityWebview : PixivMuzeiActivity(), CoroutineScope by CoroutineSc
             }
         }
         val (code, hash) = generateCodeAndHash()
-        this.code_verifier = code
+        this.verifierCode = code
         webView.loadUrl("https://app-api.pixiv.net/web/v1/login?code_challenge=$hash&code_challenge_method=S256&client=pixiv-android")
     }
 
