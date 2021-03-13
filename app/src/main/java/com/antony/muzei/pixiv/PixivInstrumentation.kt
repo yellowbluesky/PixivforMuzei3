@@ -42,20 +42,54 @@ class PixivInstrumentation {
 
         private const val TAG = "PixivInstrumentation"
 
+
         @JvmStatic
         fun updateTokenLocal(context: Context, response: OauthResponse.PixivOauthResponse) {
             PreferenceManager.getDefaultSharedPreferences(context.applicationContext).edit()
-                .apply {
-                    putString(PREFERENCE_PIXIV_ACCESS_TOKEN, response.access_token)
-                    putString(PREFERENCE_PIXIV_REFRESH_TOKEN, response.refresh_token)
-                    putLong(PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP, System.currentTimeMillis().div(1000))
+                    .apply {
+                        putString(PREFERENCE_PIXIV_ACCESS_TOKEN, response.access_token)
+                        putString(PREFERENCE_PIXIV_REFRESH_TOKEN, response.refresh_token)
+                        putLong(PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP, System.currentTimeMillis().div(1000))
 
-                    response.user?.also { user ->
-                        putString("userId", user.id)
-                        putString("name", user.name)
+                        response.user?.also { user ->
+                            putString("userId", user.id)
+                            putString("name", user.name)
+                        }
                     }
+                    .apply()
+        }
+
+        @JvmStatic
+        fun login(context: Context, verifierCode: String, authorizationCode: String): OauthResponse {
+            // Building the parameters
+            val formBody = mapOf(
+                    "client_id" to BuildConfig.PIXIV_CLIENT_ID,
+                    "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
+                    "grant_type" to "authorization_code",
+                    "code_verifier" to verifierCode,
+                    "code" to authorizationCode,
+                    "redirect_uri" to "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback",
+                    "include_police" to "true"
+            )
+
+            // Building and executing the network call
+            val service = RestClient.getRetrofitOauthInstance(false).create(OAuthResponseService::class.java)
+            try {
+                val response = service.postRefreshToken(formBody).execute()
+                if (!response.isSuccessful) {
+                    throw AccessTokenAcquisitionException("Error using refresh token to get new access token")
                 }
-                .apply()
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, response.toString())
+                }
+
+                // If we've gotten to this point, we have avoided any network errors, authentication errors, and
+                // have on hand a set of tokens to use
+                return response.body()!!
+            } catch (ex: IOException) {
+                ex.printStackTrace()
+                throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
+            }
         }
     }
 
@@ -64,16 +98,16 @@ class PixivInstrumentation {
      */
     @IOThread
     fun getAccessToken(context: Context): String =
-        PreferenceManager.getDefaultSharedPreferences(context.applicationContext).let { prefs ->
-            prefs.getLong(PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP, 0L)
-                .takeIf { accessTokenIssueTime ->
-                    System.currentTimeMillis().div(1000) - accessTokenIssueTime < 3600
-                }
-                ?.let {
-                    prefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")
-                }
-                ?: refreshAccessToken(context)
-        }
+            PreferenceManager.getDefaultSharedPreferences(context.applicationContext).let { prefs ->
+                prefs.getLong(PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP, 0L)
+                        .takeIf { accessTokenIssueTime ->
+                            System.currentTimeMillis().div(1000) - accessTokenIssueTime < 3600
+                        }
+                        ?.let {
+                            prefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")
+                        }
+                        ?: refreshAccessToken(context)
+            }
 
     /**
      * Schedule refresh pixiv accessToken, and then return it
@@ -82,51 +116,51 @@ class PixivInstrumentation {
     fun refreshAccessToken(context: Context): String {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
         return doFetchPixivToken(
-            context,
-            prefs.getString(PREFERENCE_PIXIV_REFRESH_TOKEN, ""),
-            prefs.getBoolean("pref_enableNetworkBypass", false)
+                context,
+                prefs.getString(PREFERENCE_PIXIV_REFRESH_TOKEN, ""),
+                prefs.getBoolean("pref_enableNetworkBypass", false)
         ) ?: ""
     }
 
     @Throws(AccessTokenAcquisitionException::class)
     private fun doFetchPixivToken(context: Context, refreshToken: String?, bypassActive: Boolean = false) =
-        mutableMapOf(
-            "get_secure_url" to 1.toString(),
-            "client_id" to BuildConfig.PIXIV_CLIENT_ID,
-            "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
-            "grant_type" to "refresh_token"
-        ).apply {
-            refreshToken
-                ?.takeIf { it.isNotEmpty() }
-                ?.also { put("refresh_token", it) }
-        }.let { params ->
-            val service =
-                RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService::class.java)
-            try {
-                val call = service.postRefreshToken(params)
-                val response = call.execute()
-                if (!response.isSuccessful) {
-                    throw AccessTokenAcquisitionException("Error using refresh token to get new access token")
+            mutableMapOf(
+                    "get_secure_url" to 1.toString(),
+                    "client_id" to BuildConfig.PIXIV_CLIENT_ID,
+                    "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
+                    "grant_type" to "refresh_token"
+            ).apply {
+                refreshToken
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.also { put("refresh_token", it) }
+            }.let { params ->
+                val service =
+                        RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService::class.java)
+                try {
+                    val call = service.postRefreshToken(params)
+                    val response = call.execute()
+                    if (!response.isSuccessful) {
+                        throw AccessTokenAcquisitionException("Error using refresh token to get new access token")
+                    }
+                    response
+                } catch (ex: IOException) {
+                    ex.printStackTrace()
+                    throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
                 }
-                response
-            } catch (ex: IOException) {
-                ex.printStackTrace()
-                throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
+            }.let { response ->
+                response.body()?.let { resp ->
+                    if (BuildConfig.DEBUG) {
+                        Log.d(TAG, resp.toString())
+                    }
+                    resp.pixivOauthResponse?.let {
+                        updateTokenLocal(context, it)
+                        it.access_token
+                    }
+                }
+                /*
+                Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
+                sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
+                */
             }
-        }.let { response ->
-            response.body()?.let { resp ->
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, resp.toString())
-                }
-                resp.pixivOauthResponse?.let {
-                    updateTokenLocal(context, it)
-                    it.access_token
-                }
-            }
-            /*
-            Uri profileImageUri = storeProfileImage(authResponseBody.getJSONObject("response"));
-            sharedPrefs.edit().putString("profileImageUri", profileImageUri.toString()).apply();
-            */
-        }
 
 }

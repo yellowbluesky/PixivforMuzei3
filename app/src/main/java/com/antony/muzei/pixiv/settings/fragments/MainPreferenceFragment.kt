@@ -17,20 +17,19 @@
 package com.antony.muzei.pixiv.settings.fragments
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.preference.*
 import androidx.work.WorkManager
 import com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN
 import com.antony.muzei.pixiv.R
-import com.antony.muzei.pixiv.login.LoginActivity
+import com.antony.muzei.pixiv.login.LoginActivityWebview
 import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
 import com.antony.muzei.pixiv.provider.PixivArtWorker.Companion.enqueueLoad
-import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.util.*
@@ -230,11 +229,11 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
             loginActivityPreference!!.title = getString(R.string.prefTitle_logoutButton)
             loginActivityPreference.summary = getString(R.string.prefSummary_LoggedIn) + " " + sharedPrefs.getString("name", "")
         }
+
         // Users click this preference to execute the login or logout
         loginActivityPreference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
-                val intent = Intent(context, LoginActivity::class.java)
-                IntentUtils.launchActivity(this, intent, REQUEST_CODE_LOGIN)
+                startActivityForResult(Intent(activity, LoginActivityWebview::class.java), REQUEST_CODE_LOGIN)
             } else {
                 // Alert that confirms the user really wants to log out
                 // Important as it is now difficult to login, due to Pixiv API changes 02/21
@@ -252,7 +251,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                             // If the user has an authenticated feed mode, reset it to daily ranking on logout
                             if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
                                 editor.putString("pref_updateMode", "daily")
-                                updateModePref.summary = resources.getStringArray(R.array.pref_updateMode_entries)[0]
+                                //updateModePref.summary = resources.getStringArray(R.array.pref_updateMode_entries)[0]
                             }
                             editor.apply()
                         }

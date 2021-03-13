@@ -35,6 +35,10 @@
             android:name=".login.LoginActivity"
             android:theme="@style/AppTheme.Material" />
 
+        <activity
+            android:name=".login.LoginActivityWebview"
+            android:theme="@style/AppTheme.Material" />
+
         <provider
             android:name=".provider.PixivArtProvider"
             android:authorities="${PACKAGE}.provider"

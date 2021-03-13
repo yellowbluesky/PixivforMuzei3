@@ -19,63 +19,52 @@ package com.antony.muzei.pixiv.login;
 
 import com.squareup.moshi.Json;
 
-public class OauthResponse
-{
+public class OauthResponse {
     @Json(name = "response")
     private PixivOauthResponse pixivOauthResponse;
+    private boolean has_error;
 
-    public PixivOauthResponse getPixivOauthResponse()
-    {
+    public boolean isHas_error() {
+        return has_error;
+    }
+
+    public PixivOauthResponse getPixivOauthResponse() {
         return pixivOauthResponse;
     }
 
-    public static class PixivOauthResponse
-    {
+    public static class PixivOauthResponse {
         private String access_token;
         private int expires_in;
         private String token_type;
         private String scope;
         private String refresh_token;
         private PixivOauthUser user;
-        private String device_token;
 
-        public String getAccess_token()
-        {
+        public String getAccess_token() {
             return access_token;
         }
 
-        public int getExpires_in()
-        {
+        public int getExpires_in() {
             return expires_in;
         }
 
-        public String getToken_type()
-        {
+        public String getToken_type() {
             return token_type;
         }
 
-        public String getScope()
-        {
+        public String getScope() {
             return scope;
         }
 
-        public String getRefresh_token()
-        {
+        public String getRefresh_token() {
             return refresh_token;
         }
 
-        public PixivOauthUser getUser()
-        {
+        public PixivOauthUser getUser() {
             return user;
         }
 
-        public String getDevice_token()
-        {
-            return device_token;
-        }
-
-        public static class PixivOauthUser
-        {
+        public static class PixivOauthUser {
             private Profile_Image_Urls profile_image_urls;
             private String id;
             private String name;
@@ -84,59 +73,48 @@ public class OauthResponse
             private int x_restrict;
             private boolean is_mail_authorized;
 
-            public Profile_Image_Urls getProfile_image_urls()
-            {
+            public Profile_Image_Urls getProfile_image_urls() {
                 return profile_image_urls;
             }
 
-            public String getId()
-            {
+            public String getId() {
                 return id;
             }
 
-            public String getName()
-            {
+            public String getName() {
                 return name;
             }
 
-            public String getMail_address()
-            {
+            public String getMail_address() {
                 return mail_address;
             }
 
-            public boolean isIs_premius()
-            {
+            public boolean isIs_premius() {
                 return is_premius;
             }
 
-            public int getX_restrict()
-            {
+            public int getX_restrict() {
                 return x_restrict;
             }
 
-            public boolean isIs_mail_authorized()
-            {
+            public boolean isIs_mail_authorized() {
                 return is_mail_authorized;
             }
 
-            public static class Profile_Image_Urls
-            {
+            public static class Profile_Image_Urls {
                 private String px_16x16;
                 private String px_50x50;
                 private String px_170x170;
 
-                public String getPx_16x16()
-                {
+                public String getPx_16x16() {
                     return px_16x16;
                 }
 
-                public String getPx_50x50()
-                {
+                public String getPx_50x50() {
                     return px_50x50;
                 }
 
-                public String getPx_170x170()
-                {
+                public String getPx_170x170() {
                     return px_170x170;
                 }
             }
