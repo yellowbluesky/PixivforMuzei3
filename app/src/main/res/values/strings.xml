@@ -58,7 +58,7 @@
     <string name="prefTitle_autoClearMode">Automatically clear cache at 1AM daily</string>
     <string name="prefTitle_keyContributor">Key contributor</string>
     <string name="prefTitle_loginButton">Login</string>
-    <string name="prefTitle_logoutButton">Logout</string>
+    <string name="prefTitle_logoutButton">Manage login</string>
     <string name="prefTitle_mainDeveloper">Main developer</string>
     <string name="prefTitle_minimumViews">Artwork minimum views</string>
     <string name="prefTitle_numToDownload">Number of artwork to download at a time</string>

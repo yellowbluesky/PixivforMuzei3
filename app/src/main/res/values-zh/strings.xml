@@ -58,7 +58,7 @@
     <string name="prefTitle_autoClearMode">每天凌晨 1 点自动清除缓存</string>
     <string name="prefTitle_keyContributor">关键贡献者</string>
     <string name="prefTitle_loginButton">登录</string>
-    <string name="prefTitle_logoutButton">登出</string>
+    <string name="prefTitle_logoutButton">管理个人资料</string>
     <string name="prefTitle_mainDeveloper">主要开发者</string>
     <string name="prefTitle_minimumViews">作品最低浏览量</string>
     <string name="prefTitle_numToDownload">同时下载的作品数量</string>
