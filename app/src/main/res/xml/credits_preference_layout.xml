@@ -61,6 +61,14 @@
             android:data="https://github.com/FluffyDiscord" />
     </Preference>
 
+    <Preference
+        android:summary="Pixiv login"
+        android:title="James58899">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/james58899" />
+    </Preference>
+
     <Preference android:title="@string/prefTitle_openNsfwWiki">
         <intent
             android:action="android.intent.action.VIEW"
