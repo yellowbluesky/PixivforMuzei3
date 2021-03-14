@@ -22,7 +22,7 @@
     <string name="command_shareImage">分享图像</string>
     <string name="command_viewArtworkDetails">查看详情</string>
 
-    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 非当前激活源</string><!--未在 Muzei 中激活本源，需润色通顺-->
+    <string name="dialogTitle_muzeiNotActiveSource">Pixiv for Muzei 3 非当前被激活源</string><!--未在 Muzei 中激活本源，需润色通顺-->
     <string name="dialogTitle_muzeiNotInstalled">Muzei 尚未安装</string>
 
     <string name="dialog_installMuzei">您想要安装 Muzei 吗？</string>
@@ -100,6 +100,6 @@
     <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
     <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
-    <string name="dialog_logoutConfirm">您要登出吗？</string>
-    <string name="action_sign_in_refresh">登录用Refresh Token</string>
+    <string name="dialog_logoutConfirm">您确定要登出吗？</string>
+    <string name="action_sign_in_refresh">刷新登录令牌</string>
 </resources>
