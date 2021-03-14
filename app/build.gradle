@@ -101,8 +101,10 @@ dependencies {
     implementation "com.squareup.moshi:moshi:${libs.libMoshi}"
     //noinspection GradleDependency
     implementation "com.squareup.okhttp3:okhttp:${libs.libOkhttp}"
+    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:${libs.libOkhttp}"
     implementation "com.squareup.retrofit2:converter-moshi:${libs.libRetrofit}"
     implementation "com.squareup.retrofit2:retrofit:${libs.libRetrofit}"
+    implementation 'org.conscrypt:conscrypt-android:2.5.1'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.kotlin.coroutines}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${libs.kotlin.coroutines}"
     implementation "androidx.room:room-runtime:${libs.libRoom}"

@@ -39,8 +39,7 @@ import com.antony.muzei.pixiv.PixivMuzeiSupervisor.start
 import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
-import com.antony.muzei.pixiv.provider.network.RubyHttpDns
-import com.antony.muzei.pixiv.provider.network.RubySSLSocketFactory
+import com.antony.muzei.pixiv.provider.network.OkHttpSingleton
 import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor
 import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.apps.muzei.api.UserCommand
@@ -234,32 +233,7 @@ class PixivArtProvider : MuzeiArtProvider() {
                         .url(rankingUrl)
                         .build()
 
-                var httpClient: OkHttpClient? = null
-                if (Locale.getDefault().isO3Language == "zho") {
-                    val builder = OkHttpClient.Builder()
-                    builder.sslSocketFactory(RubySSLSocketFactory(), object : X509TrustManager {
-                        @SuppressLint("TrustAllX509TrustManager")
-                        override fun checkClientTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-                        }
-
-                        @SuppressLint("TrustAllX509TrustManager")
-                        override fun checkServerTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-                        }
-
-                        override fun getAcceptedIssuers(): Array<X509Certificate> {
-                            return arrayOf()
-                        }
-                    }) //SNI bypass
-                    builder.hostnameVerifier { s: String?, sslSession: SSLSession? -> true } //disable hostnameVerifier
-                    builder.addInterceptor(NetworkTrafficLogInterceptor())
-                    builder.dns(RubyHttpDns()) //define the direct ip address
-                    httpClient = builder.build()
-                    /* SNI Bypass end */
-                }
-
-                if (httpClient == null) {
-                    return
-                }
+                val httpClient = OkHttpSingleton.getInstance()
 
                 try {
                     httpClient.newCall(request).execute()

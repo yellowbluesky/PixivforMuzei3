@@ -1,28 +1,47 @@
 package com.antony.muzei.pixiv.provider.network
 
-import android.annotation.SuppressLint
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor
+import okhttp3.ConnectionSpec
+import okhttp3.Dns
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
-import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLSession
-import javax.net.ssl.X509TrustManager
+import okhttp3.dnsoverhttps.DnsOverHttps
+import org.conscrypt.Conscrypt
+import java.net.Inet6Address
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.security.Security
 
 object OkHttpSingleton {
-    private val x509TrustManager: X509TrustManager = object : X509TrustManager {
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkClientTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-        }
-
-        @SuppressLint("TrustAllX509TrustManager")
-        override fun checkServerTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-        }
-
-        override fun getAcceptedIssuers(): Array<X509Certificate> {
-            return arrayOf()
-        }
+    init {
+        Security.insertProviderAt(Conscrypt.newProvider(), 1)
     }
+
+    private val ipv6Ready = NetworkInterface.getNetworkInterfaces().toList()
+            .any { it.interfaceAddresses.any { i -> i.address.run { this is Inet6Address && !isLoopbackAddress && !isLinkLocalAddress && !isSiteLocalAddress } } }
+    private val cloudFlareDoH = DnsOverHttps.Builder()
+            .client(OkHttpClient())
+            .url("https://muzeipixivsource.cloudflare-dns.com/dns-query".toHttpUrl())
+            .post(true)
+            .includeIPv6(ipv6Ready)
+            .bootstrapDnsHosts(listOf("104.16.248.249", "104.16.249.249").map(InetAddress::getByName))
+            .build()
+    private val googleDoH = DnsOverHttps.Builder()
+            .client(OkHttpClient())
+            .url("https://dns.google/dns-query".toHttpUrl())
+            .post(true)
+            .includeIPv6(ipv6Ready)
+            .bootstrapDnsHosts(listOf("8.8.8.8", "8.8.4.4").map(InetAddress::getByName))
+            .build()
+    private val HEDoH = DnsOverHttps.Builder()
+            .client(OkHttpClient())
+            .url("https://ordns.he.net/".toHttpUrl())
+            .post(true)
+            .includeIPv6(ipv6Ready)
+            .bootstrapDnsHosts(InetAddress.getByName("74.82.42.42"))
+            .build()
+    private val dns = FallbackDns(cloudFlareDoH, HEDoH, googleDoH, Dns.SYSTEM)
 
     private fun OkHttpClient.Builder.logOnDebug(): OkHttpClient.Builder =
             this.apply {
@@ -32,12 +51,9 @@ object OkHttpSingleton {
             }
 
     private val OkHttpSingleton: OkHttpClient = OkHttpClient.Builder()
-            .connectTimeout(60L, TimeUnit.SECONDS)
-            .readTimeout(60L, TimeUnit.SECONDS)
-            .writeTimeout(60L, TimeUnit.SECONDS)
-            .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-            .hostnameVerifier { _: String?, _: SSLSession? -> true }
-            .dns(RubyHttpDns())
+            .retryOnConnectionFailure(true)
+            .connectionSpecs(listOf(ConnectionSpec.RESTRICTED_TLS))
+            .dns(dns)
             .logOnDebug()
             .build()
 
