@@ -5,8 +5,6 @@ import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor
 import okhttp3.OkHttpClient
 import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
 
 object OkHttpSingleton {
@@ -24,6 +22,7 @@ object OkHttpSingleton {
         }
     }
 
+
     private fun OkHttpClient.Builder.logOnDebug(): OkHttpClient.Builder =
             this.apply {
                 if (BuildConfig.DEBUG) {
@@ -32,12 +31,10 @@ object OkHttpSingleton {
             }
 
     private val OkHttpSingleton: OkHttpClient = OkHttpClient.Builder()
-            .connectTimeout(60L, TimeUnit.SECONDS)
-            .readTimeout(60L, TimeUnit.SECONDS)
-            .writeTimeout(60L, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-            .hostnameVerifier { _: String?, _: SSLSession? -> true }
-            .dns(RubyHttpDns())
+            .dns(RubyHttpDns.getInstance())
+            //.hostnameVerifier { _, _ -> true }
             .logOnDebug()
             .build()
 

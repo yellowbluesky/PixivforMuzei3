@@ -235,27 +235,27 @@ class PixivArtProvider : MuzeiArtProvider() {
                         .build()
 
                 var httpClient: OkHttpClient? = null
-                if (Locale.getDefault().isO3Language == "zho") {
-                    val builder = OkHttpClient.Builder()
-                    builder.sslSocketFactory(RubySSLSocketFactory(), object : X509TrustManager {
-                        @SuppressLint("TrustAllX509TrustManager")
-                        override fun checkClientTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-                        }
-
-                        @SuppressLint("TrustAllX509TrustManager")
-                        override fun checkServerTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-                        }
-
-                        override fun getAcceptedIssuers(): Array<X509Certificate> {
-                            return arrayOf()
-                        }
-                    }) //SNI bypass
-                    builder.hostnameVerifier { s: String?, sslSession: SSLSession? -> true } //disable hostnameVerifier
-                    builder.addInterceptor(NetworkTrafficLogInterceptor())
-                    builder.dns(RubyHttpDns()) //define the direct ip address
-                    httpClient = builder.build()
-                    /* SNI Bypass end */
-                }
+//                if (Locale.getDefault().isO3Language == "zho") {
+//                    val builder = OkHttpClient.Builder()
+//                    builder.sslSocketFactory(RubySSLSocketFactory(), object : X509TrustManager {
+//                        @SuppressLint("TrustAllX509TrustManager")
+//                        override fun checkClientTrusted(x509Certificates: Array<X509Certificate>, s: String) {
+//                        }
+//
+//                        @SuppressLint("TrustAllX509TrustManager")
+//                        override fun checkServerTrusted(x509Certificates: Array<X509Certificate>, s: String) {
+//                        }
+//
+//                        override fun getAcceptedIssuers(): Array<X509Certificate> {
+//                            return arrayOf()
+//                        }
+//                    }) //SNI bypass
+//                    builder.hostnameVerifier { s: String?, sslSession: SSLSession? -> true } //disable hostnameVerifier
+//                    builder.addInterceptor(NetworkTrafficLogInterceptor())
+//                    builder.dns(RubyHttpDns.getInstance()) //define the direct ip address
+//                    httpClient = builder.build()
+//                    /* SNI Bypass end */
+//                }
 
                 if (httpClient == null) {
                     return

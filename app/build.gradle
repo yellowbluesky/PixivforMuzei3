@@ -90,7 +90,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:${libs.androidx.appcompat}"
     implementation "androidx.constraintlayout:constraintlayout:${libs.androidx.constraintlayout}"
     implementation "androidx.coordinatorlayout:coordinatorlayout:${libs.androidx.coordinatorlayout}"
-    implementation "androidx.preference:preference:${libs.androidx.preference}"
+    implementation "androidx.preference:preference-ktx:${libs.androidx.preference}"
     implementation "androidx.recyclerview:recyclerview:${libs.androidx.recyclerview}"
     implementation "androidx.work:work-runtime:${libs.androidx.work}"
     implementation "androidx.work:work-runtime-ktx:${libs.androidx.work}"
