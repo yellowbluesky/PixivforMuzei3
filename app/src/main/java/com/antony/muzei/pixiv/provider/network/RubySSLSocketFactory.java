@@ -37,8 +37,11 @@ import javax.net.ssl.SSLSocketFactory;
 import kotlin.TypeCastException;
 import kotlin.jvm.internal.Intrinsics;
 
-public final class RubySSLSocketFactory extends SSLSocketFactory {
-
+/**
+ * @Author: Perol_Notsfsssf
+ */
+public class RubySSLSocketFactory extends SSLSocketFactory
+{
     private HostnameVerifier hostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
 
     @Nullable
