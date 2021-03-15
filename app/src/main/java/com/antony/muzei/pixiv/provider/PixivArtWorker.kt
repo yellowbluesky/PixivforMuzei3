@@ -77,7 +77,7 @@ class PixivArtWorker(
     companion object {
         private const val LOG_TAG = "ANTONY_WORKER"
         private const val WORKER_TAG = "ANTONY"
-        private val IMAGE_EXTENSIONS = arrayOf(".png", ".jpg")
+        private val IMAGE_EXTENSIONS = arrayOf(".jpg", ".png")
         private var clearArtwork = false
 
         fun enqueueLoad(clear: Boolean, context: Context?) {

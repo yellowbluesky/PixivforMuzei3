@@ -18,6 +18,7 @@ package com.antony.muzei.pixiv.provider.network
 
 import android.os.Build
 import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_HOST_URL
+import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_RANKING_URL
 import com.antony.muzei.pixiv.provider.network.interceptor.PixivAuthHeaderInterceptor
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -55,7 +56,7 @@ object RestClient {
                                             "User-Agent",
                                             "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0"
                                     )
-                                    .header("Referer", PIXIV_HOST_URL)
+                                    .header("Referer", PIXIV_RANKING_URL)
                                     .url(url)
                                     .build()
                     chain.proceed(request)
@@ -63,7 +64,7 @@ object RestClient {
                 .build()
         return Retrofit.Builder()
                 .client(okHttpClientRanking)
-                .baseUrl(PIXIV_HOST_URL)
+                .baseUrl(PIXIV_RANKING_URL)
                 .addConverterFactory(MoshiConverterFactory.create())
                 .build()
     }
@@ -85,9 +86,9 @@ object RestClient {
                     val request = original.newBuilder()
                             .header(
                                     "User-Agent",
-                                    "PixivAndroidApp/5.0.220 (Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + ")"
+                                    "Mozilla/5.0 (compatible; Rigor/1.0.0; http://rigor.com)"
                             )
-                            .header("Referer", PIXIV_HOST_URL)
+                            .header("Referer", PIXIV_RANKING_URL)
                             .build()
                     chain.proceed(request)
                 })
