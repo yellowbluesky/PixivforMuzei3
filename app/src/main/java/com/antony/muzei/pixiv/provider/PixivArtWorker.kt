@@ -39,6 +39,7 @@ import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.post
+import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.PixivArtProviderDefines.PIXIV_ARTWORK_URL
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
@@ -53,10 +54,14 @@ import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
+import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.ResponseBody
 import retrofit2.Call
 import java.io.*
@@ -692,9 +697,41 @@ class PixivArtWorker(
         val bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false)
 
         // Actually downloading the file
-        val service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadServerResponse::class.java)
-        val call = service.downloadImage(imageUrl)
-        val imageDataResponse = call.execute().body()
+        var imageDataResponse: ResponseBody?
+        val useCeuiLiSAWay = true
+        if (useCeuiLiSAWay) {
+            /**
+             * new code, replace url host to ip address and download
+             * this way runs well on my phone
+             *
+             * there is something in logcat:
+             *
+             * Submitting 3 artworks
+             * Work completed
+             *
+             * is this normal?
+             */
+            val finalUrl = HostManager.get().replaceUrl(imageUrl)
+            Log.d("finalUrl", finalUrl)
+            val request: Request = Request.Builder().url(finalUrl).get().build()
+            val imageHttpClient = OkHttpClient.Builder()
+                    .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                        val original = chain.request()
+                        val request = original.newBuilder()
+                                .header("Referer", PixivProviderConst.PIXIV_HOST_URL)
+                                .build()
+                        chain.proceed(request)
+                    })
+                    .build()
+            val call = imageHttpClient.newCall(request)
+            imageDataResponse = call.execute().body
+        } else {
+            // its your original code
+            val service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadServerResponse::class.java)
+            val call = service.downloadImage(imageUrl)
+            imageDataResponse = call.execute().body()
+        }
+
         val localUri = downloadFile(imageDataResponse, token)
 //        val fileSizeLimitMegabytes = sharedPrefs.getInt("prefSlider_maxFileSize", 0)
 //        // 1024 scalar to convert from MB to bytes

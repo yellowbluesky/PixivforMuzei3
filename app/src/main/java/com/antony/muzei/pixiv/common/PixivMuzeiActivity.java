@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.antony.muzei.pixiv.PixivInstrumentation;
+import com.antony.muzei.pixiv.util.HostManager;
 
 public class PixivMuzeiActivity extends AppCompatActivity {
 
@@ -15,6 +16,7 @@ public class PixivMuzeiActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         mPixivInstrumentation = new PixivInstrumentation();
+        HostManager.get().init();
         super.onCreate(savedInstanceState);
     }
 

@@ -19,7 +19,8 @@ package com.antony.muzei.pixiv;
 
 public final class PixivProviderConst {
 
-    public static final String PIXIV_HOST_URL = "https://www.pixiv.net";
+//    public static final String PIXIV_HOST_URL = "https://www.pixiv.net";
+    public static final String PIXIV_HOST_URL = "https://app-api.pixiv.net/";
 
     public static final String PREFERENCE_PIXIV_ACCESS_TOKEN = "accessToken";
     public static final String PREFERENCE_PIXIV_REFRESH_TOKEN = "refreshToken";
