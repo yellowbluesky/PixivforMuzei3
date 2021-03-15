@@ -33,7 +33,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
 import androidx.work.*
 import com.antony.muzei.pixiv.AppDatabase
@@ -564,7 +563,7 @@ class PixivArtWorker(
                 .attribution(attribution)
                 .persistentUri(localUri)
                 .token(token)
-                .webUri((PIXIV_ARTWORK_URL + token).toUri())
+                .webUri(Uri.parse(PIXIV_ARTWORK_URL + token))
                 .build()
     }
 
@@ -715,7 +714,7 @@ class PixivArtWorker(
                 .byline(selectedArtwork.user.name)
                 .persistentUri(localUri)
                 .token(token)
-                .webUri((PIXIV_ARTWORK_URL + token).toUri())
+                .webUri(Uri.parse(PIXIV_ARTWORK_URL + token))
                 .build()
     }
 
