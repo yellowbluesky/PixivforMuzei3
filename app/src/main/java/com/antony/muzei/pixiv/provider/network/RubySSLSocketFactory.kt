@@ -40,17 +40,17 @@ class RubySSLSocketFactory : SSLSocketFactory() {
         val sslSession = sslSocket.session
 
         Log.i("ANTONY_SSL", "Setting SNI hostname")
-        val stringBuilder = StringBuilder()
-        stringBuilder.append("Established ")
-        Intrinsics.checkExpressionValueIsNotNull(sslSession, "session")
-        stringBuilder.append(sslSession.protocol)
-        stringBuilder.append(" connection with ")
-        stringBuilder.append(sslSession.peerHost)
-        stringBuilder.append(" using ")
-        stringBuilder.append(sslSession.cipherSuite)
+        val stringBuilder = StringBuilder().apply {
+            append("Established ")
+            append(sslSession.protocol)
+            append(" connection with ")
+            append(sslSession.peerHost)
+            append(" using ")
+            append(sslSession.cipherSuite)
+        }
         Log.d("ANTONY_SSL", stringBuilder.toString())
-        return sslSocket
 
+        return sslSocket
     }
 
     override fun createSocket(paramString: String?, paramInt: Int): Socket? = null
