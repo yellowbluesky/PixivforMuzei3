@@ -103,14 +103,7 @@ public class RubyHttpDns implements Dns {
 
     public List<InetAddress> lookup(String paramString)
             throws UnknownHostException {
-        Log.e("ANTONY", "dns lookup");
-        Log.e("DNS", paramString);
         try {
-            if (paramString.equals("i.pximg.net")) {
-                List<InetAddress> newDns2 = new ArrayList<>();
-                newDns2.add(InetAddress.getByName("210.140.92.138"));
-                return newDns2;
-            }
             return newDns;
         } catch (Exception localException) {
             localException.printStackTrace();

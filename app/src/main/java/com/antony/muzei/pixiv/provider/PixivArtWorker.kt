@@ -46,10 +46,7 @@ import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionExceptio
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
 import com.antony.muzei.pixiv.provider.exceptions.LoopFilterMatchNotFoundException
-import com.antony.muzei.pixiv.provider.network.AuthJsonServerResponse
-import com.antony.muzei.pixiv.provider.network.ImageDownloadServerResponse
-import com.antony.muzei.pixiv.provider.network.RankingJsonServerResponse
-import com.antony.muzei.pixiv.provider.network.RestClient
+import com.antony.muzei.pixiv.provider.network.*
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.Illusts
@@ -164,12 +161,18 @@ class PixivArtWorker(
         val bypassActive = PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean("pref_enableNetworkBypass", false)
         for (extension in IMAGE_EXTENSIONS) {
             val urlToTest = transformUrlNoExtension + extension
-            val service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadServerResponse::class.java)
-            val responseBodyResponse = service.downloadImage(urlToTest).execute()
-            val response = responseBodyResponse.raw()
-            if (response.isSuccessful) {
+
+            val finalUrl = HostManager.get().replaceUrl(urlToTest)
+            val request: Request = Request.Builder()
+                    .url(finalUrl)
+                    .addHeader("Referer", PixivProviderConst.PIXIV_HOST_URL)
+                    .get()
+                    .build()
+            val call = OkHttpSingleton.getInstance().newCall(request)
+            val responseBodyReponse = call.execute()
+            if (responseBodyReponse.isSuccessful) {
                 Log.i(LOG_TAG, "Gotten remote file extensions")
-                return responseBodyResponse.body()
+                return responseBodyReponse.body
             }
         }
         Log.e(LOG_TAG, "Failed to get remote file extensions")
