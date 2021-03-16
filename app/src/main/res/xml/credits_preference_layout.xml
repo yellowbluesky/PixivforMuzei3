@@ -33,13 +33,6 @@
             android:data="https://github.com/alvince" />
     </Preference>
     <Preference
-        android:summary="@string/prefTitle_keyContributor"
-        android:title="Perol_Notsfsssf">
-        <intent
-            android:action="android.intent.action.VIEW"
-            android:data="https://github.com/Notsfsssf" />
-    </Preference>
-    <Preference
         android:summary="Localisations and F-Droid submitter"
         android:title="linsui">
         <intent
@@ -60,13 +53,26 @@
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/FluffyDiscord" />
     </Preference>
-
     <Preference
         android:summary="Pixiv login"
         android:title="James58899">
         <intent
             android:action="android.intent.action.VIEW"
             android:data="https://github.com/james58899" />
+    </Preference>
+    <Preference
+        android:summary="GFW Bypass"
+        android:title="CeuiLiSA">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/CeuiLiSA" />
+    </Preference>
+    <Preference
+        android:summary="GFW Bypass"
+        android:title="Perol_Notsfsssf">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/Notsfsssf" />
     </Preference>
 
     <Preference android:title="@string/prefTitle_openNsfwWiki">
