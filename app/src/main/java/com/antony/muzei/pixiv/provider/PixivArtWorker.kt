@@ -46,7 +46,10 @@ import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionExceptio
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
 import com.antony.muzei.pixiv.provider.exceptions.LoopFilterMatchNotFoundException
-import com.antony.muzei.pixiv.provider.network.*
+import com.antony.muzei.pixiv.provider.network.AuthJsonServerResponse
+import com.antony.muzei.pixiv.provider.network.ImageDownloadServerResponse
+import com.antony.muzei.pixiv.provider.network.RankingJsonServerResponse
+import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.Illusts
@@ -165,10 +168,18 @@ class PixivArtWorker(
             val finalUrl = HostManager.get().replaceUrl(urlToTest)
             val request: Request = Request.Builder()
                     .url(finalUrl)
-                    .addHeader("Referer", PixivProviderConst.PIXIV_HOST_URL)
                     .get()
                     .build()
-            val call = OkHttpSingleton.getInstance().newCall(request)
+            val imageHttpClient = OkHttpClient.Builder()
+                    .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                        val original = chain.request()
+                        val request = original.newBuilder()
+                                .header("Referer", PixivProviderConst.PIXIV_HOST_URL)
+                                .build()
+                        chain.proceed(request)
+                    })
+                    .build()
+            val call = imageHttpClient.newCall(request)
             val responseBodyReponse = call.execute()
             if (responseBodyReponse.isSuccessful) {
                 Log.i(LOG_TAG, "Gotten remote file extensions")
