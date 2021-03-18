@@ -19,7 +19,6 @@
 
 package com.antony.muzei.pixiv.provider
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -39,9 +38,6 @@ import com.antony.muzei.pixiv.PixivMuzeiSupervisor.start
 import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
-import com.antony.muzei.pixiv.provider.network.RubyHttpDns
-import com.antony.muzei.pixiv.provider.network.RubySSLSocketFactory
-import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor
 import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.apps.muzei.api.UserCommand
 import com.google.android.apps.muzei.api.provider.Artwork
@@ -51,10 +47,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
-import java.security.cert.X509Certificate
-import java.util.*
-import javax.net.ssl.SSLSession
-import javax.net.ssl.X509TrustManager
 
 class PixivArtProvider : MuzeiArtProvider() {
 

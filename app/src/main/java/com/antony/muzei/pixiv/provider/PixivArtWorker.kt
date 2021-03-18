@@ -161,12 +161,11 @@ class PixivArtWorker(
         // Last transformation to remove the file extension
         //  https://i.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0
 
-        val bypassActive = PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean("pref_enableNetworkBypass", false)
         for (extension in IMAGE_EXTENSIONS) {
             val urlToTest = transformUrlNoExtension + extension
 
             val finalUrl = HostManager.get().replaceUrl(urlToTest)
-            val request: Request = Request.Builder()
+            val remoteFileExtenstionRequest: Request = Request.Builder()
                     .url(finalUrl)
                     .get()
                     .build()
@@ -179,11 +178,12 @@ class PixivArtWorker(
                         chain.proceed(request)
                     })
                     .build()
-            val call = imageHttpClient.newCall(request)
-            val responseBodyReponse = call.execute()
-            if (responseBodyReponse.isSuccessful) {
-                Log.i(LOG_TAG, "Gotten remote file extensions")
-                return responseBodyReponse.body
+
+            imageHttpClient.newCall(remoteFileExtenstionRequest).execute().let {
+                if (it.isSuccessful) {
+                    Log.i(LOG_TAG, "Gotten remote file extensions")
+                    return it.body
+                }
             }
         }
         Log.e(LOG_TAG, "Failed to get remote file extensions")
@@ -274,8 +274,10 @@ class PixivArtWorker(
                 val selectionArgs = arrayOf(filename)
                 val cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null)
                 if (cursor!!.count == 0) {
-                    contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, filename)
-                    contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PixivForMuzei3")
+                    contentValues.apply {
+                        put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+                        put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PixivForMuzei3")
+                    }
                     if (fileExtension == FileType.PNG) {
                         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
                     } else if (fileExtension == FileType.JPEG) {
@@ -529,8 +531,6 @@ class PixivArtWorker(
             "female" -> attribution = applicationContext.getString(R.string.attr_female)
             else -> ""
         }
-        val attributionDate = contents.date
-        val attTrans = attributionDate.substring(0, 4) + "/" + attributionDate.substring(4, 6) + "/" + attributionDate.substring(6, 8) + " "
 
         //writeToFile(overallJson, "rankingLog.txt");
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
@@ -555,8 +555,10 @@ class PixivArtWorker(
 
         // Variables to submit to Muzei
         val token = rankingArtwork!!.illust_id.toString()
-        attribution = attTrans + attribution
-        attribution += rankingArtwork.rank
+        val attributionDate = contents.date.let {
+            it.substring(0, 4) + "/" + it.substring(4, 6) + "/" + it.substring(6, 8) + " "
+        }
+        attribution = attributionDate + attribution + rankingArtwork.rank
 
         // Actually downloading the selected artwork
         val remoteFileExtension = getRemoteFileExtension(rankingArtwork.url)
@@ -708,10 +710,9 @@ class PixivArtWorker(
                     .original
         }
         val token = selectedArtwork.id.toString()
-        val bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false)
 
         // Actually downloading the file
-        var imageDataResponse: ResponseBody?
+        val imageDataResponse: ResponseBody?
         val useCeuiLiSAWay = true
         if (useCeuiLiSAWay) {
             /**
@@ -737,11 +738,10 @@ class PixivArtWorker(
                         chain.proceed(request)
                     })
                     .build()
-            val call = imageHttpClient.newCall(request)
-            imageDataResponse = call.execute().body
+            imageDataResponse = imageHttpClient.newCall(request).execute().body
         } else {
             // its your original code
-            val service = RestClient.getRetrofitImageInstance(bypassActive).create(ImageDownloadServerResponse::class.java)
+            val service = RestClient.getRetrofitImageInstance(false).create(ImageDownloadServerResponse::class.java)
             val call = service.downloadImage(imageUrl)
             imageDataResponse = call.execute().body()
         }
@@ -907,7 +907,9 @@ class PixivArtWorker(
                             Log.d(LOG_TAG, "Auth failed, downloading a single daily")
                             updateMode = "daily"
                             post(Runnable {
-                                Toast.makeText(applicationContext, R.string.toast_authFailedDown, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(applicationContext,
+                                        R.string.toast_authFailedDown,
+                                        Toast.LENGTH_SHORT).show()
                             })
                         }
                         "doNotChange_doNotDown" -> {
@@ -926,12 +928,9 @@ class PixivArtWorker(
             }
 
             val artworkArrayList = ArrayList<Artwork>()
-            var artwork: Artwork
-            val bypassActive = sharedPrefs.getBoolean("pref_enableNetworkBypass", false)
             if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
-                val service = RestClient.getRetrofitAuthInstance(bypassActive).create(AuthJsonServerResponse::class.java)
-                var call: Call<Illusts?>
-                call = when (updateMode) {
+                val service = RestClient.getRetrofitAuthInstance(false).create(AuthJsonServerResponse::class.java)
+                var call: Call<Illusts?> = when (updateMode) {
                     "follow" -> service.followJson
                     "bookmark" -> service.getBookmarkJson(sharedPrefs.getString("userId", ""))
                     "recommended" -> service.recommendedJson
@@ -947,11 +946,9 @@ class PixivArtWorker(
                 var authArtworkList = illusts!!.artworks
                 for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                     try {
-                        artwork = getArtworkAuth(authArtworkList, updateMode == "recommended")
-                        if (isArtworkNull(artwork)) {
-                            throw CorruptFileException("")
+                        getArtworkAuth(authArtworkList, updateMode == "recommended").let {
+                            artworkArrayList.add(it)
                         }
-                        artworkArrayList.add(artwork)
                     } catch (e: FilterMatchNotFoundException) {
                         e.printStackTrace()
                         // I'm not sure how many times we can keep getting the nextUrl
@@ -962,7 +959,7 @@ class PixivArtWorker(
                     }
                 }
             } else {
-                val service = RestClient.getRetrofitRankingInstance(bypassActive).create(RankingJsonServerResponse::class.java)
+                val service = RestClient.getRetrofitRankingInstance(false).create(RankingJsonServerResponse::class.java)
                 var call = service.getRankingJson(updateMode)
                 var contents = call.execute().body()
                 if (BuildConfig.DEBUG && contents != null) {
@@ -973,11 +970,9 @@ class PixivArtWorker(
                 var prevDate = contents.prev_date
                 for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                     try {
-                        artwork = getArtworkRanking(contents)
-                        if (isArtworkNull(artwork)) {
-                            throw CorruptFileException("")
+                        getArtworkRanking(contents).let {
+                            artworkArrayList.add(it)
                         }
-                        artworkArrayList.add(artwork)
                     } catch (e: FilterMatchNotFoundException) {
                         e.printStackTrace()
                         // If enough artworks are not found in the 50 from the first page of the rankings,
