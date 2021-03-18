@@ -109,6 +109,7 @@ dependencies {
     implementation "androidx.room:room-runtime:${libs.libRoom}"
     annotationProcessor "androidx.room:room-compiler:${libs.libRoom}"
     kapt "androidx.room:room-compiler:${libs.libRoom}"
+    kapt "com.squareup.moshi:moshi-kotlin-codegen:${libs.libMoshi}"
 }
 
 allprojects {
