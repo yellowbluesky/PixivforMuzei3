@@ -58,7 +58,7 @@
     <string name="prefTitle_autoClearMode">每天凌晨 1 点自动清除缓存</string>
     <string name="prefTitle_keyContributor">关键贡献者</string>
     <string name="prefTitle_loginButton">登录</string>
-    <string name="prefTitle_logoutButton">管理个人资料</string>
+    <string name="prefTitle_logoutButton">登录管理</string>
     <string name="prefTitle_mainDeveloper">主要开发者</string>
     <string name="prefTitle_minimumViews">作品最低浏览量</string>
     <string name="prefTitle_numToDownload">同时下载的作品数量</string>
@@ -87,6 +87,10 @@
     <string name="tab_heading_credits">贡献者</string>
     <string name="tab_heading_main">基本设置</string>
     <string name="tab_heading_roadmap">路线图</string><!--专有-->
+    
+    
+    
+    
 
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
     <string name="toast_authFailed">验证失败，请检查您的用户名或密码</string>
@@ -100,6 +104,8 @@
     <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
     <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
-    <string name="dialog_logoutConfirm">您要登出吗？</string>
-    <string name="action_sign_in_refresh">登录用Refresh Token</string>
+    
+    <string name="login_pixiv_refresh_hint">刷新令牌</string>
+    <string name="action_sign_in_refresh">刷新令牌以登录</string><!--Refresh Token 用作刷新 Access Token，为 OAuth 中一项术语，此处翻译不确定-->
+    <string name="dialog_logoutConfirm">您确定要登出吗？</string>
 </resources>
