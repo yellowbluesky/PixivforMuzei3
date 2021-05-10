@@ -33,6 +33,7 @@ import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.antony.muzei.pixiv.PixivInstrumentation
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.common.PixivMuzeiActivity
@@ -60,7 +61,7 @@ class LoginActivityWebview : PixivMuzeiActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = ActivityLoginWebviewBinding.inflate(layoutInflater)
-        setContentView(mBinding!!.root)
+        setContentView(R.layout.activity_login_webview)
 
         val webView: WebView = findViewById(R.id.webview)
         @SuppressLint("SetJavaScriptEnabled")
@@ -121,9 +122,14 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                                     applicationContext,
                                     oauthResponse.pixivOauthResponse
                                 )
+                                Log.d("LOGIN", "detaching and killing webview")
+                                val parentConstraintLayout: ConstraintLayout? =
+                                    findViewById(R.id.webviewConstraintLayout)
+                                parentConstraintLayout!!.removeView(webView)
                                 webView.removeAllViews()
                                 webView.destroyDrawingCache()
                                 webView.destroy()
+                                Log.d("LOGIN", "detached and killed webview")
 
                                 // Returns the username for immediate consumption by MainPreferenceFragment
                                 val username: Intent = Intent().putExtra(
@@ -131,6 +137,7 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                                     oauthResponse.pixivOauthResponse.user.name
                                 )
                                 setResult(RESULT_OK, username)
+                                Log.d("LOGIN", "finishing activity")
                                 finish()
                             }
                         } else {
