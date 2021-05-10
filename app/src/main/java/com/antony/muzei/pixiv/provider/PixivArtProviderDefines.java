@@ -25,7 +25,7 @@ public class PixivArtProviderDefines {
             "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0";
 
     // app strings
-    static final String APP_USER_AGENT = "PixivIOSApp/7.6.2 (iOS 12.2; iPhone9,1)";
+    public static final String APP_USER_AGENT = "PixivIOSApp/7.6.2 (iOS 12.2; iPhone9,1)";
 
     // urls
     public static final String PIXIV_HOST = "https://www.pixiv.net";

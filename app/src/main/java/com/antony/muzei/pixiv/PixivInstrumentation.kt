@@ -74,7 +74,7 @@ class PixivInstrumentation {
             )
 
             // Building and executing the network call
-            val service = RestClient.getRetrofitOauthInstance(false).create(OAuthResponseService::class.java)
+            val service = RestClient.getRetrofitOauthInstance().create(OAuthResponseService::class.java)
             try {
                 val response = service.postRefreshToken(formBody).execute()
                 if (!response.isSuccessful) {
@@ -136,7 +136,7 @@ class PixivInstrumentation {
                         ?.also { put("refresh_token", it) }
             }.let { params ->
                 val service =
-                        RestClient.getRetrofitOauthInstance(bypassActive).create(OAuthResponseService::class.java)
+                        RestClient.getRetrofitOauthInstance().create(OAuthResponseService::class.java)
                 try {
                     val call = service.postRefreshToken(params)
                     val response = call.execute()

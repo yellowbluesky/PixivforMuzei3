@@ -24,50 +24,44 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.antony.muzei.pixiv.R
-import com.antony.muzei.pixiv.provider.network.OkHttpSingleton
+import com.antony.muzei.pixiv.provider.network.PixivAddBookmarkService
+import com.antony.muzei.pixiv.provider.network.RestClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl
-import okhttp3.MultipartBody
-import okhttp3.Request
-import okhttp3.RequestBody
+import java.io.IOException
 
-class AddToBookmarkService : Service(), CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
+class AddToBookmarkService : Service(),
+    CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         createNotificationChannel()
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Adding artwork to bookmarks")
-                .setContentText(intent.getStringExtra("artworkTitle") + " by " + intent.getStringExtra("artworkArtist"))
-                .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
-                .build()
+            .setContentTitle("Adding artwork to bookmarks")
+            .setContentText(intent.getStringExtra("artworkTitle") + " by " + intent.getStringExtra("artworkArtist"))
+            .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
+            .build()
         startForeground(1, notification)
 
-        val rankingUrl: HttpUrl = HttpUrl.Builder()
-                .scheme("https")
-                .host("app-api.pixiv.net")
-                .addPathSegments("v2/illust/bookmark/add")
-                .build()
-        val authData: RequestBody = MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("illust_id", intent.getStringExtra("artworkId")!!)
-                .addFormDataPart("restrict", "public")
-                .build()
-        val request: Request = Request.Builder()
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-                .addHeader("Authorization", "Bearer " + intent.getStringExtra("accessToken"))
-                .addHeader("Connection", "close")
-                .post(authData)
-                .url(rankingUrl)
-                .build()
-
-        val call = OkHttpSingleton.getInstance().newCall(request)
-        // NetworkOnMainThread exception
-        launch(Dispatchers.IO) {
-            call.execute()
+        try {
+            // NetworkOnMainThread exception
+            launch(Dispatchers.IO) {
+                val formBody = mapOf(
+                    "illust_id" to intent.getStringExtra("artworkId")!!,
+                    "restrict" to "public"
+                )
+                val service =
+                    RestClient.getRetrofitBookmarkInstance()
+                        .create(PixivAddBookmarkService::class.java)
+                service.postArtworkBookmark(
+                    "Bearer " + intent.getStringExtra("accessToken"),
+                    formBody
+                )?.execute()
+            }
+        } catch (ex: IOException) {
+            ex.printStackTrace()
         }
+
         stopSelf()
         return START_REDELIVER_INTENT
     }
@@ -75,9 +69,9 @@ class AddToBookmarkService : Service(), CoroutineScope by CoroutineScope(Dispatc
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
-                    CHANNEL_ID,
-                    "Pixiv for Muzei 3 Foreground Service Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                CHANNEL_ID,
+                "Pixiv for Muzei 3 Foreground Service Channel",
+                NotificationManager.IMPORTANCE_DEFAULT
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)

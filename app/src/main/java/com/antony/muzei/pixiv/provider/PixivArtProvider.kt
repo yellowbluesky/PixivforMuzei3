@@ -38,11 +38,12 @@ import com.antony.muzei.pixiv.PixivMuzeiSupervisor.start
 import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
+import com.antony.muzei.pixiv.provider.network.PixivAddBookmarkService
+import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.apps.muzei.api.UserCommand
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.MuzeiArtProvider
-import okhttp3.*
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -112,7 +113,7 @@ class PixivArtProvider : MuzeiArtProvider() {
         }
 
         val artworkPersistentUri = artwork.persistentUri
-                ?: throw IOException("Require non-null persistent uri in Artwork $artwork")
+            ?: throw IOException("Require non-null persistent uri in Artwork $artwork")
 
         val inputStream = try {
             context.contentResolver.openInputStream(artworkPersistentUri)
@@ -158,43 +159,53 @@ class PixivArtProvider : MuzeiArtProvider() {
         when (id) {
             MuzeiCommandManager.COMMAND_VIEW_IMAGE_DETAILS -> {
                 artwork.token
-                        ?.takeIf { it.isNotEmpty() }
-                        ?.let { token ->
-                            Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$token")
-                            )
-                        }
-                        ?.also { intent ->
-                            IntentUtils.launchActivity(context, intent)
-                        }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { token ->
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$token")
+                        )
+                    }
+                    ?.also { intent ->
+                        IntentUtils.launchActivity(context, intent)
+                    }
             }
             MuzeiCommandManager.COMMAND_SHARE_IMAGE -> {
                 Log.d("ANTONY_WORKER", "Opening sharing ")
                 artwork.token
-                        ?.takeIf { it.isNotEmpty() }
-                        ?.let { token ->
-                            File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$token.png")
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { token ->
+                        File(
+                            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                            "$token.png"
+                        )
+                    }
+                    ?.let { file ->
+                        FileProvider.getUriForFile(
+                            context,
+                            "${BuildConfig.APPLICATION_ID}.fileprovider",
+                            file
+                        )
+                    }
+                    ?.let { uri ->
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "image/jpg"
+                            putExtra(Intent.EXTRA_STREAM, uri)
                         }
-                        ?.let { file ->
-                            FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", file)
-                        }
-                        ?.let { uri ->
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = "image/jpg"
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                            }
-                        }
-                        ?.also {
-                            IntentUtils.launchActivity(context, it)
-                        }
+                    }
+                    ?.also {
+                        IntentUtils.launchActivity(context, it)
+                    }
             }
             MuzeiCommandManager.COMMAND_ADD_TO_BOOKMARKS -> {
                 Log.d("PIXIV_DEBUG", "addToBookmarks(): Entered")
                 val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
-                if (sharedPrefs.getString(PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN, "").isNullOrEmpty()) {
+                if (sharedPrefs.getString(PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN, "")
+                        .isNullOrEmpty()
+                ) {
                     PixivMuzeiSupervisor.post {
-                        Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT)
+                            .show()
                     }
                     return
                 }
@@ -202,65 +213,23 @@ class PixivArtProvider : MuzeiArtProvider() {
                     getAccessToken()
                 } catch (e: AccessTokenAcquisitionException) {
                     PixivMuzeiSupervisor.post {
-                        Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT)
+                            .show()
                     }
                     return
                 }
-                // TODO this is a ugly mess
-                val rankingUrl = HttpUrl.Builder()
-                        .scheme("https")
-                        .host("app-api.pixiv.net")
-                        .addPathSegments("v2/illust/bookmark/add")
-                        .build()
-                val authData: RequestBody = MultipartBody.Builder()
-                        .setType(MultipartBody.FORM)
-                        .addFormDataPart("illust_id", artwork.token!!)
-                        .addFormDataPart("restrict", "public")
-                        .build()
-                val request = Request.Builder()
-                        .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                        .addHeader("User-Agent", PixivArtProviderDefines.APP_USER_AGENT)
-                        .addHeader("Authorization", "Bearer $accessToken")
-                        .addHeader("Connection", "close")
-                        .post(authData)
-                        .url(rankingUrl)
-                        .build()
-
-                var httpClient: OkHttpClient? = null
-//                if (Locale.getDefault().isO3Language == "zho") {
-//                    val builder = OkHttpClient.Builder()
-//                    builder.sslSocketFactory(RubySSLSocketFactory(), object : X509TrustManager {
-//                        @SuppressLint("TrustAllX509TrustManager")
-//                        override fun checkClientTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-//                        }
-//
-//                        @SuppressLint("TrustAllX509TrustManager")
-//                        override fun checkServerTrusted(x509Certificates: Array<X509Certificate>, s: String) {
-//                        }
-//
-//                        override fun getAcceptedIssuers(): Array<X509Certificate> {
-//                            return arrayOf()
-//                        }
-//                    }) //SNI bypass
-//                    builder.hostnameVerifier { s: String?, sslSession: SSLSession? -> true } //disable hostnameVerifier
-//                    builder.addInterceptor(NetworkTrafficLogInterceptor())
-//                    builder.dns(RubyHttpDns.getInstance()) //define the direct ip address
-//                    httpClient = builder.build()
-//                    /* SNI Bypass end */
-//                }
-
-                if (httpClient == null) {
-                    return
-                }
-
+                val formBody = mapOf(
+                    "illust_id" to artwork.token.toString(),
+                    "restrict" to "public"
+                )
+                val service =
+                    RestClient.getRetrofitBookmarkInstance()
+                        .create(PixivAddBookmarkService::class.java)
                 try {
-                    httpClient.newCall(request).execute()
+                    service.postArtworkBookmark("Bearer $accessToken", formBody)?.execute()
                 } catch (ex: IOException) {
                     ex.printStackTrace()
-                }
-                Log.d("PIXIV_DEBUG", "Added to bookmarks")
-                PixivMuzeiSupervisor.post {
-                    Toast.makeText(context, R.string.toast_addingToBookmarks, Toast.LENGTH_SHORT).show()
+                    throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
                 }
             }
         }
