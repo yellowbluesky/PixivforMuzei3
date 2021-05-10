@@ -15,17 +15,19 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.login;
+package com.antony.muzei.pixiv.provider.network;
 
-import java.util.Map;
+import com.antony.muzei.pixiv.provider.network.moshi.Contents;
 
 import retrofit2.Call;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.POST;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
 
-public interface OAuthResponseService {
-    @FormUrlEncoded
-    @POST("/auth/token")
-    Call<OauthResponse> postRefreshToken(@FieldMap Map<String, String> params);
+public interface PixivRankingFeedJsonService
+{
+    @GET("/ranking.php")
+    Call<Contents> getRankingJson(@Query("mode") String mode);
+
+    @GET("/ranking.php")
+    Call<Contents> getRankingJson(@Query("mode") String mode, @Query("p") int page, @Query("date") String date);
 }

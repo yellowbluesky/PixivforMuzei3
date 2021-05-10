@@ -22,7 +22,7 @@ import android.util.Log
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.PixivProviderConst.*
 import com.antony.muzei.pixiv.annotation.IOThread
-import com.antony.muzei.pixiv.login.OAuthResponseService
+import com.antony.muzei.pixiv.login.PixivOauthService
 import com.antony.muzei.pixiv.login.OauthResponse
 import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
@@ -74,7 +74,7 @@ class PixivInstrumentation {
             )
 
             // Building and executing the network call
-            val service = RestClient.getRetrofitOauthInstance().create(OAuthResponseService::class.java)
+            val service = RestClient.getRetrofitOauthInstance().create(PixivOauthService::class.java)
             try {
                 val response = service.postRefreshToken(formBody).execute()
                 if (!response.isSuccessful) {
@@ -136,7 +136,7 @@ class PixivInstrumentation {
                         ?.also { put("refresh_token", it) }
             }.let { params ->
                 val service =
-                        RestClient.getRetrofitOauthInstance().create(OAuthResponseService::class.java)
+                        RestClient.getRetrofitOauthInstance().create(PixivOauthService::class.java)
                 try {
                     val call = service.postRefreshToken(params)
                     val response = call.execute()

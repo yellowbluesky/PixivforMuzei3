@@ -46,9 +46,9 @@ import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionExceptio
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
 import com.antony.muzei.pixiv.provider.exceptions.LoopFilterMatchNotFoundException
-import com.antony.muzei.pixiv.provider.network.AuthJsonServerResponse
-import com.antony.muzei.pixiv.provider.network.ImageDownloadServerResponse
-import com.antony.muzei.pixiv.provider.network.RankingJsonServerResponse
+import com.antony.muzei.pixiv.provider.network.PixivAuthFeedJsonService
+import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
+import com.antony.muzei.pixiv.provider.network.PixivRankingFeedJsonService
 import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
@@ -741,7 +741,7 @@ class PixivArtWorker(
             imageDataResponse = imageHttpClient.newCall(request).execute().body
         } else {
             // its your original code
-            val service = RestClient.getRetrofitImageInstance().create(ImageDownloadServerResponse::class.java)
+            val service = RestClient.getRetrofitImageInstance().create(PixivImageDownloadService::class.java)
             val call = service.downloadImage(imageUrl)
             imageDataResponse = call.execute().body()
         }
@@ -929,7 +929,7 @@ class PixivArtWorker(
 
             val artworkArrayList = ArrayList<Artwork>()
             if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
-                val service = RestClient.getRetrofitAuthInstance().create(AuthJsonServerResponse::class.java)
+                val service = RestClient.getRetrofitAuthInstance().create(PixivAuthFeedJsonService::class.java)
                 var call: Call<Illusts?> = when (updateMode) {
                     "follow" -> service.followJson
                     "bookmark" -> service.getBookmarkJson(sharedPrefs.getString("userId", ""))
@@ -959,7 +959,8 @@ class PixivArtWorker(
                     }
                 }
             } else {
-                val service = RestClient.getRetrofitRankingInstance().create(RankingJsonServerResponse::class.java)
+                val service = RestClient.getRetrofitRankingInstance().create(
+                    PixivRankingFeedJsonService::class.java)
                 var call = service.getRankingJson(updateMode)
                 var contents = call.execute().body()
                 if (BuildConfig.DEBUG && contents != null) {
