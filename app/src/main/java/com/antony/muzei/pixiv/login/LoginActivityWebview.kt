@@ -138,6 +138,9 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                             // meed to handle the error in here
                             // even if login worked, no value stored
                             // some way to demonstrate the error?
+                            webView.removeAllViews()
+                            webView.destroyDrawingCache()
+                            webView.destroy()
                             Log.d("LOGIN", "oauthResponse had error, finishing")
                             finish()
                         }
