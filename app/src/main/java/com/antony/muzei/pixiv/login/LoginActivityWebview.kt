@@ -38,6 +38,7 @@ import com.antony.muzei.pixiv.PixivInstrumentation
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.common.PixivMuzeiActivity
 import com.antony.muzei.pixiv.databinding.ActivityLoginWebviewBinding
+import com.antony.muzei.pixiv.provider.network.moshi.Oauth
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.*
 import okhttp3.*
@@ -85,7 +86,7 @@ class LoginActivityWebview : PixivMuzeiActivity(),
 
                         // DEBUGGING
                         val moshi = Moshi.Builder().build()
-                        val jsonAdapter = moshi.adapter<Any>(OauthResponse::class.java)
+                        val jsonAdapter = moshi.adapter<Any>(Oauth::class.java)
                         val json = jsonAdapter.toJson(oauthResponse)
 
                         val client = OkHttpClient()

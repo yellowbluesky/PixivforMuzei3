@@ -1,6 +1,5 @@
 package com.antony.muzei.pixiv.provider.network
 
-import com.antony.muzei.pixiv.login.OauthResponse
 import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
 import retrofit2.Call
 import retrofit2.http.*
@@ -16,5 +15,5 @@ interface PixivAddBookmarkService {
     fun postArtworkBookmark(
         @Header("Authorization") accessToken: String,
         @FieldMap params: Map<String, String>
-    ): Call<OauthResponse?>?
+    ): Call<Oauth?>?
 }

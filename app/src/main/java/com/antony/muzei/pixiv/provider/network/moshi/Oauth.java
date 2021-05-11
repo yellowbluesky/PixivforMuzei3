@@ -15,11 +15,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.login;
+package com.antony.muzei.pixiv.provider.network.moshi;
 
 import com.squareup.moshi.Json;
 
-public class OauthResponse {
+public class Oauth {
     @Json(name = "response")
     private PixivOauthResponse pixivOauthResponse;
     private boolean has_error;

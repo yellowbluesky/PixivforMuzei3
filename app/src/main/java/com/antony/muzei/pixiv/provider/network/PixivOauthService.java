@@ -15,7 +15,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.antony.muzei.pixiv.login;
+package com.antony.muzei.pixiv.provider.network;
+
+import com.antony.muzei.pixiv.provider.network.moshi.Oauth;
 
 import java.util.Map;
 
@@ -27,5 +29,5 @@ import retrofit2.http.POST;
 public interface PixivOauthService {
     @FormUrlEncoded
     @POST("/auth/token")
-    Call<OauthResponse> postRefreshToken(@FieldMap Map<String, String> params);
+    Call<Oauth> postRefreshToken(@FieldMap Map<String, String> params);
 }

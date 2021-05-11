@@ -22,8 +22,8 @@ import android.util.Log
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.PixivProviderConst.*
 import com.antony.muzei.pixiv.annotation.IOThread
-import com.antony.muzei.pixiv.login.PixivOauthService
-import com.antony.muzei.pixiv.login.OauthResponse
+import com.antony.muzei.pixiv.provider.network.PixivOauthService
+import com.antony.muzei.pixiv.provider.network.moshi.Oauth
 import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.network.RestClient
@@ -45,7 +45,7 @@ class PixivInstrumentation {
 
 
         @JvmStatic
-        fun updateTokenLocal(context: Context, response: OauthResponse.PixivOauthResponse) {
+        fun updateTokenLocal(context: Context, response: Oauth.PixivOauthResponse) {
             PreferenceManager.getDefaultSharedPreferences(context.applicationContext).edit()
                     .apply {
                         putString(PREFERENCE_PIXIV_ACCESS_TOKEN, response.access_token)
@@ -61,7 +61,7 @@ class PixivInstrumentation {
         }
 
         @JvmStatic
-        fun login(verifierCode: String, authorizationCode: String): OauthResponse {
+        fun login(verifierCode: String, authorizationCode: String): Oauth {
             // Building the parameters
             val formBody = mapOf(
                     "client_id" to BuildConfig.PIXIV_CLIENT_ID,
