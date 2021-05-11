@@ -102,7 +102,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                 true
             }
         authFilterSelectPref.summary =
-            authSummaryStringGenerator(sharedPrefs.getStringSet("pref_authFilterSelect", null) as HashSet<String>)
+            authSummaryStringGenerator(sharedPrefs.getStringSet("pref_authFilterSelect", setOf("2")) as HashSet<String>)
 
         // Updates ranking SFW filtering preference
         // Same manner as above, the auth modes
@@ -126,7 +126,9 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
             }
         // Generates the ranking NSFW filter summary during activity startup
         rankingFilterSelectPref.summary =
-            rankingSummaryStringGenerator(sharedPrefs.getStringSet("pref_rankingFilterSelect", null) as HashSet<String>)
+            rankingSummaryStringGenerator(
+                sharedPrefs.getStringSet("pref_rankingFilterSelect", setOf("0")) as HashSet<String>
+            )
 
 
         // Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
