@@ -1,6 +1,7 @@
 package com.antony.muzei.pixiv.provider.network
 
 import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
+import com.antony.muzei.pixiv.provider.network.moshi.Oauth
 import retrofit2.Call
 import retrofit2.http.*
 
