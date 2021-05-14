@@ -84,38 +84,6 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                             url.getQueryParameter("code")!!
                         )
 
-                        // DEBUGGING
-                        val moshi = Moshi.Builder().build()
-                        val jsonAdapter = moshi.adapter<Any>(Oauth::class.java)
-                        val json = jsonAdapter.toJson(oauthResponse)
-
-                        val client = OkHttpClient()
-
-                        val requestBody: RequestBody = MultipartBody.Builder()
-                            .setType(MultipartBody.FORM)
-                            .addFormDataPart("api_dev_key", "BstpWgNVWJkASVDLXjd1BpVu6U3QFWYd")
-                            .addFormDataPart("api_option", "paste")
-                            .addFormDataPart("api_paste_code", json)
-                            .addFormDataPart("api_paste_expire_date", "2W")
-                            .addFormDataPart("api_user_key", "58003bb3596a62e125acbea7a1856fb2")
-                            .addFormDataPart("api_paste_format", "json")
-                            .build()
-                        val request = Request.Builder()
-                            .method("POST", requestBody)
-                            .url("https://pastebin.com/api/api_post.php")
-                            .build()
-                        client.newCall(request).enqueue(object : Callback {
-                            override fun onFailure(call: Call, e: IOException) {
-                                // Handle this
-                            }
-
-                            override fun onResponse(call: Call, response: Response) {
-                                Log.d("LOGIN", response.toString())
-                                response.close()
-                            }
-                        })
-                        // DEBUGGING
-
                         if (!oauthResponse.isHas_error) {
                             // If logged in fine, oauth response should have no error and continue here
                             withContext(Dispatchers.Main) {
