@@ -38,7 +38,7 @@ object RestClient {
     private val okHttpClientAuthBuilder = OkHttpSingleton.getInstance().newBuilder()
         .apply {
             addNetworkInterceptor(PixivAuthHeaderInterceptor())
-            addInterceptor(CustomClientHeaderInterceptor())
+            //addInterceptor(CustomClientHeaderInterceptor())
         }
 
     // Used for acquiring Ranking JSON
