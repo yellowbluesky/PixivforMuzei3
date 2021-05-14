@@ -23,10 +23,10 @@ import android.os.Environment
 import android.widget.Toast
 import androidx.preference.*
 import androidx.work.WorkManager
+import com.antony.muzei.pixiv.PixivProviderConst.AUTH_MODES
 import com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.login.LoginActivityWebview
-import com.antony.muzei.pixiv.provider.PixivArtProviderDefines
 import com.antony.muzei.pixiv.provider.PixivArtWorker.Companion.enqueueLoad
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
@@ -60,7 +60,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
         val updateModePref = findPreference<DropDownPreference>("pref_updateMode")
         updateModePref!!.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener setOnPreferenceChangeListener@{ _: Preference?, newValue: Any ->
-                val isAuthUpdateMode = PixivArtProviderDefines.AUTH_MODES.contains(newValue.toString())
+                val isAuthUpdateMode = AUTH_MODES.contains(newValue.toString())
                 // User has selected an authenticated feed mode, but has not yet logged in as evidenced
                 // by the lack of an access token
                 if (isAuthUpdateMode && sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
@@ -72,7 +72,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                 }
                 // If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
                 // and hide the ranking NSFW filtering
-                val authFeedModeSelected = PixivArtProviderDefines.AUTH_MODES.contains(newValue)
+                val authFeedModeSelected = AUTH_MODES.contains(newValue)
                 findPreference<Preference>("pref_authFilterSelect")!!.isVisible = authFeedModeSelected
                 findPreference<Preference>("pref_rankingFilterSelect")!!.isVisible = !authFeedModeSelected
                 findPreference<Preference>("pref_tagSearch")!!.isVisible = newValue == "tag_search"
@@ -133,7 +133,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
 
         // Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
         val updateMode = sharedPrefs.getString("pref_updateMode", "daily")
-        if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
+        if (AUTH_MODES.contains(updateMode)) {
             findPreference<Preference>("pref_authFilterSelect")!!.isVisible = true
             findPreference<Preference>("prefCat_loginSettings")!!.isVisible = true
             if (updateMode == "tag_search") {

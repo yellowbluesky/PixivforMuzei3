@@ -40,8 +40,9 @@ import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.post
 import com.antony.muzei.pixiv.PixivProviderConst
+import com.antony.muzei.pixiv.PixivProviderConst.AUTH_MODES
+import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_ARTWORK_URL
 import com.antony.muzei.pixiv.R
-import com.antony.muzei.pixiv.provider.PixivArtProviderDefines.PIXIV_ARTWORK_URL
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
@@ -69,10 +70,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
 
-class PixivArtWorker(
-        context: Context,
-        params: WorkerParameters
-) : Worker(context, params) {
+class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     companion object {
         private const val LOG_TAG = "ANTONY_WORKER"
@@ -89,10 +87,10 @@ class PixivArtWorker(
                     setRequiredNetworkType(NetworkType.CONNECTED)
                 }.let { builder ->
                     OneTimeWorkRequest.Builder(PixivArtWorker::class.java)
-                            .setConstraints(builder.build())
-                            .addTag(WORKER_TAG)
-                            .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
-                            .build()
+                        .setConstraints(builder.build())
+                        .addTag(WORKER_TAG)
+                        .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
+                        .build()
                 }.also { request ->
                     WorkManager.getInstance(it).enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request)
                 }
@@ -153,7 +151,8 @@ class PixivArtWorker(
         // This function is given a thumbnail URL like this
         //  https://tc-pximg01.techorus-cdn.com/c/240x480/img-master/img/2020/02/19/00/00/39/79583564_p0_master1200.jpg
 
-        val transformUrl = "https://i.pximg.net/img-original" + url.substring(url.indexOf("/img/")).replace("_master1200", "")
+        val transformUrl =
+            "https://i.pximg.net/img-original" + url.substring(url.indexOf("/img/")).replace("_master1200", "")
         // At this point we have a url like this:
         //  https://i.pximg.net/img-original/img/2020/02/19/00/00/39/79583564_p0.jpg
 
@@ -166,18 +165,18 @@ class PixivArtWorker(
 
             val finalUrl = HostManager.get().replaceUrl(urlToTest)
             val remoteFileExtenstionRequest: Request = Request.Builder()
-                    .url(finalUrl)
-                    .get()
-                    .build()
+                .url(finalUrl)
+                .get()
+                .build()
             val imageHttpClient = OkHttpClient.Builder()
-                    .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                        val original = chain.request()
-                        val request = original.newBuilder()
-                                .header("Referer", PixivProviderConst.PIXIV_HOST_URL)
-                                .build()
-                        chain.proceed(request)
-                    })
-                    .build()
+                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                    val original = chain.request()
+                    val request = original.newBuilder()
+                        .header("Referer", PixivProviderConst.PIXIV_API_HOST_URL)
+                        .build()
+                    chain.proceed(request)
+                })
+                .build()
 
             imageHttpClient.newCall(remoteFileExtenstionRequest).execute().let {
                 if (it.isSuccessful) {
@@ -245,16 +244,19 @@ class PixivArtWorker(
         The external storage copy also has correct file extensions
      */
     @Throws(IOException::class, CorruptFileException::class)
-    private fun downloadFile(responseBody: ResponseBody?,
-                             filename: String): Uri {
+    private fun downloadFile(
+        responseBody: ResponseBody?,
+        filename: String
+    ): Uri {
         Log.i(LOG_TAG, "Downloading file")
         val context = applicationContext
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
         // If the user has desired to store artworks into external storage
         if (sharedPrefs.getBoolean("pref_storeInExtStorage", false) &&
-                ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
             var allowedToStoreIntoExternal = false
             // TODO stop the hardcode
             val fileExtension = FileType.PNG
@@ -272,7 +274,13 @@ class PixivArtWorker(
                 val selection = "title = ?"
                 //String selection = {MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
                 val selectionArgs = arrayOf(filename)
-                val cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null)
+                val cursor = contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null
+                )
                 if (cursor!!.count == 0) {
                     contentValues.apply {
                         put(MediaStore.Images.Media.DISPLAY_NAME, filename)
@@ -302,7 +310,8 @@ class PixivArtWorker(
                     }
 
                     // Gives us a URI to save the image to
-                    imageUriExternal = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)!!
+                    imageUriExternal =
+                        contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)!!
                     fosExternal = contentResolver.openOutputStream(imageUriExternal)
                     allowedToStoreIntoExternal = true
                 }
@@ -417,7 +426,11 @@ class PixivArtWorker(
         val croppedImage = Bitmap.createBitmap(sourceImage, topX, topY, bottomX - topX + 1, bottomY - topY + 1)
 
         val output = FileOutputStream(file)
-        croppedImage.compress(Bitmap.CompressFormat.PNG, 90, output); // not bothering with JPEG as pixiv sends back only PNGs
+        croppedImage.compress(
+            Bitmap.CompressFormat.PNG,
+            90,
+            output
+        ); // not bothering with JPEG as pixiv sends back only PNGs
         output.close()
 
 
@@ -433,7 +446,8 @@ class PixivArtWorker(
         val bRed = (b and 0x00FF0000 ushr 16) // Red level
         val bGreen = (b and 0x0000FF00 ushr 8) // Green level
         val bBlue = (b and 0x000000FF) // Blue level
-        val distance = sqrt((aAlpha - bAlpha) * (aAlpha - bAlpha) + (aRed - bRed) * (aRed - bRed) + (aGreen - bGreen) * (aGreen - bGreen) + ((aBlue - bBlue) * (aBlue - bBlue)).toDouble())
+        val distance =
+            sqrt((aAlpha - bAlpha) * (aAlpha - bAlpha) + (aRed - bRed) * (aRed - bRed) + (aGreen - bGreen) * (aGreen - bGreen) + ((aBlue - bBlue) * (aBlue - bBlue)).toDouble())
 
         // 510.0 is the maximum distance between two colors
         // (0,0,0,0 -> 255,255,255,255)
@@ -446,9 +460,9 @@ class PixivArtWorker(
 
     // TODO is this even necessary anymore
     private fun isArtworkNull(artwork: Artwork?): Boolean =
-            artwork.also {
-                it ?: Log.e(LOG_TAG, "Null artwork returned, retrying at later time")
-            } == null
+        artwork.also {
+            it ?: Log.e(LOG_TAG, "Null artwork returned, retrying at later time")
+        } == null
 
     /*
         Provided an artowrk ID (token), traverses the PixivArtProvider ContentProvider to sees
@@ -460,7 +474,8 @@ class PixivArtWorker(
         val selection = "token = ?"
         val selectionArgs = arrayOf(token.toString())
         val conResUri = getProviderClient(applicationContext, PixivArtProvider::class.java).contentUri
-        val cursor: Cursor? = applicationContext.contentResolver.query(conResUri, projection, selection, selectionArgs, null)
+        val cursor: Cursor? =
+            applicationContext.contentResolver.query(conResUri, projection, selection, selectionArgs, null)
 
         if (cursor != null) {
             duplicateFound = cursor.count > 0
@@ -470,18 +485,18 @@ class PixivArtWorker(
     }
 
     private fun hasDesiredPixelSize(
-            width: Int,
-            height: Int,
-            minimumWidth: Int,
-            minimumHeight: Int,
-            aspectRatioSetting: Int
+        width: Int,
+        height: Int,
+        minimumWidth: Int,
+        minimumHeight: Int,
+        aspectRatioSetting: Int
     ): Boolean =
-            when (aspectRatioSetting) {
-                0 -> height >= (minimumHeight * 10) && width >= (minimumWidth * 10)
-                1 -> height >= (minimumHeight * 10)
-                2 -> width >= (minimumWidth * 10)
-                else -> true
-            }
+        when (aspectRatioSetting) {
+            0 -> height >= (minimumHeight * 10) && width >= (minimumWidth * 10)
+            1 -> height >= (minimumHeight * 10)
+            2 -> width >= (minimumWidth * 10)
+            else -> true
+        }
 
     /*
         0   Any aspect ratio
@@ -489,27 +504,27 @@ class PixivArtWorker(
         2   Portrait
      */
     private fun isDesiredAspectRatio(
-            width: Int,
-            height: Int,
-            aspectRatioSetting: Int
+        width: Int,
+        height: Int,
+        aspectRatioSetting: Int
     ): Boolean =
-            when (aspectRatioSetting) {
-                0 -> true
-                1 -> height >= width
-                2 -> height <= width
-                else -> true
-            }
+        when (aspectRatioSetting) {
+            0 -> true
+            1 -> height >= width
+            2 -> height <= width
+            else -> true
+        }
 
     // Scalar must match with scalar in SettingsActivity
     private fun isEnoughViews(
-            artworkViewCount: Int,
-            minimumDesiredViews: Int
+        artworkViewCount: Int,
+        minimumDesiredViews: Int
     ): Boolean = artworkViewCount >= minimumDesiredViews * 500
 
     private fun isImageTooLarge(sizeBytes: Long, limitBytes: Long): Boolean = sizeBytes > limitBytes
 
     private fun isBeenDeleted(artworkId: Int): Boolean =
-            (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(artworkId)!!)
+        (AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()?.isRowIsExist(artworkId)!!)
 
 
     /*
@@ -544,13 +559,14 @@ class PixivArtWorker(
         val minimumViews = sharedPrefs.getInt("prefSlider_minViews", 0)
 
         // Filtering
-        val rankingArtwork = filterArtworkRanking(contents.artworks.toMutableList(),
-                showManga,
-                rankingFilterSelect,
-                aspectRatioSettings,
-                minimumViews,
-                sharedPrefs.getInt("prefSlider_minimumWidth", 0),
-                sharedPrefs.getInt("prefSlider_minimumHeight", 0)
+        val rankingArtwork = filterArtworkRanking(
+            contents.artworks.toMutableList(),
+            showManga,
+            rankingFilterSelect,
+            aspectRatioSettings,
+            minimumViews,
+            sharedPrefs.getInt("prefSlider_minimumWidth", 0),
+            sharedPrefs.getInt("prefSlider_minimumHeight", 0)
         )
 
         // Variables to submit to Muzei
@@ -579,13 +595,13 @@ class PixivArtWorker(
         remoteFileExtension!!.close()
         Log.i(LOG_TAG, "getArtworkRanking(): Exited")
         return Artwork.Builder()
-                .title(rankingArtwork.title)
-                .byline(rankingArtwork.user_name)
-                .attribution(attribution)
-                .persistentUri(localUri)
-                .token(token)
-                .webUri(Uri.parse(PIXIV_ARTWORK_URL + token))
-                .build()
+            .title(rankingArtwork.title)
+            .byline(rankingArtwork.user_name)
+            .attribution(attribution)
+            .persistentUri(localUri)
+            .token(token)
+            .webUri(Uri.parse(PIXIV_ARTWORK_URL + token))
+            .build()
     }
 
     /*
@@ -596,26 +612,29 @@ class PixivArtWorker(
             Manga filtering is performed by checking the value of the "illust_type" JSON string
     */
     @Throws(FilterMatchNotFoundException::class)
-    private fun filterArtworkRanking(rankingArtworkList: MutableList<RankingArtwork>,
-                                     showManga: Boolean,
-                                     selectedFilterLevelSet: Set<String>?,
-                                     aspectRatioSetting: Int,
-                                     minimumViews: Int,
-                                     minimumWidth: Int,
-                                     minimumHeight: Int
+    private fun filterArtworkRanking(
+        rankingArtworkList: MutableList<RankingArtwork>,
+        showManga: Boolean,
+        selectedFilterLevelSet: Set<String>?,
+        aspectRatioSetting: Int,
+        minimumViews: Int,
+        minimumWidth: Int,
+        minimumHeight: Int
     ): RankingArtwork? {
         Log.i(LOG_TAG, "filterRanking(): Entering")
 
         rankingArtworkList.shuffle()
         for (randomArtwork in rankingArtworkList) {
             try {
-                return filterRankingArtworkSingle(randomArtwork,
-                        showManga,
-                        selectedFilterLevelSet,
-                        aspectRatioSetting,
-                        minimumViews,
-                        minimumWidth,
-                        minimumHeight)
+                return filterRankingArtworkSingle(
+                    randomArtwork,
+                    showManga,
+                    selectedFilterLevelSet,
+                    aspectRatioSetting,
+                    minimumViews,
+                    minimumWidth,
+                    minimumHeight
+                )
             } catch (e: LoopFilterMatchNotFoundException) {
                 Log.e(LOG_TAG, e.message!!)
                 continue
@@ -624,13 +643,14 @@ class PixivArtWorker(
         throw FilterMatchNotFoundException("All artworks in traversed, fetching a new Contents")
     }
 
-    private fun filterRankingArtworkSingle(rankingArtwork: RankingArtwork,
-                                           showManga: Boolean,
-                                           selectedFilterLevelSet: Set<String>?,
-                                           aspectRatioSetting: Int,
-                                           minimumViews: Int,
-                                           minimumWidth: Int,
-                                           minimumHeight: Int
+    private fun filterRankingArtworkSingle(
+        rankingArtwork: RankingArtwork,
+        showManga: Boolean,
+        selectedFilterLevelSet: Set<String>?,
+        aspectRatioSetting: Int,
+        minimumViews: Int,
+        minimumWidth: Int,
+        minimumHeight: Int
     ): RankingArtwork {
         if (isDuplicateArtwork(rankingArtwork.illust_id)) {
             throw LoopFilterMatchNotFoundException("Duplicate ID: " + rankingArtwork.illust_id)
@@ -641,11 +661,21 @@ class PixivArtWorker(
         if (!showManga && rankingArtwork.illust_type == 1) {
             throw LoopFilterMatchNotFoundException("Manga not desired " + rankingArtwork.illust_id)
         }
-        if (!isDesiredAspectRatio(rankingArtwork.width,
-                        rankingArtwork.height, aspectRatioSetting)) {
+        if (!isDesiredAspectRatio(
+                rankingArtwork.width,
+                rankingArtwork.height, aspectRatioSetting
+            )
+        ) {
             throw LoopFilterMatchNotFoundException("Rejecting aspect ratio " + rankingArtwork.illust_id)
         }
-        if (!hasDesiredPixelSize(rankingArtwork.width, rankingArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
+        if (!hasDesiredPixelSize(
+                rankingArtwork.width,
+                rankingArtwork.height,
+                minimumWidth,
+                minimumHeight,
+                aspectRatioSetting
+            )
+        ) {
             throw LoopFilterMatchNotFoundException("Image below desired pixel size " + rankingArtwork.illust_id)
         }
         if (isBeenDeleted(rankingArtwork.illust_id)) {
@@ -686,28 +716,28 @@ class PixivArtWorker(
 
         // Filtering
         val selectedArtwork = filterArtworkAuth(
-                authArtworkList.toMutableList(),
-                showManga,
-                selectedFilterLevel,
-                aspectRatioSettings,
-                minimumViews,
-                isRecommended,
-                sharedPrefs.getInt("prefSlider_minimumWidth", 0),
-                sharedPrefs.getInt("prefSlider_minimumHeight", 0)
+            authArtworkList.toMutableList(),
+            showManga,
+            selectedFilterLevel,
+            aspectRatioSettings,
+            minimumViews,
+            isRecommended,
+            sharedPrefs.getInt("prefSlider_minimumWidth", 0),
+            sharedPrefs.getInt("prefSlider_minimumHeight", 0)
         )
 
         // Variables for submitting to Muzei
         val imageUrl: String = if (selectedArtwork!!.meta_pages.size == 0) {
             Log.d(LOG_TAG, "Picture is a single image")
             selectedArtwork
-                    .meta_single_page
-                    .original_image_url
+                .meta_single_page
+                .original_image_url
         } else {
             Log.d(LOG_TAG, "Picture is part of an album")
             selectedArtwork
-                    .meta_pages[0]
-                    .image_urls
-                    .original
+                .meta_pages[0]
+                .image_urls
+                .original
         }
         val token = selectedArtwork.id.toString()
 
@@ -730,14 +760,14 @@ class PixivArtWorker(
             Log.d("finalUrl", finalUrl)
             val request: Request = Request.Builder().url(finalUrl).get().build()
             val imageHttpClient = OkHttpClient.Builder()
-                    .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                        val original = chain.request()
-                        val request = original.newBuilder()
-                                .header("Referer", PixivProviderConst.PIXIV_HOST_URL)
-                                .build()
-                        chain.proceed(request)
-                    })
-                    .build()
+                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                    val original = chain.request()
+                    val request = original.newBuilder()
+                        .header("Referer", PixivProviderConst.PIXIV_API_HOST_URL)
+                        .build()
+                    chain.proceed(request)
+                })
+                .build()
             imageDataResponse = imageHttpClient.newCall(request).execute().body
         } else {
             // its your original code
@@ -761,12 +791,12 @@ class PixivArtWorker(
         imageDataResponse!!.close()
         Log.i(LOG_TAG, "getArtworkAuth(): Exited")
         return Artwork.Builder()
-                .title(selectedArtwork.title)
-                .byline(selectedArtwork.user.name)
-                .persistentUri(localUri)
-                .token(token)
-                .webUri(Uri.parse(PIXIV_ARTWORK_URL + token))
-                .build()
+            .title(selectedArtwork.title)
+            .byline(selectedArtwork.user.name)
+            .persistentUri(localUri)
+            .token(token)
+            .webUri(Uri.parse(PIXIV_ARTWORK_URL + token))
+            .build()
     }
 
     /*
@@ -786,28 +816,31 @@ class PixivArtWorker(
         For manga filtering, the value of the "type" string is checked for either "manga" or "illust"
      */
     @Throws(FilterMatchNotFoundException::class)
-    private fun filterArtworkAuth(authArtworkList: MutableList<AuthArtwork>,
-                                  showManga: Boolean,
-                                  selectedFilterLevelSet: Set<String>?,
-                                  aspectRatioSetting: Int,
-                                  minimumViews: Int,
-                                  isRecommended: Boolean,
-                                  minimumWidth: Int,
-                                  minimumHeight: Int
+    private fun filterArtworkAuth(
+        authArtworkList: MutableList<AuthArtwork>,
+        showManga: Boolean,
+        selectedFilterLevelSet: Set<String>?,
+        aspectRatioSetting: Int,
+        minimumViews: Int,
+        isRecommended: Boolean,
+        minimumWidth: Int,
+        minimumHeight: Int
     ): AuthArtwork? {
         Log.i(LOG_TAG, "filterArtworkAuth(): Entering")
 
         authArtworkList.shuffle()
         for (randomArtwork in authArtworkList) {
             try {
-                return filterArtworkAuthSingle(randomArtwork,
-                        showManga,
-                        selectedFilterLevelSet,
-                        aspectRatioSetting,
-                        minimumViews,
-                        isRecommended,
-                        minimumWidth,
-                        minimumHeight)
+                return filterArtworkAuthSingle(
+                    randomArtwork,
+                    showManga,
+                    selectedFilterLevelSet,
+                    aspectRatioSetting,
+                    minimumViews,
+                    isRecommended,
+                    minimumWidth,
+                    minimumHeight
+                )
             } catch (e: LoopFilterMatchNotFoundException) {
                 Log.e(LOG_TAG, e.message!!)
             }
@@ -815,14 +848,15 @@ class PixivArtWorker(
         throw FilterMatchNotFoundException("All artworks traversed, fetching a new Illusts")
     }
 
-    private fun filterArtworkAuthSingle(authArtwork: AuthArtwork,
-                                        showManga: Boolean,
-                                        selectedFilterLevelSet: Set<String>?,
-                                        aspectRatioSetting: Int,
-                                        minimumViews: Int,
-                                        isRecommended: Boolean,
-                                        minimumWidth: Int,
-                                        minimumHeight: Int
+    private fun filterArtworkAuthSingle(
+        authArtwork: AuthArtwork,
+        showManga: Boolean,
+        selectedFilterLevelSet: Set<String>?,
+        aspectRatioSetting: Int,
+        minimumViews: Int,
+        isRecommended: Boolean,
+        minimumWidth: Int,
+        minimumHeight: Int
     ): AuthArtwork? {
 // Check if duplicate before any other check to not waste time
         if (isDuplicateArtwork(authArtwork.id)) {
@@ -835,12 +869,22 @@ class PixivArtWorker(
         }
 
         // Filter artwork based on chosen aspect ratio
-        if (!isDesiredAspectRatio(authArtwork.width,
-                        authArtwork.height, aspectRatioSetting)) {
+        if (!isDesiredAspectRatio(
+                authArtwork.width,
+                authArtwork.height, aspectRatioSetting
+            )
+        ) {
             throw LoopFilterMatchNotFoundException("Rejecting aspect ratio " + authArtwork.id)
         }
 
-        if (!hasDesiredPixelSize(authArtwork.width, authArtwork.height, minimumWidth, minimumHeight, aspectRatioSetting)) {
+        if (!hasDesiredPixelSize(
+                authArtwork.width,
+                authArtwork.height,
+                minimumWidth,
+                minimumHeight,
+                aspectRatioSetting
+            )
+        ) {
             throw LoopFilterMatchNotFoundException("Image below desired pixel size " + authArtwork.id)
         }
 
@@ -886,7 +930,7 @@ class PixivArtWorker(
             var updateMode = sharedPrefs.getString("pref_updateMode", "daily")
 
             // These modes require an access token, so we check for and acquire one first
-            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
+            if (AUTH_MODES.contains(updateMode)) {
                 try {
                     getAccessToken()
                 } catch (ex: AccessTokenAcquisitionException) {
@@ -897,9 +941,9 @@ class PixivArtWorker(
                             updateMode = "daily"
                             post(Runnable {
                                 Toast.makeText(
-                                        applicationContext,
-                                        R.string.toast_authFailedSwitch,
-                                        Toast.LENGTH_SHORT
+                                    applicationContext,
+                                    R.string.toast_authFailedSwitch,
+                                    Toast.LENGTH_SHORT
                                 ).show()
                             })
                         }
@@ -907,18 +951,20 @@ class PixivArtWorker(
                             Log.d(LOG_TAG, "Auth failed, downloading a single daily")
                             updateMode = "daily"
                             post(Runnable {
-                                Toast.makeText(applicationContext,
-                                        R.string.toast_authFailedDown,
-                                        Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    applicationContext,
+                                    R.string.toast_authFailedDown,
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             })
                         }
                         "doNotChange_doNotDown" -> {
                             Log.d(LOG_TAG, "Auth failed, retrying with no changes")
                             post(Runnable {
                                 Toast.makeText(
-                                        applicationContext,
-                                        R.string.toast_authFailedRetry,
-                                        Toast.LENGTH_SHORT
+                                    applicationContext,
+                                    R.string.toast_authFailedRetry,
+                                    Toast.LENGTH_SHORT
                                 ).show()
                             })
                             return null
@@ -928,7 +974,7 @@ class PixivArtWorker(
             }
 
             val artworkArrayList = ArrayList<Artwork>()
-            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
+            if (AUTH_MODES.contains(updateMode)) {
                 val service = RestClient.getRetrofitAuthInstance().create(PixivAuthFeedJsonService::class.java)
                 var call: Call<Illusts?> = when (updateMode) {
                     "follow" -> service.followJson
@@ -960,7 +1006,8 @@ class PixivArtWorker(
                 }
             } else {
                 val service = RestClient.getRetrofitRankingInstance().create(
-                    PixivRankingFeedJsonService::class.java)
+                    PixivRankingFeedJsonService::class.java
+                )
                 var call = service.getRankingJson(updateMode)
                 var contents = call.execute().body()
                 if (BuildConfig.DEBUG && contents != null) {
@@ -998,8 +1045,10 @@ class PixivArtWorker(
                     }
                 }
             }
-            Log.i(LOG_TAG, "Submitting " + sharedPrefs.getInt("prefSlider_numToDownload", 2) +
-                    " artworks")
+            Log.i(
+                LOG_TAG, "Submitting " + sharedPrefs.getInt("prefSlider_numToDownload", 2) +
+                        " artworks"
+            )
             return artworkArrayList
         }
 
