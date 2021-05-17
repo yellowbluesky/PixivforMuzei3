@@ -42,9 +42,10 @@ import com.antony.muzei.pixiv.common.PixivMuzeiActivity
 import com.antony.muzei.pixiv.databinding.ActivityLoginWebviewBinding
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.network.PixivOauthService
-import com.antony.muzei.pixiv.provider.network.RestClient
-import com.antony.muzei.pixiv.provider.network.moshi.Oauth
 import kotlinx.coroutines.*
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -82,29 +83,33 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                 val url: Uri = request.url
                 if (url.scheme.equals("pixiv")) {
                     launch(Dispatchers.IO) {
-                        val formBody = mapOf(
-                            "client_id" to BuildConfig.PIXIV_CLIENT_ID,
-                            "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
-                            "grant_type" to "authorization_code",
-                            "code_verifier" to verifierCode,
-                            "code" to url.getQueryParameter("code")!!,
-                            "redirect_uri" to PixivProviderConst.PIXIV_REDIRECT_URL,
-                            "include_policy" to "true"
-                        )
-                        val service = RestClient.getRetrofitOauthInstance().create(PixivOauthService::class.java)
-                        val oauthResponse: Oauth
-                        try {
-                            val response = service.postRefreshToken(formBody).execute()
+                        val retrofitClient = Retrofit.Builder()
+                            .baseUrl(PixivProviderConst.OAUTH_URL)
+                            .client(OkHttpClient())
+                            .addConverterFactory(MoshiConverterFactory.create())
+                            .build()
+                        val oauthResponse = try {
+                            val response = retrofitClient.create(PixivOauthService::class.java).postRefreshToken(
+                                mapOf(
+                                    "client_id" to BuildConfig.PIXIV_CLIENT_ID,
+                                    "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
+                                    "grant_type" to "authorization_code",
+                                    "code_verifier" to verifierCode,
+                                    "code" to url.getQueryParameter("code")!!,
+                                    "redirect_uri" to PixivProviderConst.PIXIV_REDIRECT_URL,
+                                    "include_policy" to "true"
+                                )
+                            ).execute()
                             if (!response.isSuccessful) {
                                 throw AccessTokenAcquisitionException("Error using refresh token to get new access token")
                             }
                             if (BuildConfig.DEBUG) {
-                                Log.d("PixivInstrumentation", response.toString())
+                                Log.d("PixivInstrumentation", response.body().toString())
                             }
 
                             // If we've gotten to this point, we have avoided any network errors, authentication errors, and
                             // have on hand a set of tokens to use
-                            oauthResponse = response.body()!!
+                            response.body()!!
                         } catch (ex: IOException) {
                             ex.printStackTrace()
                             throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
@@ -113,8 +118,7 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                         if (!oauthResponse.isHas_error) {
                             // If logged in fine, oauth response should have no error and continue here
                             withContext(Dispatchers.Main) {
-
-                                PreferenceManager.getDefaultSharedPreferences(applicationContext.applicationContext)
+                                PreferenceManager.getDefaultSharedPreferences(applicationContext)
                                     .edit()
                                     .apply {
                                         putString(
