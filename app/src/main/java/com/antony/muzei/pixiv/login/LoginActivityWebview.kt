@@ -34,14 +34,17 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.antony.muzei.pixiv.PixivInstrumentation
+import androidx.preference.PreferenceManager
+import com.antony.muzei.pixiv.BuildConfig
+import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.common.PixivMuzeiActivity
 import com.antony.muzei.pixiv.databinding.ActivityLoginWebviewBinding
+import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
+import com.antony.muzei.pixiv.provider.network.PixivOauthService
+import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.Oauth
-import com.squareup.moshi.Moshi
 import kotlinx.coroutines.*
-import okhttp3.*
 import java.io.IOException
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -79,18 +82,61 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                 val url: Uri = request.url
                 if (url.scheme.equals("pixiv")) {
                     launch(Dispatchers.IO) {
-                        val oauthResponse = PixivInstrumentation.login(
-                            verifierCode,
-                            url.getQueryParameter("code")!!
+                        val formBody = mapOf(
+                            "client_id" to BuildConfig.PIXIV_CLIENT_ID,
+                            "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
+                            "grant_type" to "authorization_code",
+                            "code_verifier" to verifierCode,
+                            "code" to url.getQueryParameter("code")!!,
+                            "redirect_uri" to PixivProviderConst.PIXIV_REDIRECT_URL,
+                            "include_policy" to "true"
                         )
+                        val service = RestClient.getRetrofitOauthInstance().create(PixivOauthService::class.java)
+                        val oauthResponse: Oauth
+                        try {
+                            val response = service.postRefreshToken(formBody).execute()
+                            if (!response.isSuccessful) {
+                                throw AccessTokenAcquisitionException("Error using refresh token to get new access token")
+                            }
+                            if (BuildConfig.DEBUG) {
+                                Log.d("PixivInstrumentation", response.toString())
+                            }
+
+                            // If we've gotten to this point, we have avoided any network errors, authentication errors, and
+                            // have on hand a set of tokens to use
+                            oauthResponse = response.body()!!
+                        } catch (ex: IOException) {
+                            ex.printStackTrace()
+                            throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
+                        }
 
                         if (!oauthResponse.isHas_error) {
                             // If logged in fine, oauth response should have no error and continue here
                             withContext(Dispatchers.Main) {
-                                PixivInstrumentation.updateTokenLocal(
-                                    applicationContext,
-                                    oauthResponse.pixivOauthResponse
-                                )
+
+                                PreferenceManager.getDefaultSharedPreferences(applicationContext.applicationContext)
+                                    .edit()
+                                    .apply {
+                                        putString(
+                                            PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN,
+                                            oauthResponse.pixivOauthResponse.access_token
+                                        )
+                                        putString(
+                                            PixivProviderConst.PREFERENCE_PIXIV_REFRESH_TOKEN,
+                                            oauthResponse.pixivOauthResponse.refresh_token
+                                        )
+                                        putLong(
+                                            PixivProviderConst.PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP,
+                                            System.currentTimeMillis().div(1000)
+                                        )
+
+                                        oauthResponse.pixivOauthResponse.user?.also { user ->
+                                            putString("userId", user.id)
+                                            putString("name", user.name)
+                                        }
+                                    }
+                                    .apply()
+
                                 Log.d("LOGIN", "detaching and killing webview")
                                 val parentConstraintLayout: ConstraintLayout? =
                                     findViewById(R.id.webviewConstraintLayout)
