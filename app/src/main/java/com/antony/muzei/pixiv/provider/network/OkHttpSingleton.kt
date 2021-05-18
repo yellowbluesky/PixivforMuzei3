@@ -5,6 +5,7 @@ import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor
 import okhttp3.OkHttpClient
 import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.X509TrustManager
 
 object OkHttpSingleton {
@@ -22,23 +23,29 @@ object OkHttpSingleton {
         }
     }
 
-
     private fun OkHttpClient.Builder.logOnDebug(): OkHttpClient.Builder =
-            this.apply {
-                if (BuildConfig.DEBUG) {
-                    addNetworkInterceptor(NetworkTrafficLogInterceptor())
-                }
+        this.apply {
+            if (BuildConfig.DEBUG) {
+                addNetworkInterceptor(NetworkTrafficLogInterceptor())
             }
+        }
 
-    private val OkHttpSingleton: OkHttpClient = OkHttpClient.Builder()
-            .retryOnConnectionFailure(true)
-            .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-            .dns(RubyHttpDns.getInstance())
-            //.hostnameVerifier { _, _ -> true }
-            .logOnDebug()
-            .build()
+    private var instance: OkHttpClient? = null
 
     fun getInstance(): OkHttpClient {
-        return OkHttpSingleton
+        if (instance == null) {
+            instance = OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
+                .dns(RubyHttpDns.getInstance())
+                //.hostnameVerifier { _, _ -> true }
+                .logOnDebug()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .callTimeout(60, TimeUnit.SECONDS)
+                .build()
+        }
+        return instance as OkHttpClient
     }
 }
