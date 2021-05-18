@@ -58,8 +58,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    viewBinding {
-        enabled = true
+    buildFeatures {
+        viewBinding = true
     }
 
     kotlinOptions {
@@ -85,7 +85,6 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${libs.kotlin.core}"
     implementation "androidx.annotation:annotation:${libs.androidx.annotation}"
     implementation "androidx.appcompat:appcompat:${libs.androidx.appcompat}"
     implementation "androidx.constraintlayout:constraintlayout:${libs.androidx.constraintlayout}"
