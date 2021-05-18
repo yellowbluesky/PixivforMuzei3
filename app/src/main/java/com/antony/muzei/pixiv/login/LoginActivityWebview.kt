@@ -146,7 +146,6 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                                     findViewById(R.id.webviewConstraintLayout)
                                 parentConstraintLayout!!.removeView(webView)
                                 webView.removeAllViews()
-                                webView.destroyDrawingCache()
                                 webView.destroy()
                                 Log.d("LOGIN", "detached and killed webview")
 
@@ -165,7 +164,6 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                             // even if login worked, no value stored
                             // some way to demonstrate the error?
                             webView.removeAllViews()
-                            webView.destroyDrawingCache()
                             webView.destroy()
                             Log.d("LOGIN", "oauthResponse had error, finishing")
                             finish()
