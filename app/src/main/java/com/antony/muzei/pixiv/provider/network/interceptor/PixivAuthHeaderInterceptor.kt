@@ -55,6 +55,7 @@ class PixivAuthHeaderInterceptor : Interceptor {
         }
         return originRequest.newBuilder().apply {
             addHeader("Authorization", "Bearer $token")
+            header("Accept-Encoding", "identity")
         }.let { builder ->
             chain.proceed(builder.build())
         }
