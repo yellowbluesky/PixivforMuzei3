@@ -26,6 +26,15 @@ object RestClient {
     private val okHttpClientAuthBuilder = OkHttpSingleton.getInstance().newBuilder()
         .apply {
             addNetworkInterceptor(PixivAuthHeaderInterceptor())
+            addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                val original = chain.request()
+                val request =
+                    original.newBuilder() // Using the Android User-Agent returns a HTML of the ranking page, instead of the JSON I need
+                        .header("User-Agent", BROWSER_USER_AGENT)
+                        .header("Accept-Encoding", "identity")
+                        .build()
+                chain.proceed(request)
+            })
             //addInterceptor(CustomClientHeaderInterceptor())
         }
 
