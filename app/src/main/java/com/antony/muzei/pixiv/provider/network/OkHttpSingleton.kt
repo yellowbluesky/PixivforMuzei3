@@ -1,7 +1,9 @@
 package com.antony.muzei.pixiv.provider.network
 
 import android.annotation.SuppressLint
+import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
+import com.antony.muzei.pixiv.PixivMuzei
 import com.antony.muzei.pixiv.provider.network.interceptor.NetworkTrafficLogInterceptor
 import okhttp3.OkHttpClient
 import java.security.cert.X509Certificate
@@ -24,19 +26,26 @@ object OkHttpSingleton {
 
 
     private fun OkHttpClient.Builder.logOnDebug(): OkHttpClient.Builder =
-            this.apply {
-                if (BuildConfig.DEBUG) {
-                    addNetworkInterceptor(NetworkTrafficLogInterceptor())
-                }
+        this.apply {
+            if (BuildConfig.DEBUG) {
+                addNetworkInterceptor(NetworkTrafficLogInterceptor())
             }
+        }
 
     private val OkHttpSingleton: OkHttpClient = OkHttpClient.Builder()
-            .retryOnConnectionFailure(true)
-            .sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-            .dns(RubyHttpDns.getInstance())
-            //.hostnameVerifier { _, _ -> true }
-            .logOnDebug()
-            .build()
+        .retryOnConnectionFailure(true)
+        .apply {
+            val prefs =
+                PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context?.applicationContext)
+            if (prefs.getBoolean("pref_enableNetworkBypass", false))
+                sslSocketFactory(
+                    RubySSLSocketFactory(),
+                    x509TrustManager
+                ).dns(RubyHttpDns.getInstance())
+        }
+        //.hostnameVerifier { _, _ -> true }
+        .logOnDebug()
+        .build()
 
     fun getInstance(): OkHttpClient {
         return OkHttpSingleton
