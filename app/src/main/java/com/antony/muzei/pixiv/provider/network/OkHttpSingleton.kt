@@ -32,22 +32,23 @@ object OkHttpSingleton {
             }
         }
 
-    private val OkHttpSingleton: OkHttpClient = OkHttpClient.Builder()
-        .retryOnConnectionFailure(true)
-        .apply {
-            val prefs =
-                PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context?.applicationContext)
-            if (prefs.getBoolean("pref_enableNetworkBypass", false))
-                sslSocketFactory(
-                    RubySSLSocketFactory(),
-                    x509TrustManager
-                ).dns(RubyHttpDns.getInstance())
-        }
-        //.hostnameVerifier { _, _ -> true }
-        .logOnDebug()
-        .build()
+    private var instance: OkHttpClient? = null
 
     fun getInstance(): OkHttpClient {
-        return OkHttpSingleton
+        if (instance == null) {
+            instance = OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .apply {
+                    val prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context?.applicationContext)
+                    if (prefs.getBoolean("pref_enableNetworkBypass", false)) {
+                        sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
+                        dns(RubyHttpDns.getInstance())
+                    }
+                }
+                //.hostnameVerifier { _, _ -> true }
+                .logOnDebug()
+                .build()
+        }
+        return instance as OkHttpClient
     }
 }
