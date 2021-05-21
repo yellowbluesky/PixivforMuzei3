@@ -105,9 +105,9 @@
     <string name="login_pixiv_refresh_hint">刷新令牌</string>
     <string name="action_sign_in_refresh">刷新令牌以登录</string><!--Refresh Token 用作刷新 Access Token，为 OAuth 中一项术语，此处翻译不确定-->
     <string name="dialog_logoutConfirm">您确定要登出吗？</string>
-    <string name="prefTitle_nightModePreference">Night mode preference</string>
-    <string name="prefSummary_enableNetworkBypass">Disable if you are having problems on VPN</string>
-    <string name="prefTitle_mobileDataSaver">Mobile data saver</string>
-    <string name="prefSummary_mobileDataSaver">Stops new artworks from being downloaded</string>
-    <string name="prefCat_appSettings">App settings</string>
+    <string name="prefTitle_nightModePreference">夜间模式偏好</string>
+    <string name="prefSummary_enableNetworkBypass">如果您在 VPN 上遇到问题请禁用</string>
+    <string name="prefTitle_mobileDataSaver">移动数据省流</string>
+    <string name="prefSummary_mobileDataSaver">停止下载新作品</string>
+    <string name="prefCat_appSettings">应用设置</string>
 </resources>
