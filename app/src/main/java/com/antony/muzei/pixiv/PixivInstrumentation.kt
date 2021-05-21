@@ -118,13 +118,12 @@ class PixivInstrumentation {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
         return doFetchPixivToken(
             context,
-            prefs.getString(PREFERENCE_PIXIV_REFRESH_TOKEN, ""),
-            prefs.getBoolean("pref_enableNetworkBypass", false)
+            prefs.getString(PREFERENCE_PIXIV_REFRESH_TOKEN, "")
         ) ?: ""
     }
 
     @Throws(AccessTokenAcquisitionException::class)
-    private fun doFetchPixivToken(context: Context, refreshToken: String?, bypassActive: Boolean = false) =
+    private fun doFetchPixivToken(context: Context, refreshToken: String?) =
         mutableMapOf(
             "get_secure_url" to 1.toString(),
             "client_id" to BuildConfig.PIXIV_CLIENT_ID,
