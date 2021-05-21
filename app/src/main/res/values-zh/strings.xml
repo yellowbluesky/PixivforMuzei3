@@ -75,7 +75,7 @@
 
     <string name="pref_aspectRatioDefault_entryValues">0</string>
     <string name="pref_authFailActionDropDown">验证失败后措施</string>
-    <string name="pref_enableNetworkBypass">绕过网络过滤</string><!--指绕过大陆封锁所用技术，参见 https://gulut.github.io/gulut-blog/post1/2020/05/31/2020-05-31-by-pass-the-gfw-by-sni-->
+    <string name="prefTitle_enableNetworkBypass">绕过网络过滤</string><!--指绕过大陆封锁所用技术，参见 https://gulut.github.io/gulut-blog/post1/2020/05/31/2020-05-31-by-pass-the-gfw-by-sni-->
     <string name="pref_updateMode">更新模式</string>
     <string name="pref_updateMode_default">daily_rank</string>
 
@@ -87,10 +87,7 @@
     <string name="tab_heading_credits">贡献者</string>
     <string name="tab_heading_main">基本设置</string>
     <string name="tab_heading_roadmap">路线图</string><!--专有-->
-    
-    
-    
-    
+
 
     <string name="toast_addingToBookmarks">Pixiv for Muzei 3: 添加到收藏夹</string>
     <string name="toast_authFailed">验证失败，请检查您的用户名或密码</string>
@@ -104,8 +101,13 @@
     <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
     <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
-    
+
     <string name="login_pixiv_refresh_hint">刷新令牌</string>
     <string name="action_sign_in_refresh">刷新令牌以登录</string><!--Refresh Token 用作刷新 Access Token，为 OAuth 中一项术语，此处翻译不确定-->
     <string name="dialog_logoutConfirm">您确定要登出吗？</string>
+    <string name="prefTitle_nightModePreference">Night mode preference</string>
+    <string name="prefSummary_enableNetworkBypass">Disable if you are having problems on VPN</string>
+    <string name="prefTitle_mobileDataSaver">Mobile data saver</string>
+    <string name="prefSummary_mobileDataSaver">Stops new artworks from being downloaded</string>
+    <string name="prefCat_appSettings">App settings</string>
 </resources>

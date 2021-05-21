@@ -107,20 +107,20 @@
     </PreferenceCategory>
     <PreferenceCategory
         android:key="prefCat_appSettings"
-        android:title="App settings">
+        android:title="@string/prefCat_appSettings">
         <ListPreference
             android:persistent="true"
             app:defaultValue="MODE_NIGHT_FOLLOW_SYSTEM"
             app:entries="@array/dark_mode_entries"
             app:entryValues="@array/dark_mode_values"
             app:key="pref_nightMode"
-            app:title="Night mode preference"
+            app:title="@string/prefTitle_nightModePreference"
             app:useSimpleSummaryProvider="true" />
         <SwitchPreference
             android:key="pref_dataMode"
             android:persistent="true"
-            android:summary="Stops new artworks from being downloaded"
-            android:title="Mobile data saver" />
+            android:summary="@string/prefSummary_mobileDataSaver"
+            android:title="@string/prefTitle_mobileDataSaver" />
     </PreferenceCategory>
     <!--    <PreferenceCategory-->
     <!--        android:key="prefCat_networkOptions"-->
@@ -128,7 +128,7 @@
     <SwitchPreference
         android:key="pref_enableNetworkBypass"
         android:persistent="true"
-        android:summary="Disable if you are having problems on VPN"
-        android:title="@string/pref_enableNetworkBypass" />
+        android:summary="@string/prefSummary_enableNetworkBypass"
+        android:title="@string/prefTitle_enableNetworkBypass" />
     <!--    </PreferenceCategory>-->
 </PreferenceScreen>
