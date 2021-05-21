@@ -125,9 +125,10 @@
     <!--    <PreferenceCategory-->
     <!--        android:key="prefCat_networkOptions"-->
     <!--        android:title="@string/prefCat_networkingOptions">-->
-    <!--        <SwitchPreference-->
-    <!--            android:key="pref_enableNetworkBypass"-->
-    <!--            android:persistent="true"-->
-    <!--            android:title="@string/pref_enableNetworkBypass" />-->
+    <SwitchPreference
+        android:key="pref_enableNetworkBypass"
+        android:persistent="true"
+        android:summary="Disable if you are having problems on VPN"
+        android:title="@string/pref_enableNetworkBypass" />
     <!--    </PreferenceCategory>-->
 </PreferenceScreen>
