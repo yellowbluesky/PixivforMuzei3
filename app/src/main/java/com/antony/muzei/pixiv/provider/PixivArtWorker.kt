@@ -60,15 +60,17 @@ import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.ResponseBody
+import okhttp3.*
+import okio.BufferedSink
+import okio.Okio
+import okio.buffer
+import okio.sink
 import retrofit2.Call
 import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
+
 
 class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
@@ -234,6 +236,60 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         return fileType
     }
 
+    private fun downloadImage(responseBody: ResponseBody?, filename: String) {
+        val fileType = responseBody!!.contentType()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            downloadImageApi10(responseBody, filename, fileType, false)
+        } else {
+            downloadImageApi9(responseBody, filename, fileType, false)
+        }
+
+    }
+
+    // TODO stub
+    private fun downloadImageApi10(
+        responseBody: ResponseBody?,
+        filename: String,
+        fileType: MediaType?,
+        storeInExtStorage: Boolean
+    ) {
+
+    }
+
+    // TODO stub
+    private fun downloadImageApi9(
+        responseBody: ResponseBody?,
+        filename: String,
+        fileType: MediaType?,
+        storeInExtStorage: Boolean
+    ): Uri {
+        val image: File
+        if (storeInExtStorage) {
+            val directory = File("/storage/emulated/0/Pictures/PixivForMuzei3/")
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+
+            // If the image has already been downloaded, do not redownload
+            image = File(directory, "$filename.${fileType!!.subtype}")
+            if (image.exists()) {
+                applicationContext.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(image)))
+
+                val sink: BufferedSink = image.sink().buffer()
+                sink.writeAll(responseBody!!.source())
+                sink.close()
+            }
+        } else {
+            // If user has not checked the option to "Store into external storage"
+            image = File(applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.${fileType!!.subtype}")
+            val sink: BufferedSink = image.sink().buffer()
+            sink.writeAll(responseBody!!.source())
+            sink.close()
+        }
+        return Uri.fromFile(image)
+    }
+
     /*
         First downloads the file to ExternalFilesDir, always with a png file extension
         Checks if the file is incomplete; if incomplete deletes it and passes a CorruptFileException
@@ -251,6 +307,9 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         Log.i(LOG_TAG, "Downloading file")
         val context = applicationContext
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+
+        Log.d("SIZE", responseBody!!.contentLength().toString())
+        Log.d("SIZE", responseBody.contentType().toString())
 
         // If the user has desired to store artworks into external storage
         if (sharedPrefs.getBoolean("pref_storeInExtStorage", false) &&
@@ -362,24 +421,12 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         }
 
         // If user has not checked the option to "Store into external storage"
-        val imageInternal = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.png")
-        val fosInternal = FileOutputStream(imageInternal)
-        val inputStreamNetwork = responseBody!!.byteStream()
-        val bufferTemp = ByteArray(1024 * 1024 * 10)
-        var readTemp: Int
-        while (inputStreamNetwork.read(bufferTemp).also { readTemp = it } != -1) {
-            fosInternal.write(bufferTemp, 0, readTemp)
-        }
-        inputStreamNetwork.close()
-        fosInternal.close()
-        responseBody.close()
+        val image = File(applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.${responseBody.contentType()!!.subtype}")
+        val sink: BufferedSink = image.sink().buffer()
+        sink.writeAll(responseBody!!.source())
+        sink.close()
 
-        // only available android 10+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && sharedPrefs.getBoolean("pref_autoCrop", false)) {
-            cropBlankSpaceFromImage(imageInternal)
-        }
-
-        return Uri.fromFile(imageInternal)
+        return Uri.fromFile(image)
 
 
         // TODO make this an enum
@@ -767,6 +814,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
                         .build()
                     chain.proceed(request)
                 })
+                //.addInterceptor(NetworkTrafficLogInterceptor())
                 .build()
             imageDataResponse = imageHttpClient.newCall(request).execute().body
         } else {
