@@ -62,7 +62,6 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import okhttp3.*
 import okio.BufferedSink
-import okio.Okio
 import okio.buffer
 import okio.sink
 import retrofit2.Call
@@ -278,13 +277,18 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
 
                 val sink: BufferedSink = image.sink().buffer()
                 sink.writeAll(responseBody!!.source())
+                responseBody.close()
                 sink.close()
             }
         } else {
             // If user has not checked the option to "Store into external storage"
-            image = File(applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.${fileType!!.subtype}")
+            image = File(
+                applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                "$filename.${fileType!!.subtype}"
+            )
             val sink: BufferedSink = image.sink().buffer()
             sink.writeAll(responseBody!!.source())
+            responseBody.close()
             sink.close()
         }
         return Uri.fromFile(image)
@@ -421,9 +425,13 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         }
 
         // If user has not checked the option to "Store into external storage"
-        val image = File(applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.${responseBody.contentType()!!.subtype}")
+        val image = File(
+            applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+            "$filename.${responseBody.contentType()!!.subtype}"
+        )
         val sink: BufferedSink = image.sink().buffer()
-        sink.writeAll(responseBody!!.source())
+        sink.writeAll(responseBody.source())
+        responseBody.close()
         sink.close()
 
         return Uri.fromFile(image)
