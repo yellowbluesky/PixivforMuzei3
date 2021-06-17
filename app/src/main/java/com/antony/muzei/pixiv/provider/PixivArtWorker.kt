@@ -235,10 +235,10 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         return fileType
     }
 
-    private fun downloadImage(responseBody: ResponseBody?, filename: String) {
+    private fun downloadFile(responseBody: ResponseBody?, filename: String): Uri {
         val fileType = responseBody!!.contentType()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             downloadImageApi10(responseBody, filename, fileType, false)
         } else {
             downloadImageApi9(responseBody, filename, fileType, false)
@@ -247,13 +247,76 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
     }
 
     // TODO stub
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun downloadImageApi10(
         responseBody: ResponseBody?,
         filename: String,
         fileType: MediaType?,
         storeInExtStorage: Boolean
-    ) {
+    ): Uri {
+        if (storeInExtStorage) {
+            val contentResolver = applicationContext.contentResolver
+            val contentValues = ContentValues()
 
+            // Check if existing copy of file exists
+            val projection = arrayOf(MediaStore.Images.Media._ID)
+            val selection = "title = ?"
+            //String selection = {MediaStore.Images.Media.DISPLAY_NAME + " = ? AND ", MediaStore.Images.Media.RELATIVE_PATH + " = ?"};
+            val selectionArgs = arrayOf(filename)
+            val cursor = contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )
+            if (cursor!!.count != 0) {
+                // TODO throw an exception
+            }
+            contentValues.apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PixivForMuzei3")
+            }
+            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, fileType.toString())
+
+            // Phone external storage is always "external_primary"
+            // If user has selected artwork to be stored on SD Card external storage, then we fetch a list of
+            // all mounted storages, and then select teh one which isn't "external_primary"
+            // I had assumed that external_primary was always in position 0, but a user report indicated
+            // that external;_primary was in position 1 for them
+            var volumeName: String = ""
+            if (PreferenceManager.getDefaultSharedPreferences(applicationContext)
+                    .getString("pref_selectWhichExtStorage", "phone").equals("phone")
+            ) {
+                volumeName = MediaStore.VOLUME_EXTERNAL_PRIMARY
+            } else {
+                val stringSet = MediaStore.getExternalVolumeNames(applicationContext)
+                for (s: String in stringSet) {
+                    if (s != MediaStore.VOLUME_EXTERNAL_PRIMARY) {
+                        volumeName = s
+                    }
+                }
+            }
+
+            // Gives us a URI to save the image to
+            val imageUri = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)!!
+            val image = File(imageUri.path!!)
+            val sink: BufferedSink = image.sink().buffer()
+            sink.writeAll(responseBody!!.source())
+            responseBody.close()
+            sink.close()
+            return imageUri
+        } else {
+            val image = File(
+                applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                "$filename.${fileType!!.subtype}"
+            )
+            val sink: BufferedSink = image.sink().buffer()
+            sink.writeAll(responseBody!!.source())
+            responseBody.close()
+            sink.close()
+            return Uri.fromFile(image)
+        }
     }
 
     // TODO stub
@@ -272,13 +335,8 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
 
             // If the image has already been downloaded, do not redownload
             image = File(directory, "$filename.${fileType!!.subtype}")
-            if (image.exists()) {
+            if (!image.exists()) {
                 applicationContext.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(image)))
-
-                val sink: BufferedSink = image.sink().buffer()
-                sink.writeAll(responseBody!!.source())
-                responseBody.close()
-                sink.close()
             }
         } else {
             // If user has not checked the option to "Store into external storage"
@@ -286,11 +344,11 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
                 applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
                 "$filename.${fileType!!.subtype}"
             )
-            val sink: BufferedSink = image.sink().buffer()
-            sink.writeAll(responseBody!!.source())
-            responseBody.close()
-            sink.close()
         }
+        val sink: BufferedSink = image.sink().buffer()
+        sink.writeAll(responseBody!!.source())
+        responseBody.close()
+        sink.close()
         return Uri.fromFile(image)
     }
 
@@ -304,7 +362,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         The external storage copy also has correct file extensions
      */
     @Throws(IOException::class, CorruptFileException::class)
-    private fun downloadFile(
+    private fun downloadFile2(
         responseBody: ResponseBody?,
         filename: String
     ): Uri {
