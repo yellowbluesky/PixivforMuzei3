@@ -23,7 +23,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 object RestClient {
-    private val okHttpClientAuthBuilder = OkHttpSingleton.getInstance().newBuilder()
+    private val okHttpClientAuthBuilder get() = OkHttpSingleton.getInstance().newBuilder()
         .apply {
             addNetworkInterceptor(PixivAuthHeaderInterceptor())
             //addInterceptor(CustomClientHeaderInterceptor())

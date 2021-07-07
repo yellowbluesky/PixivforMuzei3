@@ -29,6 +29,8 @@ import androidx.preference.*
 import androidx.work.*
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.ClearCacheWorker
+import com.antony.muzei.pixiv.provider.PixivArtWorker
+import com.antony.muzei.pixiv.provider.network.OkHttpSingleton
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -172,6 +174,15 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
+        val enableNetworkPassbyCheckbox = findPreference<SwitchPreference>("pref_enableNetworkBypass")!!
+        enableNetworkPassbyCheckbox.setOnPreferenceChangeListener { _, _ ->
+
+            OkHttpSingleton.refreshInstance() // Renew a instance with sslSocketFactory by this
+
+            PixivArtWorker.enqueueLoad(false, context)
+
+            true
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             preferenceScreen = findPreference(resources.getString(R.string.preferenceScreen))
             val prefCatPostProcess = findPreference<PreferenceCategory>("prefCat_postProcess")

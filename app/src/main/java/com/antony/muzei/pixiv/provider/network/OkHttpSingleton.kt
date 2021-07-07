@@ -1,6 +1,7 @@
 package com.antony.muzei.pixiv.provider.network
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzei
@@ -10,6 +11,7 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 
 object OkHttpSingleton {
+    private const val LOG_TAG = "OkHttpSingleton"
     private val x509TrustManager: X509TrustManager = object : X509TrustManager {
         @SuppressLint("TrustAllX509TrustManager")
         override fun checkClientTrusted(x509Certificates: Array<X509Certificate>, s: String) {
@@ -40,7 +42,9 @@ object OkHttpSingleton {
                 .retryOnConnectionFailure(true)
                 .apply {
                     val prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context?.applicationContext)
-                    if (prefs.getBoolean("pref_enableNetworkBypass", false)) {
+                    val enableNetworkBypass = prefs.getBoolean("pref_enableNetworkBypass", false)
+                    Log.d(LOG_TAG,"network bypass was $enableNetworkBypass")
+                    if (enableNetworkBypass) {
                         sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
                         dns(RubyHttpDns.getInstance())
                     }
@@ -50,5 +54,11 @@ object OkHttpSingleton {
                 .build()
         }
         return instance as OkHttpClient
+    }
+
+    fun refreshInstance(){
+        // Through set it to null, the OkHttpClient will be create again and apply with new preference when `getInstance` was invoked.
+        instance = null
+        Log.d(LOG_TAG,"set OkHttp instance to null")
     }
 }
