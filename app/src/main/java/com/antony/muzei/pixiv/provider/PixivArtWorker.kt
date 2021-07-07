@@ -79,6 +79,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         private var clearArtwork = false
 
         fun enqueueLoad(clear: Boolean, context: Context?) {
+            Log.d(LOG_TAG,"Enqueued load")
             if (clear) {
                 clearArtwork = true
             }
