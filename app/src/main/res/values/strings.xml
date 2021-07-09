@@ -114,6 +114,6 @@
     <string name="prefSummary_mobileDataSaver">Stops new artworks from being downloaded</string>
     <string name="prefCat_appSettings">App settings</string>
     <string name="prefSummary_enableNetworkBypass">Disable if you are having problems on VPN</string>
-    <string name="prefSummary_usePixivCat">Speed up image download in some areas</string>
+    <string name="prefSummary_usePixivCat">May speed up image downloads in some areas</string>
 
 </resources>
