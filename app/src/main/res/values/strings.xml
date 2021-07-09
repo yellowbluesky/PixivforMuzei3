@@ -76,6 +76,7 @@
     <string name="pref_aspectRatioDefault_entryValues">0</string>
     <string name="pref_authFailActionDropDown">Authentication failure action</string>
     <string name="prefTitle_enableNetworkBypass">Enable network filter bypass</string>
+    <string name="prefTitle_usePixivCat">Use pixiv.cat reverse proxy for image downloads</string>
     <string name="pref_updateMode">Update mode</string>
     <string name="pref_updateMode_default">daily_rank</string>
 
@@ -113,4 +114,6 @@
     <string name="prefSummary_mobileDataSaver">Stops new artworks from being downloaded</string>
     <string name="prefCat_appSettings">App settings</string>
     <string name="prefSummary_enableNetworkBypass">Disable if you are having problems on VPN</string>
+    <string name="prefSummary_usePixivCat">May speed up image downloads in some areas</string>
+
 </resources>
