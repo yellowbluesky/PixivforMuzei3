@@ -61,6 +61,13 @@
             android:data="https://github.com/james58899" />
     </Preference>
     <Preference
+        android:summary="Quality and stability improvements"
+        android:title="mslxl">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/mslxl" />
+    </Preference>
+    <Preference
         android:summary="GFW Bypass"
         android:title="CeuiLiSA">
         <intent
