@@ -1,8 +1,13 @@
 package com.antony.muzei.pixiv.util;
 
 
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.text.TextUtils;
+
+import androidx.preference.PreferenceManager;
+
+import com.antony.muzei.pixiv.PixivMuzei;
 
 import java.util.Random;
 
@@ -76,7 +81,14 @@ public class HostManager {
     }
 
     public String replaceUrl(String before) {
+        // See https://pixiv.cat/reverseproxy.html
+        // Its ISP is Cloudflare
         boolean usePixivCatProxy = false;
+        if(PixivMuzei.Companion.getContext() != null){
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.Companion.getContext().getApplicationContext());
+            usePixivCatProxy = prefs.getBoolean("pref_usePixivCat",false);
+        }
+
         if (usePixivCatProxy) {
             return before.replace(HOST_OLD, HOST_NEW);
         } else {

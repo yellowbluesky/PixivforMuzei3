@@ -130,5 +130,10 @@
         android:persistent="true"
         android:summary="@string/prefSummary_enableNetworkBypass"
         android:title="@string/prefTitle_enableNetworkBypass" />
+    <SwitchPreference
+        android:key="pref_usePixivCat"
+        android:persistent="true"
+        android:summary="@string/prefSummary_usePixivCat"
+        android:title="@string/prefTitle_usePixivCat" />
     <!--    </PreferenceCategory>-->
 </PreferenceScreen>
