@@ -252,7 +252,6 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         }
     }
 
-    // TODO stub
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun downloadImageExternalApi10(
         responseBody: ResponseBody?,
@@ -329,17 +328,20 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
             contentValues
         )!!
 
-        // Okio.buffer() is deprecated
-        val image = File(imageUri.path!!)
-        val sink: BufferedSink = image.sink().buffer()
-        sink.writeAll(responseBody!!.source())
-        responseBody.close()
-        sink.close()
-        return imageUri
+        // not optimal code
+        val fis = responseBody!!.byteStream()
+        val fosExternal: OutputStream? = contentResolver.openOutputStream(imageUri)
+        val buffer = ByteArray(1024 * 1024 * 10)
+        var lengthInternal: Int
+        while (fis.read(buffer).also { lengthInternal = it } > 0) {
+            fosExternal!!.write(buffer, 0, lengthInternal)
+        }
+        fosExternal!!.close()
+        fis.close()
 
+        return imageUri
     }
 
-    // TODO stub
     private fun downloadImageExternalApi9(
         responseBody: ResponseBody?,
         filename: String,
@@ -359,6 +361,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
                     Uri.fromFile(image)
                 )
             )
+        } else {
             return Uri.fromFile(image)
         }
 
@@ -595,7 +598,11 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
 
         // Actually downloading the selected artwork
         val remoteFileExtension = getRemoteFileExtension(rankingArtwork.url)
-        val localUri = downloadFile(remoteFileExtension, token, false)
+        val localUri = downloadFile(
+            remoteFileExtension,
+            token,
+            sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+        )
 
 //        val fileSizeLimit = sharedPrefs.getInt("prefSlider_maxFileSize", 0)
 //        // 1024 scalar to convert MB to byte
@@ -798,7 +805,11 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
             imageDataResponse = call.execute().body()
         }
 
-        val localUri = downloadFile(imageDataResponse, token, false)
+        val localUri = downloadFile(
+            imageDataResponse,
+            token,
+            sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+        )
 //        val fileSizeLimitMegabytes = sharedPrefs.getInt("prefSlider_maxFileSize", 0)
 //        // 1024 scalar to convert from MB to bytes
 //        if (fileSizeLimitMegabytes != 0 && isImageTooLarge(imageDataResponse!!.contentLength(), fileSizeLimitMegabytes * 1048576.toLong()))
