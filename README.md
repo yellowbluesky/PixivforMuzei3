@@ -2,9 +2,6 @@ NOTE: This project is more or less in maintenance mode after I get out the final
 
 Still continue to suggest features, if they're interesting I will take it on 😊
 
-NOTE: There is an issue logging into Pixiv with third party apps. If you are logged in, DO NOT log out or you will not be able to log back in.
-
-
 Pixiv for Muzei 3
 ===
 
