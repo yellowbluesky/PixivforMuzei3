@@ -302,21 +302,21 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
             put(MediaStore.MediaColumns.MIME_TYPE, fileType.toString())
         }
 
-        // Phone external storage is always "external_primary"
-        // If user has selected artwork to be stored on SD Card external storage, then we fetch a list of
-        // all mounted storages, and then select teh one which isn't "external_primary"
-        // I had assumed that external_primary was always in position 0, but a user report indicated
-        // that external;_primary was in position 1 for them
-        var volumeName: String = ""
-        if (PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        // Default option is VOLUME_EXTERNAL_PRIMARY
+        // If user has selected the option to store onto SD card, first we check if there is more than one storage mounted
+        // Handles the case when SD card is selected but is then unmounted
+        // Then, iterate through the array of mounted storages until we find one that is not VOLUME_EXTERNAL_PRIMARY
+        // The manual iterating is required as I received a user report where VOLUME_EXTERNAL_PRIMARY was not the first entry
+        var volumeName = MediaStore.VOLUME_EXTERNAL_PRIMARY
+        if (!PreferenceManager.getDefaultSharedPreferences(applicationContext)
                 .getString("pref_selectWhichExtStorage", "phone").equals("phone")
         ) {
-            volumeName = MediaStore.VOLUME_EXTERNAL_PRIMARY
-        } else {
             val stringSet = MediaStore.getExternalVolumeNames(applicationContext)
-            for (s: String in stringSet) {
-                if (s != MediaStore.VOLUME_EXTERNAL_PRIMARY) {
-                    volumeName = s
+            if (stringSet.size != 1) {
+                for (s: String in stringSet) {
+                    if (s != MediaStore.VOLUME_EXTERNAL_PRIMARY) {
+                        volumeName = s
+                    }
                 }
             }
         }
