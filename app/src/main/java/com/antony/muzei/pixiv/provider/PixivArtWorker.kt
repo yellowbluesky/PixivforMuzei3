@@ -192,6 +192,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         return null
     }
 
+    // TODO this function of checking for file type is no longer required, but the corrupt file check is still useful
     /*
         PixivforMuzei3 often downloads an incomplete image, i.e. the lower section of images is not
         downloaded, the file header is intact but file closer is not present.
@@ -236,7 +237,8 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         return fileType
     }
 
-    private fun downloadFile(
+    // Function that determines what downloadImage function gets called depending on user settings and API level
+    private fun downloadImage(
         responseBody: ResponseBody?,
         filename: String,
         storeInExtStorage: Boolean
@@ -246,19 +248,21 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         return if (!storeInExtStorage) {
             downloadImageInternal(responseBody, filename, fileType)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            downloadImageExternalApi10(responseBody, filename, fileType)
+            downloadImageExternalApi29(responseBody, filename, fileType)
         } else {
-            downloadImageExternalApi9(responseBody, filename, fileType)
+            downloadImageExternalApi28(responseBody, filename, fileType)
         }
     }
 
+    // Function to download images to external storage
+    // External storage in this case refers to /storage/emulated/0/Pictures/PixivForMuzei3
+    // Option is also there to store onto an SD card if present
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun downloadImageExternalApi10(
+    private fun downloadImageExternalApi29(
         responseBody: ResponseBody?,
         filename: String,
         fileType: MediaType?,
     ): Uri {
-        /* This branch taken if storeInExtStorage was chosen by user */
         val contentResolver = applicationContext.contentResolver
         val contentValues = ContentValues()
 
@@ -328,7 +332,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
             contentValues
         )!!
 
-        // not optimal code
+        // The other method using BufferedSink doesn't work all we have is a URI to sink into
         val fis = responseBody!!.byteStream()
         val fosExternal: OutputStream? = contentResolver.openOutputStream(imageUri)
         val buffer = ByteArray(1024 * 1024 * 10)
@@ -342,7 +346,9 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         return imageUri
     }
 
-    private fun downloadImageExternalApi9(
+    // Function to download images to "external storage"
+    // External storage is described at the path below
+    private fun downloadImageExternalApi28(
         responseBody: ResponseBody?,
         filename: String,
         fileType: MediaType?,
@@ -352,9 +358,10 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
             directory.mkdirs()
         }
 
-        // If the image has already been downloaded, do not redownload
         val image = File(directory, "$filename.${fileType!!.subtype}")
         if (!image.exists()) {
+            // Broadcast the addition of a new media file
+            // Solves problem where the images were not showing up in their gallery up until a scan was triggered
             applicationContext.sendBroadcast(
                 Intent(
                     Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
@@ -362,6 +369,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
                 )
             )
         } else {
+            // If the image has already been downloaded, do not redownload
             return Uri.fromFile(image)
         }
 
@@ -372,12 +380,13 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         return Uri.fromFile(image)
     }
 
+    // Function used to download images to internal storage
+    // Internal storage in this case is /storage/emulated/0/Android/data/com.antony.muzei.pixiv/files
     private fun downloadImageInternal(
         responseBody: ResponseBody?,
         filename: String,
         fileType: MediaType?,
     ): Uri {
-
         val image = File(
             applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
             "$filename.${fileType!!.subtype}"
@@ -598,7 +607,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
 
         // Actually downloading the selected artwork
         val remoteFileExtension = getRemoteFileExtension(rankingArtwork.url)
-        val localUri = downloadFile(
+        val localUri = downloadImage(
             remoteFileExtension,
             token,
             sharedPrefs.getBoolean("pref_storeInExtStorage", false)
@@ -805,7 +814,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
             imageDataResponse = call.execute().body()
         }
 
-        val localUri = downloadFile(
+        val localUri = downloadImage(
             imageDataResponse,
             token,
             sharedPrefs.getBoolean("pref_storeInExtStorage", false)
