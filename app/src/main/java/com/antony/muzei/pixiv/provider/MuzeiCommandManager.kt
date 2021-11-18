@@ -18,11 +18,13 @@
 package com.antony.muzei.pixiv.provider
 
 import android.app.PendingIntent
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import androidx.core.app.RemoteActionCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.IconCompat
@@ -93,6 +95,7 @@ class MuzeiCommandManager {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
         val storeInExtStorage = sharedPrefs.getBoolean("pref_storeInExtStorage", false)
 
+        val artworkUri: Uri
         if (!storeInExtStorage) {
             // Figuring out the right file extension
             val artworkJpeg = File(
@@ -110,46 +113,71 @@ class MuzeiCommandManager {
                 artworkPng
             }
 
-            return Intent().apply {
-                action = Intent.ACTION_SEND
-                type = "image/*"
-                putExtra(
-                    Intent.EXTRA_STREAM,
-                    FileProvider.getUriForFile(
-                        context,
-                        "${BuildConfig.APPLICATION_ID}.fileprovider",
-                        artworkFile
-                    )
-                )
-            }.let { shareIntent ->
-                IntentUtils.chooseIntent(
-                    shareIntent,
-                    context.getString(R.string.command_shareImage),
-                    context
-                )
-                    .apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-            }.let { chooseIntent ->
-                PendingIntent.getActivity(
-                    context,
-                    artwork.id.toInt(),
-                    chooseIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-                )
-            }.let { pendingIntent ->
-                val title = context.getString(R.string.command_shareImage)
-                RemoteActionCompat(
-                    IconCompat.createWithResource(context, R.drawable.ic_baseline_share_24),
-                    title,
-                    title,
-                    pendingIntent
-                )
-            }
+            artworkUri = FileProvider.getUriForFile(
+                context,
+                "${BuildConfig.APPLICATION_ID}.fileprovider",
+                artworkFile
+            )
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return null
+            val projection = arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DISPLAY_NAME
+            )
+            // For some reason DISPLAY_NAME includes the file extension
+            val selection =
+                "${MediaStore.Images.Media.DISPLAY_NAME} = ? OR ${MediaStore.Images.Media.DISPLAY_NAME} = ?"
+            val selectionArgs = arrayOf(artwork.token + ".jpg", artwork.token + ".png")
+
+            val cursor = context.contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )
+
+            cursor!!.moveToFirst()
+            artworkUri = ContentUris.withAppendedId(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID))
+                    .toLong()
+            )
+            cursor.close()
         } else {
             return null
+        }
+
+        return Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "image/*"
+            putExtra(
+                Intent.EXTRA_STREAM,
+                artworkUri
+            )
+        }.let { shareIntent ->
+            IntentUtils.chooseIntent(
+                shareIntent,
+                context.getString(R.string.command_shareImage),
+                context
+            )
+                .apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+        }.let { chooseIntent ->
+            PendingIntent.getActivity(
+                context,
+                artwork.id.toInt(),
+                chooseIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }.let { pendingIntent ->
+            val title = context.getString(R.string.command_shareImage)
+            RemoteActionCompat(
+                IconCompat.createWithResource(context, R.drawable.ic_baseline_share_24),
+                title,
+                title,
+                pendingIntent
+            )
         }
     }
 
