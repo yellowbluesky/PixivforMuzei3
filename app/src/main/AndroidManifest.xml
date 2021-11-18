@@ -26,6 +26,7 @@
 
         <activity
             android:name=".settings.MainActivity"
+            android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -84,6 +85,7 @@
 
         <service
             android:name=".provider.DeleteArtworkTileService"
+            android:exported="true"
             android:icon="@drawable/ic_delete_white_24dp"
             android:label="@string/tile_delete_artwork"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
