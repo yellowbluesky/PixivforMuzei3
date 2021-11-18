@@ -289,7 +289,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
             Log.v(LOG_TAG, "downloadImageAPI10: Duplicate found")
             val imageUri = ContentUris.withAppendedId(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                cursor.getInt(cursor.getColumnIndex(MediaStore.Images.ImageColumns._ID))
+                cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID))
                     .toLong()
             )
             cursor.close()

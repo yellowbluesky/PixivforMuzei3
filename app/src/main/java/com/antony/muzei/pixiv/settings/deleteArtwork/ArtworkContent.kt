@@ -36,9 +36,9 @@ object ArtworkContent {
         val cursor = context.contentResolver.query(conResUri, projection, null, null, null)
         if (cursor != null) {
             while (cursor.moveToNext()) {
-                val token = cursor.getString(cursor.getColumnIndex(TOKEN))
-                val title = cursor.getString(cursor.getColumnIndex(TITLE))
-                val persistentUri = Uri.parse(cursor.getString(cursor.getColumnIndex(PERSISTENT_URI)))
+                val token = cursor.getString(cursor.getColumnIndexOrThrow(TOKEN))
+                val title = cursor.getString(cursor.getColumnIndexOrThrow(TITLE))
+                val persistentUri = Uri.parse(cursor.getString(cursor.getColumnIndexOrThrow(PERSISTENT_URI)))
                 val artworkItem = ArtworkItem(token, title, persistentUri)
                 ITEMS.add(artworkItem)
             }

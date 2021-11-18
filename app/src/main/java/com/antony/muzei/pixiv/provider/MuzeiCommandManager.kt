@@ -138,7 +138,7 @@ class MuzeiCommandManager {
             cursor!!.moveToFirst()
             artworkUri = ContentUris.withAppendedId(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID))
+                cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
                     .toLong()
             )
             cursor.close()
