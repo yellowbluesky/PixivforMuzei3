@@ -144,7 +144,21 @@ class MuzeiCommandManager {
             )
             cursor.close()
         } else {
-            return null
+            val artworkJpeg = File(
+                "/storage/emulated/0/Pictures/PixivForMuzei3/",
+                "${artwork.token}.jpeg"
+            )
+            val artworkPng = File(
+                "/storage/emulated/0/Pictures/PixivForMuzei3/",
+                "${artwork.token}.png"
+            )
+            val artworkFile = if (artworkJpeg.exists()) {
+                artworkJpeg
+            } else {
+                artworkPng
+            }
+
+            artworkUri = Uri.fromFile(artworkFile)
         }
 
         return Intent().apply {
