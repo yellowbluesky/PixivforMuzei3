@@ -29,7 +29,6 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
-import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.apps.muzei.api.UserCommand
@@ -55,11 +54,11 @@ class MuzeiCommandManager {
     fun provideActions(context: Context, artwork: Artwork): List<RemoteActionCompat> {
         val list = mutableListOf<RemoteActionCompat>().apply {
             obtainActionShareImage(context, artwork)
-                    ?.also { add(it) }
+                ?.also { add(it) }
             obtainActionViewArtworkDetails(context, artwork)
-                    ?.also { add(it) }
+                ?.also { add(it) }
             obtainActionDeleteArtwork(context, artwork)
-                    ?.also { add(it) }
+                ?.also { add(it) }
         }
 
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -75,97 +74,150 @@ class MuzeiCommandManager {
             return emptyList()
         }
         return mutableListOf(
-                UserCommand(
-                        COMMAND_VIEW_IMAGE_DETAILS,
-                        context.getString(R.string.command_viewArtworkDetails)
-                ),
-                UserCommand(
-                        COMMAND_SHARE_IMAGE,
-                        context.getString(R.string.command_shareImage)
-                ),
-                UserCommand(
-                        COMMAND_ADD_TO_BOOKMARKS,
-                        context.getString(R.string.command_addToBookmark)
-                )
+            UserCommand(
+                COMMAND_VIEW_IMAGE_DETAILS,
+                context.getString(R.string.command_viewArtworkDetails)
+            ),
+            UserCommand(
+                COMMAND_SHARE_IMAGE,
+                context.getString(R.string.command_shareImage)
+            ),
+            UserCommand(
+                COMMAND_ADD_TO_BOOKMARKS,
+                context.getString(R.string.command_addToBookmark)
+            )
         )
     }
 
-    private fun obtainActionShareImage(context: Context, artwork: Artwork): RemoteActionCompat? =
-            Intent(Intent.ACTION_SEND).apply {
+    private fun obtainActionShareImage(context: Context, artwork: Artwork): RemoteActionCompat? {
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val storeInExtStorage = sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+
+        if (!storeInExtStorage) {
+            // Figuring out the right file extension
+            val artworkJpeg = File(
+                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                "${artwork.token}.jpeg"
+            )
+            val artworkPng = File(
+                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                "${artwork.token}.png"
+            )
+
+            val artworkFile = if (artworkJpeg.exists()) {
+                artworkJpeg
+            } else {
+                artworkPng
+            }
+
+            return Intent().apply {
+                action = Intent.ACTION_SEND
                 type = "image/*"
-                File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${artwork.token}.png").let { f ->
-                    FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", f)
-                }.also { uri ->
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                }
-            }.let { intent ->
-                IntentUtils.chooseIntent(intent, PixivProviderConst.SHARE_IMAGE_INTENT_CHOOSER_TITLE, context)
-            }.let { actualIntent ->
-                PendingIntent.getActivity(context, artwork.id.toInt(), actualIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                putExtra(
+                    Intent.EXTRA_STREAM,
+                    FileProvider.getUriForFile(
+                        context,
+                        "${BuildConfig.APPLICATION_ID}.fileprovider",
+                        artworkFile
+                    )
+                )
+            }.let { chooseIntent ->
+                IntentUtils.chooseIntent(
+                    chooseIntent,
+                    context.getString(R.string.command_shareImage),
+                    context
+                )
+                    .apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+            }.let { shareIntent ->
+                PendingIntent.getActivity(
+                    context,
+                    artwork.id.toInt(),
+                    shareIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                )
             }.let { pendingIntent ->
                 val title = context.getString(R.string.command_shareImage)
                 RemoteActionCompat(
-                        IconCompat.createWithResource(context, R.drawable.ic_baseline_share_24),
-                        title,
-                        title,
-                        pendingIntent
+                    IconCompat.createWithResource(context, R.drawable.ic_baseline_share_24),
+                    title,
+                    title,
+                    pendingIntent
                 )
             }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return null
+        } else {
+            return null
+        }
+    }
 
-    private fun obtainActionViewArtworkDetails(context: Context, artwork: Artwork): RemoteActionCompat? =
-            artwork.token?.takeIf { it.isNotEmpty() }?.let { token ->
-                Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$token")
-                )
-            }?.let { intent ->
-                PendingIntent.getActivity(context, artwork.id.toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT)
-            }?.let { pendingIntent ->
-                val title = context.getString(R.string.command_viewArtworkDetails)
-                RemoteActionCompat(
-                        IconCompat.createWithResource(context, R.drawable.muzei_launch_command),
-                        title,
-                        title,
-                        pendingIntent
-                ).apply {
-                    setShouldShowIcon(false)
-                }
+    private fun obtainActionViewArtworkDetails(
+        context: Context,
+        artwork: Artwork
+    ): RemoteActionCompat? =
+        artwork.token?.takeIf { it.isNotEmpty() }?.let { token ->
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$token")
+            )
+        }?.let { intent ->
+            PendingIntent.getActivity(
+                context,
+                artwork.id.toInt(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }?.let { pendingIntent ->
+            val title = context.getString(R.string.command_viewArtworkDetails)
+            RemoteActionCompat(
+                IconCompat.createWithResource(context, R.drawable.muzei_launch_command),
+                title,
+                title,
+                pendingIntent
+            ).apply {
+                setShouldShowIcon(false)
             }
+        }
 
-    private fun obtainActionAddToBookmarks(context: Context, artwork: Artwork): RemoteActionCompat? =
-            Intent(context, AddToBookmarkService::class.java).apply {
-                putExtra("artworkId", artwork.token.toString())
-                putExtra("accessToken", getAccessToken())
-                putExtra("artworkTitle", artwork.title)
-                putExtra("artworkArtist", artwork.byline)
-            }.let { intent ->
-                PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-            }.let { pendingIntent ->
-                val label = context.getString(R.string.command_addToBookmark)
-                RemoteActionCompat(
-                        IconCompat.createWithResource(context, R.drawable.ic_baseline_bookmark_24),
-                        label,
-                        label,
-                        pendingIntent
-                ).apply {
-                    setShouldShowIcon(true)
-                }
+    private fun obtainActionAddToBookmarks(
+        context: Context,
+        artwork: Artwork
+    ): RemoteActionCompat? =
+        Intent(context, AddToBookmarkService::class.java).apply {
+            putExtra("artworkId", artwork.token.toString())
+            putExtra("accessToken", getAccessToken())
+            putExtra("artworkTitle", artwork.title)
+            putExtra("artworkArtist", artwork.byline)
+        }.let { intent ->
+            PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }.let { pendingIntent ->
+            val label = context.getString(R.string.command_addToBookmark)
+            RemoteActionCompat(
+                IconCompat.createWithResource(context, R.drawable.ic_baseline_bookmark_24),
+                label,
+                label,
+                pendingIntent
+            ).apply {
+                setShouldShowIcon(true)
             }
+        }
 
     private fun obtainActionDeleteArtwork(context: Context, artwork: Artwork): RemoteActionCompat? =
-            Intent(context, DeleteArtworkReceiver::class.java).apply {
-                putExtra("artworkId", artwork.token)
-            }.let { intent ->
-                PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-            }.let { pendingIntent ->
-                val title = context.getString(R.string.command_delete_artwork)
-                RemoteActionCompat(
-                        IconCompat.createWithResource(context, R.drawable.ic_delete_white_24dp),
-                        title,
-                        title,
-                        pendingIntent
-                ).apply {
-                    setShouldShowIcon(false)
-                }
+        Intent(context, DeleteArtworkReceiver::class.java).apply {
+            putExtra("artworkId", artwork.token)
+        }.let { intent ->
+            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }.let { pendingIntent ->
+            val title = context.getString(R.string.command_delete_artwork)
+            RemoteActionCompat(
+                IconCompat.createWithResource(context, R.drawable.ic_delete_white_24dp),
+                title,
+                title,
+                pendingIntent
+            ).apply {
+                setShouldShowIcon(false)
             }
+        }
 }
