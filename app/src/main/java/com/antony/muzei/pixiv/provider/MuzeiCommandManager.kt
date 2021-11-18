@@ -121,20 +121,20 @@ class MuzeiCommandManager {
                         artworkFile
                     )
                 )
-            }.let { chooseIntent ->
+            }.let { shareIntent ->
                 IntentUtils.chooseIntent(
-                    chooseIntent,
+                    shareIntent,
                     context.getString(R.string.command_shareImage),
                     context
                 )
                     .apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
-            }.let { shareIntent ->
+            }.let { chooseIntent ->
                 PendingIntent.getActivity(
                     context,
                     artwork.id.toInt(),
-                    shareIntent,
+                    chooseIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT
                 )
             }.let { pendingIntent ->
