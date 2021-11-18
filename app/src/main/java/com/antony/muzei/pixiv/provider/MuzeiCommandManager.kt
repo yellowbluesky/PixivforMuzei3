@@ -120,8 +120,7 @@ class MuzeiCommandManager {
             )
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val projection = arrayOf(
-                MediaStore.Images.Media._ID,
-                MediaStore.Images.Media.DISPLAY_NAME
+                MediaStore.Images.Media._ID
             )
             // For some reason DISPLAY_NAME includes the file extension
             val selection =

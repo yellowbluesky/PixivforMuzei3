@@ -316,7 +316,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
                 .getString("pref_selectWhichExtStorage", "phone").equals("phone")
         ) {
             val stringSet = MediaStore.getExternalVolumeNames(applicationContext)
-            if (stringSet.size != 1) {
+            if (stringSet.size > 1) {
                 for (s: String in stringSet) {
                     if (s != MediaStore.VOLUME_EXTERNAL_PRIMARY) {
                         volumeName = s
