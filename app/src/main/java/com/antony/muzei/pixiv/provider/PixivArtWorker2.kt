@@ -11,13 +11,11 @@ import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivProviderConst.AUTH_MODES
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
-import com.antony.muzei.pixiv.provider.network.PixivAuthFeedJsonService
-import com.antony.muzei.pixiv.provider.network.PixivRankingFeedJsonService
-import com.antony.muzei.pixiv.provider.network.RestClient
-import com.antony.muzei.pixiv.provider.network.moshi.Illusts
+import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
+import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
+import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
-import retrofit2.Call
 import java.util.concurrent.TimeUnit
 
 class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
@@ -53,6 +51,14 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
         }
     }
 
+    private fun getArtworkRanking(rankingArtworkList: List<RankingArtwork>) {
+
+    }
+
+    private fun getArtworkAuth(artworkList: List<AuthArtwork>, isRecommended: Boolean) {
+
+    }
+
     // First determines with an auth update mode is possible
     // Then executes the network calls to get a JSON
     // Passes work off the the filters
@@ -74,11 +80,41 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
         // App has functionality to temporarily or permanently change the update mode if authentication fails
         // i.e. update mode can change between last if block and this if block
         // Thus two identical if statements are required
-        val artworks: MutableList<Artwork>
         if (AUTH_MODES.contains(updateMode)) {
+            // Determines if any extra information is needed
+            val data = when (updateMode) {
+                "bookmark" -> sharedPrefs.getString("userId", "")
+                "artist" -> sharedPrefs.getString("pref_artistId", "")
+                "tag_search" -> sharedPrefs.getString("pref_tagSearch", "")
+                else -> ""
+            }
+            // IllustsManager is stateful, stores a copy of Illusts, and can fetch a new one if needed
+            val illustsManager = IllustsManager(updateMode ?: "recommended", data ?: "")
+            var illusts = illustsManager.getNewIllusts()
+            var authArtworkList = illusts.artworks
 
+            for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+                try {
+                    getArtworkAuth(authArtworkList, false)
+                } catch (e: FilterMatchNotFoundException) {
+                    illusts = illustsManager.getNextIllusts()
+                    authArtworkList = illusts.artworks
+                }
+            }
         } else {
+            // contentsManager is stateful, stores a copy on nContetnts, and can fetch a new one if needed
+            val contentsManager = ContentsManager(updateMode ?: "daily")
+            var contents = contentsManager.getNewContents()
+            var rankingArtworkList = contents.artworks
 
+            for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+                try {
+                    getArtworkRanking(rankingArtworkList)
+                } catch (e: FilterMatchNotFoundException) {
+                    contents = contentsManager.getNextContents()
+                    rankingArtworkList = contents.artworks
+                }
+            }
         }
         Log.i(
             LOG_TAG, "Submitting " + sharedPrefs.getInt("prefSlider_numToDownload", 2) +
