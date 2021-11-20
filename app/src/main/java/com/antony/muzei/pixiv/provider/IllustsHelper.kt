@@ -5,7 +5,7 @@ import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import retrofit2.Call
 
-class IllustsManager(_updateMode: String, _data: String) {
+class IllustsHelper(_updateMode: String, _data: String) {
     private var illusts: Illusts = Illusts()
     private val updateMode: String = _updateMode
     private val data: String = _data
