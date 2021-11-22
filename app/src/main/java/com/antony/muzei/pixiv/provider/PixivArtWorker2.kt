@@ -18,6 +18,8 @@ import com.antony.muzei.pixiv.PixivProviderConst.AUTH_MODES
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
+import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
+import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
@@ -212,6 +214,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) : Worker
     ): Uri {
         File(
             applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.${fileType!!.subtype}"
+            // TODO handle this null asserted
         ).also {
             if (it.exists()) {
                 return Uri.fromFile(it)
@@ -233,7 +236,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) : Worker
 
         // Filtering
         val rankingArtwork = filterArtworkRanking(
-            contents.artworks.toMutableList(),
+            contents.artworks.toMutableList().shuffled() as MutableList<RankingArtwork>,
             sharedPrefs.getBoolean("pref_showManga", false),
             sharedPrefs.getStringSet("pref_rankingFilterSelect", setOf("0")) ?: setOf("0"),
             sharedPrefs.getString("pref_aspectRatioSelect", "0")?.toInt() ?: 0,
@@ -292,7 +295,6 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) : Worker
         settingMinimumWidth: Int,
         settingMinimumHeight: Int
     ): RankingArtwork {
-        artworkList.shuffle()
         for (artwork in artworkList) {
             if (isDuplicateArtwork(artwork.illust_id)) {
                 continue
@@ -453,10 +455,133 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) : Worker
     }
 
     private fun getArtworkAuth(
-        artworkList: List<AuthArtwork>,
+        artworkList: MutableList<AuthArtwork>,
         isRecommended: Boolean
     ): Artwork {
-        TODO()
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+
+        val selectedArtwork = filterArtworkAuth(
+            artworkList.shuffled() as MutableList<AuthArtwork>,
+            sharedPrefs.getBoolean("pref_showManga", false),
+            sharedPrefs.getStringSet("pref_authFilterSelect", setOf("2")) ?: setOf("2"),
+            sharedPrefs.getString("pref_aspectRatioSelect", "0")?.toInt() ?: 0,
+            sharedPrefs.getInt("prefSlider_minViews", 0),
+            isRecommended,
+            sharedPrefs.getInt("prefSlider_minimumWidth", 0),
+            sharedPrefs.getInt("prefSlider_minimumHeight", 0)
+        )
+
+        // Variables for submitting to Muzei
+        val imageUrl: String = if (selectedArtwork.meta_pages.size == 0) {
+            selectedArtwork
+                .meta_single_page
+                .original_image_url
+        } else {
+            selectedArtwork
+                .meta_pages[0]
+                .image_urls
+                .original
+        }
+
+        val useCeuiLiSAWay = true
+        val imageDataResponse = if (useCeuiLiSAWay) {
+            /**
+             * new code, replace url host to ip address and download
+             * this way runs well on my phone
+             */
+            val finalUrl = HostManager.get().replaceUrl(imageUrl)
+            Log.d("finalUrl", finalUrl)
+            val request: Request = Request.Builder().url(finalUrl).get().build()
+            val imageHttpClient = OkHttpClient.Builder()
+                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
+                    val original = chain.request()
+                    val request = original.newBuilder()
+                        .header("Referer", PixivProviderConst.PIXIV_API_HOST_URL)
+                        .build()
+                    chain.proceed(request)
+                })
+                //.addInterceptor(NetworkTrafficLogInterceptor())
+                .build()
+            imageHttpClient.newCall(request).execute().body
+        } else {
+            // its your original code
+            val service =
+                RestClient.getRetrofitImageInstance().create(PixivImageDownloadService::class.java)
+            val call = service.downloadImage(imageUrl)
+            call.execute().body()
+        }
+
+        val token = selectedArtwork.id.toString()
+        val localUri = downloadImage(
+            imageDataResponse, token, sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+        )
+        imageDataResponse!!.close()
+
+        Log.i(LOG_TAG, "getArtworkAuth(): Exited")
+        return Artwork.Builder()
+            .title(selectedArtwork.title)
+            .byline(selectedArtwork.user.name)
+            .persistentUri(localUri)
+            .token(token)
+            .webUri(Uri.parse(PixivProviderConst.PIXIV_ARTWORK_URL + token))
+            .build()
+    }
+
+    private fun filterArtworkAuth(
+        artworkList: MutableList<AuthArtwork>,
+        settingShowManga: Boolean,
+        settingNsfwSelection: Set<String>,
+        settingAspectRatio: Int,
+        settingMinimumViews: Int,
+        settingIsRecommended: Boolean,
+        settingMinimumWidth: Int,
+        settingMinimumHeight: Int
+    ): AuthArtwork {
+        for (artwork in artworkList) {
+            if (isDuplicateArtwork(artwork.id)) {
+                continue
+            }
+
+            if (!settingShowManga && artwork.type == "manga") {
+                continue
+            }
+
+            if (!isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio)) {
+                continue
+            }
+
+            if (!isDesiredPixelSize(
+                    artwork.width,
+                    artwork.height,
+                    settingMinimumWidth,
+                    settingMinimumHeight,
+                    settingAspectRatio
+                )
+            ) {
+                continue
+            }
+
+            if (!isEnoughViews(artwork.total_view, settingMinimumViews)) {
+                continue
+            }
+
+            if (isBeenDeleted(artwork.id)) {
+                continue
+            }
+
+            if (settingIsRecommended || settingNsfwSelection.size == 4) {
+                return artwork
+            }
+
+            for (setting in settingNsfwSelection) {
+                if (setting == artwork.sanity_Level.toString()) {
+                    return artwork
+                } else if (setting == "8" && artwork.x_restrict == 1) {
+                    return artwork
+                }
+            }
+        }
+        throw FilterMatchNotFoundException("All ranking artworks iterated over, fetching a new Contents")
     }
 
     // Returns a list of Artworks to Muzei
@@ -492,7 +617,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) : Worker
 
             for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                 try {
-                    artworkList.add(getArtworkAuth(authArtworkList, false))
+                    artworkList.add(getArtworkAuth(authArtworkList, updateMode == "recommended"))
                 } catch (e: FilterMatchNotFoundException) {
                     authArtworkList = illustsHelper.getNextIllusts().artworks
                 }
