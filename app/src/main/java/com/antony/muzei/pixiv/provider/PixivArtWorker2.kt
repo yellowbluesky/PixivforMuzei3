@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.preference.PreferenceManager
 import androidx.work.*
+import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivProviderConst
@@ -24,15 +25,13 @@ import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import okhttp3.*
-import okio.BufferedSink
 import okio.buffer
 import okio.sink
 import java.io.File
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
 
-class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
-    Worker(context, workerParams) {
+class PixivArtWorker2(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
     companion object {
         const val LOG_TAG = "ANTONY_WORKER"
         private const val WORKER_TAG = "ANTONY"
@@ -41,23 +40,26 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
         // Variable that tracks if the artwork cache needs to be cleared
         private var clearArtwork = false
 
-        internal fun enqueueLoad(clearArtworkRequested: Boolean, context: Context) {
+        internal fun enqueueLoad(clearArtworkRequested: Boolean, context: Context?) {
             if (clearArtworkRequested) {
                 clearArtwork = true
             }
 
-            Constraints.Builder().apply {
-                setRequiredNetworkType(NetworkType.CONNECTED)
-            }.let { builder ->
-                OneTimeWorkRequest.Builder(PixivArtWorker2::class.java)
-                    .setConstraints(builder.build())
-                    .addTag(WORKER_TAG)
-                    .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
-                    .build()
-            }.let { request ->
-                WorkManager.getInstance(context)
-                    .enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request)
+            context?.also {
+                Constraints.Builder().apply {
+                    setRequiredNetworkType(NetworkType.CONNECTED)
+                }.let { builder ->
+                    OneTimeWorkRequest.Builder(PixivArtWorker2::class.java)
+                        .setConstraints(builder.build())
+                        .addTag(WORKER_TAG)
+                        .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
+                        .build()
+                }.let { request ->
+                    WorkManager.getInstance(it)
+                        .enqueueUniqueWork(WORKER_TAG, ExistingWorkPolicy.KEEP, request)
+                }
             }
+
             // The Work must be a UniqueWork
             // If not unique work, multiple works can be submitted at the processed at the same time
             // This can lead to race conditions if a new access token is needed
@@ -92,30 +94,10 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
     ): Uri {
         val contentResolver = applicationContext.contentResolver
 
-        /* Checking if existing copy of images exists*/
-        // Specifying that I want only _ID and DISPLAY_NAME columns returned
-        // Specifying that I only want rows that have a DISPLAY_NAME matching the filename passed
-        // Executing the query
-        val cursor = contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(MediaStore.Images.Media._ID),
-            "${MediaStore.Images.Media.DISPLAY_NAME} = ?",
-            arrayOf(filename),
-            null
-        )
-        // If an existing image is found, return that URI, and do not download anything else
-        // If cursor is null, then we proceed with the download
-        if (cursor != null && cursor.count != 0) {
-            Log.v(LOG_TAG, "downloadImageAPI10: Duplicate found")
-            val imageUri = ContentUris.withAppendedId(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID)).toLong()
-            )
-            cursor.close()
-            return imageUri
+        // If image already exists on the filesystem, then we can skip downloading it
+        isImageAlreadyDownloadedApi29(contentResolver, filename)?.let {
+            return it
         }
-        cursor?.close()
-
 
         // Inserting the filename, relative path within the /Pictures folder, and MIME type into the content provider
         val contentValues = ContentValues().apply {
@@ -143,13 +125,9 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
                 }
         }
 
-        // Actually doing the download
         //Gives us a URI to save the image to
-        val imageUri = contentResolver.insert(
-            MediaStore.Images.Media.getContentUri(volumeName),
-            contentValues
-        )!!
-        // TODO handle this null
+        val imageUri = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)!!
+        // Null asserted here because if contentResolver.insert() returns a null for whatever reason, we really cannot proceed
 
         // The other method using BufferedSink doesn't work all we have is a URI to sink into
         val fis = responseBody!!.byteStream()
@@ -163,6 +141,33 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
         fis.close()
 
         return imageUri
+    }
+
+    /* Checking if existing copy of images exists*/
+    // Returns the Uri of an image with matching filename
+    // otherwise returns null
+    private fun isImageAlreadyDownloadedApi29(contentResolver: ContentResolver, filename: String): Uri? {
+
+        // Specifying that I want only the _ID column returned
+        // Specifying that I only want rows that have a DISPLAY_NAME matching the filename passed
+        contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            arrayOf(MediaStore.Images.Media._ID),
+            "${MediaStore.Images.Media.DISPLAY_NAME} = ?",
+            arrayOf(filename),
+            null
+        )?.let {
+            if (it.count != 0) {
+                Log.v(LOG_TAG, "downloadImageAPI10: Duplicate found")
+                val imageUri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    it.getInt(it.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID)).toLong()
+                )
+                it.close()
+                return imageUri
+            }
+        }
+        return null
     }
 
     // Function to download images to "external storage"
@@ -212,10 +217,11 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
                 return Uri.fromFile(it)
             }
         }.let {
-            val sink: BufferedSink = it.sink().buffer()
-            sink.writeAll(responseBody!!.source())
-            responseBody.close()
-            sink.close()
+            with(it.sink().buffer()) {
+                writeAll(responseBody!!.source())
+                responseBody.close()
+                close()
+            }
             return Uri.fromFile(it)
         }
     }
@@ -263,6 +269,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
         )
         // TODO file size limit filter
         // TODO handle this null
+        // what does a null mean here
         remoteFileExtension!!.close()
 
         Log.i(LOG_TAG, "getArtworkRanking(): Exited")
@@ -277,15 +284,119 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
     }
 
     private fun filterArtworkRanking(
-        toMutableList: MutableList<RankingArtwork>,
-        boolean: Boolean,
-        set: Set<String>,
-        i: Int,
-        int: Int,
-        int1: Int,
-        int2: Int
+        artworkList: MutableList<RankingArtwork>,
+        settingShowManga: Boolean,
+        settingNsfwSelection: Set<String>,
+        settingAspectRatio: Int,
+        settingMinimumViewCount: Int,
+        settingMinimumWidth: Int,
+        settingMinimumHeight: Int
     ): RankingArtwork {
-        TODO()
+        artworkList.shuffle()
+        for (artwork in artworkList) {
+            if (isDuplicateArtwork(artwork.illust_id)) {
+                continue
+            }
+
+            if (!isEnoughViews(artwork.view_count, settingMinimumViewCount)) {
+                continue
+            }
+
+            if (!settingShowManga && artwork.illust_type == 1) {
+                continue
+            }
+
+            if (!isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio)) {
+                continue
+            }
+
+            if (!isDesiredPixelSize(
+                    artwork.width,
+                    artwork.height,
+                    settingMinimumHeight,
+                    settingMinimumWidth,
+                    settingAspectRatio
+                )
+            ) {
+                continue
+            }
+
+            if (isBeenDeleted(artwork.illust_id)) {
+                continue
+            }
+
+            // A set size of 2 means the user wants to view everything
+            // There are only two options, SFW and NSFW
+            if (settingNsfwSelection.size == 2) {
+                return artwork
+            } else {
+                for (s in settingNsfwSelection) {
+                    if (s.toInt() == artwork.illust_content_type.sexual) {
+                        return artwork
+                    }
+                }
+            }
+        }
+        throw FilterMatchNotFoundException("All ranking artworks iterated over, fetching a new Contents")
+    }
+
+    private fun isDesiredPixelSize(
+        width: Int,
+        height: Int,
+        settingMinimumHeight: Int,
+        settingMinimumWidth: Int,
+        settingAspectRatio: Int
+    ): Boolean {
+        return when (settingAspectRatio) {
+            0 -> height >= (settingMinimumHeight * 10) && width >= (settingMinimumWidth * 10)
+            1 -> height >= (settingMinimumHeight * 10)
+            2 -> width >= (settingMinimumWidth * 10)
+            else -> true
+        }
+    }
+
+    // 0: Anything goes
+    // 1: Portrait
+    // 2: Landscape
+    private fun isDesiredAspectRatio(width: Int, height: Int, settingAspectRatio: Int): Boolean {
+        return when (settingAspectRatio) {
+            0 -> true
+            1 -> height >= width
+            2 -> height <= width
+            else -> true
+        }
+    }
+
+    // Scalar must match with scalar in SettingsActivity
+    private fun isEnoughViews(viewCount: Int, settingMinimumViewCount: Int): Boolean {
+        return viewCount >= settingMinimumViewCount * 500
+    }
+
+    // Returns true if the artwork's ID exists int the DeletedArtwork database
+    // If the database in inaccessible for whatever reason, false is returned
+    private fun isBeenDeleted(illustId: Int): Boolean {
+        return AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()
+            ?.isRowIsExist(illustId) ?: false
+    }
+
+
+    // Returns true if the image currently exists in the app's ContentProvider, e.g. it can be selected by Muzei at any time as the wallpaper
+    private fun isDuplicateArtwork(illustId: Int): Boolean {
+        // SQL pseudocode
+        // FROM PixivArtProvider.providerClient SELECT _id WHERE token = illustId
+        applicationContext.contentResolver.query(
+            getProviderClient(applicationContext, PixivArtProvider::class.java).contentUri,
+            arrayOf("_id"),
+            "token = ?",
+            arrayOf(illustId.toString()),
+            null
+        )?.let {
+            val duplicateFound = it.count > 0
+            it.close()
+            return duplicateFound
+        }
+        // This is only reachable if contentResolver.query() returned null for whatever reason, and should never happen
+        return false
     }
 
     /*
@@ -366,6 +477,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
         // App has functionality to temporarily or permanently change the update mode if authentication fails
         // i.e. update mode can change between the previous if block and this if block
         // Thus two identical if statements are required
+        val artworkList: MutableList<Artwork> = mutableListOf()
         if (AUTH_MODES.contains(updateMode)) {
             // Determines if any extra information is needed, and passes it along
             val data = when (updateMode) {
@@ -380,7 +492,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
 
             for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                 try {
-                    getArtworkAuth(authArtworkList, false)
+                    artworkList.add(getArtworkAuth(authArtworkList, false))
                 } catch (e: FilterMatchNotFoundException) {
                     authArtworkList = illustsHelper.getNextIllusts().artworks
                 }
@@ -392,7 +504,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
 
             for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                 try {
-                    getArtworkRanking(contents)
+                    artworkList.add(getArtworkRanking(contents))
                 } catch (e: FilterMatchNotFoundException) {
                     contents = contentsHelper.getNextContents()
                 }
@@ -402,7 +514,7 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
             LOG_TAG, "Submitting " + sharedPrefs.getInt("prefSlider_numToDownload", 2) +
                     " artworks"
         )
-        return mutableListOf<Artwork>()
+        return artworkList
     }
 
     private fun authHandleAuthFailure(sharedPrefs: SharedPreferences): String? {
@@ -447,17 +559,17 @@ class PixivArtWorker2(context: Context, workerParams: WorkerParameters) :
     }
 
     override fun doWork(): Result {
-        val providerClient = getProviderClient(applicationContext, PixivArtProvider::class.java)
-
-        val artworks = getArtworks() ?: return Result.retry()
-
-        if (clearArtwork) {
-            clearArtwork = false
-            providerClient.setArtwork(artworks)
-        } else {
-            providerClient.addArtwork(artworks)
+        with(getProviderClient(applicationContext, PixivArtProvider::class.java)) {
+            val artworks = getArtworks() ?: return Result.retry()
+            if (clearArtwork) {
+                clearArtwork = false
+                setArtwork(artworks)
+            } else {
+                addArtwork(artworks)
+            }
         }
-
         return Result.success()
     }
 }
+
+// refactor one more function
