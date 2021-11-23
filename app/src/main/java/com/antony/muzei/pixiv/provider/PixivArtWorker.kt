@@ -275,7 +275,7 @@ class PixivArtWorker(context: Context, params: WorkerParameters) : Worker(contex
         )
         // Specifying that I only want rows that have a DISPLAY_NAME matching the filename passed
         val selection = "${MediaStore.Images.Media.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf(filename)
+        val selectionArgs = arrayOf("$filename.${fileType!!.subtype}")
         // Executing the query
         val cursor = contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
