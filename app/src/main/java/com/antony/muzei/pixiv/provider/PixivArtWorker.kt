@@ -191,25 +191,12 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             if (!image.exists()) {
                 // Broadcast the addition of a new media file
                 // Solves problem where the images were not showing up in their gallery up until a scan was triggered
-                applicationContext.sendBroadcast(
-                    Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(image))
-                )
+                MediaScannerConnection.scanFile(applicationContext, arrayOf(image.toString()), null, null)
             } else {
                 // If the image has already been downloaded, do not redownload
                 return Uri.fromFile(image)
             }
         }
-        // If user has not checked the option to "Store into external storage"
-//        val fosInternal = FileOutputStream(image)
-//        val inputStreamNetwork = responseBody!!.byteStream()
-//        val bufferTemp = ByteArray(1024 * 1024 * 10)
-//        var readTemp: Int
-//        while (inputStreamNetwork.read(bufferTemp).also { readTemp = it } != -1) {
-//            fosInternal.write(bufferTemp, 0, readTemp)
-//        }
-//        inputStreamNetwork.close()
-//        fosInternal.close()
-//        responseBody.close()
         val sink: BufferedSink = image.sink().buffer()
         sink.writeAll(responseBody!!.source())
         responseBody.close()
