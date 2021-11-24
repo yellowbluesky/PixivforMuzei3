@@ -1,6 +1,7 @@
 package com.antony.muzei.pixiv.provider
 
 import android.content.*
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -25,13 +26,13 @@ import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
 import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
+import com.google.android.apps.muzei.api.provider.ProviderContract
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import okhttp3.*
 import okio.BufferedSink
 import okio.buffer
 import okio.sink
 import java.io.File
-import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
 
@@ -96,10 +97,12 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         filename: String,
         fileType: MediaType?,
     ): Uri {
+        Log.i(LOG_TAG, "Downloading artwork, external API >29")
         val contentResolver = applicationContext.contentResolver
 
         // If image already exists on the filesystem, then we can skip downloading it
         isImageAlreadyDownloadedApi29(contentResolver, filename)?.let {
+            Log.i(LOG_TAG, "Image already exists, early exiting")
             return it
         }
 
@@ -144,6 +147,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         fosExternal!!.close()
         fis.close()
 
+        Log.i(LOG_TAG, "Downloaded")
         return imageUri
     }
 
@@ -151,7 +155,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
     // Returns the Uri of an image with matching filename
     // otherwise returns null
     private fun isImageAlreadyDownloadedApi29(contentResolver: ContentResolver, filename: String): Uri? {
-
         // Specifying that I want only the _ID column returned
         // Specifying that I only want rows that have a DISPLAY_NAME matching the filename passed
         contentResolver.query(
@@ -176,11 +179,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
 
     // Function to download images to "external storage"
     // External storage is described at the path below
+    // This function is used when downloading on external storage on Api 28 or lower
     private fun downloadImageExternalApi28(
         responseBody: ResponseBody?,
         filename: String,
         fileType: MediaType?,
     ): Uri {
+        Log.i(LOG_TAG, "Downloading artwork, external API < 28")
         // Checks if directory exists. If nonexistent, then create it
         val directory = File("/storage/emulated/0/Pictures/PixivForMuzei3/")
         if (!directory.exists()) {
@@ -194,6 +199,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
                 MediaScannerConnection.scanFile(applicationContext, arrayOf(image.toString()), null, null)
             } else {
                 // If the image has already been downloaded, do not redownload
+                Log.i(LOG_TAG, "Artwork exists, early exit")
                 return Uri.fromFile(image)
             }
         }
@@ -201,6 +207,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         sink.writeAll(responseBody!!.source())
         responseBody.close()
         sink.close()
+        Log.i(LOG_TAG, "Downloaded")
         return Uri.fromFile(image)
     }
 
@@ -212,11 +219,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         filename: String,
         fileType: MediaType?,
     ): Uri {
+        Log.i(LOG_TAG, "Downloading artwork, internal")
         File(
             applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.${fileType!!.subtype}"
             // TODO handle this null asserted
         ).also {
             if (it.exists()) {
+                Log.i(LOG_TAG, "Artwork exists, early exit")
                 return Uri.fromFile(it)
             }
         }.let {
@@ -225,6 +234,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
                 responseBody.close()
                 close()
             }
+            Log.i(LOG_TAG, "Downloaded")
             return Uri.fromFile(it)
         }
     }
@@ -275,8 +285,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         // FROM PixivArtProvider.providerClient SELECT _id WHERE token = illustId
         applicationContext.contentResolver.query(
             getProviderClient(applicationContext, PixivArtProvider::class.java).contentUri,
-            arrayOf("_id"),
-            "token = ?",
+            arrayOf(ProviderContract.Artwork._ID),
+            "${ProviderContract.Artwork.TOKEN} = ?",
             arrayOf(illustId.toString()),
             null
         )?.let {
@@ -299,6 +309,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
     Returns a ResponseBody which contains the picture to download
 */
     private fun getRemoteFileExtension(thumbnailUrl: String): ResponseBody? {
+        Log.i(LOG_TAG, "Getting remote file extensions")
         /* Deliberately not turned into scope function to optimize readability */
 
         // This function is given a thumbnail URL like this
@@ -332,7 +343,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
 
             imageHttpClient.newCall(remoteFileExtenstionRequest).execute().let {
                 if (it.isSuccessful) {
-                    Log.i(LOG_TAG, "Gotten remote file extensions")
+                    Log.i(LOG_TAG, "Getting remote file extensions completed")
                     return it.body
                 }
             }
@@ -343,10 +354,11 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
 
     // Each call to this function returns a single Ranking artwork
     private fun getArtworkRanking(contents: Contents): Artwork {
-        Log.i(LOG_TAG, "getArtworkRanking(): Entering")
+        Log.i(LOG_TAG, "Getting ranking artwork")
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
         // Filtering
+        Log.i(LOG_TAG, "Filtering ranking artwork")
         val rankingArtwork = filterArtworkRanking(
             contents.artworks.toMutableList().shuffled() as MutableList<RankingArtwork>,
             sharedPrefs.getBoolean("pref_showManga", false),
@@ -356,6 +368,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             sharedPrefs.getInt("prefSlider_minimumWidth", 0),
             sharedPrefs.getInt("prefSlider_minimumHeight", 0)
         )
+        Log.i(LOG_TAG, "Filtering ranking artwork completed")
 
         val attribution = contents.date.run {
             substring(0, 4) + "/" + substring(4, 6) + "/" + substring(6, 8) + " "
@@ -387,7 +400,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         // what does a null mean here
         remoteFileExtension!!.close()
 
-        Log.i(LOG_TAG, "getArtworkRanking(): Exited")
+        Log.i(LOG_TAG, "Getting ranking artwork completed")
         return Artwork.Builder()
             .title(rankingArtwork.title)
             .byline(rankingArtwork.user_name)
@@ -461,6 +474,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         Log.i(LOG_TAG, "Getting auth artwork")
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
+        Log.i(LOG_TAG, "Filtering auth artwork")
         val selectedArtwork = filterArtworkAuth(
             artworkList.shuffled() as MutableList<AuthArtwork>,
             sharedPrefs.getBoolean("pref_showManga", false),
@@ -471,6 +485,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             sharedPrefs.getInt("prefSlider_minimumWidth", 0),
             sharedPrefs.getInt("prefSlider_minimumHeight", 0)
         )
+        Log.i(LOG_TAG, "Filtering auth artwork completed")
 
         // Variables for submitting to Muzei
         val imageUrl: String = if (selectedArtwork.meta_pages.size == 0) {
@@ -518,7 +533,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         )
         imageDataResponse!!.close()
 
-        Log.i(LOG_TAG, "getArtworkAuth(): Exited")
+        Log.i(LOG_TAG, "Getting auth artwork completed")
         return Artwork.Builder()
             .title(selectedArtwork.title)
             .byline(selectedArtwork.user.name)
