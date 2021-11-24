@@ -108,7 +108,7 @@ class MuzeiCommandManager {
             context.contentResolver.query(
                 ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
                 arrayOf("persistent_uri"),
-                "token = ?",
+                "${ProviderContract.Artwork.TOKEN} = ?",
                 arrayOf("${artwork.token}"),
                 null
             )?.let {
