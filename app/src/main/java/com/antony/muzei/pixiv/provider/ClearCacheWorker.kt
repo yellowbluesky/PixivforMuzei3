@@ -21,16 +21,10 @@ import android.os.Environment
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.antony.muzei.pixiv.provider.PixivArtWorker.Companion.enqueueLoad
-import java.io.File
 
-class ClearCacheWorker(
-        context: Context,
-        params: WorkerParameters) : Worker(context, params) {
+class ClearCacheWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
-        val dir = applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        for (child in dir!!.list()) {
-            File(dir, child).delete()
-        }
+        applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.deleteRecursively()
         enqueueLoad(true, applicationContext)
         return Result.success()
     }
