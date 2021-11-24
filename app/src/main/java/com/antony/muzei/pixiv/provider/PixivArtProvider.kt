@@ -19,6 +19,8 @@
 
 package com.antony.muzei.pixiv.provider
 
+import android.annotation.SuppressLint
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -235,4 +237,12 @@ class PixivArtProvider : MuzeiArtProvider() {
         }
     }
 
+    @SuppressLint("InlinedApi")
+    override fun getArtworkInfo(artwork: Artwork): PendingIntent? {
+        if (artwork.webUri != null && context != null) {
+            val intent = Intent(Intent.ACTION_VIEW, artwork.webUri)
+            return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        }
+        return null
+    }
 }
