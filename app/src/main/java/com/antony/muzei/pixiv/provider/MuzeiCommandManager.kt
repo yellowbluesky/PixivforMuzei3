@@ -17,24 +17,25 @@
 
 package com.antony.muzei.pixiv.provider
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
-import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.provider.MediaStore
 import androidx.core.app.RemoteActionCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.IconCompat
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
+import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_ARTWORK_URL
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.apps.muzei.api.UserCommand
 import com.google.android.apps.muzei.api.provider.Artwork
+import com.google.android.apps.muzei.api.provider.ProviderContract
 import java.io.File
 
 /**
@@ -91,88 +92,38 @@ class MuzeiCommandManager {
         )
     }
 
+    @SuppressLint("InlinedApi")
     private fun obtainActionShareImage(context: Context, artwork: Artwork): RemoteActionCompat? {
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
-        val storeInExtStorage = sharedPrefs.getBoolean("pref_storeInExtStorage", false)
+        val artworkJpeg = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${artwork.token}.jpeg")
+        val artworkPng = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${artwork.token}.png")
 
-        val artworkUri: Uri
-        if (!storeInExtStorage) {
-            // Figuring out the right file extension
-            val artworkJpeg = File(
-                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-                "${artwork.token}.jpeg"
-            )
-            val artworkPng = File(
-                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-                "${artwork.token}.png"
-            )
-
-            val artworkFile = if (artworkJpeg.exists()) {
-                artworkJpeg
-            } else {
-                artworkPng
-            }
-
-            artworkUri = FileProvider.getUriForFile(
-                context,
-                "${BuildConfig.APPLICATION_ID}.fileprovider",
-                artworkFile
-            )
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val projection = arrayOf(
-                MediaStore.Images.Media._ID
-            )
-            // For some reason DISPLAY_NAME includes the file extension
-            val selection =
-                "${MediaStore.Images.Media.DISPLAY_NAME} = ? OR ${MediaStore.Images.Media.DISPLAY_NAME} = ?"
-            val selectionArgs = arrayOf(artwork.token + ".jpg", artwork.token + ".png")
-
-            val cursor = context.contentResolver.query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                selection,
-                selectionArgs,
-                null
-            )
-
-            cursor!!.moveToFirst()
-            artworkUri = ContentUris.withAppendedId(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
-                    .toLong()
-            )
-            cursor.close()
+        var artworkUri = Uri.EMPTY
+        // First looks in internal storage if the artwork exists
+        if (artworkJpeg.exists()) {
+            artworkUri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", artworkJpeg)
+        } else if (artworkPng.exists()) {
+            artworkUri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", artworkPng)
         } else {
-            val artworkJpeg = File(
-                "/storage/emulated/0/Pictures/PixivForMuzei3/",
-                "${artwork.token}.jpeg"
-            )
-            val artworkPng = File(
-                "/storage/emulated/0/Pictures/PixivForMuzei3/",
-                "${artwork.token}.png"
-            )
-            val artworkFile = if (artworkJpeg.exists()) {
-                artworkJpeg
-            } else {
-                artworkPng
+            // Then looks in external storage
+            context.contentResolver.query(
+                ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
+                arrayOf("persistent_uri"),
+                "${ProviderContract.Artwork.TOKEN} = ?",
+                arrayOf("${artwork.token}"),
+                null
+            )?.let {
+                it.moveToFirst()
+                artworkUri = Uri.parse(it.getString(0))
+                it.close()
             }
-
-            artworkUri = Uri.fromFile(artworkFile)
         }
 
         return Intent().apply {
             action = Intent.ACTION_SEND
             type = "image/*"
-            putExtra(
-                Intent.EXTRA_STREAM,
-                artworkUri
-            )
+            putExtra(Intent.EXTRA_STREAM, artworkUri)
         }.let { shareIntent ->
-            IntentUtils.chooseIntent(
-                shareIntent,
-                context.getString(R.string.command_shareImage),
-                context
-            )
+            IntentUtils.chooseIntent(shareIntent, context.getString(R.string.command_shareImage), context)
                 .apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
@@ -181,7 +132,7 @@ class MuzeiCommandManager {
                 context,
                 artwork.id.toInt(),
                 chooseIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
         }.let { pendingIntent ->
             val title = context.getString(R.string.command_shareImage)
@@ -194,6 +145,7 @@ class MuzeiCommandManager {
         }
     }
 
+    @SuppressLint("InlinedApi")
     private fun obtainActionViewArtworkDetails(
         context: Context,
         artwork: Artwork
@@ -201,14 +153,14 @@ class MuzeiCommandManager {
         artwork.token?.takeIf { it.isNotEmpty() }?.let { token ->
             Intent(
                 Intent.ACTION_VIEW,
-                Uri.parse("http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$token")
+                Uri.parse(PIXIV_ARTWORK_URL + token)
             )
         }?.let { intent ->
             PendingIntent.getActivity(
                 context,
                 artwork.id.toInt(),
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
         }?.let { pendingIntent ->
             val title = context.getString(R.string.command_viewArtworkDetails)
@@ -222,6 +174,7 @@ class MuzeiCommandManager {
             }
         }
 
+    @SuppressLint("InlinedApi")
     private fun obtainActionAddToBookmarks(
         context: Context,
         artwork: Artwork
@@ -232,7 +185,12 @@ class MuzeiCommandManager {
             putExtra("artworkTitle", artwork.title)
             putExtra("artworkArtist", artwork.byline)
         }.let { intent ->
-            PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getService(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }.let { pendingIntent ->
             val label = context.getString(R.string.command_addToBookmark)
             RemoteActionCompat(
@@ -245,11 +203,17 @@ class MuzeiCommandManager {
             }
         }
 
+    @SuppressLint("InlinedApi")
     private fun obtainActionDeleteArtwork(context: Context, artwork: Artwork): RemoteActionCompat? =
         Intent(context, DeleteArtworkReceiver::class.java).apply {
             putExtra("artworkId", artwork.token)
         }.let { intent ->
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }.let { pendingIntent ->
             val title = context.getString(R.string.command_delete_artwork)
             RemoteActionCompat(

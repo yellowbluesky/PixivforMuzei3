@@ -3,30 +3,28 @@ package com.antony.muzei.pixiv.provider
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.AsyncTask
 import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.settings.deleteArtwork.DeletedArtworkIdEntity
 import com.google.android.apps.muzei.api.provider.ProviderContract
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
-class DeleteArtworkReceiver : BroadcastReceiver() {
+class DeleteArtworkReceiver : BroadcastReceiver(),
+    CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val artworkId: String? = intent.getStringExtra("artworkId")
-
-        if (artworkId != null) {
-            val selectionClause = "${ProviderContract.Artwork.TOKEN} = ?"
-            val selectionArgs = arrayOf(artworkId)
-
-            val conResUri = ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri
+        intent.getStringExtra("artworkId")?.let { artworkId ->
             context.contentResolver.delete(
-                    conResUri,
-                    selectionClause,
-                    selectionArgs
+                ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
+                "${ProviderContract.Artwork.TOKEN} = ?",
+                arrayOf(artworkId)
             )
 
-            val appDatabase = AppDatabase.getInstance(context)
-            AsyncTask.execute {
-                appDatabase?.deletedArtworkIdDao()?.insertDeletedArtworkId(listOf(DeletedArtworkIdEntity(artworkId)))
+            launch(Dispatchers.Main) {
+                AppDatabase.getInstance(context)?.deletedArtworkIdDao()
+                    ?.insertDeletedArtworkId(listOf(DeletedArtworkIdEntity(artworkId)))
             }
         }
     }

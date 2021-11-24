@@ -10,17 +10,11 @@ import com.google.android.apps.muzei.api.provider.ProviderContract
 class DeleteArtworkTileService : TileService() {
     override fun onClick() {
         super.onClick()
-        val title = MuzeiContract.Artwork.getCurrentArtwork(applicationContext)?.title
-
-        if (title != null) {
-            val selectionClause = "${ProviderContract.Artwork.TITLE} = ?"
-            val selectionArgs = arrayOf(title)
-
-            val conResUri = ProviderContract.getProviderClient(applicationContext, PixivArtProvider::class.java).contentUri
+        MuzeiContract.Artwork.getCurrentArtwork(applicationContext)?.title?.let {
             applicationContext.contentResolver.delete(
-                    conResUri,
-                    selectionClause,
-                    selectionArgs
+                ProviderContract.getProviderClient(applicationContext, PixivArtProvider::class.java).contentUri,
+                "${ProviderContract.Artwork.TITLE} = ?",
+                arrayOf(it)
             )
         }
     }
