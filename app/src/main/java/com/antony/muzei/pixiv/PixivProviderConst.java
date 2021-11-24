@@ -21,7 +21,7 @@ public final class PixivProviderConst {
 
     public static final String PIXIV_RANKING_URL = "https://www.pixiv.net";
     public static final String PIXIV_API_HOST_URL = "https://app-api.pixiv.net/";
-    public static final String PIXIV_ARTWORK_URL = "https://www.pixiv.net/artworks/";
+    public static final String PIXIV_ARTWORK_URL = "https://www.pixiv.net/en/artworks/";
     public static final String PIXIV_REDIRECT_URL = "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback";
     public static final String PIXIV_IMAGE_URL = "https://i.pximg.net";
     public static final String MEMBER_ILLUST_URL = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=";
