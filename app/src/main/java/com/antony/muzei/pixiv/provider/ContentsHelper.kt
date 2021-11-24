@@ -5,14 +5,14 @@ import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 
 class ContentsHelper(_updateMode: String) {
+    private var contents: Contents = Contents()
     private val updateMode = _updateMode
-    val service = RestClient.getRetrofitRankingInstance().create(
+    private val service = RestClient.getRetrofitRankingInstance().create(
         PixivRankingFeedJsonService::class.java
     )
-    private var contents: Contents = Contents()
     private var pageNumber = 1
     private lateinit var date: String
-    lateinit var prevDate: String
+    private lateinit var prevDate: String
 
     fun getNewContents(): Contents {
         val call = service.getRankingJson(updateMode)
@@ -25,14 +25,17 @@ class ContentsHelper(_updateMode: String) {
     fun getNextContents(): Contents {
         if (pageNumber != 9) {
             pageNumber++
-            val call = service.getRankingJson(updateMode, pageNumber, date)
-            contents = call.execute().body()!!
+            service.getRankingJson(updateMode, pageNumber, date).let {
+                contents = it.execute().body()!!
+            }
+
         } else {
             // If we for some reason cannot find enough artwork to satisfy the filter
             // from the top 450, then we can look at the previous day's ranking
             pageNumber = 1
-            val call = service.getRankingJson(updateMode, pageNumber, prevDate)
-            contents = call.execute().body()!!
+            service.getRankingJson(updateMode, pageNumber, prevDate).let {
+                contents = it.execute().body()!!
+            }
             date = contents.date
             prevDate = contents.prev_date
         }

@@ -32,16 +32,17 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class AddToBookmarkService : Service(),
-    CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
+class AddToBookmarkService : Service(), CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         createNotificationChannel()
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Adding artwork to bookmarks")
-            .setContentText(intent.getStringExtra("artworkTitle") + " by " + intent.getStringExtra("artworkArtist"))
+            .setContentText("${intent.getStringExtra("artworkTitle")} by ${intent.getStringExtra("artworkArtist")}")
             .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
             .build()
-        startForeground(1, notification)
+            .let {
+                startForeground(1, it)
+            }
 
         try {
             // NetworkOnMainThread exception
@@ -73,8 +74,7 @@ class AddToBookmarkService : Service(),
                 "Pixiv for Muzei 3 Foreground Service Channel",
                 NotificationManager.IMPORTANCE_DEFAULT
             )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
+            getSystemService(NotificationManager::class.java).createNotificationChannel(serviceChannel)
         }
     }
 
