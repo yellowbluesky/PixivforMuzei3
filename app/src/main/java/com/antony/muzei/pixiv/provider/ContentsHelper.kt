@@ -5,7 +5,7 @@ import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 
 class ContentsHelper(_updateMode: String) {
-    private var contents: Contents = Contents()
+    private lateinit var contents: Contents
     private val updateMode = _updateMode
     private val service = RestClient.getRetrofitRankingInstance().create(
         PixivRankingFeedJsonService::class.java

@@ -6,7 +6,7 @@ import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import retrofit2.Call
 
 class IllustsHelper(_updateMode: String, _data: String) {
-    private var illusts: Illusts = Illusts()
+    private lateinit var illusts: Illusts
     private val updateMode: String = _updateMode
     private val data: String = _data
     private val service: PixivAuthFeedJsonService = RestClient.getRetrofitAuthInstance()
