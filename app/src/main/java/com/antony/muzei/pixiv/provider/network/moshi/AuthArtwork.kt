@@ -27,7 +27,7 @@ data class AuthArtwork(
     val image_urls: Image_Urls,
     val is_bookmarked: Boolean,
     val is_muted: Boolean,
-    val meta_pages: List<Image_Urls>,
+    val meta_pages: List<Meta_Pages>,
     val meta_single_page: Meta_Single_Page,
     val page_count: Int,
     val restrict: Int,
@@ -50,6 +50,11 @@ data class Image_Urls(
     val medium: String?,
     val original: String?,
     val square_medium: String?,
+)
+
+@JsonClass(generateAdapter = true)
+data class Meta_Pages(
+    val image_urls: Image_Urls
 )
 
 @JsonClass(generateAdapter = true)

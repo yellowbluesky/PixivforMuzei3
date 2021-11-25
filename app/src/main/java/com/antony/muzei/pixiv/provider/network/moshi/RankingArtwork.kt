@@ -32,7 +32,7 @@ data class RankingArtwork(
     val profile_img: String,
     val rank: Int,
     val rating_count: Int,
-    val taks: List<String>,
+    val tags: List<String>,
     val title: String,
     val url: String,
     val user_id: Int,

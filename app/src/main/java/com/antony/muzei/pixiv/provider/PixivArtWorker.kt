@@ -495,6 +495,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         } else {
             selectedArtwork
                 .meta_pages[0]
+                .image_urls
                 .original
         }
 
