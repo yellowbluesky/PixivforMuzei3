@@ -488,14 +488,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         Log.i(LOG_TAG, "Filtering auth artwork completed")
 
         // Variables for submitting to Muzei
-        val imageUrl: String = if (selectedArtwork.meta_pages.size == 0) {
+        val imageUrl: String? = if (selectedArtwork.meta_pages.isEmpty()) {
             selectedArtwork
                 .meta_single_page
                 .original_image_url
         } else {
             selectedArtwork
                 .meta_pages[0]
-                .image_urls
                 .original
         }
 
@@ -596,7 +595,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             }
 
             for (setting in settingNsfwSelection) {
-                if (setting == artwork.sanity_Level.toString()) {
+                if (setting == artwork.sanity_level.toString()) {
                     return artwork
                 } else if (setting == "8" && artwork.x_restrict == 1) {
                     return artwork
