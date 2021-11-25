@@ -27,8 +27,10 @@ class IllustsHelper(_updateMode: String, _data: String) {
     }
 
     fun getNextIllusts(): Illusts {
-        val call = service.getNextUrl(illusts.nextUrl)
+        val call = service.getNextUrl(illusts.next_url)
         illusts = call.execute().body()!!
         return illusts
     }
+
+    fun getIllusts() = illusts
 }

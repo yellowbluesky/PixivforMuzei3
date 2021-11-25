@@ -641,7 +641,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
 
             for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                 try {
-                    artworkList.add(getArtworkAuth(authArtworkList, updateMode == "recommended"))
+                    artworkList.add(getArtworkAuth(authArtworkList.toMutableList(), updateMode == "recommended"))
                 } catch (e: FilterMatchNotFoundException) {
                     Log.i(LOG_TAG, "Fetching new illusts")
                     authArtworkList = illustsHelper.getNextIllusts().artworks

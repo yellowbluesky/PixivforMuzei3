@@ -14,20 +14,19 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+package com.antony.muzei.pixiv.provider.network.moshi
 
-package com.antony.muzei.pixiv.provider.network;
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
-import com.antony.muzei.pixiv.provider.network.moshi.OAuth;
-
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.POST;
-
-public interface PixivOauthService {
-    @FormUrlEncoded
-    @POST("/auth/token")
-    Call<OAuth> postRefreshToken(@FieldMap Map<String, String> params);
-}
+@JsonClass(generateAdapter = true)
+data class Contents(
+    val content: String,
+    @Json(name = "contents") val artworks: List<RankingArtwork>,
+    val date: String,
+    val mode: String,
+    val next: Int,
+    val page: Int,
+    val prev_date: String,
+    val rank_total: Int
+)

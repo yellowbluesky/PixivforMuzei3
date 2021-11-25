@@ -14,27 +14,13 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+package com.antony.muzei.pixiv.provider.network.moshi
 
-package com.antony.muzei.pixiv.provider.network.moshi;
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
-import com.squareup.moshi.Json;
-
-import java.util.List;
-
-public class Illusts {
-
-    @Json(name = "illusts")
-    private List<AuthArtwork> artworks;
-
-    @Json(name = "next_url")
-    private String nextUrl;
-
-    public List<AuthArtwork> getArtworks() {
-        return artworks;
-    }
-
-    public String getNextUrl() {
-        return nextUrl;
-    }
-
-}
+@JsonClass(generateAdapter = true)
+data class Illusts(
+    @Json(name = "illusts") val artworks: List<AuthArtwork>,
+    val next_url: String
+)

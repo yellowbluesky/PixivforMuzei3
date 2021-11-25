@@ -115,7 +115,7 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                             throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
                         }
 
-                        if (!oauthResponse.isHas_error) {
+                        if (!oauthResponse.has_error) {
                             // If logged in fine, oauth response should have no error and continue here
                             withContext(Dispatchers.Main) {
                                 PreferenceManager.getDefaultSharedPreferences(applicationContext)
@@ -123,18 +123,19 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                                     .apply {
                                         putString(
                                             PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN,
-                                            oauthResponse.pixivOauthResponse.access_token
+                                            oauthResponse.response.access_token
+                                            //OAuthResponse.access_token
                                         )
                                         putString(
                                             PixivProviderConst.PREFERENCE_PIXIV_REFRESH_TOKEN,
-                                            oauthResponse.pixivOauthResponse.refresh_token
+                                            oauthResponse.response.refresh_token
                                         )
                                         putLong(
                                             PixivProviderConst.PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP,
                                             System.currentTimeMillis().div(1000)
                                         )
 
-                                        oauthResponse.pixivOauthResponse.user?.also { user ->
+                                        oauthResponse.response.user.also { user ->
                                             putString("userId", user.id)
                                             putString("name", user.name)
                                         }
@@ -152,7 +153,7 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                                 // Returns the username for immediate consumption by MainPreferenceFragment
                                 val username: Intent = Intent().putExtra(
                                     "username",
-                                    oauthResponse.pixivOauthResponse.user.name
+                                    oauthResponse.response.user.name
                                 )
                                 setResult(RESULT_OK, username)
                                 Log.d("LOGIN", "finishing activity")

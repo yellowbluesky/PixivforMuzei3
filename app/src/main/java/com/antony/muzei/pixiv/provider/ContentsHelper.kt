@@ -41,4 +41,6 @@ class ContentsHelper(_updateMode: String) {
         }
         return contents
     }
+
+    fun getContents() = contents
 }
