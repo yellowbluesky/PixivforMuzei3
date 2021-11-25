@@ -32,14 +32,13 @@ public interface PixivAuthFeedJsonService {
     @GET("v1/user/bookmarks/illust?restrict=public")
     Call<Illusts> getBookmarkJson(@Query("user_id") String userId);
 
-    @GET("v1/search/illust?search_target=partial_match_for_tags&sort=date_desc&filter=for_ios")
+    @GET("v1/search/illust?search_target=partial_match_for_tags&sort=date_desc")
     Call<Illusts> getTagSearchJson(@Query("word") String tag);
 
-    @GET("v1/user/illusts?filter=for_ios")
+    @GET("v1/user/illusts")
     Call<Illusts> getArtistJson(@Query("user_id") String artist_id);
-
-    // filter=for_ios here, !?(･_･;?
-    @GET("v1/illust/recommended?content_type=illust&include_ranking_label=true&include_ranking_illusts=true&filter=for_ios")
+    
+    @GET("v1/illust/recommended?content_type=illust&include_ranking_label=true&include_ranking_illusts=true")
     Call<Illusts> getRecommendedJson();
 
     @GET
