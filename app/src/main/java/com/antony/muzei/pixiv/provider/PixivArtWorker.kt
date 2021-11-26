@@ -412,7 +412,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
     }
 
     private fun filterArtworkRanking(
-        artworkList: MutableList<RankingArtwork>,
+        artworkList: List<RankingArtwork>,
         settingShowManga: Boolean,
         settingNsfwSelection: Set<String>,
         settingAspectRatio: Int,
@@ -420,51 +420,35 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         settingMinimumWidth: Int,
         settingMinimumHeight: Int
     ): RankingArtwork {
-        for (artwork in artworkList) {
-            if (isDuplicateArtwork(artwork.illust_id)) {
-                continue
-            }
-
-            if (!isEnoughViews(artwork.view_count, settingMinimumViewCount)) {
-                continue
-            }
-
-            if (!settingShowManga && artwork.illust_type == 1) {
-                continue
-            }
-
-            if (!isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio)) {
-                continue
-            }
-
-            if (!isDesiredPixelSize(
+        val predicates = listOf(
+            { artwork: RankingArtwork -> !isDuplicateArtwork(artwork.illust_id) },
+            { artwork: RankingArtwork -> isEnoughViews(artwork.view_count, settingMinimumViewCount) },
+            { artwork: RankingArtwork -> settingShowManga || !settingShowManga && artwork.illust_type == 0 },
+            { artwork: RankingArtwork -> isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio) },
+            { artwork: RankingArtwork ->
+                isDesiredPixelSize(
                     artwork.width,
                     artwork.height,
                     settingMinimumHeight,
                     settingMinimumWidth,
                     settingAspectRatio
                 )
-            ) {
-                continue
-            }
+            },
+            { artwork: RankingArtwork -> !isBeenDeleted(artwork.illust_id) },
+            { artwork: RankingArtwork -> settingNsfwSelection.contains(artwork.illust_content_type.sexual.toString()) },
+        )
 
-            if (isBeenDeleted(artwork.illust_id)) {
-                continue
-            }
-
-            // A set size of 2 means the user wants to view everything
-            // There are only two options, SFW and NSFW
-            if (settingNsfwSelection.size == 2) {
-                return artwork
+        val filteredArtworksList = artworkList.filter { candidate ->
+            predicates.all { it(candidate) }
+        }.also {
+            if (it.isEmpty()) {
+                throw FilterMatchNotFoundException("All ranking artworks iterated over, fetching a new Contents")
             } else {
-                for (s in settingNsfwSelection) {
-                    if (s.toInt() == artwork.illust_content_type.sexual) {
-                        return artwork
-                    }
-                }
+                Log.d(LOG_TAG, "${it.size} artworks remaining before NSFW filtering")
             }
         }
-        throw FilterMatchNotFoundException("All ranking artworks iterated over, fetching a new Contents")
+
+        return filteredArtworksList.random()
     }
 
     private fun getArtworkAuth(
