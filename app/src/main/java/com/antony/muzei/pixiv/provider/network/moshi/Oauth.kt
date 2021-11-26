@@ -21,18 +21,16 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class OAuth(
     val response: OAuthResponse,
-    val has_error: Boolean
 )
 
 @JsonClass(generateAdapter = true)
 data class OAuthResponse(
     val access_token: String,
     val expires_in: Int,
-    val token_type: Int,
+    val token_type: String,
     val scope: String,
     val refresh_token: String,
     val user: OAuthUser,
-    val device_token: String
 )
 
 @JsonClass(generateAdapter = true)

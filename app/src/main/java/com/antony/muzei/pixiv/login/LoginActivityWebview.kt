@@ -115,60 +115,50 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                             throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
                         }
 
-                        if (!oauthResponse.has_error) {
-                            // If logged in fine, oauth response should have no error and continue here
-                            withContext(Dispatchers.Main) {
-                                PreferenceManager.getDefaultSharedPreferences(applicationContext)
-                                    .edit()
-                                    .apply {
-                                        putString(
-                                            PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN,
-                                            oauthResponse.response.access_token
-                                            //OAuthResponse.access_token
-                                        )
-                                        putString(
-                                            PixivProviderConst.PREFERENCE_PIXIV_REFRESH_TOKEN,
-                                            oauthResponse.response.refresh_token
-                                        )
-                                        putLong(
-                                            PixivProviderConst.PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP,
-                                            System.currentTimeMillis().div(1000)
-                                        )
+                        // If logged in fine, oauth response should have no error and continue here
+                        withContext(Dispatchers.Main) {
+                            PreferenceManager.getDefaultSharedPreferences(applicationContext)
+                                .edit()
+                                .apply {
+                                    putString(
+                                        PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN,
+                                        oauthResponse.response.access_token
+                                        //OAuthResponse.access_token
+                                    )
+                                    putString(
+                                        PixivProviderConst.PREFERENCE_PIXIV_REFRESH_TOKEN,
+                                        oauthResponse.response.refresh_token
+                                    )
+                                    putLong(
+                                        PixivProviderConst.PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP,
+                                        System.currentTimeMillis().div(1000)
+                                    )
 
-                                        oauthResponse.response.user.also { user ->
-                                            putString("userId", user.id)
-                                            putString("name", user.name)
-                                        }
+                                    oauthResponse.response.user.also { user ->
+                                        putString("userId", user.id)
+                                        putString("name", user.name)
                                     }
-                                    .apply()
+                                }
+                                .apply()
 
-                                Log.d("LOGIN", "detaching and killing webview")
-                                val parentConstraintLayout: ConstraintLayout? =
-                                    findViewById(R.id.webviewConstraintLayout)
-                                parentConstraintLayout!!.removeView(webView)
-                                webView.removeAllViews()
-                                webView.destroy()
-                                Log.d("LOGIN", "detached and killed webview")
-
-                                // Returns the username for immediate consumption by MainPreferenceFragment
-                                val username: Intent = Intent().putExtra(
-                                    "username",
-                                    oauthResponse.response.user.name
-                                )
-                                setResult(RESULT_OK, username)
-                                Log.d("LOGIN", "finishing activity")
-                                finish()
-                            }
-                        } else {
-                            // only enters here if oauthResponse has error
-                            // meed to handle the error in here
-                            // even if login worked, no value stored
-                            // some way to demonstrate the error?
+                            Log.d("LOGIN", "detaching and killing webview")
+                            val parentConstraintLayout: ConstraintLayout? =
+                                findViewById(R.id.webviewConstraintLayout)
+                            parentConstraintLayout!!.removeView(webView)
                             webView.removeAllViews()
                             webView.destroy()
-                            Log.d("LOGIN", "oauthResponse had error, finishing")
+                            Log.d("LOGIN", "detached and killed webview")
+
+                            // Returns the username for immediate consumption by MainPreferenceFragment
+                            val username: Intent = Intent().putExtra(
+                                "username",
+                                oauthResponse.response.user.name
+                            )
+                            setResult(RESULT_OK, username)
+                            Log.d("LOGIN", "finishing activity")
                             finish()
                         }
+
                     }
 
                     return true
