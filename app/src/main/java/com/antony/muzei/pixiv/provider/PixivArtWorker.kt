@@ -443,9 +443,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         }.also {
             if (it.isEmpty()) {
                 throw FilterMatchNotFoundException("All ranking artworks iterated over, fetching a new Contents")
-            } else {
-                Log.d(LOG_TAG, "${it.size} artworks remaining before NSFW filtering")
             }
+            Log.d(LOG_TAG, "${it.size} artworks remaining before NSFW filtering")
         }
 
         return filteredArtworksList.random()
@@ -537,59 +536,38 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         settingMinimumWidth: Int,
         settingMinimumHeight: Int
     ): AuthArtwork {
-        for (artwork in artworkList) {
-            if (isDuplicateArtwork(artwork.id)) {
-                Log.e(LOG_TAG, "Duplicate artwork ${artwork.id}")
-                continue
-            }
-
-            if (!settingShowManga && artwork.type == "manga") {
-                Log.e(LOG_TAG, "Artwork is manga ${artwork.id}")
-                continue
-            }
-
-            if (!isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio)) {
-                Log.e(LOG_TAG, "Artwork is not in desired aspect ratio ${artwork.id}")
-                continue
-            }
-
-            if (!isDesiredPixelSize(
+        val predicates = listOf(
+            { artwork: AuthArtwork -> !isDuplicateArtwork(artwork.id) },
+            { artwork: AuthArtwork -> settingShowManga || !settingShowManga && artwork.type != "manga" },
+            { artwork: AuthArtwork -> isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio) },
+            { artwork: AuthArtwork ->
+                isDesiredPixelSize(
                     artwork.width,
                     artwork.height,
                     settingMinimumWidth,
                     settingMinimumHeight,
                     settingAspectRatio
                 )
-            ) {
-                Log.e(LOG_TAG, "Artwork does nto have desired pixel size ${artwork.id}")
-                continue
-            }
+            },
+            { artwork: AuthArtwork -> isEnoughViews(artwork.total_view, settingMinimumViews) },
+            { artwork: AuthArtwork -> !isBeenDeleted(artwork.id) },
+            { artwork: AuthArtwork ->
+                settingIsRecommended ||
+                        settingNsfwSelection.size == 4 ||
+                        settingNsfwSelection.contains(artwork.sanity_level.toString()) ||
+                        settingNsfwSelection.contains("8") && artwork.x_restrict == 1
+            },
+        )
 
-            if (!isEnoughViews(artwork.total_view, settingMinimumViews)) {
-                Log.e(LOG_TAG, "Artwork does not have enough views ${artwork.id}")
-                continue
+        val filteredArtworksList = artworkList.filter { candidate ->
+            predicates.all { it(candidate) }
+        }.also {
+            if (it.isEmpty()) {
+                throw FilterMatchNotFoundException("All auth artworks iterated over, fetching a new Illusts")
             }
-
-            if (isBeenDeleted(artwork.id)) {
-                Log.e(LOG_TAG, "Artwork has previously been deleted ${artwork.id}")
-                continue
-            }
-
-            if (settingIsRecommended || settingNsfwSelection.size == 4) {
-                return artwork
-            }
-
-            for (setting in settingNsfwSelection) {
-                if (setting == artwork.sanity_level.toString()) {
-                    return artwork
-                } else if (setting == "8" && artwork.x_restrict == 1) {
-                    return artwork
-                } else {
-                    Log.e(LOG_TAG, "NSFW not matching ${artwork.id}")
-                }
-            }
+            Log.d(LOG_TAG, "${it.size} artworks remaining before NSFW filtering")
         }
-        throw FilterMatchNotFoundException("All ranking artworks iterated over, fetching a new Contents")
+        return filteredArtworksList.random()
     }
 
     // Returns a list of Artworks to Muzei
