@@ -420,22 +420,18 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         settingMinimumWidth: Int,
         settingMinimumHeight: Int
     ): RankingArtwork {
-        val predicates = listOf(
-            { artwork: RankingArtwork -> !isDuplicateArtwork(artwork.illust_id) },
-            { artwork: RankingArtwork -> isEnoughViews(artwork.view_count, settingMinimumViewCount) },
-            { artwork: RankingArtwork -> settingShowManga || !settingShowManga && artwork.illust_type == 0 },
-            { artwork: RankingArtwork -> isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio) },
-            { artwork: RankingArtwork ->
-                isDesiredPixelSize(
-                    artwork.width,
-                    artwork.height,
-                    settingMinimumHeight,
-                    settingMinimumWidth,
-                    settingAspectRatio
-                )
-            },
-            { artwork: RankingArtwork -> !isBeenDeleted(artwork.illust_id) },
-            { artwork: RankingArtwork -> settingNsfwSelection.contains(artwork.illust_content_type.sexual.toString()) },
+        val predicates: List<(RankingArtwork) -> Boolean> = listOfNotNull(
+            { !isDuplicateArtwork(it.illust_id) },
+            { isEnoughViews(it.view_count, settingMinimumViewCount) },
+            { settingShowManga || !settingShowManga && it.illust_type == 0 },
+            { isDesiredAspectRatio(it.width, it.height, settingAspectRatio) },
+            { isDesiredPixelSize(it.width, it.height, settingMinimumHeight, settingMinimumWidth, settingAspectRatio) },
+            { !isBeenDeleted(it.illust_id) },
+            { settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
+            // There are only two NSFW levels. If user has selected both, don't bother filtering NSFW, they want everything
+            if (settingNsfwSelection.size != 2) {
+                { settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) }
+            } else null
         )
 
         val filteredArtworksList = artworkList.filter { candidate ->
@@ -536,27 +532,21 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         settingMinimumWidth: Int,
         settingMinimumHeight: Int
     ): AuthArtwork {
-        val predicates = listOf(
-            { artwork: AuthArtwork -> !isDuplicateArtwork(artwork.id) },
-            { artwork: AuthArtwork -> settingShowManga || !settingShowManga && artwork.type != "manga" },
-            { artwork: AuthArtwork -> isDesiredAspectRatio(artwork.width, artwork.height, settingAspectRatio) },
-            { artwork: AuthArtwork ->
-                isDesiredPixelSize(
-                    artwork.width,
-                    artwork.height,
-                    settingMinimumWidth,
-                    settingMinimumHeight,
-                    settingAspectRatio
-                )
-            },
-            { artwork: AuthArtwork -> isEnoughViews(artwork.total_view, settingMinimumViews) },
-            { artwork: AuthArtwork -> !isBeenDeleted(artwork.id) },
-            { artwork: AuthArtwork ->
-                settingIsRecommended ||
-                        settingNsfwSelection.size == 4 ||
-                        settingNsfwSelection.contains(artwork.sanity_level.toString()) ||
-                        settingNsfwSelection.contains("8") && artwork.x_restrict == 1
-            },
+        val predicates: List<(AuthArtwork) -> Boolean> = listOfNotNull(
+            { !isDuplicateArtwork(it.id) },
+            { settingShowManga || !settingShowManga && it.type != "manga" },
+            { isDesiredAspectRatio(it.width, it.height, settingAspectRatio) },
+            { isDesiredPixelSize(it.width, it.height, settingMinimumWidth, settingMinimumHeight, settingAspectRatio) },
+            { isEnoughViews(it.total_view, settingMinimumViews) },
+            { !isBeenDeleted(it.id) },
+            // If feed mode is recommended or user has selected all possible NSFW levels, then don't bother filtering NSFW
+            // Recommended only provides SFW artwork
+            if (!settingIsRecommended || settingNsfwSelection.size != 4) {
+                {
+                    settingNsfwSelection.contains(it.sanity_level.toString()) ||
+                            (settingNsfwSelection.contains("8") && it.x_restrict == 1)
+                }
+            } else null
         )
 
         val filteredArtworksList = artworkList.filter { candidate ->
