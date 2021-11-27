@@ -494,10 +494,10 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             val imageHttpClient = OkHttpClient.Builder()
                 .addInterceptor(Interceptor { chain: Interceptor.Chain ->
                     val original = chain.request()
-                    val request = original.newBuilder()
+                    val newRequest = original.newBuilder()
                         .header("Referer", PixivProviderConst.PIXIV_API_HOST_URL)
                         .build()
-                    chain.proceed(request)
+                    chain.proceed(newRequest)
                 })
                 //.addInterceptor(NetworkTrafficLogInterceptor())
                 .build()
