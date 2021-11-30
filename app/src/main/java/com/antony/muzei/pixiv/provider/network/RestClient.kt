@@ -23,11 +23,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 object RestClient {
-    private val okHttpClientAuthBuilder get() = OkHttpSingleton.getInstance().newBuilder()
-        .apply {
-            addNetworkInterceptor(PixivAuthHeaderInterceptor())
-            //addInterceptor(CustomClientHeaderInterceptor())
-        }
+    private val okHttpClientAuthBuilder
+        get() = OkHttpSingleton.getInstance().newBuilder()
+            .apply {
+                addNetworkInterceptor(PixivAuthHeaderInterceptor())
+                //addInterceptor(CustomClientHeaderInterceptor())
+            }
 
     // Used for acquiring Ranking JSON
     fun getRetrofitRankingInstance(): Retrofit {
@@ -69,7 +70,6 @@ object RestClient {
         return Retrofit.Builder()
             .client(OkHttpSingleton.getInstance())
             .baseUrl(PIXIV_API_HOST_URL)
-            .addConverterFactory(MoshiConverterFactory.create())
             .build()
     }
 
