@@ -38,7 +38,7 @@ data class AuthArtwork(
     val total_bookmarks: Int,
     val total_view: Int,
     val type: String,
-    val user: User,
+    val user: Artist,
     val visible: Boolean,
     val width: Int,
     val x_restrict: Int
@@ -64,7 +64,7 @@ data class Meta_Single_Page(val original_image_url: String?)
 data class Tags(val name: String)
 
 @JsonClass(generateAdapter = true)
-data class User(
+data class Artist(
     val account: String,
     val id: Int,
     val name: String

@@ -22,5 +22,5 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class Illusts(
     @Json(name = "illusts") val artworks: List<AuthArtwork>,
-    val next_url: String
+    val next_url: String?
 )

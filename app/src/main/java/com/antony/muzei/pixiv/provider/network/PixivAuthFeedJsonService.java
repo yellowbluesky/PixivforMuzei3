@@ -17,6 +17,7 @@
 
 package com.antony.muzei.pixiv.provider.network;
 
+import com.antony.muzei.pixiv.provider.network.moshi.FullUser;
 import com.antony.muzei.pixiv.provider.network.moshi.Illusts;
 
 import retrofit2.Call;
@@ -32,12 +33,18 @@ public interface PixivAuthFeedJsonService {
     @GET("v1/user/bookmarks/illust?restrict=public")
     Call<Illusts> getBookmarkJson(@Query("user_id") String userId);
 
+    @GET("v1/user/bookmarks/illust?restrict=public")
+    Call<Illusts> getBookmarkOffsetJson(@Query("user_id") String userId, @Query("max_bookmark_id") String maxBookmarkId);
+
     @GET("v1/search/illust?search_target=partial_match_for_tags&sort=date_desc")
     Call<Illusts> getTagSearchJson(@Query("word") String tag);
 
     @GET("v1/user/illusts")
     Call<Illusts> getArtistJson(@Query("user_id") String artist_id);
-    
+
+    @GET("v1/user/detail")
+    Call<FullUser> getUserDetails(@Query("user_id") String userId);
+
     @GET("v1/illust/recommended?content_type=illust&include_ranking_label=true&include_ranking_illusts=true")
     Call<Illusts> getRecommendedJson();
 
