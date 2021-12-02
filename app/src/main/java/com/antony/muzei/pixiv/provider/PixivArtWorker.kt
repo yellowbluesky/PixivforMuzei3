@@ -19,10 +19,12 @@ import com.antony.muzei.pixiv.PixivProviderConst.AUTH_MODES
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
+import com.antony.muzei.pixiv.provider.network.PixivAuthFeedJsonService
 import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
 import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
+import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
 import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
@@ -32,9 +34,11 @@ import okhttp3.*
 import okio.BufferedSink
 import okio.buffer
 import okio.sink
+import retrofit2.Call
 import java.io.File
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
     companion object {
@@ -71,6 +75,34 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             // Additionally, we definitely do not want to spam the API
         }
     }
+
+    private fun findBookmarkStartTime(userId: String) {
+        // request a bookmark JSON with a particular next url
+        val service: PixivAuthFeedJsonService = RestClient.getRetrofitAuthInstance()
+            .create(PixivAuthFeedJsonService::class.java)
+        var call: Call<Illusts?> = service.getBookmarkJson(userId)
+        var found = false
+        var prevId: Long = 0
+        var callingId: Long = 0
+        while (!found) {
+            val illusts = call.execute().body()!!
+            if (illusts.next_url != null) {
+                val currentId = illusts.next_url.substringAfter("max_bookmark_id=").toLong()
+                callingId = currentId - abs((currentId - prevId) / 2)
+                prevId = currentId
+                call = service.getBookmarkOffsetJson(userId, callingId.toString())
+            } else if (illusts.artworks.isEmpty()) {
+                val temp = callingId
+                callingId += abs((callingId - prevId) / 2)
+                prevId = temp
+                call = service.getBookmarkOffsetJson(userId, callingId.toString())
+            } else{
+                found = true
+            }
+        }
+
+    }
+
 
     private fun downloadImage(
         responseBody: ResponseBody?,
@@ -429,9 +461,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             { !isBeenDeleted(it.illust_id) },
             { settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
             // There are only two NSFW levels. If user has selected both, don't bother filtering NSFW, they want everything
-            if (settingNsfwSelection.size != 2) {
-                { settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) }
-            } else null
+            { settingNsfwSelection.size == 2 || settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
         )
 
         val filteredArtworksList = artworkList.filter { candidate ->
@@ -539,14 +569,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             { isDesiredPixelSize(it.width, it.height, settingMinimumWidth, settingMinimumHeight, settingAspectRatio) },
             { isEnoughViews(it.total_view, settingMinimumViews) },
             { !isBeenDeleted(it.id) },
+            {
+                settingIsRecommended || settingNsfwSelection.size == 4 ||
+                        settingNsfwSelection.contains(it.sanity_level.toString()) ||
+                        (settingNsfwSelection.contains("8") && it.x_restrict == 1)
+            }
             // If feed mode is recommended or user has selected all possible NSFW levels, then don't bother filtering NSFW
             // Recommended only provides SFW artwork
-            if (!settingIsRecommended || settingNsfwSelection.size != 4) {
-                {
-                    settingNsfwSelection.contains(it.sanity_level.toString()) ||
-                            (settingNsfwSelection.contains("8") && it.x_restrict == 1)
-                }
-            } else null
         )
 
         val filteredArtworksList = artworkList.filter { candidate ->
@@ -582,6 +611,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         Log.i(LOG_TAG, "Feed mode: $updateMode")
         if (AUTH_MODES.contains(updateMode)) {
             // Determines if any extra information is needed, and passes it along
+            // If bookmark, specify a second data for offset
             val data = when (updateMode) {
                 "bookmark" -> sharedPrefs.getString("userId", "")
                 "artist" -> sharedPrefs.getString("pref_artistId", "")
