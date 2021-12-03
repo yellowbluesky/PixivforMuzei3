@@ -16,7 +16,6 @@ class IllustsHelper(_updateMode: String, _data: String) {
     fun getNewIllusts(): Illusts {
         val call: Call<Illusts?> = when (updateMode) {
             "follow" -> service.followJson
-            "bookmark" -> service.getBookmarkJson(data)
             "recommended" -> service.recommendedJson
             "artist" -> service.getArtistJson(data)
             "tag_search" -> service.getTagSearchJson(data)
