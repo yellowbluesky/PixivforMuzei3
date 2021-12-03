@@ -622,7 +622,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         Log.i(LOG_TAG, "Feed mode: $updateMode")
         if (updateMode == "bookmark") {
             // If we do not know the oldest bookmark id for the currently signed in account
-            if (sharedPrefs.getString("oldestMaxBookmarkId", "")!!.isEmpty()) {
+            if (sharedPrefs.getLong("oldestMaxBookmarkId", 0.toLong()) == 0.toLong()) {
                 findBookmarkStartTime(sharedPrefs.getString("userId", "")!!)
             }
 
