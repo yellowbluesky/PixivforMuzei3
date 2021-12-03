@@ -77,6 +77,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
     }
 
     private fun findBookmarkStartTime(userId: String) {
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         // request a bookmark JSON with a particular next url
         val service: PixivAuthFeedJsonService = RestClient.getRetrofitAuthInstance()
             .create(PixivAuthFeedJsonService::class.java)
@@ -84,23 +85,33 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         var found = false
         var prevId: Long = 0
         var callingId: Long = 0
+        var counter = 0
         while (!found) {
+            Log.d("BOOKMARK_FEED", counter.toString())
+            Log.d("BOOKMARK_FEED", callingId.toString())
+            counter++
             val illusts = call.execute().body()!!
             if (illusts.next_url != null) {
+                Log.d("BOOKMARK_FEED", "too high")
                 val currentId = illusts.next_url.substringAfter("max_bookmark_id=").toLong()
                 callingId = currentId - abs((currentId - prevId) / 2)
                 prevId = currentId
                 call = service.getBookmarkOffsetJson(userId, callingId.toString())
             } else if (illusts.artworks.isEmpty()) {
+                Log.d("BOOKMARK_FEED", "too low")
                 val temp = callingId
                 callingId += abs((callingId - prevId) / 2)
                 prevId = temp
                 call = service.getBookmarkOffsetJson(userId, callingId.toString())
-            } else{
+            } else {
                 found = true
+                Log.d("BOOKMARK_FEED", "FOUND")
             }
         }
-
+        with(sharedPrefs.edit()) {
+            putString("oldestMaxBookmarkId", callingId.toString())
+            apply()
+        }
     }
 
 
@@ -609,7 +620,33 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         // Thus two identical if statements are required
         val artworkList: MutableList<Artwork> = mutableListOf()
         Log.i(LOG_TAG, "Feed mode: $updateMode")
-        if (AUTH_MODES.contains(updateMode)) {
+        if (updateMode == "bookmark") {
+            // If we do not know the oldest bookmark id for the currently signed in account
+            if (sharedPrefs.getString("oldestMaxBookmarkId", "")!!.isEmpty()) {
+                findBookmarkStartTime(sharedPrefs.getString("userId", "")!!)
+            }
+
+            val bookmarksHelper = BookmarksHelper(sharedPrefs.getString("userId", "")!!)
+
+            // find the lower bound
+            val oldestBookmarkId = sharedPrefs.getString("oldestMaxBookmarkId", "")!!.toLong()
+            Log.d("BOOKMARK_FEED", oldestBookmarkId.toString())
+            // Find the upper bound
+            val currentBookmarkId =
+                bookmarksHelper.getNewIllusts().next_url?.substringAfter("max_bookmark_id=")!!.toLong()
+            Log.d("BOOKMARK_FEED", currentBookmarkId.toString())
+
+            var bookmarkArtworks = bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
+            for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+                try {
+                    artworkList.add(getArtworkAuth(bookmarkArtworks, false))
+                } catch (e: FilterMatchNotFoundException) {
+                    Log.i(LOG_TAG, "Fetching new illusts")
+                }
+                bookmarkArtworks = bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
+            }
+
+        } else if (AUTH_MODES.contains(updateMode)) {
             // Determines if any extra information is needed, and passes it along
             // If bookmark, specify a second data for offset
             val data = when (updateMode) {
