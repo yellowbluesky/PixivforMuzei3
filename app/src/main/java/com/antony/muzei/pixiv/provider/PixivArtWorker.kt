@@ -632,8 +632,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             val oldestBookmarkId = sharedPrefs.getString("oldestMaxBookmarkId", "")!!.toLong()
             Log.d("BOOKMARK_FEED", oldestBookmarkId.toString())
             // Find the upper bound
-            val currentBookmarkId =
-                bookmarksHelper.getNewIllusts().next_url?.substringAfter("max_bookmark_id=")!!.toLong()
+            val currentBookmarkId: Long =
+                (bookmarksHelper.getNewIllusts().next_url?.substringAfter("max_bookmark_id=")!!.toLong() * 1.01).toLong()
             Log.d("BOOKMARK_FEED", currentBookmarkId.toString())
 
             var bookmarkArtworks = bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
