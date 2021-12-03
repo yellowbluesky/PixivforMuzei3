@@ -403,7 +403,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         // Filtering
         Log.i(LOG_TAG, "Filtering ranking artwork")
         val rankingArtwork = filterArtworkRanking(
-            contents.artworks.toMutableList().shuffled() as MutableList<RankingArtwork>,
+            contents.artworks,
             sharedPrefs.getBoolean("pref_showManga", false),
             sharedPrefs.getStringSet("pref_rankingFilterSelect", setOf("0")) ?: setOf("0"),
             sharedPrefs.getString("pref_aspectRatioSelect", "0")?.toInt() ?: 0,
@@ -488,7 +488,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
     }
 
     private fun getArtworkAuth(
-        artworkList: MutableList<AuthArtwork>,
+        artworkList: List<AuthArtwork>,
         isRecommended: Boolean
     ): Artwork {
         Log.i(LOG_TAG, "Getting auth artwork")
@@ -496,7 +496,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
 
         Log.i(LOG_TAG, "Filtering auth artwork")
         val selectedArtwork = filterArtworkAuth(
-            artworkList.shuffled() as MutableList<AuthArtwork>,
+            artworkList,
             sharedPrefs.getBoolean("pref_showManga", false),
             sharedPrefs.getStringSet("pref_authFilterSelect", setOf("2")) ?: setOf("2"),
             sharedPrefs.getString("pref_aspectRatioSelect", "0")?.toInt() ?: 0,
@@ -564,7 +564,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
     }
 
     private fun filterArtworkAuth(
-        artworkList: MutableList<AuthArtwork>,
+        artworkList: List<AuthArtwork>,
         settingShowManga: Boolean,
         settingNsfwSelection: Set<String>,
         settingAspectRatio: Int,
