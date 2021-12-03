@@ -109,7 +109,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             }
         }
         with(sharedPrefs.edit()) {
-            putString("oldestMaxBookmarkId", callingId.toString())
+            putLong("oldestMaxBookmarkId", callingId)
             apply()
         }
     }
@@ -629,19 +629,17 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
             val bookmarksHelper = BookmarksHelper(sharedPrefs.getString("userId", "")!!)
 
             // find the lower bound
-            val oldestBookmarkId = sharedPrefs.getString("oldestMaxBookmarkId", "")!!.toLong()
-            Log.d("BOOKMARK_FEED", oldestBookmarkId.toString())
+            val oldestBookmarkId = sharedPrefs.getLong("oldestMaxBookmarkId", 0)
             // Find the upper bound
             val currentBookmarkId: Long =
                 (bookmarksHelper.getNewIllusts().next_url?.substringAfter("max_bookmark_id=")!!.toLong() * 1.01).toLong()
-            Log.d("BOOKMARK_FEED", currentBookmarkId.toString())
 
             var bookmarkArtworks = bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
             for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
                 try {
                     artworkList.add(getArtworkAuth(bookmarkArtworks, false))
                 } catch (e: FilterMatchNotFoundException) {
-                    Log.i(LOG_TAG, "Fetching new illusts")
+                    Log.i(LOG_TAG, "Fetching new bookmarks")
                 }
                 bookmarkArtworks = bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
             }
