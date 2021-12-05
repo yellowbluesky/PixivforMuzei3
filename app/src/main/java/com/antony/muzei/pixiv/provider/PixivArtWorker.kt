@@ -244,8 +244,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             arrayOf(MediaStore.Images.Media._ID),
-            "${MediaStore.Images.Media.DISPLAY_NAME} = ?",
-            arrayOf(filename),
+            "${MediaStore.Images.Media.DISPLAY_NAME} LIKE ?",
+            arrayOf("$filename%"),
             null
         )?.let {
             if (it.count != 0) {
