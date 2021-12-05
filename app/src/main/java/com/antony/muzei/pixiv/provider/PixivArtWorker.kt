@@ -38,9 +38,9 @@ import retrofit2.Call
 import java.io.File
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 
-class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
+    Worker(context, workerParams) {
     companion object {
         const val LOG_TAG = "ANTONY_WORKER"
         private const val WORKER_TAG = "ANTONY"
@@ -76,39 +76,71 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) : Worker(
         }
     }
 
+    /*
+    * Performs binary search to find when the oldest bookmark artwork was made.
+    * Buckle up for a fairly convoluted explanation
+    * Context: Imagine a user account with 1000 bookmarked artworks made over the past one year
+    * The Pixiv API has no way to arbitrarily navigate to any single bookmarked artwork.
+    * Instead, when making an API call we may specify a "max_bookmark_id" parameter
+    * This parameter is a timestamp of some sort. From my investigations, it appears to be a counting
+    * in centiseconds from an epoch sometime in early 2016. This doesn't seem entirely correct, but exact understanding
+    * is not strictly required
+    * The parameter is a "sliding window", and varying this parameter varies what artworks are returned in the API response
+    * As the parameter is a timestamp, adjusting it can have unpredictable results:
+    *   If the user has made many bookmarks in a short period of time, then a slight adjustment will present completely new artworks
+    *   If the user has slowly added bookmarks, then even a large adjustment will not result in a dramatically different API response
+    *
+    * Binary search parameters
+    *   Stop criteria: API response with non-empty artwork list, but also a null next_url value
+    *   Heuristics:
+    *       We are too high if the API response contains a next_url value
+    *       We are low if the API response contains no artworks.
+    *   Search space: Between maximal value and 0
+    *   Initial value: maximal value
+    *   Initial step: to halfway within the search space
+    *
+    * Binary Search Algorithm
+    *   Every step, if the stop criteria is not met, the search will move up or down by half the last step
+    *
+    *
+    * Example:
+    *   Say that the initial value is 100, and the target value is 67.5
+    *       The inital search at 100 is too high, so we go down by half the search space to 50
+    *       50 is too low, go up by half the previous step (25 = 50 / 2) to 75
+    *       75 is too high, so we go down by half the previous step (12.5 = 25 / 2) to 67.5
+    *       We have a match
+    */
     private fun findBookmarkStartTime(userId: String) {
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        // request a bookmark JSON with a particular next url
+        Log.d(LOG_TAG, "Looking for oldest bookmark id")
         val service: PixivAuthFeedJsonService = RestClient.getRetrofitAuthInstance()
             .create(PixivAuthFeedJsonService::class.java)
         var call: Call<Illusts?> = service.getBookmarkJson(userId)
-        var found = false
-        var prevId: Long = 0
-        var callingId: Long = 0
+
         var counter = 0
-        while (!found) {
-            Log.d("BOOKMARK_FEED", counter.toString())
-            Log.d("BOOKMARK_FEED", callingId.toString())
+        var callingId = 0L
+        // setting initial value
+        var illusts = call.execute().body()!!
+        var step = illusts.next_url!!.substringAfter("max_bookmark_id=").toLong()
+        while (true) {
             counter++
-            val illusts = call.execute().body()!!
+            Log.d(LOG_TAG, "Iteration $counter")
             if (illusts.next_url != null) {
-                Log.d("BOOKMARK_FEED", "too high")
-                val currentId = illusts.next_url.substringAfter("max_bookmark_id=").toLong()
-                callingId = currentId - abs((currentId - prevId) / 2)
-                prevId = currentId
+                // we are too high
+                val currentId = illusts.next_url!!.substringAfter("max_bookmark_id=").toLong()
+                step /= 2
+                callingId = currentId - step
                 call = service.getBookmarkOffsetJson(userId, callingId.toString())
             } else if (illusts.artworks.isEmpty()) {
-                Log.d("BOOKMARK_FEED", "too low")
-                val temp = callingId
-                callingId += abs((callingId - prevId) / 2)
-                prevId = temp
+                step /= 2
+                callingId += step
                 call = service.getBookmarkOffsetJson(userId, callingId.toString())
             } else {
-                found = true
-                Log.d("BOOKMARK_FEED", "FOUND")
+                Log.d(LOG_TAG, "Found at $callingId")
+                break
             }
+            illusts = call.execute().body()!!
         }
-        with(sharedPrefs.edit()) {
+        with(PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()) {
             putLong("oldestMaxBookmarkId", callingId)
             apply()
         }
