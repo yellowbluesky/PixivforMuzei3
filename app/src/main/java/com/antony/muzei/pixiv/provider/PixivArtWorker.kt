@@ -632,11 +632,94 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         return filteredArtworksList.random()
     }
 
+    private fun getArtworksBookmark(): List<Artwork> {
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+
+        // If we do not know the oldest bookmark id for the currently signed in account
+        if (sharedPrefs.getLong("oldestMaxBookmarkId", 0L) == 0L) {
+            findBookmarkStartTime(sharedPrefs.getString("userId", "")!!)
+        }
+
+        val bookmarksHelper = BookmarksHelper(sharedPrefs.getString("userId", "")!!)
+
+        // find the lower bound
+        val oldestBookmarkId = sharedPrefs.getLong("oldestMaxBookmarkId", 0)
+        // Find the upper bound
+        val currentBookmarkId: Long =
+            (bookmarksHelper.getNewIllusts().next_url?.substringAfter("max_bookmark_id=")!!
+                .toLong() * 1.01).toLong()
+
+        var bookmarkArtworks = bookmarksHelper.getNewIllusts(
+            (oldestBookmarkId..currentBookmarkId).random().toString()
+        ).artworks
+        val artworkList = mutableListOf<Artwork>()
+        for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            try {
+                artworkList.add(buildArtworkAuth(bookmarkArtworks, false))
+            } catch (e: FilterMatchNotFoundException) {
+                Log.i(LOG_TAG, "Fetching new bookmarks")
+            }
+            bookmarkArtworks = bookmarksHelper.getNewIllusts(
+                (oldestBookmarkId..currentBookmarkId).random().toString()
+            ).artworks
+        }
+        return artworkList
+    }
+
+    private fun getArtworksAuth(updateMode: String): List<Artwork> {
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        // Determines if any extra information is needed, and passes it along
+        // If bookmark, specify a second data for offset
+        val data = when (updateMode) {
+            "bookmark" -> sharedPrefs.getString("userId", "")
+            "artist" -> sharedPrefs.getString("pref_artistId", "")
+            "tag_search" -> sharedPrefs.getString("pref_tagSearch", "")
+            else -> ""
+        }
+        // illustsHelper is stateful, stores a copy of Illusts, and can fetch a new one if needed
+        val illustsHelper = IllustsHelper(updateMode, data ?: "")
+        var authArtworkList = illustsHelper.getNewIllusts().artworks
+
+        val artworkList = mutableListOf<Artwork>()
+        for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            try {
+                artworkList.add(
+                    buildArtworkAuth(
+                        authArtworkList.toMutableList(),
+                        updateMode == "recommended"
+                    )
+                )
+            } catch (e: FilterMatchNotFoundException) {
+                Log.i(LOG_TAG, "Fetching new illusts")
+                authArtworkList = illustsHelper.getNextIllusts().artworks
+            }
+        }
+        return artworkList
+    }
+
+    private fun getArtworksRanking(updateMode: String): List<Artwork> {
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        // contentsHelper is stateful, stores a copy of Contents, and can fetch a new one if needed
+        val contentsHelper = ContentsHelper(updateMode)
+        var contents = contentsHelper.getNewContents()
+
+        val artworkList = mutableListOf<Artwork>()
+        for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            try {
+                artworkList.add(buildArtworkRanking(contents))
+            } catch (e: FilterMatchNotFoundException) {
+                Log.i(LOG_TAG, "Fetching new contents")
+                contents = contentsHelper.getNextContents()
+            }
+        }
+        return artworkList
+    }
+
     // Returns a list of Artworks to Muzei
     //
-    private fun getArtworks(): MutableList<Artwork>? {
+    private fun getArtworks(): List<Artwork>? {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        var updateMode = sharedPrefs.getString("pref_updateMode", "daily")
+        var updateMode = sharedPrefs.getString("pref_updateMode", "daily") ?: "daily"
 
         // Gets an up to date access token if required
         if (AUTH_MODES.contains(updateMode)) {
@@ -650,66 +733,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         // App has functionality to temporarily or permanently change the update mode if authentication fails
         // i.e. update mode can change between the previous if block and this if block
         // Thus two identical if statements are required
-        val artworkList: MutableList<Artwork> = mutableListOf()
         Log.i(LOG_TAG, "Feed mode: $updateMode")
-        if (updateMode == "bookmark") {
-            // If we do not know the oldest bookmark id for the currently signed in account
-            if (sharedPrefs.getLong("oldestMaxBookmarkId", 0.toLong()) == 0.toLong()) {
-                findBookmarkStartTime(sharedPrefs.getString("userId", "")!!)
-            }
-
-            val bookmarksHelper = BookmarksHelper(sharedPrefs.getString("userId", "")!!)
-
-            // find the lower bound
-            val oldestBookmarkId = sharedPrefs.getLong("oldestMaxBookmarkId", 0)
-            // Find the upper bound
-            val currentBookmarkId: Long =
-                (bookmarksHelper.getNewIllusts().next_url?.substringAfter("max_bookmark_id=")!!.toLong() * 1.01).toLong()
-
-            var bookmarkArtworks = bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
-            for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
-                try {
-                    artworkList.add(getArtworkAuth(bookmarkArtworks, false))
-                } catch (e: FilterMatchNotFoundException) {
-                    Log.i(LOG_TAG, "Fetching new bookmarks")
-                }
-                bookmarkArtworks = bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
-            }
-
+        val artworkList: List<Artwork> = if (updateMode == "bookmark") {
+            getArtworksBookmark()
         } else if (AUTH_MODES.contains(updateMode)) {
-            // Determines if any extra information is needed, and passes it along
-            // If bookmark, specify a second data for offset
-            val data = when (updateMode) {
-                "bookmark" -> sharedPrefs.getString("userId", "")
-                "artist" -> sharedPrefs.getString("pref_artistId", "")
-                "tag_search" -> sharedPrefs.getString("pref_tagSearch", "")
-                else -> ""
-            }
-            // illustsHelper is stateful, stores a copy of Illusts, and can fetch a new one if needed
-            val illustsHelper = IllustsHelper(updateMode ?: "recommended", data ?: "")
-            var authArtworkList = illustsHelper.getNewIllusts().artworks
-
-            for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
-                try {
-                    artworkList.add(getArtworkAuth(authArtworkList.toMutableList(), updateMode == "recommended"))
-                } catch (e: FilterMatchNotFoundException) {
-                    Log.i(LOG_TAG, "Fetching new illusts")
-                    authArtworkList = illustsHelper.getNextIllusts().artworks
-                }
-            }
+            getArtworksAuth(updateMode)
         } else {
-            // contentsHelper is stateful, stores a copy of Contents, and can fetch a new one if needed
-            val contentsHelper = ContentsHelper(updateMode ?: "daily")
-            var contents = contentsHelper.getNewContents()
-
-            for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
-                try {
-                    artworkList.add(getArtworkRanking(contents))
-                } catch (e: FilterMatchNotFoundException) {
-                    Log.i(LOG_TAG, "Fetching new contents")
-                    contents = contentsHelper.getNextContents()
-                }
-            }
+            getArtworksRanking(updateMode)
         }
         Log.i(LOG_TAG, "Submitting ${artworkList.size} artworks")
         return artworkList
