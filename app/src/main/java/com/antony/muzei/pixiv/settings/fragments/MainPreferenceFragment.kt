@@ -137,13 +137,16 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
             findPreference<Preference>("pref_authFilterSelect")!!.isVisible = true
             findPreference<Preference>("prefCat_loginSettings")!!.isVisible = true
             if (updateMode == "tag_search") {
-                val tagSearch = findPreference<Preference>("pref_tagSearch")
-                tagSearch!!.isVisible = true
-                tagSearch.summary = sharedPrefs.getString("pref_tagSearch", "")
+                findPreference<Preference>("pref_tagSearch")?.let {
+                    it.isVisible = true
+                }
+                findPreference<Preference>("pref_tagLanguage")?.let {
+                    it.isVisible = true
+                }
             } else if (updateMode == "artist") {
-                val artistId = findPreference<Preference>("pref_artistId")
-                artistId!!.isVisible = true
-                artistId.summary = sharedPrefs.getString("pref_artistId", "")
+                findPreference<Preference>("pref_artistId")?.let {
+                    it.isVisible = true
+                }
             }
         } else {
             findPreference<Preference>("pref_rankingFilterSelect")!!.isVisible = true

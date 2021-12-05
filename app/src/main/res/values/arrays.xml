@@ -80,7 +80,7 @@
 
     <string-array name="pref_tagFilterLanguage_entryValues">
         <item>ja</item>
-        <item>en</item>
+        <item>en-us</item>
         <item>ko</item>
         <item>zh</item>
         <item>zh_tw</item>

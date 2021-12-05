@@ -26,8 +26,8 @@
             android:entryValues="@array/pref_updateMode_entryValues"
             android:key="pref_updateMode"
             android:persistent="true"
-            app:useSimpleSummaryProvider="true"
-            android:title="@string/pref_updateMode" />
+            android:title="@string/pref_updateMode"
+            app:useSimpleSummaryProvider="true" />
         <MultiSelectListPreference
             android:defaultValue="@array/pref_rankingFilterDefault_entryvalues"
             android:entries="@array/pref_rankingFilterLevel_entries"
@@ -54,14 +54,24 @@
             android:key="pref_tagSearch"
             android:persistent="true"
             android:title="@string/prefTitle_tagSearch"
-            app:isPreferenceVisible="false" />
+            app:isPreferenceVisible="false"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:key="pref_tagLanguage"
+            android:persistent="true"
+            android:title="@string/prefTitle_tagLanguage"
+            app:entries="@array/pref_tagFilterLanguage_entries"
+            app:entryValues="@array/pref_tagFilterLanguage_entryValues"
+            app:isPreferenceVisible="false"
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             android:dialogTitle="@string/prefTitle_artistId"
             android:inputType="number"
             android:key="pref_artistId"
             android:persistent="true"
             android:title="@string/prefTitle_artistId"
-            app:isPreferenceVisible="false" />
+            app:isPreferenceVisible="false"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="prefCat_loginSettings"
@@ -72,7 +82,7 @@
             android:entryValues="@array/array_authFailActions_entryvalues"
             android:key="pref_authFailAction"
             android:persistent="true"
-            app:useSimpleSummaryProvider="true"
-            android:title="@string/pref_authFailActionDropDown" />
+            android:title="@string/pref_authFailActionDropDown"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
