@@ -184,7 +184,10 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         // Inserting the filename, relative path within the /Pictures folder, and MIME type into the content provider
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, filename)
-            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PixivForMuzei3")
+            put(
+                MediaStore.Images.Media.RELATIVE_PATH,
+                Environment.DIRECTORY_PICTURES + "/PixivForMuzei3"
+            )
             put(MediaStore.MediaColumns.MIME_TYPE, fileType.toString())
         }
 
@@ -208,7 +211,10 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
 
         //Gives us a URI to save the image to
-        val imageUri = contentResolver.insert(MediaStore.Images.Media.getContentUri(volumeName), contentValues)!!
+        val imageUri = contentResolver.insert(
+            MediaStore.Images.Media.getContentUri(volumeName),
+            contentValues
+        )!!
         // Null asserted here because if contentResolver.insert() returns a null for whatever reason, we really cannot proceed
 
         // The other method using BufferedSink doesn't work all we have is a URI to sink into
@@ -229,7 +235,10 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
     /* Checking if existing copy of images exists*/
     // Returns the Uri of an image with matching filename
     // otherwise returns null
-    private fun isImageAlreadyDownloadedApi29(contentResolver: ContentResolver, filename: String): Uri? {
+    private fun isImageAlreadyDownloadedApi29(
+        contentResolver: ContentResolver,
+        filename: String
+    ): Uri? {
         // Specifying that I want only the _ID column returned
         // Specifying that I only want rows that have a DISPLAY_NAME matching the filename passed
         contentResolver.query(
@@ -271,7 +280,12 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             if (!image.exists()) {
                 // Broadcast the addition of a new media file
                 // Solves problem where the images were not showing up in their gallery up until a scan was triggered
-                MediaScannerConnection.scanFile(applicationContext, arrayOf(image.toString()), null, null)
+                MediaScannerConnection.scanFile(
+                    applicationContext,
+                    arrayOf(image.toString()),
+                    null,
+                    null
+                )
             } else {
                 // If the image has already been downloaded, do not redownload
                 Log.i(LOG_TAG, "Artwork exists, early exit")
@@ -296,7 +310,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
     ): Uri {
         Log.i(LOG_TAG, "Downloading artwork, internal")
         File(
-            applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "$filename.${fileType!!.subtype}"
+            applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+            "$filename.${fileType!!.subtype}"
             // TODO handle this null asserted
         ).also {
             if (it.exists()) {
@@ -428,7 +443,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
     }
 
     // Each call to this function returns a single Ranking artwork
-    private fun getArtworkRanking(contents: Contents): Artwork {
+    private fun buildArtworkRanking(contents: Contents): Artwork {
         Log.i(LOG_TAG, "Getting ranking artwork")
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
@@ -500,7 +515,15 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             { isEnoughViews(it.view_count, settingMinimumViewCount) },
             { settingShowManga || !settingShowManga && it.illust_type == 0 },
             { isDesiredAspectRatio(it.width, it.height, settingAspectRatio) },
-            { isDesiredPixelSize(it.width, it.height, settingMinimumHeight, settingMinimumWidth, settingAspectRatio) },
+            {
+                isDesiredPixelSize(
+                    it.width,
+                    it.height,
+                    settingMinimumHeight,
+                    settingMinimumWidth,
+                    settingAspectRatio
+                )
+            },
             { !isBeenDeleted(it.illust_id) },
             { settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
             // There are only two NSFW levels. If user has selected both, don't bother filtering NSFW, they want everything
@@ -519,7 +542,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         return filteredArtworksList.random()
     }
 
-    private fun getArtworkAuth(
+    private fun buildArtworkAuth(
         artworkList: List<AuthArtwork>,
         isRecommended: Boolean
     ): Artwork {
@@ -609,7 +632,15 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             { !isDuplicateArtwork(it.id) },
             { settingShowManga || !settingShowManga && it.type != "manga" },
             { isDesiredAspectRatio(it.width, it.height, settingAspectRatio) },
-            { isDesiredPixelSize(it.width, it.height, settingMinimumWidth, settingMinimumHeight, settingAspectRatio) },
+            {
+                isDesiredPixelSize(
+                    it.width,
+                    it.height,
+                    settingMinimumWidth,
+                    settingMinimumHeight,
+                    settingAspectRatio
+                )
+            },
             { isEnoughViews(it.total_view, settingMinimumViews) },
             { !isBeenDeleted(it.id) },
             {
@@ -752,21 +783,33 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 Log.i(LOG_TAG, "Changing mode to daily")
                 sharedPrefs.edit().putString("pref_updateMode", "daily").apply()
                 PixivMuzeiSupervisor.post(Runnable {
-                    Toast.makeText(applicationContext, R.string.toast_authFailedSwitch, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        applicationContext,
+                        R.string.toast_authFailedSwitch,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 })
                 return "daily"
             }
             "doNotChange_downDaily" -> {
                 Log.i(LOG_TAG, "Downloading a single daily")
                 PixivMuzeiSupervisor.post(Runnable {
-                    Toast.makeText(applicationContext, R.string.toast_authFailedDown, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        applicationContext,
+                        R.string.toast_authFailedDown,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 })
                 return "daily"
             }
             "doNotChange_doNotDown" -> {
                 Log.i(LOG_TAG, "Retrying with no changes")
                 PixivMuzeiSupervisor.post(Runnable {
-                    Toast.makeText(applicationContext, R.string.toast_authFailedRetry, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        applicationContext,
+                        R.string.toast_authFailedRetry,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 })
                 return null
             }
