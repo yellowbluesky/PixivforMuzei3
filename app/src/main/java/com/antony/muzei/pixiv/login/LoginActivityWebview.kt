@@ -134,6 +134,11 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                                         System.currentTimeMillis().div(1000)
                                     )
 
+                                    putLong(
+                                        PREFERENCE_OLDEST_MAX_BOOKMARK_ID,
+                                        0
+                                    )
+
                                     oauthResponse.response.user.also { user ->
                                         putString("userId", user.id)
                                         putString("name", user.name)
