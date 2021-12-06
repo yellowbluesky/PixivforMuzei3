@@ -21,6 +21,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.preference.*
 import androidx.work.WorkManager
 import com.antony.muzei.pixiv.PixivProviderConst.AUTH_MODES
@@ -29,17 +30,16 @@ import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.login.LoginActivityWebview
 import com.antony.muzei.pixiv.provider.PixivArtWorker.Companion.enqueueLoad
 import com.google.android.material.snackbar.Snackbar
-import java.io.File
 import java.util.*
 
 
 class MainPreferenceFragment : PreferenceFragmentCompat() {
-    private var oldUpdateMode: String? = null
-    private var newUpdateMode: String? = null
-    private var oldTag: String? = null
-    private var newTag: String? = null
-    private var oldArtist: String? = null
-    private var newArtist: String? = null
+    private lateinit var oldUpdateMode: String
+    private lateinit var newUpdateMode: String
+    private lateinit var oldTag: String
+    private lateinit var newTag: String
+    private lateinit var oldArtist: String
+    private lateinit var newArtist: String
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.main_preference_layout, rootKey)
@@ -48,22 +48,22 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
 
         // Stores user toggleable variables into a temporary store for later comparison in onStop()
         // If the value of the preference on Activity creation is different to Activity stop, then take certain action
-        oldUpdateMode = sharedPrefs.getString("pref_updateMode", "daily")
-        newUpdateMode = oldUpdateMode
-        oldTag = sharedPrefs.getString("pref_tagSearch", "")
-        newTag = oldTag
-        oldArtist = sharedPrefs.getString("pref_artistId", "")
-        newArtist = oldArtist
+        oldUpdateMode = sharedPrefs.getString("pref_updateMode", "daily") ?: "daily"
+        oldTag = sharedPrefs.getString("pref_tagSearch", "") ?: ""
+        oldArtist = sharedPrefs.getString("pref_artistId", "") ?: ""
 
         // Ensures that the user has logged in first before selecting any update mode requiring authentication
         // Reveals UI elements as needed depending on Update Mode selection
         val updateModePref = findPreference<DropDownPreference>("pref_updateMode")
-        updateModePref!!.onPreferenceChangeListener =
+        updateModePref?.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener setOnPreferenceChangeListener@{ _: Preference?, newValue: Any ->
-                val isAuthUpdateMode = AUTH_MODES.contains(newValue.toString())
                 // User has selected an authenticated feed mode, but has not yet logged in as evidenced
                 // by the lack of an access token
-                if (isAuthUpdateMode && sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
+                if (AUTH_MODES.contains(newValue) && sharedPrefs.getString(
+                        PREFERENCE_PIXIV_ACCESS_TOKEN,
+                        ""
+                    )!!.isEmpty()
+                ) {
                     Snackbar.make(
                         requireView(), R.string.toast_loginFirst,
                         Snackbar.LENGTH_SHORT
@@ -73,10 +73,13 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                 // If any of the auth feed modes, reveal login Preference Category, reveal the auth NSFW filtering,
                 // and hide the ranking NSFW filtering
                 val authFeedModeSelected = AUTH_MODES.contains(newValue)
-                findPreference<Preference>("pref_authFilterSelect")!!.isVisible = authFeedModeSelected
-                findPreference<Preference>("pref_rankingFilterSelect")!!.isVisible = !authFeedModeSelected
-                findPreference<Preference>("pref_tagSearch")!!.isVisible = newValue == "tag_search"
-                findPreference<Preference>("pref_artistId")!!.isVisible = newValue == "artist"
+                findPreference<Preference>("pref_authFilterSelect")?.isVisible =
+                    authFeedModeSelected
+                findPreference<Preference>("pref_rankingFilterSelect")?.isVisible =
+                    !authFeedModeSelected
+                findPreference<Preference>("pref_tagSearch")?.isVisible = newValue == "tag_search"
+                findPreference<Preference>("pref_tagLanguage")?.isVisible = newValue == "tag_search"
+                findPreference<Preference>("pref_artistId")?.isVisible = newValue == "artist"
                 true
             }
 
@@ -84,58 +87,68 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
         // Will default to only SFW if no filtering modes are selected
         // Prints a summary string based on selection
         // Updates authFilterSelectPref summary as user updates it
-        val authFilterSelectPref = findPreference<MultiSelectListPreference>("pref_authFilterSelect")
-        authFilterSelectPref!!.onPreferenceChangeListener =
-            Preference.OnPreferenceChangeListener setOnPreferenceChangeListener@{ _: Preference?, newValue: Any ->
-                // Reset to SFW on empty selection
-                if ((newValue as HashSet<*>).isEmpty()) {
-                    authFilterSelectPref.values = setOf("2")
-                    sharedPrefs.edit().apply {
-                        putStringSet("pref_authFilterSelect", setOf("2"))
-                        apply()
+        // SimpleSummaryProvider does not support MultiSelectListPreference
+        findPreference<MultiSelectListPreference>("pref_authFilterSelect")?.let {
+            it.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener setOnPreferenceChangeListener@{ _: Preference?, newValue: Any ->
+                    // Reset to SFW on empty selection
+                    @Suppress("UNCHECKED_CAST")
+                    if ((newValue as Set<String>).isEmpty()) {
+                        it.values = setOf("2")
+                        sharedPrefs.edit().apply {
+                            putStringSet("pref_authFilterSelect", setOf("2"))
+                            apply()
+                        }
+                        it.summary = "SFW"
+                        return@setOnPreferenceChangeListener false
                     }
-                    authFilterSelectPref.summary = "SFW"
-                    return@setOnPreferenceChangeListener false
-                }
-                authFilterSelectPref.summary = authSummaryStringGenerator(newValue as HashSet<String>)
+                    it.summary =
+                        authSummaryStringGenerator(newValue)
 
-                true
-            }
-        authFilterSelectPref.summary =
-            authSummaryStringGenerator(sharedPrefs.getStringSet("pref_authFilterSelect", setOf("2")) as HashSet<String>)
+                    true
+                }
+            it.summary = authSummaryStringGenerator(
+                sharedPrefs.getStringSet(
+                    "pref_authFilterSelect",
+                    setOf("2")
+                ) as Set<String>
+            )
+        }
 
         // Updates ranking SFW filtering preference
         // Same manner as above, the auth modes
-        val rankingFilterSelectPref = findPreference<MultiSelectListPreference>("pref_rankingFilterSelect")
-        rankingFilterSelectPref!!.onPreferenceChangeListener =
-            Preference.OnPreferenceChangeListener setOnPreferenceChangeListener@{ _: Preference?, newValue: Any ->
-                // For some reason a length of 2 is an empty selection
-                if ((newValue as HashSet<*>).isEmpty()) {
-                    rankingFilterSelectPref.values = setOf("0")
-                    sharedPrefs.edit().apply {
-                        putStringSet("pref_rankingFilterSelect", setOf("0"))
-                        apply()
+        findPreference<MultiSelectListPreference>("pref_rankingFilterSelect")?.let {
+            it.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener setOnPreferenceChangeListener@{ _: Preference?, newValue: Any ->
+                    // Reset to SFW on empty selection
+                    @Suppress("UNCHECKED_CAST")
+                    if ((newValue as Set<String>).isEmpty()) {
+                        it.values = setOf("0")
+                        sharedPrefs.edit().apply {
+                            putStringSet("pref_rankingFilterSelect", setOf("0"))
+                            apply()
+                        }
+                        it.summary = "SFW"
+                        return@setOnPreferenceChangeListener false
                     }
-                    rankingFilterSelectPref.summary = "SFW"
-                    return@setOnPreferenceChangeListener false
+
+                    it.summary =
+                        rankingSummaryStringGenerator(newValue)
+
+                    true
                 }
-
-                rankingFilterSelectPref.summary = rankingSummaryStringGenerator(newValue as HashSet<String>)
-
-                true
-            }
-        // Generates the ranking NSFW filter summary during activity startup
-        rankingFilterSelectPref.summary =
-            rankingSummaryStringGenerator(
-                sharedPrefs.getStringSet("pref_rankingFilterSelect", setOf("0")) as HashSet<String>
-            )
-
+            // Generates the ranking NSFW filter summary during activity startup
+            it.summary =
+                rankingSummaryStringGenerator(
+                    sharedPrefs.getStringSet("pref_rankingFilterSelect", setOf("0")) as Set<String>
+                )
+        }
 
         // Reveal the tag_search or artist_id EditTextPreference and write the summary if update mode matches
         val updateMode = sharedPrefs.getString("pref_updateMode", "daily")
         if (AUTH_MODES.contains(updateMode)) {
-            findPreference<Preference>("pref_authFilterSelect")!!.isVisible = true
-            findPreference<Preference>("prefCat_loginSettings")!!.isVisible = true
+            findPreference<Preference>("pref_authFilterSelect")?.isVisible = true
+            findPreference<Preference>("prefCat_loginSettings")?.isVisible = true
             if (updateMode == "tag_search") {
                 findPreference<Preference>("pref_tagSearch")?.let {
                     it.isVisible = true
@@ -149,18 +162,15 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                 }
             }
         } else {
-            findPreference<Preference>("pref_rankingFilterSelect")!!.isVisible = true
+            findPreference<Preference>("pref_rankingFilterSelect")?.isVisible = true
         }
 
         // Preference that immediately clears Muzei's image cache when pressed
-        findPreference<Preference>(getString(R.string.button_clearCache))!!.onPreferenceClickListener =
+        findPreference<Preference>(getString(R.string.button_clearCache))?.onPreferenceClickListener =
             Preference.OnPreferenceClickListener {
                 WorkManager.getInstance(requireContext()).cancelUniqueWork("ANTONY")
-                val dir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                val children = dir!!.list()
-                for (child in children) {
-                    File(dir, child).delete()
-                }
+                requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                    ?.deleteRecursively()
                 enqueueLoad(true, context)
                 Snackbar.make(
                     requireView(), R.string.toast_clearingCache,
@@ -171,66 +181,51 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                 true
             }
 
-        // On app launch set the Preference to show to appropriate text if logged in
-        val loginActivityPreference = findPreference<Preference>("pref_login")
-        if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
-            loginActivityPreference!!.title = getString(R.string.prefTitle_loginButton)
-            loginActivityPreference.summary = getString(R.string.prefSummary_notLoggedIn)
-        } else {
-            loginActivityPreference!!.title = getString(R.string.prefTitle_logoutButton)
-            loginActivityPreference.summary =
-                getString(R.string.prefSummary_LoggedIn) + " " + sharedPrefs.getString("name", "")
-        }
+        val loginActivityLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val data = result.data
+                    val loginButtonMain = findPreference<Preference>("pref_login")
+                    loginButtonMain!!.summary =
+                        getString(R.string.prefSummary_LoggedIn) + " " + data!!.getStringExtra("username")
+                    loginButtonMain.title = getString(R.string.prefTitle_logoutButton)
+                }
+            }
 
-        // Users click this preference to execute the login or logout
-        loginActivityPreference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            startActivityForResult(
-                Intent(activity, LoginActivityWebview::class.java),
-                REQUEST_CODE_LOGIN
-            )
-//            if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")!!.isEmpty()) {
-//                startActivityForResult(Intent(activity, LoginActivityWebview::class.java), REQUEST_CODE_LOGIN)
-//            } else {
-//                // Alert that confirms the user really wants to log out
-//                // Important as it is now difficult to login, due to Pixiv API changes 02/21
-//                AlertDialog.Builder(requireContext())
-//                        .setMessage(getString(R.string.dialog_logoutConfirm))
-//                        .setPositiveButton(R.string.dialog_yes) { _, _ ->
-//                            val editor = sharedPrefs.edit()
-//                            editor.remove("accessTokenIssueTime")
-//                            editor.remove("name")
-//                            editor.remove(PREFERENCE_PIXIV_ACCESS_TOKEN)
-//                            editor.remove("userId")
-//                            editor.remove("refreshToken")
-//                            loginActivityPreference.title = getString(R.string.prefTitle_loginButton)
-//                            loginActivityPreference.summary = getString(R.string.prefSummary_notLoggedIn)
-//                            // If the user has an authenticated feed mode, reset it to daily ranking on logout
-//                            if (PixivArtProviderDefines.AUTH_MODES.contains(updateMode)) {
-//                                editor.putString("pref_updateMode", "daily")
-//                                //updateModePref.summary = resources.getStringArray(R.array.pref_updateMode_entries)[0]
-//                            }
-//                            editor.apply()
-//                        }
-//                        .setNegativeButton(R.string.dialog_no) { dialog, _ ->
-//                            // Do nothing
-//                            dialog.dismiss()
-//                        }
-//                        .show()
-//            }
-            true
+        findPreference<Preference>("pref_login")?.let {
+            // On app launch set the Preference to show to appropriate text if logged in
+            if (sharedPrefs.getString(PREFERENCE_PIXIV_ACCESS_TOKEN, "")?.isEmpty() == true) {
+                it.title = getString(R.string.prefTitle_loginButton)
+                it.summary = getString(R.string.prefSummary_notLoggedIn)
+            } else {
+                it.title = getString(R.string.prefTitle_logoutButton)
+                it.summary =
+                    "${getString(R.string.prefSummary_LoggedIn)} ${
+                        sharedPrefs.getString(
+                            "name",
+                            ""
+                        )
+                    }"
+            }
+
+            // Users click this preference to execute the login or logout
+            it.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                loginActivityLauncher.launch(Intent(activity, LoginActivityWebview::class.java))
+                true
+            }
         }
     }
 
     // 0 or 1 correspond to SFW or NSFW respectively
-    private fun rankingSummaryStringGenerator(selection: HashSet<String>): String {
-        val rankingFilterEntriesPossible = resources.getStringArray(R.array.pref_rankingFilterLevel_entries)
+    private fun rankingSummaryStringGenerator(selection: Set<String>): String {
+        val rankingFilterEntriesPossible =
+            resources.getStringArray(R.array.pref_rankingFilterLevel_entries)
         return StringBuilder().let {
-            selection.forEachIndexed { index, element ->
+            selection.forEachIndexed { _, element ->
                 it.append(rankingFilterEntriesPossible[element.toInt()])
-                if (index != selection.size - 1) {
-                    it.append(", ")
-                }
+                it.append(", ")
             }
+            it.setLength(it.length - 2)
             it.toString()
         }
     }
@@ -239,27 +234,17 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
     // newValue is a HashSet that can contain 2, 4, 6, or 8, and corresponds to
     // SFW, Slightly Ecchi, Fairly Ecchi, and R18 respectively
     // 2, 4, 6, 8 was selected to match with the values used in Pixiv JSON
-    private fun authSummaryStringGenerator(selection: HashSet<String>): String {
-        val authFilterEntriesPossible = resources.getStringArray(R.array.pref_authFilterLevel_entries)
+    private fun authSummaryStringGenerator(selection: Set<String>): String {
+        val authFilterEntriesPossible =
+            resources.getStringArray(R.array.pref_authFilterLevel_entries)
         return StringBuilder().let {
-            selection.forEachIndexed { index, element ->
+            selection.forEachIndexed { _, element ->
+                // Translation from {2, 4, 6, 8} to {0, 1, 2, 3}
                 it.append(authFilterEntriesPossible[(element.toInt() - 2) / 2])
-                if (index != selection.size - 1) {
-                    it.append(", ")
-                }
+                it.append(", ")
             }
+            it.setLength(it.length - 2)
             it.toString()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        // Currently only used by LoginActivity
-        if (requestCode == REQUEST_CODE_LOGIN && resultCode == Activity.RESULT_OK) {
-            val loginButtonMain = findPreference<Preference>("pref_login")
-            loginButtonMain!!.summary =
-                getString(R.string.prefSummary_LoggedIn) + " " + data!!.getStringExtra("username")
-            loginButtonMain.title = getString(R.string.prefTitle_logoutButton)
         }
     }
 
@@ -267,9 +252,9 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
     override fun onStop() {
         super.onStop()
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
-        newUpdateMode = sharedPrefs.getString("pref_updateMode", "")
-        newTag = sharedPrefs.getString("pref_tagSearch", "")
-        newArtist = sharedPrefs.getString("pref_artistId", "")
+        newUpdateMode = sharedPrefs.getString("pref_updateMode", "") ?: ""
+        newTag = sharedPrefs.getString("pref_tagSearch", "") ?: ""
+        newArtist = sharedPrefs.getString("pref_artistId", "") ?: ""
 
         // If user has changed update, filter mode, or search tag:
         // Immediately stop any pending work, clear the Provider of any Artwork, and then toast
@@ -277,11 +262,8 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
             || oldArtist != newArtist
         ) {
             WorkManager.getInstance(requireContext()).cancelUniqueWork("ANTONY")
-            val dir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-            val children = dir!!.list()
-            for (child in children) {
-                File(dir, child).delete()
-            }
+            requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                ?.deleteRecursively()
             enqueueLoad(true, context)
             if (oldUpdateMode != newUpdateMode) {
                 Toast.makeText(context, getString(R.string.toast_newUpdateMode), Toast.LENGTH_SHORT)
@@ -299,9 +281,5 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
                 ).show()
             }
         }
-    }
-
-    companion object {
-        private const val REQUEST_CODE_LOGIN = 1
     }
 }
