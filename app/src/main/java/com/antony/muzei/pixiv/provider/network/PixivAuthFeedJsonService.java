@@ -22,6 +22,7 @@ import com.antony.muzei.pixiv.provider.network.moshi.Illusts;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
 
@@ -37,7 +38,7 @@ public interface PixivAuthFeedJsonService {
     Call<Illusts> getBookmarkOffsetJson(@Query("user_id") String userId, @Query("max_bookmark_id") String maxBookmarkId);
 
     @GET("v1/search/illust?search_target=partial_match_for_tags&sort=date_desc")
-    Call<Illusts> getTagSearchJson(@Query("word") String tag);
+    Call<Illusts> getTagSearchJson(@Header("Accept-Language") String language, @Query("word") String tag);
 
     @GET("v1/user/illusts")
     Call<Illusts> getArtistJson(@Query("user_id") String artist_id);

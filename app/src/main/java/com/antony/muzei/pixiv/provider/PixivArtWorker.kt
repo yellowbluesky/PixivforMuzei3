@@ -700,15 +700,20 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
     private fun getArtworksAuth(updateMode: String): List<Artwork> {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         // Determines if any extra information is needed, and passes it along
-        // If bookmark, specify a second data for offset
-        val data = when (updateMode) {
-            "bookmark" -> sharedPrefs.getString("userId", "")
-            "artist" -> sharedPrefs.getString("pref_artistId", "")
-            "tag_search" -> sharedPrefs.getString("pref_tagSearch", "")
-            else -> ""
+
+        // {"follow", "bookmark", "tag_search", "artist", "recommended"};
+        val illustsHelper = when (updateMode) {
+            "follow" -> IllustsHelper(updateMode)
+            "recommended" -> IllustsHelper(updateMode)
+            "artist" -> IllustsHelper(updateMode, sharedPrefs.getString("pref_artistId", "") ?: "")
+            "tag_search" -> IllustsHelper(
+                updateMode,
+                sharedPrefs.getString("pref_tagSearch", "") ?: "",
+                sharedPrefs.getString("pref_tagLanguage", "") ?: ""
+            )
+            else -> IllustsHelper("follow")
         }
-        // illustsHelper is stateful, stores a copy of Illusts, and can fetch a new one if needed
-        val illustsHelper = IllustsHelper(updateMode, data ?: "")
+
         var authArtworkList = illustsHelper.getNewIllusts().artworks
 
         val artworkList = mutableListOf<Artwork>()

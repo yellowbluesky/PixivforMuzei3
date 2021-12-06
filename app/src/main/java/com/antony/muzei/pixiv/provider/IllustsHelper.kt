@@ -5,10 +5,11 @@ import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import retrofit2.Call
 
-class IllustsHelper(_updateMode: String, _data: String) {
+class IllustsHelper(_updateMode: String, _searchOption: String = "", _language: String = "") {
     private lateinit var illusts: Illusts
     private val updateMode: String = _updateMode
-    private val data: String = _data
+    private val searchOption: String = _searchOption
+    private val language: String = _language
     private val service: PixivAuthFeedJsonService = RestClient.getRetrofitAuthInstance()
         .create(PixivAuthFeedJsonService::class.java)
 
@@ -17,8 +18,8 @@ class IllustsHelper(_updateMode: String, _data: String) {
         val call: Call<Illusts?> = when (updateMode) {
             "follow" -> service.followJson
             "recommended" -> service.recommendedJson
-            "artist" -> service.getArtistJson(data)
-            "tag_search" -> service.getTagSearchJson(data)
+            "artist" -> service.getArtistJson(searchOption)
+            "tag_search" -> service.getTagSearchJson(language, searchOption)
             else -> throw IllegalStateException("Unexpected value: $updateMode")
         }
         illusts = call.execute().body()!!
