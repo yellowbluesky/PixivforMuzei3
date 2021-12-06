@@ -37,6 +37,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivProviderConst
+import com.antony.muzei.pixiv.PixivProviderConst.PREFERENCE_OLDEST_MAX_BOOKMARK_ID
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.common.PixivMuzeiActivity
 import com.antony.muzei.pixiv.databinding.ActivityLoginWebviewBinding

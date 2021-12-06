@@ -36,6 +36,7 @@ public final class PixivProviderConst {
     public static final String PREFERENCE_PIXIV_ACCESS_TOKEN = "accessToken";
     public static final String PREFERENCE_PIXIV_REFRESH_TOKEN = "refreshToken";
     public static final String PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP = "accessTokenIssueTime";
+    public static final String PREFERENCE_OLDEST_MAX_BOOKMARK_ID = "oldestMaxBookmarkId";
 
 
     public static final String[] AUTH_MODES = {"follow", "bookmark", "tag_search", "artist", "recommended"};
