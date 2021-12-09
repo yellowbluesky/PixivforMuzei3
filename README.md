@@ -1,7 +1,3 @@
-NOTE: This project is more or less in maintenance mode after I get out the final release with image cropping single download location. Work and my other hobbies currently take up most of my time.
-
-Still continue to suggest features, if they're interesting I will take it on 😊
-
 Pixiv for Muzei 3
 ===
 
