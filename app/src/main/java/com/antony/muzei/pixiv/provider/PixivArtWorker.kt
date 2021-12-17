@@ -18,6 +18,7 @@ import com.antony.muzei.pixiv.PixivProviderConst
 import com.antony.muzei.pixiv.PixivProviderConst.AUTH_MODES
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
+import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
 import com.antony.muzei.pixiv.provider.network.PixivAuthFeedJsonService
 import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
@@ -31,12 +32,13 @@ import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import okhttp3.*
-import okio.BufferedSink
 import okio.buffer
 import okio.sink
 import retrofit2.Call
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
+import java.io.RandomAccessFile
 import java.util.concurrent.TimeUnit
 
 class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
@@ -146,6 +148,43 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
     }
 
+    private fun isCorruptFile(image: File, type: MediaType?): Boolean {
+        type?.let { filetype ->
+            with(RandomAccessFile(image, "r")) {
+                if (filetype.subtype == "png") {
+                    seek(image.length() - 8)
+                    if (readInt() == 0x49454E44) {
+                        return false
+                    }
+                } else if (filetype.subtype == "jpeg") {
+                    seek(image.length() - 2)
+                    if (readShort() == 0xFFD9.toShort()) {
+                        return false
+                    }
+                }
+            }
+        }
+        return true
+    }
+
+    private fun isCorruptFile(image: InputStream, type: MediaType?): Boolean {
+        type?.let { fileType ->
+            // Only looking at the last 4 bytes
+            with(image.readBytes().takeLast(4)) {
+                if (fileType.subtype == "png") {
+                    if (this[0] == 0x49.toByte() && this[1] == 0x45.toByte() && this[2] == 0x4E.toByte() && this[3] == 0x44.toByte()) {
+                        return false
+                    }
+                } else if (fileType.subtype == "jpeg") {
+                    if (this[2] == 0xFF.toByte() && this[3] == 0xD9.toByte()) {
+                        return false
+                    }
+                }
+            }
+
+        }
+        return true
+    }
 
     private fun downloadImage(
         responseBody: ResponseBody?,
@@ -228,6 +267,10 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         fosExternal!!.close()
         fis.close()
 
+        if (isCorruptFile(contentResolver.openInputStream(imageUri)!!, fileType)) {
+            throw CorruptFileException("")
+        }
+
         Log.i(LOG_TAG, "Downloaded")
         return imageUri
     }
@@ -292,10 +335,18 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 return Uri.fromFile(image)
             }
         }
-        val sink: BufferedSink = image.sink().buffer()
-        sink.writeAll(responseBody!!.source())
-        responseBody.close()
-        sink.close()
+
+        with(image.sink().buffer()) {
+            writeAll(responseBody!!.source())
+            responseBody.close()
+            close()
+
+        }
+
+        if (isCorruptFile(image, fileType)) {
+            throw CorruptFileException("")
+        }
+
         Log.i(LOG_TAG, "Downloaded")
         return Uri.fromFile(image)
     }
@@ -324,6 +375,11 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 responseBody.close()
                 close()
             }
+
+            if (isCorruptFile(it, fileType)) {
+                throw CorruptFileException("")
+            }
+
             Log.i(LOG_TAG, "Downloaded")
             return Uri.fromFile(it)
         }
