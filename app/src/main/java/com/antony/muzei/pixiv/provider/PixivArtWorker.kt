@@ -773,18 +773,21 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         var authArtworkList = illustsHelper.getNewIllusts().artworks
 
         val artworkList = mutableListOf<Artwork>()
-        for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        var counter = 0
+
+        while (counter != sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            val artwork: Artwork
             try {
-                artworkList.add(
-                    buildArtworkAuth(
-                        authArtworkList.toMutableList(),
-                        updateMode == "recommended"
-                    )
-                )
+                artwork = buildArtworkAuth(authArtworkList.toMutableList(), updateMode == "recommended")
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new illusts")
                 authArtworkList = illustsHelper.getNextIllusts().artworks
+                continue
+            } catch (e: CorruptFileException) {
+                continue
             }
+            counter++
+            artworkList.add(artwork)
         }
         return artworkList
     }
@@ -796,13 +799,20 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         var contents = contentsHelper.getNewContents()
 
         val artworkList = mutableListOf<Artwork>()
-        for (i in 0 until sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        var counter = 0
+        while (counter != sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            val artwork: Artwork
             try {
-                artworkList.add(buildArtworkRanking(contents))
+                artwork = buildArtworkRanking(contents)
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new contents")
                 contents = contentsHelper.getNextContents()
+                continue
+            } catch (e: CorruptFileException) {
+                continue
             }
+            artworkList.add(artwork)
+            counter++
         }
         return artworkList
     }
