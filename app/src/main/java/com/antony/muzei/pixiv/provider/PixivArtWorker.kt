@@ -268,6 +268,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         fis.close()
 
         if (isCorruptFile(contentResolver.openInputStream(imageUri)!!, fileType)) {
+            contentResolver.delete(imageUri, null, null)
             throw CorruptFileException("")
         }
 
@@ -344,6 +345,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
 
         if (isCorruptFile(image, fileType)) {
+            image.delete()
             throw CorruptFileException("")
         }
 
@@ -377,6 +379,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             }
 
             if (isCorruptFile(it, fileType)) {
+                it.delete()
                 throw CorruptFileException("")
             }
 
