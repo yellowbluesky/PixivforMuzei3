@@ -14,12 +14,13 @@
   ~     You should have received a copy of the GNU General Public License
   ~     along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center_vertical"
     tools:context=".settings.deleteArtwork.ArtworkDeletionFragment">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -42,4 +43,4 @@
         android:focusable="true"
         android:src="@drawable/ic_delete_white_24dp"
         app:rippleColor="@color/colorPrimaryDark" />
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>

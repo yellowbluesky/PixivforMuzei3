@@ -17,8 +17,9 @@
 package com.antony.muzei.pixiv.settings.deleteArtwork
 
 import android.content.ContentProviderOperation
+import android.content.Context
 import android.content.OperationApplicationException
-import android.os.AsyncTask
+import android.net.Uri
 import android.os.Bundle
 import android.os.RemoteException
 import android.view.LayoutInflater
@@ -31,26 +32,25 @@ import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.PixivArtProvider
+import com.google.android.apps.muzei.api.provider.ProviderContract
 import com.google.android.apps.muzei.api.provider.ProviderContract.Artwork.TOKEN
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.*
 import java.util.*
 import kotlin.math.ceil
 
 class ArtworkDeletionFragment : Fragment() {
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        ArtworkContent.populateListInitial(requireContext())
+    companion object {
+        val SELECTED_ITEMS = mutableListOf<ArtworkItem>()
+        val SELECTED_POSITIONS = mutableListOf<Int>()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val linearLayoutView = inflater.inflate(R.layout.fragment_artwork_list, container, false)
         val recyclerView: RecyclerView = linearLayoutView.findViewById(R.id.list)
         val context = recyclerView.context
@@ -60,7 +60,7 @@ class ArtworkDeletionFragment : Fragment() {
         val displayMetrics = context.resources.displayMetrics
         val dpWidth = displayMetrics.widthPixels / displayMetrics.density
         recyclerView.layoutManager = GridLayoutManager(context, ceil(dpWidth.toDouble() / 200).toInt())
-        val adapter = ArtworkItemRecyclerViewAdapter(ArtworkContent.ITEMS)
+        val adapter = ArtworkDeletionAdapter(getInitialArtworkItemList(context))
         recyclerView.adapter = adapter
 
         // This FAB actions the delete operation from both the RecyclerView, and the
@@ -68,48 +68,40 @@ class ArtworkDeletionFragment : Fragment() {
         // All changes appear instantaneously
         val fab: FloatingActionButton = linearLayoutView.findViewById(R.id.fab)
         fab.setOnClickListener {
-            // Optimization if no artworks are selected
-            if (ArtworkContent.SELECTED_ITEMS.isEmpty()) {
-                Snackbar.make(requireView(), R.string.snackbar_selectArtworkFirst,
-                        Snackbar.LENGTH_LONG)
-                        .show()
+            // Early exit when no artworks are selected for deletion
+            if (SELECTED_ITEMS.isEmpty()) {
+                Snackbar.make(
+                    requireView(), R.string.snackbar_selectArtworkFirst,
+                    Snackbar.LENGTH_LONG
+                )
+                    .show()
                 return@setOnClickListener
             }
-            else {
-                val numberDeleted = ArtworkContent.SELECTED_ITEMS.size
-                Snackbar.make(requireView(), numberDeleted.toString() + " " + getString(R.string.snackbar_deletedArtworks),
-                        Snackbar.LENGTH_LONG)
-                        .show()
-            }
+            val numberDeleted = SELECTED_ITEMS.size
 
             // Deletes the artwork items from the ArrayList used as backing for the RecyclerView
-            ArtworkContent.ITEMS.removeAll(ArtworkContent.SELECTED_ITEMS)
+            adapter.removeItems(SELECTED_ITEMS, SELECTED_POSITIONS)
+            SELECTED_POSITIONS.clear()
 
-            // Updates the RecyclerView.Adapter by removing the selected images
-            // Nice animation as we're not calling notifyDataSetChanged()
-            for ((deleteCount, i) in ArtworkContent.SELECTED_POSITIONS.withIndex()) {
-                adapter.notifyItemRemoved(i - deleteCount)
-            }
-            ArtworkContent.SELECTED_POSITIONS.clear()
-
-            // Used to remember which artworks have been deleted, so we don't download them again
+            // We insert the deleted artwork ID's
             val listOfDeletedIds: MutableList<DeletedArtworkIdEntity> = mutableListOf()
 
             // Now to delete the Artwork's themselves from the ContentProvider
             val operations = ArrayList<ContentProviderOperation>()
-            var operation: ContentProviderOperation
             val selection = "$TOKEN = ?"
             // Builds a new delete operation for every selected artwork
-            for (artworkItem in ArtworkContent.SELECTED_ITEMS) {
-                operation = ContentProviderOperation
-                        .newDelete(getProviderClient(context, PixivArtProvider::class.java).contentUri)
-                        .withSelection(selection, arrayOf(artworkItem.token))
-                        .build()
+            for (artworkItem in SELECTED_ITEMS) {
+                val operation = ContentProviderOperation
+                    .newDelete(getProviderClient(context, PixivArtProvider::class.java).contentUri)
+                    .withSelection(selection, arrayOf(artworkItem.token))
+                    .build()
                 operations.add(operation)
 
                 // Used to remember which artworks have been deleted, so we don't download them again
                 listOfDeletedIds.add(DeletedArtworkIdEntity(artworkItem.token))
             }
+            SELECTED_ITEMS.clear()
+
             try {
                 context.contentResolver.applyBatch(BuildConfig.APPLICATION_ID + ".provider", operations)
             } catch (e: RemoteException) {
@@ -119,15 +111,35 @@ class ArtworkDeletionFragment : Fragment() {
             }
 
             val appDatabase = AppDatabase.getInstance(context)
-            AsyncTask.execute {
+            CoroutineScope(Dispatchers.Main + SupervisorJob()).launch(Dispatchers.IO) {
                 appDatabase?.deletedArtworkIdDao()?.insertDeletedArtworkId(listOfDeletedIds.toList())
             }
 
             // TODO also delete the files from the disk?
-            ArtworkContent.SELECTED_ITEMS.clear()
+
+            Snackbar.make(
+                requireView(), numberDeleted.toString() + " " + getString(R.string.snackbar_deletedArtworks),
+                Snackbar.LENGTH_LONG
+            ).show()
         }
         return linearLayoutView
     }
 
-    companion object
+    private fun getInitialArtworkItemList(context: Context): MutableList<ArtworkItem> {
+        val listOfArtworkItem = mutableListOf<ArtworkItem>()
+        val projection = arrayOf("token", "title", "persistent_uri")
+        val conResUri = getProviderClient(context, PixivArtProvider::class.java).contentUri
+        val cursor = context.contentResolver.query(conResUri, projection, null, null, null)
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                val token = cursor.getString(cursor.getColumnIndexOrThrow(TOKEN))
+                //val title = cursor.getString(cursor.getColumnIndexOrThrow(ProviderContract.Artwork.TITLE))
+                val persistentUri =
+                    Uri.parse(cursor.getString(cursor.getColumnIndexOrThrow(ProviderContract.Artwork.PERSISTENT_URI)))
+                listOfArtworkItem.add(ArtworkItem(token, persistentUri))
+            }
+            cursor.close()
+        }
+        return listOfArtworkItem
+    }
 }
