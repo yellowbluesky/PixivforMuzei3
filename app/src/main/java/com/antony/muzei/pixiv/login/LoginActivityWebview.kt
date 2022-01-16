@@ -33,7 +33,6 @@ import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivProviderConst
@@ -43,6 +42,7 @@ import com.antony.muzei.pixiv.common.PixivMuzeiActivity
 import com.antony.muzei.pixiv.databinding.ActivityLoginWebviewBinding
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.network.PixivOauthService
+import com.antony.muzei.pixiv.provider.network.moshi.OAuth
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -77,116 +77,99 @@ class LoginActivityWebview : PixivMuzeiActivity(),
             ""
         ) // Hide WebView version
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(
-                view: WebView,
-                request: WebResourceRequest
-            ): Boolean {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url: Uri = request.url
                 if (url.scheme.equals("pixiv")) {
-                    launch(Dispatchers.IO) {
-                        val retrofitClient = Retrofit.Builder()
-                            .baseUrl(PixivProviderConst.OAUTH_URL)
-                            .client(OkHttpClient())
-                            .addConverterFactory(MoshiConverterFactory.create())
-                            .build()
-                        val oauthResponse = try {
-                            val response = retrofitClient.create(PixivOauthService::class.java).postRefreshToken(
-                                mapOf(
-                                    "client_id" to BuildConfig.PIXIV_CLIENT_ID,
-                                    "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
-                                    "grant_type" to "authorization_code",
-                                    "code_verifier" to verifierCode,
-                                    "code" to url.getQueryParameter("code")!!,
-                                    "redirect_uri" to PixivProviderConst.PIXIV_REDIRECT_URL,
-                                    "include_policy" to "true"
+                    launch {
+                        val oauthResponse = loginNetworkRequest(url)
+
+                        PreferenceManager.getDefaultSharedPreferences(applicationContext)
+                            .edit()
+                            .apply {
+                                putString(
+                                    PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN,
+                                    oauthResponse.response.access_token
                                 )
-                            ).execute()
-                            if (!response.isSuccessful) {
-                                throw AccessTokenAcquisitionException("Error using refresh token to get new access token")
-                            }
-                            if (BuildConfig.DEBUG) {
-                                Log.d("PixivInstrumentation", response.body().toString())
-                            }
-
-                            // If we've gotten to this point, we have avoided any network errors, authentication errors, and
-                            // have on hand a set of tokens to use
-                            response.body()!!
-                        } catch (ex: IOException) {
-                            ex.printStackTrace()
-                            throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
-                        }
-
-                        // If logged in fine, oauth response should have no error and continue here
-                        withContext(Dispatchers.Main) {
-                            PreferenceManager.getDefaultSharedPreferences(applicationContext)
-                                .edit()
-                                .apply {
-                                    putString(
-                                        PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN,
-                                        oauthResponse.response.access_token
-                                        //OAuthResponse.access_token
-                                    )
-                                    putString(
-                                        PixivProviderConst.PREFERENCE_PIXIV_REFRESH_TOKEN,
-                                        oauthResponse.response.refresh_token
-                                    )
-                                    putLong(
-                                        PixivProviderConst.PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP,
-                                        System.currentTimeMillis().div(1000)
-                                    )
-
-                                    putLong(
-                                        PREFERENCE_OLDEST_MAX_BOOKMARK_ID,
-                                        0
-                                    )
-
-                                    oauthResponse.response.user.also { user ->
-                                        putString("userId", user.id)
-                                        putString("name", user.name)
-                                    }
+                                putString(
+                                    PixivProviderConst.PREFERENCE_PIXIV_REFRESH_TOKEN,
+                                    oauthResponse.response.refresh_token
+                                )
+                                putLong(
+                                    PixivProviderConst.PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP,
+                                    System.currentTimeMillis().div(1000)
+                                )
+                                putLong(
+                                    PREFERENCE_OLDEST_MAX_BOOKMARK_ID,
+                                    0
+                                )
+                                oauthResponse.response.user.also { user ->
+                                    putString("userId", user.id)
+                                    putString("name", user.name)
                                 }
-                                .apply()
+                            }
+                            .apply()
 
-                            Log.d("LOGIN", "detaching and killing webview")
-                            val parentConstraintLayout: ConstraintLayout? =
-                                findViewById(R.id.webviewConstraintLayout)
-                            parentConstraintLayout!!.removeView(webView)
-                            webView.removeAllViews()
-                            webView.destroy()
-                            Log.d("LOGIN", "detached and killed webview")
-
-                            // Returns the username for immediate consumption by MainPreferenceFragment
-                            val username: Intent = Intent().putExtra(
-                                "username",
-                                oauthResponse.response.user.name
-                            )
-                            setResult(RESULT_OK, username)
-                            Log.d("LOGIN", "finishing activity")
-                            finish()
-                        }
-
+                        // Returns the username for immediate consumption by MainPreferenceFragment
+                        val username: Intent = Intent().putExtra("username", oauthResponse.response.user.name)
+                        setResult(RESULT_OK, username)
+                        Log.d("LOGIN", "finishing activity")
+                        finish()
                     }
-
                     return true
                 }
                 // Disallow user use WebView browser other page
-                if (url.host !in allowDomain && !url.toString()
-                        .startsWith("https://www.pixiv.net/logout.php")
-                ) {
+                if (url.host !in allowDomain && !url.toString().startsWith("https://www.pixiv.net/logout.php")) {
                     if (url.host == "socialize.gigya.com") {
                         bypassDomainCheck = true
                     } else if (!bypassDomainCheck) {
                         startActivity(Intent(Intent.ACTION_VIEW, url))
                         return true
                     }
-                } else if (bypassDomainCheck) bypassDomainCheck =
-                    false // Enable check if back to pixiv.
+                } else if (bypassDomainCheck)
+                    bypassDomainCheck = false // Enable check if back to pixiv.
                 return false
             }
         }
         val (code, hash) = generateCodeAndHash()
         this.verifierCode = code
         webView.loadUrl("https://app-api.pixiv.net/web/v1/login?code_challenge=$hash&code_challenge_method=S256&client=pixiv-android")
+    }
+
+    private suspend fun loginNetworkRequest(url: Uri): OAuth {
+        val retrofitClient = Retrofit.Builder()
+            .baseUrl(PixivProviderConst.OAUTH_URL)
+            .client(OkHttpClient())
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = retrofitClient.create(PixivOauthService::class.java).postRefreshToken(
+                    mapOf(
+                        "client_id" to BuildConfig.PIXIV_CLIENT_ID,
+                        "client_secret" to BuildConfig.PIXIV_CLIENT_SEC,
+                        "grant_type" to "authorization_code",
+                        "code_verifier" to verifierCode,
+                        "code" to url.getQueryParameter("code")!!,
+                        "redirect_uri" to PixivProviderConst.PIXIV_REDIRECT_URL,
+                        "include_policy" to "true"
+                    )
+                ).execute()
+                if (!response.isSuccessful) {
+                    throw AccessTokenAcquisitionException("Error using refresh token to get new access token")
+                }
+                if (BuildConfig.DEBUG) {
+                    Log.d("PixivInstrumentation", response.body().toString())
+                }
+
+                // If we've gotten to this point, we have avoided any network errors, authentication errors, and
+                // have on hand a set of tokens to use
+                response.body()!!
+
+            } catch (ex: IOException) {
+                ex.printStackTrace()
+                throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
+            }
+        }
     }
 
     private fun generateCodeAndHash(): Pair<String, String> {
