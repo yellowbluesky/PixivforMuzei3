@@ -99,8 +99,6 @@ dependencies {
     implementation "com.github.bumptech.glide:glide:${libs.libGlide}"
     implementation "com.google.android.apps.muzei:muzei-api:${libs.libMuzei}"
     implementation "com.squareup.moshi:moshi:${libs.libMoshi}"
-    //noinspection GradleDependency
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation "com.squareup.okhttp3:okhttp:${libs.libOkhttp}"
     implementation "com.squareup.retrofit2:converter-moshi:${libs.libRetrofit}"
     implementation "com.squareup.retrofit2:retrofit:${libs.libRetrofit}"
