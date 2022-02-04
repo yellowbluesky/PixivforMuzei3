@@ -251,7 +251,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
     // Functions in here action only on app exit
     override fun onStop() {
         super.onStop()
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         newUpdateMode = sharedPrefs.getString("pref_updateMode", "") ?: ""
         newTag = sharedPrefs.getString("pref_tagSearch", "") ?: ""
         newArtist = sharedPrefs.getString("pref_artistId", "") ?: ""

@@ -22,7 +22,7 @@ class DeleteArtworkReceiver : BroadcastReceiver(),
                 arrayOf(artworkId)
             )
 
-            launch(Dispatchers.Main) {
+            launch(Dispatchers.IO) {
                 AppDatabase.getInstance(context)?.deletedArtworkIdDao()
                     ?.insertDeletedArtworkId(listOf(DeletedArtworkIdEntity(artworkId)))
             }

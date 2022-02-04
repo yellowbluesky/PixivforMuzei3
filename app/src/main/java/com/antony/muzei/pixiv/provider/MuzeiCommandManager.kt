@@ -24,6 +24,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.FileUriExposedException
 import androidx.core.app.RemoteActionCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.IconCompat
@@ -104,17 +105,23 @@ class MuzeiCommandManager {
         } else if (artworkPng.exists()) {
             artworkUri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", artworkPng)
         } else {
-            // Then looks in external storage
-            context.contentResolver.query(
-                ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
-                arrayOf("persistent_uri"),
-                "${ProviderContract.Artwork.TOKEN} = ?",
-                arrayOf("${artwork.token}"),
-                null
-            )?.let {
-                it.moveToFirst()
-                artworkUri = Uri.parse(it.getString(0))
-                it.close()
+            try {
+                // Then looks in external storage
+                context.contentResolver.query(
+                    ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
+                    arrayOf("PERSISTENT_URI"),
+                    "${ProviderContract.Artwork.TOKEN} = ?",
+                    arrayOf("${artwork.token}"),
+                    null
+                )?.let {
+                    // Cursor only returns one unique row, so it is correct to moveToFirst row and use that as result
+                    it.moveToFirst()
+                    // Hardcoding a 0 is a bit dodgy, but we only request one column "persistent_uri"
+                    artworkUri = Uri.parse(it.getString(0))
+                    it.close()
+                }
+            } catch (e: FileUriExposedException) {
+                return null
             }
         }
 

@@ -41,7 +41,7 @@ object OkHttpSingleton {
             instance = OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
                 .apply {
-                    val prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context?.applicationContext)
+                    val prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context!!.applicationContext)
                     val enableNetworkBypass = prefs.getBoolean("pref_enableNetworkBypass", false)
                     Log.d(LOG_TAG,"network bypass was $enableNetworkBypass")
                     if (enableNetworkBypass) {

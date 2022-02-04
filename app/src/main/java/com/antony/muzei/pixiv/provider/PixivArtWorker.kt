@@ -131,15 +131,15 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 val currentId = illusts.next_url!!.substringAfter("max_bookmark_id=").toLong()
                 step /= 2
                 callingId = currentId - step
-                call = service.getBookmarkOffsetJson(userId, callingId.toString())
             } else if (illusts.artworks.isEmpty()) {
+                // we are too low
                 step /= 2
                 callingId += step
-                call = service.getBookmarkOffsetJson(userId, callingId.toString())
             } else {
                 Log.d(LOG_TAG, "Found at $callingId")
                 break
             }
+            call = service.getBookmarkOffsetJson(userId, callingId.toString())
             illusts = call.execute().body()!!
         }
         with(PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()) {
@@ -181,7 +181,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                     }
                 }
             }
-
         }
         return true
     }
@@ -743,17 +742,20 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
         val artworkList = mutableListOf<Artwork>()
         var counter = 0
-        while (counter <= sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        while (counter < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            val artwork: Artwork
             try {
-                artworkList.add(buildArtworkAuth(bookmarkArtworks, false))
+                artwork = buildArtworkAuth(bookmarkArtworks, false)
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new bookmarks")
                 bookmarkArtworks =
                     bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
                 continue
             } catch (e: CorruptFileException) {
+                Log.i(LOG_TAG, "Corrupt artwork found")
                 continue
             }
+            artworkList.add(artwork)
             counter++
         }
         return artworkList
@@ -778,16 +780,19 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         var authArtworkList = illustsHelper.getNewIllusts().artworks
         val artworkList = mutableListOf<Artwork>()
         var counter = 0
-        while (counter <= sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        while (counter < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            val artwork: Artwork
             try {
-                artworkList.add(buildArtworkAuth(authArtworkList, updateMode == "recommended"))
+                artwork = buildArtworkAuth(authArtworkList, updateMode == "recommended")
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new illusts")
                 authArtworkList = illustsHelper.getNextIllusts().artworks
                 continue
             } catch (e: CorruptFileException) {
+                Log.i(LOG_TAG, "Corrupt artwork found")
                 continue
             }
+            artworkList.add(artwork)
             counter++
         }
         return artworkList
@@ -800,16 +805,19 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         var contents = contentsHelper.getNewContents()
         val artworkList = mutableListOf<Artwork>()
         var counter = 0
-        while (counter <= sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        while (counter < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+            val artwork: Artwork
             try {
-                artworkList.add(buildArtworkRanking(contents))
+                artwork = buildArtworkRanking(contents)
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new contents")
                 contents = contentsHelper.getNextContents()
                 continue
             } catch (e: CorruptFileException) {
+                Log.i(LOG_TAG, "Corrupt artwork found")
                 continue
             }
+            artworkList.add(artwork)
             counter++
         }
         return artworkList
@@ -899,5 +907,3 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         return Result.success()
     }
 }
-
-// refactor one more function

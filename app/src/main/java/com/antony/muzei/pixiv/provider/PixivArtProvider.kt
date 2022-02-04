@@ -71,7 +71,7 @@ class PixivArtProvider : MuzeiArtProvider() {
     }
 
     override fun onLoadRequested(initial: Boolean) {
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context!!)
         if (sharedPrefs.getBoolean("pref_dataMode", false) && isOnMobileData()) {
             Log.i("ANTONY_PROVIDER", "Data saver mode, stopping new artwork download")
             return

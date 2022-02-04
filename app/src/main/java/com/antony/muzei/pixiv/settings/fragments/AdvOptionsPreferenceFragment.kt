@@ -50,7 +50,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         // Indicate here the XML resource you created above that holds the preferences
         setPreferencesFromResource(R.xml.adv_setting_preference_layout, rootKey)
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context!!)
 
         // Artwork minimum views slider
         // Updates the summary in real time as the user drags the thumb
@@ -219,7 +219,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             preferenceScreen = findPreference(resources.getString(R.string.preferenceScreen))
             val prefCatPostProcess = findPreference<PreferenceCategory>("prefCat_postProcess")
-            preferenceScreen.removePreference(prefCatPostProcess)
+            preferenceScreen.removePreference(prefCatPostProcess!!)
         }
 
         val nightModeListPref = findPreference<ListPreference>("pref_nightMode")

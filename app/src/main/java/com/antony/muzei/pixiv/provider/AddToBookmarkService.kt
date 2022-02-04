@@ -32,7 +32,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class AddToBookmarkService : Service(), CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
+class AddToBookmarkService : Service() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         createNotificationChannel()
         NotificationCompat.Builder(this, CHANNEL_ID)
@@ -46,7 +46,7 @@ class AddToBookmarkService : Service(), CoroutineScope by CoroutineScope(Dispatc
 
         try {
             // NetworkOnMainThread exception
-            launch(Dispatchers.IO) {
+            CoroutineScope(Dispatchers.Main + SupervisorJob()).launch(Dispatchers.IO) {
                 val formBody = mapOf(
                     "illust_id" to intent.getStringExtra("artworkId")!!,
                     "restrict" to "public"
