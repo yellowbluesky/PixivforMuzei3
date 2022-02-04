@@ -834,12 +834,10 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         // i.e. update mode can change between the previous if block and this if block
         // Thus two identical if statements are required
         Log.i(LOG_TAG, "Feed mode: $updateMode")
-        val artworkList: List<Artwork> = if (updateMode == "bookmark") {
-            getArtworksBookmark()
-        } else if (AUTH_MODES.contains(updateMode)) {
-            getArtworksAuth(updateMode)
-        } else {
-            getArtworksRanking(updateMode)
+        val artworkList: List<Artwork> = when (updateMode) {
+            "bookmark" -> getArtworksBookmark()
+            in AUTH_MODES -> getArtworksAuth(updateMode)
+            else -> getArtworksRanking(updateMode)
         }
         Log.i(LOG_TAG, "Submitting ${artworkList.size} artworks")
         return artworkList
