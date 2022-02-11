@@ -148,22 +148,33 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
     }
 
-    private fun isCorruptFile(image: File, type: MediaType?): Boolean {
-        type?.let { filetype ->
-            with(RandomAccessFile(image, "r")) {
-                if (filetype.subtype == "png") {
-                    seek(image.length() - 8)
-                    if (readInt() == 0x49454E44) {
-                        return false
-                    }
-                } else if (filetype.subtype == "jpeg") {
-                    seek(image.length() - 2)
-                    if (readShort() == 0xFFD9.toShort()) {
-                        return false
-                    }
+    private fun isCorruptFile(image: File, type: MediaType): Boolean {
+        Log.d("CORRUPT", "checking corrupt status")
+        Log.d("CORRUPT", image.name)
+        with(RandomAccessFile(image, "r")) {
+            if (type.subtype == "png") {
+                Log.d("CORRUPT", "png")
+                seek(image.length() - 8)
+                if (readInt() == 0x49454E44) {
+                    Log.d("CORRUPT", "intact artwork")
+                    close()
+                    return false
+                }
+            } else if (type.subtype == "jpeg") {
+                Log.d("CORRUPT", "jpeg")
+                seek(image.length() - 2)
+                if (readShort() == 0xFFD9.toShort()) {
+                    Log.d("CORRUPT", "intact artwork")
+                    close()
+                    return false
                 }
             }
+            close()
         }
+        Log.d("CORRUPT", "corrupt artwork")
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val existingCorruptCount = sharedPrefs.getInt("corruptImageCount", 0)
+        sharedPrefs.edit().putInt("corruptImageCount", existingCorruptCount + 1).apply()
         return true
     }
 
