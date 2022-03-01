@@ -301,15 +301,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             "${MediaStore.Images.Media.DISPLAY_NAME} LIKE ?",
             arrayOf("$filename%"),
             null
-        )?.let {
-            if (it.count != 0) {
+        )?.use {
+            if (it.moveToFirst()) {
                 Log.v(LOG_TAG, "downloadImageAPI10: Duplicate found")
-                val imageUri = ContentUris.withAppendedId(
+                return ContentUris.withAppendedId(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     it.getInt(it.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID)).toLong()
                 )
-                it.close()
-                return imageUri
             }
         }
         return null
