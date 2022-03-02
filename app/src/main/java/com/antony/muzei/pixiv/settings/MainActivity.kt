@@ -84,6 +84,7 @@ class MainActivity : PixivMuzeiActivity(), AdvOptionsPreferenceFragment.NightMod
                 .setNeutralButton(android.R.string.ok) { dialog: DialogInterface?, which: Int ->
                     val intent = createChooseProviderIntent(BuildConfig.APPLICATION_ID + ".provider")
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    finishAffinity()
                     IntentUtils.launchActivity(this, intent)
                 }
                 .show()
