@@ -50,27 +50,24 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         // Indicate here the XML resource you created above that holds the preferences
         setPreferencesFromResource(R.xml.adv_setting_preference_layout, rootKey)
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context!!)
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
         // Artwork minimum views slider
         // Updates the summary in real time as the user drags the thumb
-        // Increments of 500, hence the scalar
-        val minimumViewSliderPref = findPreference<SeekBarPreference>("prefSlider_minViews")
-        minimumViewSliderPref?.let {
-            it.updatesContinuously = true
-            it.summary = (sharedPrefs.getInt("prefSlider_minViews", 0) * 500).toString()
-            it.onPreferenceChangeListener =
+        // Increments of 500, hence the scalar =
+        findPreference<SeekBarPreference>("prefSlider_minViews")?.let { slider ->
+            slider.updatesContinuously = true
+            slider.summary = (sharedPrefs.getInt("prefSlider_minViews", 0) * 500).toString()
+            slider.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
-                    minimumViewSliderPref.summary = (newValue as Int * 500).toString()
+                    slider.summary = (newValue as Int * 500).toString()
                     true
                 }
         }
 
-        val minWidthSlider = findPreference<SeekBarPreference>("prefSlider_minimumWidth")
-        minWidthSlider?.let {
+        findPreference<SeekBarPreference>("prefSlider_minimumWidth")?.let {
             it.updatesContinuously = true
-            it.summary =
-                (sharedPrefs.getInt("prefSlider_minimumWidth", 0) * 10).toString() + "px"
+            it.summary = (sharedPrefs.getInt("prefSlider_minimumWidth", 0) * 10).toString() + "px"
             it.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
                     it.summary = (newValue as Int * 10).toString() + "px"
@@ -78,8 +75,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
                 }
         }
 
-        val minHeightSlider = findPreference<SeekBarPreference>("prefSlider_minimumHeight")
-        minHeightSlider?.let {
+        findPreference<SeekBarPreference>("prefSlider_minimumHeight")?.let {
             it.updatesContinuously = true
             it.summary =
                 (sharedPrefs.getInt("prefSlider_minimumHeight", 0) * 10).toString() + "px"
@@ -90,9 +86,9 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
                 }
         }
 
-        val clearCachePref = findPreference<SwitchPreference>("pref_autoClearMode")
-        clearCachePref!!.onPreferenceChangeListener =
-            Preference.OnPreferenceChangeListener { preference, newValue ->
+        // Switch that controls if the cache periodically auto clears itself
+        findPreference<SwitchPreference>("pref_autoClearMode")?.let {
+            it.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
                 if (newValue as Boolean) {
                     // Calculates the hours to midnight
                     @SuppressLint("SimpleDateFormat") val simpleDateFormat = SimpleDateFormat("kk")
@@ -122,6 +118,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
                 }
                 true
             }
+        }
 
         // Maximum file size slider
 //        SeekBarPreference maximumFileSizeSliderPref = findPreference("prefSlider_maxFileSize");
@@ -154,7 +151,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         // Also only visible if the option to download artwork to user storage is enabled
         val selectWhichExternalStoragePref =
             findPreference<DropDownPreference>("pref_selectWhichExtStorage")
-        selectWhichExternalStoragePref!!.isVisible =
+        selectWhichExternalStoragePref?.isVisible =
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
                     isMoreThanOneStorage() &&
                     sharedPrefs.getBoolean("pref_storeInExtStorage", false)
@@ -180,13 +177,9 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
         }
         externalStoragePref.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener { preference, newValue ->
-                (ContextCompat.checkSelfPermission(
-                    requireActivity(),
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED)
                 // Dynamically hides and reveals select storage preference as the store into external storage preference is enabled and disabled
                 if (isMoreThanOneStorage()) {
-                    selectWhichExternalStoragePref.isVisible = newValue as Boolean
+                    selectWhichExternalStoragePref?.isVisible = newValue as Boolean
                 }
                 true
             }
@@ -197,37 +190,44 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
 
         // Slider that lets the user adjust how many artworks to download at a time
         // Draws and updates the slider position number as the user drags
-        val numToDownloadSlider = findPreference<SeekBarPreference>("prefSlider_numToDownload")
-        numToDownloadSlider!!.updatesContinuously = true
-        numToDownloadSlider.summary = sharedPrefs.getInt("prefSlider_numToDownload", 2).toString()
-        numToDownloadSlider.onPreferenceChangeListener =
-            Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any? ->
-                numToDownloadSlider.summary = (newValue as Int).toString()
+        findPreference<SeekBarPreference>("prefSlider_numToDownload")?.let { slider ->
+            slider.updatesContinuously = true
+            slider.summary = sharedPrefs.getInt("prefSlider_numToDownload", 2).toString()
+            slider.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any? ->
+                    slider.summary = (newValue as Int).toString()
+                    true
+                }
+        }
+
+        findPreference<SwitchPreference>("pref_enableNetworkBypass")?.let {
+            it.setOnPreferenceChangeListener { _, _ ->
+
+                OkHttpSingleton.refreshInstance() // Renew a instance with sslSocketFactory by this
+
+                PixivArtWorker.enqueueLoad(false, context)
+
                 true
             }
-
-        val enableNetworkPassbyCheckbox =
-            findPreference<SwitchPreference>("pref_enableNetworkBypass")!!
-        enableNetworkPassbyCheckbox.setOnPreferenceChangeListener { _, _ ->
-
-            OkHttpSingleton.refreshInstance() // Renew a instance with sslSocketFactory by this
-
-            PixivArtWorker.enqueueLoad(false, context)
-
-            true
         }
+
+        // Hides the post processing switch when API level is too low
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             preferenceScreen = findPreference(resources.getString(R.string.preferenceScreen))
-            val prefCatPostProcess = findPreference<PreferenceCategory>("prefCat_postProcess")
-            preferenceScreen.removePreference(prefCatPostProcess!!)
+            findPreference<PreferenceCategory>("prefCat_postProcess")?.let {
+                preferenceScreen.removePreference(it)
+            }
         }
 
-        val nightModeListPref = findPreference<ListPreference>("pref_nightMode")
-        nightModeListPref!!.onPreferenceChangeListener =
-            Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
+        // This preference immediately sets the night mode option
+        // Without it, the app needs to restart to apply the new setting
+        // Needs to be implemented as an interface as the setting can only be applied within an Adtivity
+        findPreference<ListPreference>("pref_nightMode")?.let {
+            it.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
                 nightModePreferenceListener.nightModeOptionSelected((newValue as String).toInt())
                 true
             }
+        }
     }
 
     private fun isMoreThanOneStorage(): Boolean {
