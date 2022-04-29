@@ -24,6 +24,7 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.antony.muzei.pixiv.R
 import com.bumptech.glide.Glide
+import com.google.android.material.color.MaterialColors
 
 class ArtworkDeletionAdapter(private val artworkItems: MutableList<ArtworkItem>) :
     RecyclerView.Adapter<ArtworkDeletionAdapter.ViewHolder>() {
@@ -56,6 +57,8 @@ class ArtworkDeletionAdapter(private val artworkItems: MutableList<ArtworkItem>)
         private val mImageView: ImageView = mView.findViewById(R.id.image)
         private lateinit var mArtworkItem: ArtworkItem
 
+        private val color = MaterialColors.getColor(mView, R.attr.colorSecondaryVariant, Color.BLUE)
+
         fun bind(artworkItem: ArtworkItem) {
             mArtworkItem = artworkItem
             // Glide is used instead of simply setting the ImageView Uri directly
@@ -68,7 +71,7 @@ class ArtworkDeletionAdapter(private val artworkItems: MutableList<ArtworkItem>)
                 .into(mImageView)
 
             if (artworkItem.selected) {
-                mImageView.setColorFilter(Color.argb(130, 0, 150, 250))
+                mImageView.setColorFilter(Color.argb(130, Color.red(color), Color.green(color), Color.blue(color)))
             } else {
                 mImageView.clearColorFilter()
             }
@@ -83,7 +86,7 @@ class ArtworkDeletionAdapter(private val artworkItems: MutableList<ArtworkItem>)
                 if (!mArtworkItem.selected) {
                     ArtworkDeletionFragment.SELECTED_ITEMS.add(mArtworkItem)
                     ArtworkDeletionFragment.SELECTED_POSITIONS.add(position)
-                    mImageView.setColorFilter(Color.argb(130, 0, 150, 250))
+                    mImageView.setColorFilter(Color.argb(130, Color.red(color), Color.green(color), Color.blue(color)))
                     mArtworkItem.selected = true
                 } else {
                     ArtworkDeletionFragment.SELECTED_ITEMS.remove(mArtworkItem)
