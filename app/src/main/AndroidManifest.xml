@@ -28,7 +28,7 @@
             android:name=".settings.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,7 +38,7 @@
 
         <activity
             android:name=".login.LoginActivityWebview"
-            android:theme="@style/AppTheme.Material" />
+            android:theme="@style/AppTheme" />
 
         <provider
             android:name=".provider.PixivArtProvider"

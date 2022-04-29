@@ -42,5 +42,5 @@
         android:contentDescription="@string/fab_delete_selected_artwork"
         android:focusable="true"
         android:src="@drawable/ic_delete_white_24dp"
-        app:rippleColor="@color/colorPrimaryDark" />
+        app:rippleColor="?android:attr/colorPressedHighlight" />
 </FrameLayout>
