@@ -82,6 +82,7 @@ android {
             dimension = 'deliver'
         }
     }
+    namespace 'com.antony.muzei.pixiv'
 }
 
 dependencies {
