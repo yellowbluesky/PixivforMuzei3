@@ -56,21 +56,18 @@ class MuzeiCommandManager {
     }
 
     fun provideActions(context: Context, artwork: Artwork): List<RemoteActionCompat> {
-        val list = mutableListOf<RemoteActionCompat>().apply {
-            obtainActionShareImage(context, artwork)
-                ?.also { add(it) }
-            obtainActionViewArtworkDetails(context, artwork)
-                ?.also { add(it) }
-            obtainActionDeleteArtwork(context, artwork)
-                ?.also { add(it) }
+        val listOfActions = mutableListOf<RemoteActionCompat?>().apply {
+            add(obtainActionShareImage(context, artwork))
+            add(obtainActionViewArtworkDetails(context, artwork))
+            add(obtainActionDeleteArtwork(context, artwork))
+            // Logged in user required to add artwork to bookmarks
+            if (PreferenceManager.getDefaultSharedPreferences(context).getString("accessToken", "")
+                    ?.isNotEmpty() == true
+            ) {
+                add(obtainActionAddToBookmarks(context, artwork))
+            }
         }
-
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
-        if (!sharedPrefs.getString("accessToken", "")?.isEmpty()!!) {
-            obtainActionAddToBookmarks(context, artwork)?.let { list.add(it) }
-        }
-
-        return list
+        return listOfActions.filterNotNull()
     }
 
     fun provideActionsLegacy(context: Context, artwork: Artwork): List<UserCommand> {
