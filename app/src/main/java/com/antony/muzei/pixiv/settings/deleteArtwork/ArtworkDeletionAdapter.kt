@@ -57,7 +57,7 @@ class ArtworkDeletionAdapter(private val artworkItems: MutableList<ArtworkItem>)
         private val mImageView: ImageView = mView.findViewById(R.id.image)
         private lateinit var mArtworkItem: ArtworkItem
 
-        private val color = MaterialColors.getColor(mView, R.attr.colorSecondaryVariant, Color.BLUE)
+        private val color = MaterialColors.getColor(mView, com.google.android.material.R.attr.colorTertiaryContainer, Color.BLUE)
 
         fun bind(artworkItem: ArtworkItem) {
             mArtworkItem = artworkItem
