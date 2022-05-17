@@ -42,7 +42,6 @@ object RestClient {
                         .build()
                     val request =
                         original.newBuilder() // Using the Android User-Agent returns a HTML of the ranking page, instead of the JSON I need
-                            .header("User-Agent", BROWSER_USER_AGENT)
                             .header("Referer", PIXIV_RANKING_URL)
                             .url(url)
                             .build()
@@ -79,7 +78,6 @@ object RestClient {
             .addInterceptor(Interceptor { chain: Interceptor.Chain ->
                 val original = chain.request()
                 val request = original.newBuilder()
-                    .header("User-Agent", BROWSER_USER_AGENT)
                     .header("Referer", PIXIV_RANKING_URL)
                     .build()
                 chain.proceed(request)
