@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.antony.muzei.pixiv"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode getProperty('app.version.code') as int
         versionName getProperty('app.version.name')
 
