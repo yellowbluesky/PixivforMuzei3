@@ -172,7 +172,7 @@ class MuzeiCommandManager {
         }?.let { pendingIntent ->
             val title = context.getString(R.string.command_viewArtworkDetails)
             RemoteActionCompat(
-                IconCompat.createWithResource(context, R.drawable.muzei_launch_command),
+                IconCompat.createWithResource(context, com.google.android.apps.muzei.api.R.drawable.muzei_launch_command),
                 title,
                 title,
                 pendingIntent
