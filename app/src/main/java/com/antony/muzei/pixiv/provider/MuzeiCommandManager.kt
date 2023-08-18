@@ -17,15 +17,17 @@
 
 package com.antony.muzei.pixiv.provider
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.os.FileUriExposedException
 import androidx.core.app.RemoteActionCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.IconCompat
 import androidx.preference.PreferenceManager
@@ -101,25 +103,26 @@ class MuzeiCommandManager {
             artworkUri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", artworkJpeg)
         } else if (artworkPng.exists()) {
             artworkUri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", artworkPng)
-        } else {
-            try {
-                // Then looks in external storage
-                context.contentResolver.query(
-                    ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
-                    arrayOf("PERSISTENT_URI"),
-                    "${ProviderContract.Artwork.TOKEN} = ?",
-                    arrayOf("${artwork.token}"),
-                    null
-                )?.let {
-                    // Cursor only returns one unique row, so it is correct to moveToFirst row and use that as result
-                    it.moveToFirst()
-                    // Hardcoding a 0 is a bit dodgy, but we only request one column "persistent_uri"
-                    artworkUri = Uri.parse(it.getString(0))
-                    it.close()
-                }
-            } catch (e: FileUriExposedException) {
-                return null
+        } else if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            context.contentResolver.query(
+                ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
+                arrayOf("persistent_uri"),
+                "${ProviderContract.Artwork.TOKEN} = ?",
+                arrayOf("${artwork.token}"),
+                null
+            )?.let {
+                // Cursor only returns one unique row, so it is correct to moveToFirst row and use that as result
+                it.moveToFirst()
+                // Hardcoding a 0 is a bit dodgy, but we only request one column "persistent_uri"
+                artworkUri = Uri.parse(it.getString(0))
+                it.close()
             }
+        } else {
+            return null
         }
 
         return Intent().apply {
@@ -182,7 +185,7 @@ class MuzeiCommandManager {
     private fun obtainActionAddToBookmarks(
         context: Context,
         artwork: Artwork
-    ): RemoteActionCompat? =
+    ): RemoteActionCompat =
         Intent(context, AddToBookmarkService::class.java).apply {
             putExtra("artworkId", artwork.token.toString())
             putExtra("accessToken", getAccessToken())
