@@ -44,7 +44,7 @@ class MainPreferenceFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.main_preference_layout, rootKey)
 
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
         // Stores user toggleable variables into a temporary store for later comparison in onStop()
         // If the value of the preference on Activity creation is different to Activity stop, then take certain action
