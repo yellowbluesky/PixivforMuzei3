@@ -14,6 +14,9 @@ import java.util.Random;
 import retrofit2.Call;
 import retrofit2.Callback;
 
+/*
+This class is called everytime an image is downloaded
+ */
 public class HostManager {
 
     public static final String HOST_OLD = "i.pximg.net";

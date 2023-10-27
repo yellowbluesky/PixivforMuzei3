@@ -26,6 +26,9 @@ import java.util.List;
 
 import okhttp3.Dns;
 
+/*
+This class is called only when network bypass is enabled
+ */
 public class RubyHttpDns implements Dns {
 
     /**
