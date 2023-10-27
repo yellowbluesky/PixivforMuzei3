@@ -38,10 +38,7 @@ public class RubyHttpDns implements Dns {
      */
 
     private static final String[] addresses = {
-            "210.140.131.188",
-            "210.140.131.218",
-            "210.140.131.187",
-            "210.140.131.189"
+            "210.140.92.136", "210.140.92.137", "210.140.92.145"
     };
     public static List<InetAddress> newDns = new ArrayList<>();
     private static RubyHttpDns sHttpDns = null;
