@@ -24,6 +24,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.antony.muzei.pixiv.settings.deleteArtwork.ArtworkDeletionFragment;
 import com.antony.muzei.pixiv.settings.fragments.AdvOptionsPreferenceFragment;
+import com.antony.muzei.pixiv.settings.fragments.BookmarkExportFragment;
 import com.antony.muzei.pixiv.settings.fragments.CreditsPreferenceFragment;
 import com.antony.muzei.pixiv.settings.fragments.MainPreferenceFragment;
 import com.antony.muzei.pixiv.settings.fragments.RoadmapPreferenceFragment;
@@ -50,7 +51,7 @@ public class SectionsPagerAdapter extends FragmentStateAdapter {
             default:
                 return new CreditsPreferenceFragment();
             case 4:
-                return new RoadmapPreferenceFragment();
+                return new BookmarkExportFragment();
         }
     }
 

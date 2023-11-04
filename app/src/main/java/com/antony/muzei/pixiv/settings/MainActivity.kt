@@ -54,41 +54,41 @@ class MainActivity : PixivMuzeiActivity(), AdvOptionsPreferenceFragment.NightMod
         }.attach()
 
         // If Muzei is not installed, this will redirect the user to Muzei's Play Store listing
-        if (!isMuzeiInstalled) {
-            AlertDialog.Builder(this)
-                .setTitle(getString(R.string.dialogTitle_muzeiNotInstalled))
-                .setMessage(getString(R.string.dialog_installMuzei))
-                .setPositiveButton(R.string.dialog_yes) { dialog: DialogInterface?, which: Int ->
-                    if (!IntentUtils.launchActivity(
-                            this,
-                            Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=net.nurik.roman.muzei"))
-                        )
-                    ) {
-                        val fallback = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://play.google.com/store/apps/details?id=net.nurik.roman.muzei")
-                        )
-                        IntentUtils.launchActivity(this, fallback)
-                    }
-                }
-                .setNegativeButton(R.string.dialog_no) { dialog: DialogInterface, which: Int ->
-                    // Do nothing
-                    dialog.dismiss()
-                }
-                .show()
-        } else if (!isProviderSelected(this, BuildConfig.APPLICATION_ID + ".provider")) {
-            // If Pixiv for Muzei 3 is not the selected provider
-            AlertDialog.Builder(this)
-                .setTitle(applicationContext.getString(R.string.dialogTitle_muzeiNotActiveSource))
-                .setMessage(applicationContext.getString(R.string.dialog_selectSource))
-                .setNeutralButton(android.R.string.ok) { dialog: DialogInterface?, which: Int ->
-                    val intent = createChooseProviderIntent(BuildConfig.APPLICATION_ID + ".provider")
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    finishAffinity()
-                    IntentUtils.launchActivity(this, intent)
-                }
-                .show()
-        }
+//        if (!isMuzeiInstalled) {
+//            AlertDialog.Builder(this)
+//                .setTitle(getString(R.string.dialogTitle_muzeiNotInstalled))
+//                .setMessage(getString(R.string.dialog_installMuzei))
+//                .setPositiveButton(R.string.dialog_yes) { dialog: DialogInterface?, which: Int ->
+//                    if (!IntentUtils.launchActivity(
+//                            this,
+//                            Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=net.nurik.roman.muzei"))
+//                        )
+//                    ) {
+//                        val fallback = Intent(
+//                            Intent.ACTION_VIEW,
+//                            Uri.parse("https://play.google.com/store/apps/details?id=net.nurik.roman.muzei")
+//                        )
+//                        IntentUtils.launchActivity(this, fallback)
+//                    }
+//                }
+//                .setNegativeButton(R.string.dialog_no) { dialog: DialogInterface, which: Int ->
+//                    // Do nothing
+//                    dialog.dismiss()
+//                }
+//                .show()
+//        } else if (!isProviderSelected(this, BuildConfig.APPLICATION_ID + ".provider")) {
+//            // If Pixiv for Muzei 3 is not the selected provider
+//            AlertDialog.Builder(this)
+//                .setTitle(applicationContext.getString(R.string.dialogTitle_muzeiNotActiveSource))
+//                .setMessage(applicationContext.getString(R.string.dialog_selectSource))
+//                .setNeutralButton(android.R.string.ok) { dialog: DialogInterface?, which: Int ->
+//                    val intent = createChooseProviderIntent(BuildConfig.APPLICATION_ID + ".provider")
+//                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//                    finishAffinity()
+//                    IntentUtils.launchActivity(this, intent)
+//                }
+//                .show()
+//        }
     }
 
     // Checks if Muzei is installed

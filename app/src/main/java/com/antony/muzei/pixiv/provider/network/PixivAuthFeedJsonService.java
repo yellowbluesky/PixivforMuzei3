@@ -32,10 +32,16 @@ public interface PixivAuthFeedJsonService {
     Call<Illusts> getFollowJson();
 
     @GET("v1/user/bookmarks/illust?restrict=public")
-    Call<Illusts> getBookmarkJson(@Query("user_id") String userId);
+    Call<Illusts> getPublicBookmarkJson(@Query("user_id") String userId);
+
+    @GET("v1/user/bookmarks/illust?restrict=private")
+    Call<Illusts> getPrivateBookmarkJson(@Query("user_id") String userId);
 
     @GET("v1/user/bookmarks/illust?restrict=public")
-    Call<Illusts> getBookmarkOffsetJson(@Query("user_id") String userId, @Query("max_bookmark_id") String maxBookmarkId);
+    Call<Illusts> getPublicBookmarkOffsetJson(@Query("user_id") String userId, @Query("max_bookmark_id") String maxBookmarkId);
+
+    @GET("v1/user/bookmarks/illust?restrict=private")
+    Call<Illusts> getPrivateBookmarkOffsetJson(@Query("user_id") String userId, @Query("max_bookmark_id") String maxBookmarkId);
 
     @GET("v1/search/illust?search_target=partial_match_for_tags&sort=date_desc")
     Call<Illusts> getTagSearchJson(@Header("Accept-Language") String language, @Query("word") String tag);
