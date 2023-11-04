@@ -600,7 +600,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             { settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
             // There are only two NSFW levels. If user has selected both, don't bother filtering NSFW, they want everything
             { settingNsfwSelection.size == 2 || settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
-            { hasArtistBeenBlocked(it.user_id) },
+            { !hasArtistBeenBlocked(it.user_id) },
         )
 
         val filteredArtworksList = artworkList.filter { candidate ->
@@ -722,7 +722,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                         settingNsfwSelection.contains(it.sanity_level.toString()) ||
                         (settingNsfwSelection.contains("8") && it.x_restrict == 1)
             },
-            {hasArtistBeenBlocked(it.user.id)}
+            { !hasArtistBeenBlocked(it.user.id) }
             // If feed mode is recommended or user has selected all possible NSFW levels, then don't bother filtering NSFW
             // Recommended only provides SFW artwork
         )
