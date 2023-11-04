@@ -114,33 +114,35 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
     */
     private fun findBookmarkStartTime(userId: String) {
         Log.d(LOG_TAG, "Looking for oldest bookmark id")
-        val service: PixivAuthFeedJsonService = RestClient.getRetrofitAuthInstance()
-            .create(PixivAuthFeedJsonService::class.java)
-        var call: Call<Illusts?> = service.getBookmarkJson(userId)
+        val bookmarks = BookmarksHelper(userId)
+        bookmarks.getNewPublicBookmarks()
 
-        var counter = 0
-        var callingId = 0L
-        // setting initial value
-        var illusts = call.execute().body()!!
-        var step = illusts.next_url!!.substringAfter("max_bookmark_id=").toLong()
+        var counter = 0 // Used only to output to logcat how many iterations it took find
+        var callingId = 0L // Stores the next time "window" to check
+        // Initial value of this is the latest bookmark / largest possible value
+        var step = bookmarks.getBookmarks().next_url!!.substringAfter("max_bookmark_id=").toLong()
+
         while (true) {
             counter++
+            step /= 2 //Halving the step size
             Log.d(LOG_TAG, "Iteration $counter")
-            if (illusts.next_url != null) {
-                // we are too high
-                val currentId = illusts.next_url!!.substringAfter("max_bookmark_id=").toLong()
-                step /= 2
+            if (bookmarks.getBookmarks().next_url != null) {
+                // we are not looking far enough in the past
+                // we need to reduce the maxBookmarkId parameter to
+                val currentId =
+                    bookmarks.getBookmarks().next_url!!.substringAfter("max_bookmark_id=").toLong()
                 callingId = currentId - step
-            } else if (illusts.artworks.isEmpty()) {
-                // we are too low
-                step /= 2
+            } else if (bookmarks.getBookmarks().artworks.isEmpty()) {
+                // we are looking too far in the past
+                // we need to increase the maxBookmarkId parameter to look closer to current time
                 callingId += step
             } else {
+                // we have found the stop criteria
                 Log.d(LOG_TAG, "Found at $callingId")
                 break
             }
-            call = service.getBookmarkOffsetJson(userId, callingId.toString())
-            illusts = call.execute().body()!!
+            bookmarks.getNewPublicBookmarks(callingId.toString())
+
         }
         with(PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()) {
             putLong("oldestMaxBookmarkId", callingId)
@@ -743,14 +745,18 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         // find the lower bound
         val oldestBookmarkId = sharedPrefs.getLong("oldestMaxBookmarkId", 0)
         // Find the upper bound
+        // Multiply by 1.01 as a fudge factor to ensure we get the latest artwork
         val currentBookmarkId: Long =
-            (bookmarksHelper.getNewIllusts().next_url?.substringAfter("max_bookmark_id=")!!
+            (bookmarksHelper.getNewPublicBookmarks().next_url?.substringAfter("max_bookmark_id=")!!
                 .toLong() * 1.01).toLong()
 
         var bookmarkArtworks =
-            bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
+            bookmarksHelper.getNewPublicBookmarks(
+                (oldestBookmarkId..currentBookmarkId).random().toString()
+            ).artworks
         val artworkList = mutableListOf<Artwork>()
         var counter = 0
+
         while (counter < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
@@ -758,7 +764,9 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new bookmarks")
                 bookmarkArtworks =
-                    bookmarksHelper.getNewIllusts((oldestBookmarkId..currentBookmarkId).random().toString()).artworks
+                    bookmarksHelper.getNewPublicBookmarks(
+                        (oldestBookmarkId..currentBookmarkId).random().toString()
+                    ).artworks
                 continue
             } catch (e: CorruptFileException) {
                 Log.i(LOG_TAG, "Corrupt artwork found")
@@ -770,6 +778,9 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         return artworkList
     }
 
+    // Bookmarks artworks are handled in a separate function
+    // Part of the reason is that Pixiv itself has different API surface for bookmarks
+    // And must be handled accordingly
     private fun getArtworksAuth(updateMode: String): List<Artwork> {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         // Determines if any extra information is needed, and passes it along
@@ -784,6 +795,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 sharedPrefs.getString("pref_tagSearch", "") ?: "",
                 sharedPrefs.getString("pref_tagLanguage", "") ?: ""
             )
+
             else -> IllustsHelper("follow")
         }
         var authArtworkList = illustsHelper.getNewIllusts().artworks
@@ -875,6 +887,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 })
                 return "daily"
             }
+
             "doNotChange_downDaily" -> {
                 Log.i(LOG_TAG, "Downloading a single daily")
                 PixivMuzeiSupervisor.post(Runnable {
@@ -886,6 +899,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 })
                 return "daily"
             }
+
             "doNotChange_doNotDown" -> {
                 Log.i(LOG_TAG, "Retrying with no changes")
                 PixivMuzeiSupervisor.post(Runnable {
@@ -897,6 +911,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 })
                 return null
             }
+
             else -> return null
         }
     }

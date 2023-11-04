@@ -10,15 +10,35 @@ class BookmarksHelper(_userId: String) {
         .create(PixivAuthFeedJsonService::class.java)
     private val userId: String = _userId
 
-    fun getNewIllusts(maxBookmarkId: String): Illusts {
-        val call = service.getBookmarkOffsetJson(userId, maxBookmarkId)
+    fun getNewPublicBookmarks(maxBookmarkId: String): Illusts {
+        val call = service.getPublicBookmarkOffsetJson(userId, maxBookmarkId)
         illusts = call.execute().body()!!
         return illusts
     }
 
-    fun getNewIllusts(): Illusts {
-        val call = service.getBookmarkJson(userId)
+    fun getNewPrivateIllusts(maxBookmarkId: String): Illusts {
+        val call = service.getPrivateBookmarkOffsetJson(userId, maxBookmarkId)
         illusts = call.execute().body()!!
         return illusts
     }
+
+    fun getNewPublicBookmarks(): Illusts {
+        val call = service.getPublicBookmarkJson(userId)
+        illusts = call.execute().body()!!
+        return illusts
+    }
+
+    fun getNewPrivateIllusts(): Illusts {
+        val call = service.getPrivateBookmarkJson(userId)
+        illusts = call.execute().body()!!
+        return illusts
+    }
+
+    fun getNextBookmarks(): Illusts {
+        val call = service.getNextUrl(illusts.next_url)
+        illusts = call.execute().body()!!
+        return illusts
+    }
+
+    fun getBookmarks() = illusts
 }
