@@ -2,10 +2,10 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "807eb609dccc000014507586f6e03786",
+    "identityHash": "2fc95dfa3f3d8d781548080a4467a684",
     "entities": [
       {
-        "tableName": "DeletedArtworkIdEntity",
+        "tableName": "deleteArtwork",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`artworkId` TEXT NOT NULL, PRIMARY KEY(`artworkId`))",
         "fields": [
           {
@@ -23,12 +23,32 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "blockArtist",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`artistId` TEXT NOT NULL, PRIMARY KEY(`artistId`))",
+        "fields": [
+          {
+            "fieldPath": "artistId",
+            "columnName": "artistId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "artistId"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '807eb609dccc000014507586f6e03786')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2fc95dfa3f3d8d781548080a4467a684')"
     ]
   }
 }
