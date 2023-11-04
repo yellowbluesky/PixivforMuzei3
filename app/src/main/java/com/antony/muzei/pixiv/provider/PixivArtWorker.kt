@@ -430,8 +430,12 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
     // Returns true if the artwork's ID exists int the DeletedArtwork database
     // If the database in inaccessible for whatever reason, false is returned
     private fun isBeenDeleted(illustId: Int): Boolean {
-        return AppDatabase.getInstance(applicationContext)?.deletedArtworkIdDao()
-            ?.isRowIsExist(illustId) ?: false
+        return AppDatabase.getInstance(applicationContext).deletedArtworkIdDao()
+            .isRowIsExist(illustId)
+    }
+
+    private fun hasArtistBeenBlocked(artistId: Int): Boolean {
+        return AppDatabase.getInstance(applicationContext).blockedArtistDao().isRowIsExist(artistId)
     }
 
 
@@ -564,6 +568,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             .persistentUri(localUri)
             .token(token)
             .webUri(Uri.parse(PixivProviderConst.PIXIV_ARTWORK_URL + token))
+            .metadata(rankingArtwork.user_id.toString()) // Allows blocking of artist
             .build()
     }
 
@@ -594,6 +599,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             { settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
             // There are only two NSFW levels. If user has selected both, don't bother filtering NSFW, they want everything
             { settingNsfwSelection.size == 2 || settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
+            { !hasArtistBeenBlocked(it.user_id) },
         )
 
         // Absolute black magic, something to do with Kotlin predicates, I no longer understand this
@@ -682,6 +688,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             .persistentUri(localUri)
             .token(token)
             .webUri(Uri.parse(PixivProviderConst.PIXIV_ARTWORK_URL + token))
+            .metadata(selectedArtwork.user.id.toString()) // Allows blocking of artist
             .build()
     }
 
@@ -714,7 +721,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 settingIsRecommended || settingNsfwSelection.size == 4 ||
                         settingNsfwSelection.contains(it.sanity_level.toString()) ||
                         (settingNsfwSelection.contains("8") && it.x_restrict == 1)
-            }
+            },
+            { !hasArtistBeenBlocked(it.user.id) }
             // If feed mode is recommended or user has selected all possible NSFW levels, then don't bother filtering NSFW
             // Recommended only provides SFW artwork
         )

@@ -55,6 +55,7 @@ class MuzeiCommandManager {
         const val COMMAND_ADD_TO_BOOKMARKS = 517
         const val COMMAND_VIEW_IMAGE_DETAILS = 988
         const val COMMAND_SHARE_IMAGE = 883
+        const val COMMAND_BLOCK_ARTIST = 765
     }
 
     fun provideActions(context: Context, artwork: Artwork): List<RemoteActionCompat> {
@@ -68,6 +69,7 @@ class MuzeiCommandManager {
             ) {
                 add(obtainActionAddToBookmarks(context, artwork))
             }
+            add(obtainActionBlockArtist(context, artwork))
         }
         return listOfActions.filterNotNull()
     }
@@ -88,7 +90,8 @@ class MuzeiCommandManager {
             UserCommand(
                 COMMAND_ADD_TO_BOOKMARKS,
                 context.getString(R.string.command_addToBookmark)
-            )
+            ),
+            UserCommand(COMMAND_BLOCK_ARTIST, "Block this artist") // TODO
         )
     }
 
@@ -172,7 +175,10 @@ class MuzeiCommandManager {
         }?.let { pendingIntent ->
             val title = context.getString(R.string.command_viewArtworkDetails)
             RemoteActionCompat(
-                IconCompat.createWithResource(context, com.google.android.apps.muzei.api.R.drawable.muzei_launch_command),
+                IconCompat.createWithResource(
+                    context,
+                    com.google.android.apps.muzei.api.R.drawable.muzei_launch_command
+                ),
                 title,
                 title,
                 pendingIntent
@@ -225,6 +231,28 @@ class MuzeiCommandManager {
             val title = context.getString(R.string.command_delete_artwork)
             RemoteActionCompat(
                 IconCompat.createWithResource(context, R.drawable.ic_delete_white_24dp),
+                title,
+                title,
+                pendingIntent
+            ).apply {
+                setShouldShowIcon(false)
+            }
+        }
+
+    private fun obtainActionBlockArtist(context: Context, artwork: Artwork): RemoteActionCompat? =
+        Intent(context, BlockArtistReceiver::class.java).apply {
+            putExtra("artistId", artwork.metadata)
+        }.let { intent ->
+            PendingIntent.getBroadcast(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }.let { pendingIntent ->
+            val title = "Block this artist" // TODO
+            RemoteActionCompat(
+                IconCompat.createWithResource(context, R.drawable.baseline_block_24),
                 title,
                 title,
                 pendingIntent

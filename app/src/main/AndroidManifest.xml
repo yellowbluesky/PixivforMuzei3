@@ -19,6 +19,10 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <receiver
+            android:name=".provider.BlockArtistReceiver"
+            android:enabled="true"
+            android:exported="false" />
+        <receiver
             android:name=".provider.DeleteArtworkReceiver"
             android:enabled="true"
             android:exported="false" />
@@ -34,11 +38,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".login.LoginActivityWebview"
             android:theme="@style/AppTheme" />
-
         <provider
             android:name=".provider.PixivArtProvider"
             android:authorities="${PACKAGE}.provider"
@@ -56,7 +58,6 @@
                 android:name="color"
                 android:value="#0096db" />
         </provider>
-
         <provider
             android:name="com.google.android.apps.muzei.api.provider.MuzeiArtDocumentsProvider"
             android:authorities="${PACKAGE}.provider.documents"
@@ -67,7 +68,6 @@
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
             </intent-filter>
         </provider>
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${PACKAGE}.fileprovider"
@@ -81,7 +81,6 @@
         <service
             android:name=".provider.AddToBookmarkService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
-
         <service
             android:name=".provider.DeleteArtworkTileService"
             android:exported="true"

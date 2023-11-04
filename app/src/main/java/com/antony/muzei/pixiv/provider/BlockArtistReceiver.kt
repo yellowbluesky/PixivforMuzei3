@@ -4,27 +4,25 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.antony.muzei.pixiv.AppDatabase
-import com.antony.muzei.pixiv.settings.deleteArtwork.DeletedArtworkIdEntity
+import com.antony.muzei.pixiv.settings.blockArtist.BlockArtistEntity
 import com.google.android.apps.muzei.api.provider.ProviderContract
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-class DeleteArtworkReceiver : BroadcastReceiver(),
-    CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
-
+class BlockArtistReceiver : BroadcastReceiver(), CoroutineScope by CoroutineScope(Dispatchers.Main + SupervisorJob()) {
     override fun onReceive(context: Context, intent: Intent) {
-        intent.getStringExtra("artworkId")?.let { artworkId ->
+        intent.getStringExtra("artistId")?.let { artistId ->
             context.contentResolver.delete(
                 ProviderContract.getProviderClient(context, PixivArtProvider::class.java).contentUri,
                 "${ProviderContract.Artwork.TOKEN} = ?",
-                arrayOf(artworkId)
+                arrayOf(artistId)
             )
 
             launch(Dispatchers.IO) {
-                AppDatabase.getInstance(context).deletedArtworkIdDao()
-                    .insertDeletedArtworkId(listOf(DeletedArtworkIdEntity(artworkId)))
+                AppDatabase.getInstance(context).blockedArtistDao()
+                    .insertBlockedArtistId(listOf(BlockArtistEntity(artistId)))
             }
         }
     }
