@@ -20,12 +20,10 @@ import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
-import com.antony.muzei.pixiv.provider.network.PixivAuthFeedJsonService
 import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
 import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
-import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
 import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
@@ -34,7 +32,6 @@ import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderCl
 import okhttp3.*
 import okio.buffer
 import okio.sink
-import retrofit2.Call
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -227,7 +224,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         val contentResolver = applicationContext.contentResolver
 
         // If image already exists on the filesystem, then we can skip downloading it
-        isImageAlreadyDownloadedApi29(contentResolver, filename)?.let {
+        getExistingImageExternalApi29(contentResolver, filename)?.let {
             Log.i(LOG_TAG, "Image already exists, early exiting")
             return it
         }
@@ -291,7 +288,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
     /* Checking if existing copy of images exists*/
     // Returns the Uri of an image with matching filename
     // otherwise returns null
-    private fun isImageAlreadyDownloadedApi29(
+    private fun getExistingImageExternalApi29(
         contentResolver: ContentResolver,
         filename: String
     ): Uri? {
@@ -381,7 +378,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 Log.i(LOG_TAG, "Artwork exists, early exit")
                 return Uri.fromFile(it)
             }
-        }.let {
+        }.also {
             with(it.sink().buffer()) {
                 writeAll(responseBody!!.source())
                 responseBody.close()
@@ -448,7 +445,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             "${ProviderContract.Artwork.TOKEN} = ?",
             arrayOf(illustId.toString()),
             null
-        )?.let {
+        )?.use {
             val duplicateFound = it.count > 0
             it.close()
             return duplicateFound
@@ -599,6 +596,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             { settingNsfwSelection.size == 2 || settingNsfwSelection.contains(it.illust_content_type.sexual.toString()) },
         )
 
+        // Absolute black magic, something to do with Kotlin predicates, I no longer understand this
         val filteredArtworksList = artworkList.filter { candidate ->
             predicates.all { it(candidate) }
         }.also {
@@ -755,9 +753,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 (oldestBookmarkId..currentBookmarkId).random().toString()
             ).artworks
         val artworkList = mutableListOf<Artwork>()
-        var counter = 0
 
-        while (counter < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        for (i in 0..sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
                 artwork = buildArtworkAuth(bookmarkArtworks, false)
@@ -773,7 +770,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 continue
             }
             artworkList.add(artwork)
-            counter++
         }
         return artworkList
     }
@@ -800,8 +796,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
         var authArtworkList = illustsHelper.getNewIllusts().artworks
         val artworkList = mutableListOf<Artwork>()
-        var counter = 0
-        while (counter < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        for (i in 0..sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
                 artwork = buildArtworkAuth(authArtworkList, updateMode == "recommended")
@@ -814,32 +809,31 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 continue
             }
             artworkList.add(artwork)
-            counter++
         }
         return artworkList
     }
 
     private fun getArtworksRanking(updateMode: String): List<Artwork> {
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val numArtworksToDownload =
+            PreferenceManager.getDefaultSharedPreferences(applicationContext).getInt("prefSlider_numToDownload", 2)
         // contentsHelper is stateful, stores a copy of Contents, and can fetch a new one if needed
         val contentsHelper = ContentsHelper(updateMode)
         var contents = contentsHelper.getNewContents()
-        val artworkList = mutableListOf<Artwork>()
-        var counter = 0
-        while (counter < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
-            val artwork: Artwork
-            try {
-                artwork = buildArtworkRanking(contents)
-            } catch (e: FilterMatchNotFoundException) {
-                Log.i(LOG_TAG, "Fetching new contents")
-                contents = contentsHelper.getNextContents()
-                continue
-            } catch (e: CorruptFileException) {
-                Log.i(LOG_TAG, "Corrupt artwork found")
-                continue
+        val artworkList = mutableListOf<Artwork>().also {
+            for (i in 1..numArtworksToDownload) {
+                val artwork: Artwork
+                try {
+                    artwork = buildArtworkRanking(contents)
+                } catch (e: FilterMatchNotFoundException) {
+                    Log.i(LOG_TAG, "Fetching new contents")
+                    contents = contentsHelper.getNextContents()
+                    continue
+                } catch (e: CorruptFileException) {
+                    Log.i(LOG_TAG, "Corrupt artwork found")
+                    continue
+                }
+                it.add(artwork)
             }
-            artworkList.add(artwork)
-            counter++
         }
         return artworkList
     }
@@ -916,6 +910,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
     }
 
+    // Entry method, called by Muzei / Workmanager
+    // Any critical errors bubble up as a null result, resulting in Muzei calling this function again later
     override fun doWork(): Result {
         Log.i(LOG_TAG, "Starting work")
         with(getProviderClient(applicationContext, PixivArtProvider::class.java)) {
