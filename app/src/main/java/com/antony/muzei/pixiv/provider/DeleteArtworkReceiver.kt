@@ -23,8 +23,8 @@ class DeleteArtworkReceiver : BroadcastReceiver(),
             )
 
             launch(Dispatchers.IO) {
-                AppDatabase.getInstance(context)?.deletedArtworkIdDao()
-                    ?.insertDeletedArtworkId(listOf(DeletedArtworkIdEntity(artworkId)))
+                AppDatabase.getInstance(context).deletedArtworkIdDao()
+                    .insertDeletedArtworkId(listOf(DeletedArtworkIdEntity(artworkId)))
             }
         }
     }

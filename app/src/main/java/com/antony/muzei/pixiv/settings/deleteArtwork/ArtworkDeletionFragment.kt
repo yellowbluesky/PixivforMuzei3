@@ -112,7 +112,7 @@ class ArtworkDeletionFragment : Fragment() {
 
             val appDatabase = AppDatabase.getInstance(context)
             CoroutineScope(Dispatchers.Main + SupervisorJob()).launch(Dispatchers.IO) {
-                appDatabase?.deletedArtworkIdDao()?.insertDeletedArtworkId(listOfDeletedIds.toList())
+                appDatabase.deletedArtworkIdDao().insertDeletedArtworkId(listOfDeletedIds.toList())
             }
 
             // TODO also delete the files from the disk?

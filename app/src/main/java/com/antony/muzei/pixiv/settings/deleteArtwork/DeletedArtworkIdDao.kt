@@ -8,8 +8,8 @@ import androidx.room.Query
 @Dao
 interface DeletedArtworkIdDao {
     // For debug purposes only
-    @Query("SELECT * FROM DeletedArtworkIdEntity")
-    fun getAll(): List<DeletedArtworkIdEntity>
+//    @Query("SELECT * FROM DeletedArtworkIdEntity")
+//    fun getAll(): List<DeletedArtworkIdEntity>
 
     // Returns true if the passed artworkId is present in the table
     @Query("SELECT EXISTS(SELECT * FROM DeletedArtworkIdEntity WHERE artworkId = (:artworkId))")
