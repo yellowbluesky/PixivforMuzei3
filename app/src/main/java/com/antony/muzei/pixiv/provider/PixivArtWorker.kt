@@ -760,10 +760,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 artwork = buildArtworkAuth(bookmarkArtworks, false)
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new bookmarks")
-                bookmarkArtworks =
-                    bookmarksHelper.getNewPublicBookmarks(
-                        (oldestBookmarkId..currentBookmarkId).random().toString()
-                    ).artworks
+                bookmarkArtworks = bookmarksHelper.getNextBookmarks().artworks
                 continue
             } catch (e: CorruptFileException) {
                 Log.i(LOG_TAG, "Corrupt artwork found")
