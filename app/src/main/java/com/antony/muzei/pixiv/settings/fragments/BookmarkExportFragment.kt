@@ -88,7 +88,11 @@ class BookmarkExportFragment : PreferenceFragmentCompat() {
                 val textFile: File = File(
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                     filename
-                ).also { it.writeText("") }
+                ).also {
+                    if (it.exists()) {
+                        it.delete()
+                    }
+                }.also { it.writeText("") }
 
                 var iterationCounter = 1
                 while (true) {
