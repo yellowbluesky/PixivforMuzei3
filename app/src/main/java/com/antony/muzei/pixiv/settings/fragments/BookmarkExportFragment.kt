@@ -91,7 +91,7 @@ class BookmarkExportFragment : PreferenceFragmentCompat() {
                 ).also { it.writeText("") }
 
                 var iterationCounter = 1
-                while (bookmarks.getBookmarks().artworks.isNotEmpty()) {
+                while (true) {
                     // Iterate through list of artworks and add id's to list
                     for (artwork in bookmarks.getBookmarks().artworks) {
                         //Log.d("BOOKMARK", artwork.id.toString())
@@ -104,6 +104,9 @@ class BookmarkExportFragment : PreferenceFragmentCompat() {
                     iterationCounter++
                     // Delay of 500 ms to avoid overloading Pixiv network
                     delay(500L)
+                    if (bookmarks.getBookmarks().next_url == null) {
+                        break
+                    }
                     bookmarks.getNextBookmarks()
                 }
                 withContext(Dispatchers.Main) {
