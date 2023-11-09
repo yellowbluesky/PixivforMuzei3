@@ -4,9 +4,8 @@ import com.antony.muzei.pixiv.provider.network.PixivRankingFeedJsonService
 import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 
-class ContentsHelper(_updateMode: String) {
+class ContentsHelper(private val updateMode: String) {
     private lateinit var contents: Contents
-    private val updateMode = _updateMode
     private val service = RestClient.getRetrofitRankingInstance().create(
         PixivRankingFeedJsonService::class.java
     )
@@ -25,7 +24,7 @@ class ContentsHelper(_updateMode: String) {
     fun getNextContents(): Contents {
         if (pageNumber != 9) {
             pageNumber++
-            service.getRankingJson(updateMode, pageNumber, date).let {
+            service.getRankingJson(updateMode, pageNumber, date)?.let {
                 contents = it.execute().body()!!
             }
 

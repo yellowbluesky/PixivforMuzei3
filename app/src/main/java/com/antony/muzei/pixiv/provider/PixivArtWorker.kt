@@ -790,11 +790,11 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         val illustsHelper = when (updateMode) {
             "follow" -> IllustsHelper(updateMode)
             "recommended" -> IllustsHelper(updateMode)
-            "artist" -> IllustsHelper(updateMode, sharedPrefs.getString("pref_artistId", "") ?: "")
+            "artist" -> IllustsHelper(updateMode, artist = sharedPrefs.getString("pref_artistId", "") ?: "")
             "tag_search" -> IllustsHelper(
                 updateMode,
-                sharedPrefs.getString("pref_tagSearch", "") ?: "",
-                sharedPrefs.getString("pref_tagLanguage", "") ?: ""
+                tag = sharedPrefs.getString("pref_tagSearch", "") ?: "",
+                language = sharedPrefs.getString("pref_tagLanguage", "") ?: ""
             )
 
             else -> IllustsHelper("follow")

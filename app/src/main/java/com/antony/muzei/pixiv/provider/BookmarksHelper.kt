@@ -4,11 +4,10 @@ import com.antony.muzei.pixiv.provider.network.PixivAuthFeedJsonService
 import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.moshi.Illusts
 
-class BookmarksHelper(_userId: String) {
+class BookmarksHelper(private val userId: String) {
     private lateinit var illusts: Illusts
     private val service: PixivAuthFeedJsonService = RestClient.getRetrofitAuthInstance()
         .create(PixivAuthFeedJsonService::class.java)
-    private val userId: String = _userId
 
     fun getNewPublicBookmarks(maxBookmarkId: String): Illusts {
         val call = service.getPublicBookmarkOffsetJson(userId, maxBookmarkId)
