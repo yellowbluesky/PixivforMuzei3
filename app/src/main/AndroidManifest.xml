@@ -6,6 +6,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        android:minSdkVersion="34" />
 
     <application
         android:name=".PixivMuzei"
@@ -41,6 +44,7 @@
         <activity
             android:name=".login.LoginActivityWebview"
             android:theme="@style/AppTheme" />
+
         <provider
             android:name=".provider.PixivArtProvider"
             android:authorities="${PACKAGE}.provider"
@@ -80,6 +84,7 @@
 
         <service
             android:name=".provider.AddToBookmarkService"
+            android:foregroundServiceType="dataSync"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
             android:name=".provider.DeleteArtworkTileService"

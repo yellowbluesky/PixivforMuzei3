@@ -20,6 +20,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -41,7 +42,14 @@ class AddToBookmarkService : Service() {
             .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
             .build()
             .let {
-                startForeground(1, it)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    startForeground(1, it)
+                } else {
+                    startForeground(
+                        1, it,
+                        FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                    )
+                }
             }
 
         try {
@@ -57,7 +65,7 @@ class AddToBookmarkService : Service() {
                 service.postArtworkBookmark(
                     "Bearer " + intent.getStringExtra("accessToken"),
                     formBody
-                )?.execute()
+                ).execute()
             }
         } catch (ex: IOException) {
             ex.printStackTrace()
