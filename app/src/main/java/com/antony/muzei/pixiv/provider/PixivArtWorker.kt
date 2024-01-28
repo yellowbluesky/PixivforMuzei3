@@ -1,6 +1,10 @@
 package com.antony.muzei.pixiv.provider
 
-import android.content.*
+import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Context
+import android.content.SharedPreferences
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -10,7 +14,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.preference.PreferenceManager
-import androidx.work.*
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.antony.muzei.pixiv.AppDatabase
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
@@ -22,6 +33,7 @@ import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
 import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
 import com.antony.muzei.pixiv.provider.network.RestClient
+import com.antony.muzei.pixiv.provider.network.interceptor.ImageIntegrityInterceptor
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
@@ -29,13 +41,15 @@ import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
-import okhttp3.*
+import okhttp3.Interceptor
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.ResponseBody
 import okio.buffer
 import okio.sink
 import java.io.File
-import java.io.InputStream
 import java.io.OutputStream
-import java.io.RandomAccessFile
 import java.util.concurrent.TimeUnit
 
 class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
@@ -147,54 +161,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
     }
 
-    private fun isCorruptFile(image: File, type: MediaType): Boolean {
-        Log.d("CORRUPT", "checking corrupt status")
-        Log.d("CORRUPT", image.name)
-        with(RandomAccessFile(image, "r")) {
-            if (type.subtype == "png") {
-                Log.d("CORRUPT", "png")
-                seek(image.length() - 8)
-                if (readInt() == 0x49454E44) {
-                    Log.d("CORRUPT", "intact artwork")
-                    close()
-                    return false
-                }
-            } else if (type.subtype == "jpeg") {
-                Log.d("CORRUPT", "jpeg")
-                seek(image.length() - 2)
-                if (readShort() == 0xFFD9.toShort()) {
-                    Log.d("CORRUPT", "intact artwork")
-                    close()
-                    return false
-                }
-            }
-            close()
-        }
-        Log.d("CORRUPT", "corrupt artwork")
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        val existingCorruptCount = sharedPrefs.getInt("corruptImageCount", 0)
-        sharedPrefs.edit().putInt("corruptImageCount", existingCorruptCount + 1).apply()
-        return true
-    }
-
-    private fun isCorruptFile(image: InputStream, type: MediaType?): Boolean {
-        type?.let { fileType ->
-            // Only looking at the last 4 bytes
-            with(image.readBytes().takeLast(4)) {
-                if (fileType.subtype == "png") {
-                    if (this[0] == 0x49.toByte() && this[1] == 0x45.toByte() && this[2] == 0x4E.toByte() && this[3] == 0x44.toByte()) {
-                        return false
-                    }
-                } else if (fileType.subtype == "jpeg") {
-                    if (this[2] == 0xFF.toByte() && this[3] == 0xD9.toByte()) {
-                        return false
-                    }
-                }
-            }
-        }
-        return true
-    }
-
     private fun downloadImage(
         responseBody: ResponseBody?,
         filename: String,
@@ -276,11 +242,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         fosExternal!!.close()
         fis.close()
 
-        if (isCorruptFile(contentResolver.openInputStream(imageUri)!!, fileType)) {
-            contentResolver.delete(imageUri, null, null)
-            throw CorruptFileException("")
-        }
-
         Log.i(LOG_TAG, "Downloaded")
         return imageUri
     }
@@ -351,11 +312,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
 
         }
 
-        if (isCorruptFile(image, fileType)) {
-            image.delete()
-            throw CorruptFileException("")
-        }
-
         Log.i(LOG_TAG, "Downloaded")
         return Uri.fromFile(image)
     }
@@ -383,11 +339,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 writeAll(responseBody!!.source())
                 responseBody.close()
                 close()
-            }
-
-            if (isCorruptFile(it, fileType)) {
-                it.delete()
-                throw CorruptFileException("")
             }
 
             Log.i(LOG_TAG, "Downloaded")
@@ -492,6 +443,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 .get()
                 .build()
             val imageHttpClient = OkHttpClient.Builder()
+                //.addNetworkInterceptor(NetworkTrafficLogInterceptor())
                 .addInterceptor(Interceptor { chain: Interceptor.Chain ->
                     val original = chain.request()
                     val request = original.newBuilder()
@@ -499,6 +451,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                         .build()
                     chain.proceed(request)
                 })
+                .addInterceptor(ImageIntegrityInterceptor())
                 .build()
 
             imageHttpClient.newCall(remoteFileExtenstionRequest).execute().let {
@@ -665,8 +618,11 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                     chain.proceed(newRequest)
                 })
                 //.addInterceptor(NetworkTrafficLogInterceptor())
+                .addInterceptor(ImageIntegrityInterceptor())
                 .build()
+
             imageHttpClient.newCall(request).execute().body
+
         } else {
             // its your original code
             val service =

@@ -89,14 +89,15 @@ dependencies {
     implementation "androidx.appcompat:appcompat:${libs.androidx.appcompat}"
     implementation "androidx.constraintlayout:constraintlayout:${libs.androidx.constraintlayout}"
     implementation "androidx.coordinatorlayout:coordinatorlayout:${libs.androidx.coordinatorlayout}"
+    implementation "androidx.localbroadcastmanager:localbroadcastmanager:${libs.androidx.localbroadcastmanager}"
     implementation "androidx.preference:preference-ktx:${libs.androidx.preference}"
     implementation "androidx.recyclerview:recyclerview:${libs.androidx.recyclerview}"
+    implementation "androidx.room:room-runtime:${libs.libRoom}"
     implementation "androidx.viewpager2:viewpager2:1.0.0"
     implementation "androidx.work:work-runtime:${libs.androidx.work}"
     implementation "androidx.work:work-runtime-ktx:${libs.androidx.work}"
-    implementation "androidx.localbroadcastmanager:localbroadcastmanager:${libs.androidx.localbroadcastmanager}"
-    implementation "com.google.android.material:material:${libs.androidx.material}"
     implementation "com.github.bumptech.glide:glide:${libs.libGlide}"
+    implementation "com.google.android.material:material:${libs.androidx.material}"
     implementation "com.google.android.apps.muzei:muzei-api:${libs.libMuzei}"
     implementation "com.squareup.moshi:moshi:${libs.libMoshi}"
     implementation "com.squareup.okhttp3:okhttp:${libs.libOkhttp}"
@@ -104,7 +105,9 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:${libs.libRetrofit}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.kotlin.coroutines}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${libs.kotlin.coroutines}"
-    implementation "androidx.room:room-runtime:${libs.libRoom}"
+
+    implementation 'com.joaomgcd:taskerpluginlibrary:0.4.10'
+
     annotationProcessor "androidx.room:room-compiler:${libs.libRoom}"
     ksp "androidx.room:room-compiler:${libs.libRoom}"
     ksp "com.squareup.moshi:moshi-kotlin-codegen:${libs.libMoshi}"

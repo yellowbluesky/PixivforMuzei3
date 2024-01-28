@@ -16,7 +16,10 @@
  */
 package com.antony.muzei.pixiv.provider.network
 
-import com.antony.muzei.pixiv.PixivProviderConst.*
+import com.antony.muzei.pixiv.PixivProviderConst.OAUTH_URL
+import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_API_HOST_URL
+import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_IMAGE_URL
+import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_RANKING_URL
 import com.antony.muzei.pixiv.provider.network.interceptor.PixivAuthHeaderInterceptor
 import okhttp3.Interceptor
 import retrofit2.Retrofit
