@@ -234,6 +234,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
 
         // The other method using BufferedSink doesn't work all we have is a URI to sink into
         val fis = responseBody!!.byteStream()
+        responseBody.close()
         val fosExternal: OutputStream? = contentResolver.openOutputStream(imageUri)
         val buffer = ByteArray(1024 * 1024 * 10)
         var lengthInternal: Int
@@ -453,6 +454,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 if (it.isSuccessful) {
                     Log.i(LOG_TAG, "Getting remote file extensions completed")
                     return it.body
+                } else {
+                    it.close()
                 }
             }
         }
