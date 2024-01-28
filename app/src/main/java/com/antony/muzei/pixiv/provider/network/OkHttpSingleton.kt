@@ -30,7 +30,8 @@ object OkHttpSingleton {
     private fun OkHttpClient.Builder.logOnDebug(): OkHttpClient.Builder =
         this.apply {
             if (BuildConfig.DEBUG) {
-                addNetworkInterceptor(NetworkTrafficLogInterceptor())
+                // Deprecated with Android Studio Network Inspector tool
+                //addNetworkInterceptor(NetworkTrafficLogInterceptor())
             }
         }
 

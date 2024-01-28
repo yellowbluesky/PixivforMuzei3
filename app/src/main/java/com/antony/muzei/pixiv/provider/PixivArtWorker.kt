@@ -31,6 +31,7 @@ import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
 import com.antony.muzei.pixiv.provider.exceptions.CorruptFileException
 import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
+import com.antony.muzei.pixiv.provider.network.OkHttpSingleton
 import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
 import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.interceptor.ImageIntegrityInterceptor
@@ -442,7 +443,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 .url(finalUrl)
                 .get()
                 .build()
-            val imageHttpClient = OkHttpClient.Builder()
+            val imageHttpClient = OkHttpSingleton.getInstance().newBuilder()
                 //.addNetworkInterceptor(NetworkTrafficLogInterceptor())
                 .addInterceptor(StandardImageHttpHeaderInterceptor())
                 .addInterceptor(ImageIntegrityInterceptor())
@@ -603,7 +604,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             val finalUrl = HostManager.get().replaceUrl(imageUrl)
             Log.d("finalUrl", finalUrl)
             val request: Request = Request.Builder().url(finalUrl).get().build()
-            val imageHttpClient = OkHttpClient.Builder()
+            val imageHttpClient = OkHttpSingleton.getInstance().newBuilder()
                 //.addInterceptor(NetworkTrafficLogInterceptor())
                 .addInterceptor(StandardImageHttpHeaderInterceptor())
                 .addInterceptor(ImageIntegrityInterceptor())
