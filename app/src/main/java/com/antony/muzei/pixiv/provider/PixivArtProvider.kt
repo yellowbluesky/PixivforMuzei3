@@ -29,19 +29,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.RemoteActionCompat
 import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
-import com.antony.muzei.pixiv.PixivMuzeiSupervisor
-import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivMuzeiSupervisor.start
-import com.antony.muzei.pixiv.PixivProviderConst
-import com.antony.muzei.pixiv.R
-import com.antony.muzei.pixiv.provider.exceptions.AccessTokenAcquisitionException
-import com.antony.muzei.pixiv.provider.network.PixivAddBookmarkService
-import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.util.IntentUtils
 import com.google.android.apps.muzei.api.UserCommand
 import com.google.android.apps.muzei.api.provider.Artwork
@@ -172,6 +164,7 @@ class PixivArtProvider : MuzeiArtProvider() {
                         IntentUtils.launchActivity(context, intent)
                     }
             }
+
             MuzeiCommandManager.COMMAND_SHARE_IMAGE -> {
                 Log.d("ANTONY_WORKER", "Opening sharing ")
                 artwork.token
@@ -198,41 +191,6 @@ class PixivArtProvider : MuzeiArtProvider() {
                     ?.also {
                         IntentUtils.launchActivity(context, it)
                     }
-            }
-            MuzeiCommandManager.COMMAND_ADD_TO_BOOKMARKS -> {
-                Log.d("PIXIV_DEBUG", "addToBookmarks(): Entered")
-                val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
-                if (sharedPrefs.getString(PixivProviderConst.PREFERENCE_PIXIV_ACCESS_TOKEN, "")
-                        .isNullOrEmpty()
-                ) {
-                    PixivMuzeiSupervisor.post {
-                        Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                    return
-                }
-                val accessToken = try {
-                    getAccessToken()
-                } catch (e: AccessTokenAcquisitionException) {
-                    PixivMuzeiSupervisor.post {
-                        Toast.makeText(context, R.string.toast_loginFirst, Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                    return
-                }
-                val formBody = mapOf(
-                    "illust_id" to artwork.token.toString(),
-                    "restrict" to "public"
-                )
-                val service =
-                    RestClient.getRetrofitBookmarkInstance()
-                        .create(PixivAddBookmarkService::class.java)
-                try {
-                    service.postArtworkBookmark("Bearer $accessToken", formBody)?.execute()
-                } catch (ex: IOException) {
-                    ex.printStackTrace()
-                    throw AccessTokenAcquisitionException("getAccessToken(): Error executing call")
-                }
             }
         }
     }
