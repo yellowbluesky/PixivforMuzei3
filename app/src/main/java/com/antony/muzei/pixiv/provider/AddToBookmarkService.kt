@@ -25,12 +25,16 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.antony.muzei.pixiv.R
-import com.antony.muzei.pixiv.provider.network.PixivAddBookmarkService
-import com.antony.muzei.pixiv.provider.network.RestClient
+import com.antony.muzei.pixiv.provider.network.OkHttpSingleton
+import com.antony.muzei.pixiv.provider.network.interceptor.PixivAuthHeaderInterceptor
+import com.antony.muzei.pixiv.provider.network.interceptor.StandardAuthHttpHeaderInterceptor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.IOException
 
 class AddToBookmarkService : Service() {
@@ -55,17 +59,24 @@ class AddToBookmarkService : Service() {
         try {
             // NetworkOnMainThread exception
             CoroutineScope(Dispatchers.Main + SupervisorJob()).launch(Dispatchers.IO) {
-                val formBody = mapOf(
-                    "illust_id" to intent.getStringExtra("artworkId")!!,
-                    "restrict" to "public"
-                )
-                val service =
-                    RestClient.getRetrofitBookmarkInstance()
-                        .create(PixivAddBookmarkService::class.java)
-                service.postArtworkBookmark(
-                    "Bearer " + intent.getStringExtra("accessToken"),
-                    formBody
-                ).execute()
+                // in here execute a post request
+                // no need to use the service really
+                val imageHttpClient = OkHttpSingleton.getInstance().newBuilder()
+                    .addInterceptor(PixivAuthHeaderInterceptor())
+                    .addInterceptor(StandardAuthHttpHeaderInterceptor())
+                    .build()
+
+                val formBody = FormBody.Builder()
+                    .add("illust_id", intent.getStringExtra("artworkId")!!)
+                    .add("restrict", "public")
+                    .build()
+
+                val request = Request.Builder()
+                    .url("https://app-api.pixiv.net/v2/illust/bookmark/add")
+                    .post(formBody)
+                    .build()
+
+                imageHttpClient.newCall(request).execute()
             }
         } catch (ex: IOException) {
             ex.printStackTrace()
