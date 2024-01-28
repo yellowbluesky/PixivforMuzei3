@@ -31,7 +31,7 @@ public final class PixivProviderConst {
     public static final String BROWSER_USER_AGENT =
             "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0";
 
-    public static final String APP_USER_AGENT = "PixivIOSApp/7.6.2 (iOS 12.2; iPhone9,1)";
+    public static final String APP_USER_AGENT = "PixivAndroidApp/6.96.0 (Android 11; Pixel 5)";
 
     public static final String PREFERENCE_PIXIV_ACCESS_TOKEN = "accessToken";
     public static final String PREFERENCE_PIXIV_REFRESH_TOKEN = "refreshToken";

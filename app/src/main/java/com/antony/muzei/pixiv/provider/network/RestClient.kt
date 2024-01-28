@@ -21,6 +21,8 @@ import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_API_HOST_URL
 import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_IMAGE_URL
 import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_RANKING_URL
 import com.antony.muzei.pixiv.provider.network.interceptor.PixivAuthHeaderInterceptor
+import com.antony.muzei.pixiv.provider.network.interceptor.StandardAuthHttpHeaderInterceptor
+import com.antony.muzei.pixiv.provider.network.interceptor.StandardImageHttpHeaderInterceptor
 import okhttp3.Interceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -29,8 +31,8 @@ object RestClient {
     private val okHttpClientAuthBuilder
         get() = OkHttpSingleton.getInstance().newBuilder()
             .apply {
-                addNetworkInterceptor(PixivAuthHeaderInterceptor())
-                //addInterceptor(CustomClientHeaderInterceptor())
+                addInterceptor(PixivAuthHeaderInterceptor())
+                addInterceptor(StandardAuthHttpHeaderInterceptor())
             }
 
     // Used for acquiring Ranking JSON
@@ -78,13 +80,7 @@ object RestClient {
     // Downloads images from any source
     fun getRetrofitImageInstance(): Retrofit {
         val imageHttpClient = OkHttpSingleton.getInstance().newBuilder()
-            .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                val original = chain.request()
-                val request = original.newBuilder()
-                    .header("Referer", PIXIV_RANKING_URL)
-                    .build()
-                chain.proceed(request)
-            })
+            .addInterceptor(StandardImageHttpHeaderInterceptor())
             .build()
         return Retrofit.Builder()
             .client(imageHttpClient)

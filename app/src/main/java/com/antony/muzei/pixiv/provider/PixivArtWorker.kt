@@ -34,6 +34,7 @@ import com.antony.muzei.pixiv.provider.exceptions.FilterMatchNotFoundException
 import com.antony.muzei.pixiv.provider.network.PixivImageDownloadService
 import com.antony.muzei.pixiv.provider.network.RestClient
 import com.antony.muzei.pixiv.provider.network.interceptor.ImageIntegrityInterceptor
+import com.antony.muzei.pixiv.provider.network.interceptor.StandardImageHttpHeaderInterceptor
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
@@ -41,7 +42,6 @@ import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
-import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -444,13 +444,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 .build()
             val imageHttpClient = OkHttpClient.Builder()
                 //.addNetworkInterceptor(NetworkTrafficLogInterceptor())
-                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                    val original = chain.request()
-                    val request = original.newBuilder()
-                        .header("Referer", PixivProviderConst.PIXIV_API_HOST_URL)
-                        .build()
-                    chain.proceed(request)
-                })
+                .addInterceptor(StandardImageHttpHeaderInterceptor())
                 .addInterceptor(ImageIntegrityInterceptor())
                 .build()
 
@@ -610,14 +604,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             Log.d("finalUrl", finalUrl)
             val request: Request = Request.Builder().url(finalUrl).get().build()
             val imageHttpClient = OkHttpClient.Builder()
-                .addInterceptor(Interceptor { chain: Interceptor.Chain ->
-                    val original = chain.request()
-                    val newRequest = original.newBuilder()
-                        .header("Referer", PixivProviderConst.PIXIV_API_HOST_URL)
-                        .build()
-                    chain.proceed(newRequest)
-                })
                 //.addInterceptor(NetworkTrafficLogInterceptor())
+                .addInterceptor(StandardImageHttpHeaderInterceptor())
                 .addInterceptor(ImageIntegrityInterceptor())
                 .build()
 
