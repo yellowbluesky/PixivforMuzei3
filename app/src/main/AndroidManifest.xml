@@ -96,6 +96,16 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+
+        <activity
+            android:name=".tasker.ActivityConfigBasicAction"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="My Tasker Action">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
