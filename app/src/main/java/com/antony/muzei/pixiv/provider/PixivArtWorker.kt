@@ -44,7 +44,6 @@ import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import okhttp3.MediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.ResponseBody
 import okio.buffer
@@ -231,10 +230,9 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             contentValues
         )!!
         // Null asserted here because if contentResolver.insert() returns a null for whatever reason, we really cannot proceed
-
         // The other method using BufferedSink doesn't work all we have is a URI to sink into
+
         val fis = responseBody!!.byteStream()
-        responseBody.close()
         val fosExternal: OutputStream? = contentResolver.openOutputStream(imageUri)
         val buffer = ByteArray(1024 * 1024 * 10)
         var lengthInternal: Int
