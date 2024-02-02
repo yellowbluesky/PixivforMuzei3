@@ -708,7 +708,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             ).artworks
         val artworkList = mutableListOf<Artwork>()
 
-        for (i in 0..sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        while (artworkList.size < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
                 artwork = buildArtworkAuth(bookmarkArtworks, false)
@@ -722,6 +722,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             }
             artworkList.add(artwork)
         }
+
         return artworkList
     }
 
@@ -747,12 +748,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
         var authArtworkList = illustsHelper.getNewIllusts().artworks
         val artworkList = mutableListOf<Artwork>()
-        for (i in 0..sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+
+        while (artworkList.size < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
-                artwork = buildArtworkAuth(authArtworkList, updateMode == "recommended")
+                artwork = buildArtworkAuth(authArtworkList, false)
             } catch (e: FilterMatchNotFoundException) {
-                Log.i(LOG_TAG, "Fetching new illusts")
+                Log.i(LOG_TAG, "Fetching new bookmarks")
                 authArtworkList = illustsHelper.getNextIllusts().artworks
                 continue
             } catch (e: CorruptFileException) {
@@ -770,8 +772,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         // contentsHelper is stateful, stores a copy of Contents, and can fetch a new one if needed
         val contentsHelper = ContentsHelper(updateMode)
         var contents = contentsHelper.getNewContents()
-        val artworkList = mutableListOf<Artwork>().also {
-            for (i in 1..numArtworksToDownload) {
+        return mutableListOf<Artwork>().also {
+            while (it.size < numArtworksToDownload) {
                 val artwork: Artwork
                 try {
                     artwork = buildArtworkRanking(contents)
@@ -786,7 +788,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 it.add(artwork)
             }
         }
-        return artworkList
     }
 
     // Returns a list of Artworks to Muzei
