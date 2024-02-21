@@ -110,7 +110,7 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
                     WorkManager.getInstance(requireContext())
                         .enqueueUniquePeriodicWork(
                             "PIXIV_CACHE_AUTO",
-                            ExistingPeriodicWorkPolicy.REPLACE,
+                            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                             request
                         )
                 } else {
