@@ -44,7 +44,6 @@ import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract
 import com.google.android.apps.muzei.api.provider.ProviderContract.getProviderClient
 import okhttp3.MediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.ResponseBody
 import okio.buffer
@@ -231,10 +230,9 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             contentValues
         )!!
         // Null asserted here because if contentResolver.insert() returns a null for whatever reason, we really cannot proceed
-
         // The other method using BufferedSink doesn't work all we have is a URI to sink into
+
         val fis = responseBody!!.byteStream()
-        responseBody.close()
         val fosExternal: OutputStream? = contentResolver.openOutputStream(imageUri)
         val buffer = ByteArray(1024 * 1024 * 10)
         var lengthInternal: Int
@@ -710,7 +708,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             ).artworks
         val artworkList = mutableListOf<Artwork>()
 
-        for (i in 0..sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+        while (artworkList.size < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
                 artwork = buildArtworkAuth(bookmarkArtworks, false)
@@ -724,6 +722,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
             }
             artworkList.add(artwork)
         }
+
         return artworkList
     }
 
@@ -749,12 +748,13 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         }
         var authArtworkList = illustsHelper.getNewIllusts().artworks
         val artworkList = mutableListOf<Artwork>()
-        for (i in 0..sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
+
+        while (artworkList.size < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
-                artwork = buildArtworkAuth(authArtworkList, updateMode == "recommended")
+                artwork = buildArtworkAuth(authArtworkList, false)
             } catch (e: FilterMatchNotFoundException) {
-                Log.i(LOG_TAG, "Fetching new illusts")
+                Log.i(LOG_TAG, "Fetching new bookmarks")
                 authArtworkList = illustsHelper.getNextIllusts().artworks
                 continue
             } catch (e: CorruptFileException) {
@@ -772,8 +772,8 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         // contentsHelper is stateful, stores a copy of Contents, and can fetch a new one if needed
         val contentsHelper = ContentsHelper(updateMode)
         var contents = contentsHelper.getNewContents()
-        val artworkList = mutableListOf<Artwork>().also {
-            for (i in 1..numArtworksToDownload) {
+        return mutableListOf<Artwork>().also {
+            while (it.size < numArtworksToDownload) {
                 val artwork: Artwork
                 try {
                     artwork = buildArtworkRanking(contents)
@@ -788,7 +788,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 it.add(artwork)
             }
         }
-        return artworkList
     }
 
     // Returns a list of Artworks to Muzei

@@ -1,0 +1,6 @@
+-dontwarn java.lang.Module
+-dontwarn org.graalvm.nativeimage.hosted.Feature$BeforeAnalysisAccess
+-dontwarn org.graalvm.nativeimage.hosted.Feature
+-dontwarn org.graalvm.nativeimage.hosted.RuntimeResourceAccess
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }

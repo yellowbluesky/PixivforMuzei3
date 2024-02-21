@@ -32,23 +32,12 @@ android {
 
     buildTypes {
         release {
-            postprocessing {
-                removeUnusedCode false
-                removeUnusedResources true // <--
-                obfuscate false
-                optimizeCode true
-            }
-//            minifyEnabled true
-//            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-//            postprocessing {
-//                removeUnusedCode false
-//                removeUnusedResources true // <--
-//                obfuscate false
-//                optimizeCode true
-//            }
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
