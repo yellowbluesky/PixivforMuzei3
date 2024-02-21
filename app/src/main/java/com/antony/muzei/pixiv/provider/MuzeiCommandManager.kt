@@ -36,7 +36,6 @@ import com.antony.muzei.pixiv.PixivMuzeiSupervisor.getAccessToken
 import com.antony.muzei.pixiv.PixivProviderConst.PIXIV_ARTWORK_URL
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.util.IntentUtils
-import com.google.android.apps.muzei.api.UserCommand
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract
 import java.io.File
@@ -48,7 +47,6 @@ import java.io.File
  *
  * @author alvince.zy@gmail.com
  */
-@Suppress("DEPRECATION")
 class MuzeiCommandManager {
 
     companion object {
@@ -73,28 +71,6 @@ class MuzeiCommandManager {
         }
         return listOfActions.filterNotNull()
     }
-
-    fun provideActionsLegacy(context: Context, artwork: Artwork): List<UserCommand> {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-            return emptyList()
-        }
-        return mutableListOf(
-            UserCommand(
-                COMMAND_VIEW_IMAGE_DETAILS,
-                context.getString(R.string.command_viewArtworkDetails)
-            ),
-            UserCommand(
-                COMMAND_SHARE_IMAGE,
-                context.getString(R.string.command_shareImage)
-            ),
-            UserCommand(
-                COMMAND_ADD_TO_BOOKMARKS,
-                context.getString(R.string.command_addToBookmark)
-            ),
-            UserCommand(COMMAND_BLOCK_ARTIST, "Block this artist") // TODO
-        )
-    }
-
     @SuppressLint("InlinedApi")
     private fun obtainActionShareImage(context: Context, artwork: Artwork): RemoteActionCompat? {
         val artworkJpeg = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${artwork.token}.jpeg")
@@ -216,8 +192,7 @@ class MuzeiCommandManager {
             }
         }
 
-    @SuppressLint("InlinedApi")
-    private fun obtainActionDeleteArtwork(context: Context, artwork: Artwork): RemoteActionCompat? =
+    private fun obtainActionDeleteArtwork(context: Context, artwork: Artwork): RemoteActionCompat =
         Intent(context, DeleteArtworkReceiver::class.java).apply {
             putExtra("artworkId", artwork.token)
         }.let { intent ->
@@ -239,7 +214,7 @@ class MuzeiCommandManager {
             }
         }
 
-    private fun obtainActionBlockArtist(context: Context, artwork: Artwork): RemoteActionCompat? =
+    private fun obtainActionBlockArtist(context: Context, artwork: Artwork): RemoteActionCompat =
         Intent(context, BlockArtistReceiver::class.java).apply {
             putExtra("artistId", artwork.metadata)
         }.let { intent ->

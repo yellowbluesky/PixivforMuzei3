@@ -78,26 +78,6 @@ class PixivArtProvider : MuzeiArtProvider() {
         return commandManager.provideActions(checkContext(), artwork)
     }
 
-    //<editor-fold desc="Deprecated in Muzei">
-
-    @Suppress("OverridingDeprecatedMember")
-    override fun getCommands(artwork: Artwork): List<UserCommand> {
-        if (!running) {
-            return emptyList()
-        }
-        return commandManager.provideActionsLegacy(checkContext(), artwork)
-    }
-
-    @Suppress("OverridingDeprecatedMember")
-    override fun onCommand(artwork: Artwork, id: Int) {
-        if (!running) {
-            return
-        }
-        handleCommandLegacy(checkContext(), artwork, id)
-    }
-
-    //</editor-fold>
-
     @Throws(IOException::class)
     override fun openFile(artwork: Artwork): InputStream {
         val context = try {
