@@ -124,7 +124,7 @@ class NetworkTrafficLogInterceptor : Interceptor {
 
     private fun readRespContent(response: Response): String? =
         response.body
-            ?.let { body ->
+            .let { body ->
                 val source = body.source()
                     .apply {
                         request(Long.MAX_VALUE)
@@ -149,7 +149,7 @@ class NetworkTrafficLogInterceptor : Interceptor {
             ?.also {
                 return Charset.forName(it)
             }
-        return body?.contentType()?.charset() ?: defaultCharset
+        return body.contentType()?.charset() ?: defaultCharset
     }
 
 }

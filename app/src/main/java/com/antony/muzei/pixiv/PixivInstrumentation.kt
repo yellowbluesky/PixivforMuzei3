@@ -53,7 +53,7 @@ class PixivInstrumentation {
                     putString(PREFERENCE_PIXIV_REFRESH_TOKEN, response.refresh_token)
                     putLong(PREFERENCE_PIXIV_UPDATE_TOKEN_TIMESTAMP, System.currentTimeMillis().div(1000))
 
-                    response.user?.also { user ->
+                    response.user.also { user ->
                         putString("userId", user.id)
                         putString("name", user.name)
                     }
@@ -153,7 +153,7 @@ class PixivInstrumentation {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, resp.toString())
                 }
-                resp.response?.let {
+                resp.response.let {
                     updateTokenLocal(context, it)
                     it.access_token
                 }
