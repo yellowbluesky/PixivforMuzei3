@@ -9,8 +9,13 @@ import androidx.preference.PreferenceManager;
 
 import com.antony.muzei.pixiv.PixivMuzei;
 
+import java.net.InetAddress;
+import java.util.List;
 import java.util.Random;
 
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.dnsoverhttps.DnsOverHttps;
 import retrofit2.Call;
 import retrofit2.Callback;
 
@@ -55,28 +60,18 @@ public class HostManager {
     }
 
     private void updateHost() {
-        CloudFlareDNSService.Companion.invoke().query(HOST_OLD, "application/dns-json", "A")
-                .enqueue(new Callback<CloudFlareDNSResponse>() {
-                    @Override
-                    public void onResponse(Call<CloudFlareDNSResponse> call, retrofit2.Response<CloudFlareDNSResponse> response) {
-                        try {
-                            CloudFlareDNSResponse cloudFlareDNSResponse = response.body();
-                            if (cloudFlareDNSResponse != null) {
-                                if (cloudFlareDNSResponse.getAnswer() != null && cloudFlareDNSResponse.getAnswer().size() != 0) {
-                                    int position = flatRandom(cloudFlareDNSResponse.getAnswer().size());
-                                    host = cloudFlareDNSResponse.getAnswer().get(position).getData();
-                                }
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<CloudFlareDNSResponse> call, Throwable t) {
-                        t.printStackTrace();
-                    }
-                });
+        DnsOverHttps dohDns = (DnsOverHttps) DoHUtils.createDohDnsClient();
+        List<InetAddress> addressList;
+        try {
+            addressList = dohDns.lookup(HOST_OLD);
+            if (!addressList.isEmpty()) {
+                int position = flatRandom(addressList.size());
+                InetAddress address = addressList.get(position);
+                host = address.getHostAddress();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public String replaceUrl(String before) {

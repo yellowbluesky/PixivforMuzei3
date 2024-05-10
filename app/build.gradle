@@ -91,6 +91,7 @@ dependencies {
     implementation "com.google.android.apps.muzei:muzei-api:${libs.libMuzei}"
     implementation "com.squareup.moshi:moshi:${libs.libMoshi}"
     implementation "com.squareup.okhttp3:okhttp:${libs.libOkhttp}"
+    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:${libs.libOkhttp}"
     implementation "com.squareup.retrofit2:converter-moshi:${libs.libRetrofit}"
     implementation "com.squareup.retrofit2:retrofit:${libs.libRetrofit}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.kotlin.coroutines}"
