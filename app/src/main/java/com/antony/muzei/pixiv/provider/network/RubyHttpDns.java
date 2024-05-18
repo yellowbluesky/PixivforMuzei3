@@ -19,6 +19,8 @@ package com.antony.muzei.pixiv.provider.network;
 
 import android.util.Log;
 
+import com.antony.muzei.pixiv.util.DoHUtils;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -40,20 +42,12 @@ public class RubyHttpDns implements Dns {
      * 210.129.120.55 www.pixiv.net
      */
 
-    private static final String[] addresses = {
-            "210.140.92.136", "210.140.92.137", "210.140.92.145"
-    };
     public static List<InetAddress> newDns = new ArrayList<>();
     private static RubyHttpDns sHttpDns = null;
+    private Dns dohDns;
 
     private RubyHttpDns() {
-        for (String address : addresses) {
-            try {
-                newDns.add(InetAddress.getByName(address));
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
-        }
+        dohDns = DoHUtils.createDohDnsClient();
     }
 
 
@@ -104,7 +98,11 @@ public class RubyHttpDns implements Dns {
     public List<InetAddress> lookup(String paramString)
             throws UnknownHostException {
         try {
-            return newDns;
+            if (paramString.endsWith("pixiv.net")) {
+                return dohDns.lookup("pixiv.net");
+            } else {
+                return dohDns.lookup(paramString);
+            }
         } catch (Exception localException) {
             localException.printStackTrace();
         }
