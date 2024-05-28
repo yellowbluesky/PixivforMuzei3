@@ -44,12 +44,13 @@ class ArtworkDeletionAdapter(private val artworkItems: MutableList<ArtworkItem>)
         return artworkItems.size
     }
 
-    fun removeItems(artworkItemsToDelete: List<ArtworkItem>, positionsToDelete: List<Int>) {
+    fun removeItems(artworkItemsToDelete: List<ArtworkItem>) {
+        val positionsToDelete = artworkItemsToDelete.mapNotNull { item ->
+            artworkItems.indexOf(item).takeIf { it != -1 }
+        }.sortedDescending()
         artworkItems.removeAll(artworkItemsToDelete)
-        for ((deleteCount, position) in positionsToDelete.withIndex()) {
-            // With each deletion, the backing artworkItems list shifts in size.
-            // If we do not offset the deletion index, we will quickly encounter IndexOutOfBounds errors
-            notifyItemRemoved(position - deleteCount)
+        for (position in positionsToDelete) {
+            notifyItemRemoved(position)
         }
     }
 
@@ -85,12 +86,10 @@ class ArtworkDeletionAdapter(private val artworkItems: MutableList<ArtworkItem>)
                 // We can access the data within the views
                 if (!mArtworkItem.selected) {
                     ArtworkDeletionFragment.SELECTED_ITEMS.add(mArtworkItem)
-                    ArtworkDeletionFragment.SELECTED_POSITIONS.add(position)
                     mImageView.setColorFilter(Color.argb(130, Color.red(color), Color.green(color), Color.blue(color)))
                     mArtworkItem.selected = true
                 } else {
                     ArtworkDeletionFragment.SELECTED_ITEMS.remove(mArtworkItem)
-                    ArtworkDeletionFragment.SELECTED_POSITIONS.remove(position)
                     mImageView.clearColorFilter()
                     mArtworkItem.selected = false
                 }

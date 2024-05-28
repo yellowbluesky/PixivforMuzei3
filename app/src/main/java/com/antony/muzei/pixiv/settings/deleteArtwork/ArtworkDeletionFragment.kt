@@ -44,7 +44,6 @@ import kotlin.math.ceil
 class ArtworkDeletionFragment : Fragment() {
     companion object {
         val SELECTED_ITEMS = mutableListOf<ArtworkItem>()
-        val SELECTED_POSITIONS = mutableListOf<Int>()
     }
 
     override fun onCreateView(
@@ -80,8 +79,7 @@ class ArtworkDeletionFragment : Fragment() {
             val numberDeleted = SELECTED_ITEMS.size
 
             // Deletes the artwork items from the ArrayList used as backing for the RecyclerView
-            adapter.removeItems(SELECTED_ITEMS, SELECTED_POSITIONS)
-            SELECTED_POSITIONS.clear()
+            adapter.removeItems(SELECTED_ITEMS)
 
             // We insert the deleted artwork ID's
             val listOfDeletedIds: MutableList<DeletedArtworkIdEntity> = mutableListOf()
