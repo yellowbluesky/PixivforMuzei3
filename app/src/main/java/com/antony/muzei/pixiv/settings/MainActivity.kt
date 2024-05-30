@@ -35,6 +35,8 @@ import com.google.android.material.tabs.TabLayoutMediator
 
 class MainActivity : PixivMuzeiActivity(), AdvOptionsPreferenceFragment.NightModePreferenceListener {
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         val tabTitles = intArrayOf(
             R.string.tab_heading_main,
             R.string.tab_heading_adv_options,
@@ -43,7 +45,6 @@ class MainActivity : PixivMuzeiActivity(), AdvOptionsPreferenceFragment.NightMod
             R.string.tab_heading_roadmap
         )
 
-        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val viewPager = findViewById<ViewPager2>(R.id.view_pager)
         val sectionsPagerAdapter = SectionsPagerAdapter(this)
@@ -51,6 +52,10 @@ class MainActivity : PixivMuzeiActivity(), AdvOptionsPreferenceFragment.NightMod
         TabLayoutMediator(findViewById(R.id.tabs), viewPager) { tab, position ->
             tab.text = applicationContext.resources.getString(tabTitles[position])
         }.attach()
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         // If Muzei is not installed, this will redirect the user to Muzei's Play Store listing
         if (!isMuzeiInstalled) {
