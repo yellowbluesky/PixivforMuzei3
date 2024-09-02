@@ -77,14 +77,18 @@ public class HostManager {
     public String replaceUrl(String before) {
         // See https://pixiv.cat/reverseproxy.html
         // Its ISP is Cloudflare
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.Companion.getContext().getApplicationContext());
+
         boolean usePixivCatProxy = false;
+        String pixivProxyHost = "";
+
         if(PixivMuzei.Companion.getContext() != null){
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.Companion.getContext().getApplicationContext());
             usePixivCatProxy = prefs.getBoolean("pref_usePixivCat",false);
         }
 
         if (usePixivCatProxy) {
-            return before.replace(HOST_OLD, HOST_NEW);
+            pixivProxyHost = prefs.getString("pref_pixivProxyHost", HOST_NEW);
+            return before.replace(HOST_OLD, pixivProxyHost);
         } else {
             return resizeUrl(before);
         }

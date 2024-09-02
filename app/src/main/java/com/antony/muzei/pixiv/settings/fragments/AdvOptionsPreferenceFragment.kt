@@ -202,11 +202,8 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
 
         findPreference<SwitchPreference>("pref_enableNetworkBypass")?.let {
             it.setOnPreferenceChangeListener { _, _ ->
-
                 OkHttpSingleton.refreshInstance() // Renew a instance with sslSocketFactory by this
-
                 PixivArtWorker.enqueueLoad(false, context)
-
                 true
             }
         }

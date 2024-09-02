@@ -34,7 +34,9 @@
         <SwitchPreference
             android:key="pref_showManga"
             android:persistent="true"
-            android:title="@string/prefTitle_showManga" />
+            android:title="@string/prefTitle_showManga"
+            app:summaryOff="Hiding manga"
+            app:summaryOn="Showing manga" />
         <!--    <DropDownPreference-->
         <!--        android:entries="@array/pref_tagFilterLanguage_entries"-->
         <!--        android:entryValues="@array/pref_tagFilterLanguage_entryValues"-->
@@ -135,5 +137,14 @@
         android:persistent="true"
         android:summary="@string/prefSummary_usePixivCat"
         android:title="@string/prefTitle_usePixivCat" />
+    <EditTextPreference
+        android:defaultValue="i.pixiv.cat"
+        android:key="pref_pixivProxyHost"
+        android:singleLine="true"
+        android:title="Pixiv proxy host"
+        android:inputType="text"
+        app:dependency="pref_usePixivCat"
+        app:persistent="true"
+        app:useSimpleSummaryProvider="true"/>
     <!--    </PreferenceCategory>-->
 </PreferenceScreen>
