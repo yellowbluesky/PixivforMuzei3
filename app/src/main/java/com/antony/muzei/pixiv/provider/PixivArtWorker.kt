@@ -752,7 +752,7 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
         while (artworkList.size < sharedPrefs.getInt("prefSlider_numToDownload", 2)) {
             val artwork: Artwork
             try {
-                artwork = buildArtworkAuth(authArtworkList, false)
+                artwork = buildArtworkAuth(authArtworkList, updateMode == "recommended")
             } catch (e: FilterMatchNotFoundException) {
                 Log.i(LOG_TAG, "Fetching new bookmarks")
                 authArtworkList = illustsHelper.getNextIllusts().artworks
