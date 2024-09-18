@@ -39,7 +39,6 @@ import com.antony.muzei.pixiv.provider.network.interceptor.StandardImageHttpHead
 import com.antony.muzei.pixiv.provider.network.moshi.AuthArtwork
 import com.antony.muzei.pixiv.provider.network.moshi.Contents
 import com.antony.muzei.pixiv.provider.network.moshi.RankingArtwork
-import com.antony.muzei.pixiv.util.DoHUtils
 import com.antony.muzei.pixiv.util.HostManager
 import com.google.android.apps.muzei.api.provider.Artwork
 import com.google.android.apps.muzei.api.provider.ProviderContract
@@ -610,7 +609,6 @@ class PixivArtWorker(context: Context, workerParams: WorkerParameters) :
                 //.addInterceptor(NetworkTrafficLogInterceptor())
                 .addInterceptor(StandardImageHttpHeaderInterceptor())
                 .addInterceptor(ImageIntegrityInterceptor())
-                .dns(DoHUtils.createDohDnsClient())
                 .build()
 
             imageHttpClient.newCall(request).execute().body

@@ -17,16 +17,14 @@
 
 package com.antony.muzei.pixiv.provider.network;
 
-import android.util.Log;
-
-import com.antony.muzei.pixiv.util.DoHUtils;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.Dns;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.dnsoverhttps.DnsOverHttps;
 
 /*
 This class is called only when network bypass is enabled
@@ -42,12 +40,14 @@ public class RubyHttpDns implements Dns {
      * 210.129.120.55 www.pixiv.net
      */
 
-    public static List<InetAddress> newDns = new ArrayList<>();
     private static RubyHttpDns sHttpDns = null;
     private Dns dohDns;
 
+    private static final String DOH_URL = "https://1.0.0.1/dns-query";
     private RubyHttpDns() {
-        dohDns = DoHUtils.createDohDnsClient();
+        dohDns = new DnsOverHttps.Builder().client(new OkHttpClient())
+                .url(HttpUrl.get(DOH_URL))
+                .build();
     }
 
 
