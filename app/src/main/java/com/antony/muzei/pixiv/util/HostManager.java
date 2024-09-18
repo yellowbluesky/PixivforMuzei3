@@ -42,38 +42,6 @@ public class HostManager {
         private static final HostManager INSTANCE = new HostManager();
     }
 
-    public void init() {
-        host = randomHost();
-        updateHost();
-    }
-
-    private String randomHost() {
-        String[] already = new String[]{
-                "210.140.92.145",
-                "210.140.92.141",
-                "210.140.92.143",
-                "210.140.92.146",
-                "210.140.92.142",
-                "210.140.92.147",
-        };
-        return already[flatRandom(already.length)];
-    }
-
-    private void updateHost() {
-        DnsOverHttps dohDns = (DnsOverHttps) DoHUtils.createDohDnsClient();
-        List<InetAddress> addressList;
-        try {
-            addressList = dohDns.lookup(HOST_OLD);
-            if (!addressList.isEmpty()) {
-                int position = flatRandom(addressList.size());
-                InetAddress address = addressList.get(position);
-                host = address.getHostAddress();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public String replaceUrl(String before) {
         // See https://pixiv.cat/reverseproxy.html
         // Its ISP is Cloudflare
@@ -95,15 +63,12 @@ public class HostManager {
     }
 
     private String resizeUrl(String url) {
-        if (TextUtils.isEmpty(host)) {
-            host = randomHost();
-        }
         try {
             Uri uri = Uri.parse(url);
-            return HTTP_HEAD + host + uri.getPath();
+            return HTTP_HEAD + HOST_OLD + uri.getPath();
         } catch (Exception e) {
             e.printStackTrace();
-            return HTTP_HEAD + host + url.substring(19);
+            return HTTP_HEAD + HOST_OLD + url.substring(19);
         }
     }
 
