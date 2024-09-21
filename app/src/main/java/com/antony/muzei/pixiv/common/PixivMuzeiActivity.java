@@ -16,7 +16,6 @@ public class PixivMuzeiActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         mPixivInstrumentation = new PixivInstrumentation();
-        HostManager.get().init();
         super.onCreate(savedInstanceState);
     }
 
