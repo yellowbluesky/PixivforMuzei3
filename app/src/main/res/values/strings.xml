@@ -106,6 +106,10 @@
     <string name="toast_newFilterSelect">New filter selection, clearing image cache</string>
     <string name="toast_newTag">New search tag, clearing image cache</string>
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
+    <string name="toast_bookmark_success">Added to bookmarks</string>
+    <string name="toast_bookmark_private_success">Added to private bookmarks</string>
+    <string name="toast_bookmark_failure">Failed to add to bookmarks</string>
+
     <string name="preferenceScreen">preferenceScreen</string>
     <string name="login_pixiv_refresh_hint">Refresh Token</string>
     <string name="action_sign_in_refresh">Login using refresh token</string>
@@ -117,8 +121,4 @@
     <string name="prefSummary_enableNetworkBypass">Disable if you are having problems on VPN</string>
     <string name="prefSummary_usePixivCat">May speed up image downloads in some areas</string>
     <string name="prefTitle_tagLanguage">Tag language</string>
-    <string name="toast_bookmark_success">Added to bookmarks</string>
-    <string name="toast_bookmark_private_success">Added to private bookmarks</string>
-    <string name="toast_bookmark_failure">Failed to add to bookmarks</string>
-
 </resources>
