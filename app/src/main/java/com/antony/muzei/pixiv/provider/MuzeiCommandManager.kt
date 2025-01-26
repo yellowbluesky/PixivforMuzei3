@@ -50,11 +50,13 @@ import java.io.File
 class MuzeiCommandManager {
 
     companion object {
-        const val COMMAND_ADD_TO_BOOKMARKS = 517
-        const val COMMAND_ADD_TO_PRIVATE_BOOKMARKS = 518
         const val COMMAND_VIEW_IMAGE_DETAILS = 988
         const val COMMAND_SHARE_IMAGE = 883
-        const val COMMAND_BLOCK_ARTIST = 765
+
+        private const val ACTION_ADD_TO_BOOKMARK = "${BuildConfig.APPLICATION_ID}.action.ADD_TO_BOOKMARK"
+        private const val ACTION_ADD_TO_PRIVATE_BOOKMARK = "${BuildConfig.APPLICATION_ID}.action.ADD_TO_PRIVATE_BOOKMARK"
+        private const val ACTION_DELETE_ARTWORK = "${BuildConfig.APPLICATION_ID}.action.DELETE_ARTWORK"
+        private const val ACTION_BLOCK_ARTIST = "${BuildConfig.APPLICATION_ID}.action.BLOCK_ARTIST"
     }
 
     fun provideActions(context: Context, artwork: Artwork): List<RemoteActionCompat> {
@@ -171,6 +173,7 @@ class MuzeiCommandManager {
         artwork: Artwork
     ): RemoteActionCompat =
         Intent(context, AddToBookmarkService::class.java).apply {
+            action = ACTION_ADD_TO_BOOKMARK
             putExtra("artworkId", artwork.token.toString())
             putExtra("accessToken", getAccessToken())
             putExtra("artworkTitle", artwork.title)
@@ -179,7 +182,7 @@ class MuzeiCommandManager {
         }.let { intent ->
             PendingIntent.getService(
                 context,
-                0,
+                artwork.id.toInt(),
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
@@ -201,6 +204,7 @@ class MuzeiCommandManager {
         artwork: Artwork
     ): RemoteActionCompat =
         Intent(context, AddToBookmarkService::class.java).apply {
+            action = ACTION_ADD_TO_PRIVATE_BOOKMARK
             putExtra("artworkId", artwork.token.toString())
             putExtra("accessToken", getAccessToken())
             putExtra("artworkTitle", artwork.title)
@@ -209,7 +213,7 @@ class MuzeiCommandManager {
         }.let { intent ->
             PendingIntent.getService(
                 context,
-                COMMAND_ADD_TO_PRIVATE_BOOKMARKS,
+                artwork.id.toInt(),
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
@@ -227,11 +231,12 @@ class MuzeiCommandManager {
 
     private fun obtainActionDeleteArtwork(context: Context, artwork: Artwork): RemoteActionCompat =
         Intent(context, DeleteArtworkReceiver::class.java).apply {
+            action = ACTION_DELETE_ARTWORK
             putExtra("artworkId", artwork.token)
         }.let { intent ->
             PendingIntent.getBroadcast(
                 context,
-                0,
+                artwork.id.toInt(),
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
@@ -249,11 +254,12 @@ class MuzeiCommandManager {
 
     private fun obtainActionBlockArtist(context: Context, artwork: Artwork): RemoteActionCompat =
         Intent(context, BlockArtistReceiver::class.java).apply {
+            action = ACTION_BLOCK_ARTIST
             putExtra("artistId", artwork.metadata)
         }.let { intent ->
             PendingIntent.getBroadcast(
                 context,
-                0,
+                artwork.id.toInt(),
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
