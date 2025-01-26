@@ -51,6 +51,7 @@ class MuzeiCommandManager {
 
     companion object {
         const val COMMAND_ADD_TO_BOOKMARKS = 517
+        const val COMMAND_ADD_TO_PRIVATE_BOOKMARKS = 518
         const val COMMAND_VIEW_IMAGE_DETAILS = 988
         const val COMMAND_SHARE_IMAGE = 883
         const val COMMAND_BLOCK_ARTIST = 765
@@ -61,13 +62,14 @@ class MuzeiCommandManager {
             add(obtainActionShareImage(context, artwork))
             add(obtainActionViewArtworkDetails(context, artwork))
             add(obtainActionDeleteArtwork(context, artwork))
+            add(obtainActionBlockArtist(context, artwork))
             // Logged in user required to add artwork to bookmarks
             if (PreferenceManager.getDefaultSharedPreferences(context).getString("accessToken", "")
                     ?.isNotEmpty() == true
             ) {
                 add(obtainActionAddToBookmarks(context, artwork))
+                add(obtainActionAddToPrivateBookmarks(context, artwork))
             }
-            add(obtainActionBlockArtist(context, artwork))
         }
         return listOfActions.filterNotNull()
     }
@@ -173,6 +175,7 @@ class MuzeiCommandManager {
             putExtra("accessToken", getAccessToken())
             putExtra("artworkTitle", artwork.title)
             putExtra("artworkArtist", artwork.byline)
+            putExtra("isPrivate", false)
         }.let { intent ->
             PendingIntent.getService(
                 context,
@@ -189,6 +192,36 @@ class MuzeiCommandManager {
                 pendingIntent
             ).apply {
                 setShouldShowIcon(true)
+            }
+        }
+
+    @SuppressLint("InlinedApi")
+    private fun obtainActionAddToPrivateBookmarks(
+        context: Context,
+        artwork: Artwork
+    ): RemoteActionCompat =
+        Intent(context, AddToBookmarkService::class.java).apply {
+            putExtra("artworkId", artwork.token.toString())
+            putExtra("accessToken", getAccessToken())
+            putExtra("artworkTitle", artwork.title)
+            putExtra("artworkArtist", artwork.byline)
+            putExtra("isPrivate", true)
+        }.let { intent ->
+            PendingIntent.getService(
+                context,
+                COMMAND_ADD_TO_PRIVATE_BOOKMARKS,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }.let { pendingIntent ->
+            val label = context.getString(R.string.command_addToPrivateBookmark)
+            RemoteActionCompat(
+                IconCompat.createWithResource(context, R.drawable.ic_baseline_bookmark_24),
+                label,
+                label,
+                pendingIntent
+            ).apply {
+                setShouldShowIcon(false)
             }
         }
 

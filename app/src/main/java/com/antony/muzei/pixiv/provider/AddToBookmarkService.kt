@@ -68,7 +68,7 @@ class AddToBookmarkService : Service() {
 
                 val formBody = FormBody.Builder()
                     .add("illust_id", intent.getStringExtra("artworkId")!!)
-                    .add("restrict", "public")
+                    .add("restrict", if (intent.getBooleanExtra("isPrivate", false)) "private" else "public")
                     .build()
 
                 val request = Request.Builder()

@@ -18,6 +18,7 @@
     <string name="button_clearCache">Immediately clear image cache</string>
 
     <string name="command_addToBookmark">Add to bookmarks</string>
+    <string name="command_addToPrivateBookmark">Bookmark privately</string>
     <string name="command_delete_artwork">Delete this artwork</string>
     <string name="command_shareImage">Share image</string>
     <string name="command_viewArtworkDetails">Show details</string>
@@ -116,5 +117,8 @@
     <string name="prefSummary_enableNetworkBypass">Disable if you are having problems on VPN</string>
     <string name="prefSummary_usePixivCat">May speed up image downloads in some areas</string>
     <string name="prefTitle_tagLanguage">Tag language</string>
+    <string name="toast_bookmark_success">Added to bookmarks</string>
+    <string name="toast_bookmark_private_success">Added to private bookmarks</string>
+    <string name="toast_bookmark_failure">Failed to add to bookmarks</string>
 
 </resources>
