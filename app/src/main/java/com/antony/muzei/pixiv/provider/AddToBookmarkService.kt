@@ -23,7 +23,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
 import android.os.IBinder
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.antony.muzei.pixiv.PixivMuzeiSupervisor
 import com.antony.muzei.pixiv.R
 import com.antony.muzei.pixiv.provider.network.OkHttpSingleton
 import com.antony.muzei.pixiv.provider.network.interceptor.PixivAuthHeaderInterceptor
@@ -68,7 +70,7 @@ class AddToBookmarkService : Service() {
 
                 val formBody = FormBody.Builder()
                     .add("illust_id", intent.getStringExtra("artworkId")!!)
-                    .add("restrict", "public")
+                    .add("restrict", if (intent.getBooleanExtra("isPrivate", false)) "private" else "public")
                     .build()
 
                 val request = Request.Builder()
@@ -76,7 +78,28 @@ class AddToBookmarkService : Service() {
                     .post(formBody)
                     .build()
 
-                imageHttpClient.newCall(request).execute()
+                imageHttpClient.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        PixivMuzeiSupervisor.post(Runnable {
+                            Toast.makeText(
+                                applicationContext,
+                                if (intent.getBooleanExtra("isPrivate", false))
+                                    R.string.toast_bookmark_private_success
+                                else
+                                    R.string.toast_bookmark_success,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        })
+                    } else {
+                        PixivMuzeiSupervisor.post(Runnable {
+                            Toast.makeText(
+                                applicationContext,
+                                R.string.toast_bookmark_failure,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        })
+                    }
+                }
             }
         } catch (ex: IOException) {
             ex.printStackTrace()
