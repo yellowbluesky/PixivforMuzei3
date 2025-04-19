@@ -21,6 +21,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.viewpager2.widget.ViewPager2
@@ -35,6 +36,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 
 class MainActivity : PixivMuzeiActivity(), AdvOptionsPreferenceFragment.NightModePreferenceListener {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         val tabTitles = intArrayOf(

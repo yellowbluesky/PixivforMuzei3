@@ -4,7 +4,8 @@
     android:id="@+id/webviewConstraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".login.LoginActivityWebview">
+    tools:context=".login.LoginActivityWebview"
+    android:fitsSystemWindows="true">
 
     <WebView
         android:id="@+id/webview"
