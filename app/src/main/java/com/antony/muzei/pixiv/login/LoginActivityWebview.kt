@@ -33,6 +33,7 @@ import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.enableEdgeToEdge
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
 import com.antony.muzei.pixiv.PixivProviderConst
@@ -65,6 +66,7 @@ class LoginActivityWebview : PixivMuzeiActivity(),
     private var mBinding: ActivityLoginWebviewBinding? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         mBinding = ActivityLoginWebviewBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_login_webview)
