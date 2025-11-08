@@ -31,7 +31,7 @@ class ImageIntegrityInterceptor : Interceptor {
             Log.d("LENGTH", "Reported length: $contentLength")
             Log.d("LENGTH", "Actual length: $responseLength")
 
-            if (contentLength == responseLength) {
+            if (contentLength == null || contentLength == responseLength) {
                 return response
             }
             response = chain.proceed(chain.request())
