@@ -78,15 +78,17 @@ class AddToBookmarkService : Service() {
                     .post(formBody)
                     .build()
 
+                val artworkTitle = intent.getStringExtra("artworkTitle") ?: ""
+
                 imageHttpClient.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
                         PixivMuzeiSupervisor.post(Runnable {
                             Toast.makeText(
                                 applicationContext,
                                 if (intent.getBooleanExtra("isPrivate", false))
-                                    R.string.toast_bookmark_private_success
+                                    applicationContext.getString(R.string.toast_bookmark_private_success, artworkTitle)
                                 else
-                                    R.string.toast_bookmark_success,
+                                    applicationContext.getString(R.string.toast_bookmark_success, artworkTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         })
@@ -94,7 +96,7 @@ class AddToBookmarkService : Service() {
                         PixivMuzeiSupervisor.post(Runnable {
                             Toast.makeText(
                                 applicationContext,
-                                R.string.toast_bookmark_failure,
+                                applicationContext.getString(R.string.toast_bookmark_failure, artworkTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         })

@@ -103,9 +103,9 @@
     <string name="toast_newFilterSelect">过滤选择更新，清除图像缓存</string>
     <string name="toast_newTag">搜索标签更新，清除图像缓存</string>
     <string name="toast_newUpdateMode">模式更新，清除图像缓存</string>
-    <string name="toast_bookmark_success">收藏成功</string>
-    <string name="toast_bookmark_private_success">非公开收藏成功</string>
-    <string name="toast_bookmark_failure">收藏失败</string>
+    <string name="toast_bookmark_success">收藏成功: %s</string>
+    <string name="toast_bookmark_private_success">非公开收藏成功: %s</string>
+    <string name="toast_bookmark_failure">收藏失败: %s</string>
 
     <string name="login_pixiv_refresh_hint">刷新令牌</string>
     <string name="action_sign_in_refresh">刷新令牌以登录</string><!--Refresh Token 用作刷新 Access Token，为 OAuth 中一项术语，此处翻译不确定-->
