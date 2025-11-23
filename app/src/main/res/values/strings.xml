@@ -106,9 +106,9 @@
     <string name="toast_newFilterSelect">New filter selection, clearing image cache</string>
     <string name="toast_newTag">New search tag, clearing image cache</string>
     <string name="toast_newUpdateMode">New update mode, clearing image cache</string>
-    <string name="toast_bookmark_success">Added to bookmarks</string>
-    <string name="toast_bookmark_private_success">Added to private bookmarks</string>
-    <string name="toast_bookmark_failure">Failed to add to bookmarks</string>
+    <string name="toast_bookmark_success">Added to bookmarks: %s</string>
+    <string name="toast_bookmark_private_success">Added to private bookmarks: %s</string>
+    <string name="toast_bookmark_failure">Failed to add to bookmarks: %s</string>
 
     <string name="preferenceScreen">preferenceScreen</string>
     <string name="login_pixiv_refresh_hint">Refresh Token</string>
