@@ -25,14 +25,17 @@
 package com.antony.muzei.pixiv.login
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
@@ -124,12 +127,23 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                     if (url.host == "socialize.gigya.com") {
                         bypassDomainCheck = true
                     } else if (!bypassDomainCheck) {
-                        startActivity(Intent(Intent.ACTION_VIEW, url))
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, url))
+                        } catch (e: ActivityNotFoundException) {
+                            Log.w("LOGIN", "No app available to open $url", e)
+                            Toast.makeText(this@LoginActivityWebview, R.string.no_browser_available, Toast.LENGTH_LONG).show()
+                        }
                         return true
                     }
                 } else if (bypassDomainCheck)
                     bypassDomainCheck = false // Enable check if back to pixiv.
                 return false
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                if (request != null && request.isForMainFrame) {
+                    Log.w("LOGIN", "WebView load error ${error?.errorCode}: ${error?.description} @ ${request.url}")
+                }
             }
         }
         val (code, hash) = generateCodeAndHash()
