@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    compileSdkVersion 35
+    compileSdkVersion 37
     defaultConfig {
         applicationId "com.antony.muzei.pixiv"
-        minSdkVersion 21
-        targetSdkVersion 35
+        minSdkVersion 24
+        targetSdkVersion 37
         versionCode getProperty('app.version.code') as int
         versionName getProperty('app.version.name')
 
@@ -36,7 +36,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
