@@ -25,6 +25,7 @@
 package com.antony.muzei.pixiv.login
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -33,6 +34,7 @@ import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.preference.PreferenceManager
 import com.antony.muzei.pixiv.BuildConfig
@@ -124,7 +126,16 @@ class LoginActivityWebview : PixivMuzeiActivity(),
                     if (url.host == "socialize.gigya.com") {
                         bypassDomainCheck = true
                     } else if (!bypassDomainCheck) {
-                        startActivity(Intent(Intent.ACTION_VIEW, url))
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, url))
+                        } catch (e: ActivityNotFoundException) {
+                            Log.w("LOGIN", "No handler for $url", e)
+                            Toast.makeText(
+                                this@LoginActivityWebview,
+                                R.string.no_app_to_open_link,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                         return true
                     }
                 } else if (bypassDomainCheck)

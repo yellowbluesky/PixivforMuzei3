@@ -121,4 +121,5 @@
     <string name="prefSummary_enableNetworkBypass">Disable if you are having problems on VPN</string>
     <string name="prefSummary_usePixivCat">May speed up image downloads in some areas</string>
     <string name="prefTitle_tagLanguage">Tag language</string>
+    <string name="no_app_to_open_link">No app available to open this link</string>
 </resources>
