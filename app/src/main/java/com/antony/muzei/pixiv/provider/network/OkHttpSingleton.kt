@@ -41,15 +41,16 @@ object OkHttpSingleton {
         if (instance == null) {
             instance = OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
-                .apply {
-                    val prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context!!.applicationContext)
-                    val enableNetworkBypass = prefs.getBoolean("pref_enableNetworkBypass", false)
-                    Log.d(LOG_TAG,"network bypass was $enableNetworkBypass")
-                    if (enableNetworkBypass) {
-                        sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
-                        dns(RubyHttpDns.getInstance())
-                    }
-                }
+//                .apply {
+//                    val prefs = PreferenceManager.getDefaultSharedPreferences(PixivMuzei.context!!.applicationContext)
+//                    val enableNetworkBypass = prefs.getBoolean("pref_enableNetworkBypass", false)
+//                    Log.d(LOG_TAG,"network bypass was $enableNetworkBypass")
+// SNI bypass feature removed as per comment https://github.com/yellowbluesky/PixivforMuzei3/issues/265#issuecomment-5738231927
+//                    if (enableNetworkBypass) {
+//                        sslSocketFactory(RubySSLSocketFactory(), x509TrustManager)
+//                        dns(RubyHttpDns.getInstance())
+//                    }
+//                }
                 //.hostnameVerifier { _, _ -> true }
                 .logOnDebug()
                 .build()

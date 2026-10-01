@@ -28,6 +28,7 @@ import kotlin.jvm.internal.Intrinsics
  * @Author: Perol_Notsfsssf
  */
 // With contributions by CeuiLiSA
+// Entire class no longer user and deprecated as per comment https://github.com/yellowbluesky/PixivforMuzei3/issues/265#issuecomment-5738231927
 class RubySSLSocketFactory : SSLSocketFactory() {
     @Throws(IOException::class)
     override fun createSocket(paramSocket: Socket?, host: String?, port: Int, autoClose: Boolean): Socket {

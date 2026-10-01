@@ -127,11 +127,11 @@
     <!--    <PreferenceCategory-->
     <!--        android:key="prefCat_networkOptions"-->
     <!--        android:title="@string/prefCat_networkingOptions">-->
-    <SwitchPreference
-        android:key="pref_enableNetworkBypass"
-        android:persistent="true"
-        android:summary="@string/prefSummary_enableNetworkBypass"
-        android:title="@string/prefTitle_enableNetworkBypass" />
+<!--    <SwitchPreference-->
+<!--        android:key="pref_enableNetworkBypass"-->
+<!--        android:persistent="true"-->
+<!--        android:summary="@string/prefSummary_enableNetworkBypass"-->
+<!--        android:title="@string/prefTitle_enableNetworkBypass" />-->
     <SwitchPreference
         android:key="pref_usePixivCat"
         android:persistent="true"

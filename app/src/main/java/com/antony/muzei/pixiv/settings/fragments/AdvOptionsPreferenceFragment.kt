@@ -200,13 +200,13 @@ class AdvOptionsPreferenceFragment : PreferenceFragmentCompat() {
                 }
         }
 
-        findPreference<SwitchPreference>("pref_enableNetworkBypass")?.let {
-            it.setOnPreferenceChangeListener { _, _ ->
-                OkHttpSingleton.refreshInstance() // Renew a instance with sslSocketFactory by this
-                PixivArtWorker.enqueueLoad(false, context)
-                true
-            }
-        }
+//        findPreference<SwitchPreference>("pref_enableNetworkBypass")?.let {
+//            it.setOnPreferenceChangeListener { _, _ ->
+//                OkHttpSingleton.refreshInstance() // Renew a instance with sslSocketFactory by this
+//                PixivArtWorker.enqueueLoad(false, context)
+//                true
+//            }
+//        }
 
         // Hides the post processing switch when API level is too low
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
